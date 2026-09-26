@@ -33,14 +33,15 @@
       ],
       "failureModes": [
         "Weak (low µF): compressor runs hot and high amps, trips overload, hums or fails to start in hot weather; fan runs slow/hot.",
-        "Open section: motor hums and does not start (single-phase), or fan does not turn; spinning the fan by hand may start it.",
+        "Open section: motor hums and does not start (single-phase), or fan does not turn (a blade that starts when nudged with an insulated stick from outside the guard confirms a dead cap section).",
         "Shorted: blows the fuse or trips the breaker, or the motor draws locked-rotor amps.",
         "Bulged or leaking can (pressure-interrupter opened): replace on sight."
       ],
       "safety": [
         "Capacitors hold a lethal charge after power is off — discharge through a bleed resistor (never a screwdriver, which pits terminals and can weld) before touching terminals.",
         "Replace with the same µF and an equal or higher voltage rating (370 V can be replaced by 440 V, not the reverse). Match the tolerance rating if the manufacturer specifies it.",
-        "Insulated tools and gloves when working near the capacitor with the disconnect on; capacitor cases are typically at ground potential but the terminals are not."
+        "Insulated tools and gloves when working near the capacitor with the disconnect on; capacitor cases are typically at ground potential but the terminals are not.",
+        "Never hand-spin an energized fan blade to 'help it start' — a PSC motor with an open cap will snap to full speed the moment it is spun; use the capacitor test instead, and spin blades only with power locked out."
       ],
       "tools": ["Clamp meter with µA-to-A range", "Capacitance meter", "Bleed resistor", "Insulated screwdrivers"],
       "notes": [
@@ -120,7 +121,7 @@
         "Terminals 1, 2 and 5 are at line potential and back-EMF can exceed line voltage (~ 1.5×) when the motor runs."
       ],
       "tools": ["Multimeter", "Bleed resistor"],
-      "notes": ["Copeland-style wiring: 1 to start cap, 2 to S/start winding, 5 to R/run (line). Verify with the wiring diagram — kits differ."]
+      "notes": ["Standard wiring: 1 → start capacitor (other side of the start cap to R), 2 → S (start winding), 5 → C (common); coil 2–5 is across the start winding S–C, contacts 1–2 in series with the start cap. Verify with the kit/compressor diagram — kits differ."]
     },
     {
       "id": "contactor",
@@ -136,7 +137,7 @@
             "If ~24 VAC is present and the contactor is not pulled in: kill power and ohm the coil.",
             "If no coil voltage: trace the 24 V safety chain back toward the board (see 24 V path tracing)."
           ],
-          "expected": "24 VAC ±10 % across the coil (≈ 21–27 V) and the armature pulled in; coil resistance typically 10–30 Ω for 24 V coils (compare to a known good).",
+          "expected": "24 VAC ±10 % across the coil (≈ 21–27 V) and the armature pulled in; 24 V coils typically ≈ 5–20 Ω (most DP contactors 8–12 Ω; some Danfoss 3–5 Ω) — compare with a known-good of the same part number; 0 Ω or OL = replace.",
           "tolerance": "Coil below ~19 V = low control voltage (transformer overloaded, voltage drop in the chain); coil open (OL) = replace."
         },
         {
@@ -170,7 +171,7 @@
       "safety": [
         "Line side of the contactor is live whenever the disconnect is on, even with no call — treat it as live.",
         "Lock out and tag out before touching contacts; verify dead with a meter proved on a known live source (live-dead-live).",
-        "Do not manually push in a contactor with the panel open on 3-phase 460/575 V gear without arc-rated PPE (NFPA 70E)."
+        "Never manually push in a contactor as a test at any voltage — it bypasses every safety and the anti-short-cycle delay, starts the load against unequalized pressure, and puts your hand at the arc point (NFPA 70E energized work at ≥ 50 V). To run the load for a check, energize the coil through the control circuit (momentary attended jumper) with panels closed and PPE on."
       ],
       "tools": ["Multimeter", "Clamp meter"],
       "notes": ["Designators vary: C, CC, C1/C2 (compressor), OFC (outdoor fan), IFC (indoor fan). Read the diagram legend."]
@@ -278,7 +279,7 @@
             "Record all three readings and the compressor temperature."
           ],
           "expected": "> 100 MΩ good; 20–100 MΩ investigate; < 20 MΩ suspect; < 1 MΩ condemn.",
-          "tolerance": "Per Copeland/Emerson AE bulletins; readings drop with refrigerant in the oil and rise as the compressor warms."
+          "tolerance": "The 100/20/1 MΩ bands are general field guidance (IEEE 43 style). Copeland AE4-1294 (Megohm Values of Copeland Compressors): ≥ 0.5 MΩ acceptable on a new compressor; 0.5–20 MΩ on an installed compressor = contaminated system, clean up (driers, oil) and re-test rather than condemn; < 0.5 MΩ = condemn. Readings drop with refrigerant in the oil and rise as the compressor warms."
         },
         {
           "name": "Running amps and start test",
@@ -324,7 +325,7 @@
             "Megger each terminal to the shell at 500 VDC (not under vacuum, VFD disconnected)."
           ],
           "expected": "The three readings equal within ±5 %; no OL (unless an internal overload is open hot — cool and re-test), no 0 Ω; > 100 MΩ to ground.",
-          "tolerance": "> 5 % spread = shorted turns or bad terminal; < 20 MΩ suspect, < 1 MΩ condemn."
+          "tolerance": "> 5 % spread = shorted turns or bad terminal. Megohm bands (< 20 MΩ suspect, < 1 MΩ condemn) are general field guidance (IEEE 43 style); Copeland AE4-1294 (Megohm Values of Copeland Compressors): ≥ 0.5 MΩ acceptable on a new compressor, 0.5–20 MΩ installed = contaminated system — clean up and re-test rather than condemn, < 0.5 MΩ = condemn."
         },
         {
           "name": "Running amps per leg and rotation",
@@ -360,7 +361,7 @@
       "id": "scroll_internal_protection",
       "name": "Scroll internal protection (IPR valve / internal overload / discharge thermostat)",
       "aliases": ["IPR", "internal pressure relief", "internal overload", "line break overload", "discharge line thermostat", "DLT", "internal thermostat", "compressor protector", "ASTP", "CoreSense"],
-      "function": "Built-in protections: an internal pressure-relief (IPR) valve opens discharge to suction at a large differential (e.g. ~375–450 psid on R-410A scrolls), an internal line-break overload opens the motor on temperature/current, and on some units a discharge-line thermostat or external module (Copeland CoreSense / Danfoss) locks the compressor out.",
+      "function": "Built-in protections: an internal pressure-relief (IPR) valve opens discharge to suction at a large differential — ≈ 550–625 psid on ZP (R-410A) scrolls, ≈ 375–450 psid on ZR (R-22/R-407C) scrolls; some sizes (e.g. ZP91–ZP143KC, 7–15 ton KC) have no IPR and rely on the HPS — verify in the Copeland AE bulletin for the model, an internal line-break overload opens the motor on temperature/current, and on some units a discharge-line thermostat or external module (Copeland CoreSense / Danfoss) locks the compressor out.",
       "tests": [
         {
           "name": "Identify a tripped internal protector vs a failed compressor",
@@ -426,13 +427,14 @@
       ],
       "failureModes": [
         "Bearings seized (motor hot, hums, trips its internal overload) — the most common on rooftops.",
-        "Run capacitor weak/open: slow or no start; spinning the blade starts it.",
+        "Run capacitor weak/open: slow or no start (a blade that starts when nudged with an insulated stick from outside the guard confirms a dead cap section).",
         "Thermal overload cycling: motor runs then quits when hot, restarts later — high head pressure follows.",
         "Wrong rotation on replacement (reversible motors: check the rotation jumper/plug).",
         "Rain-shield/weep holes plugged; water in the motor."
       ],
       "safety": [
         "Fan blades can start without warning when the contactor pulls in — lock out before reaching into the fan section.",
+        "Never hand-spin an energized fan blade to 'help it start' — a PSC motor with an open cap will snap to full speed the moment it is spun; use the capacitor test instead, and spin blades only with power locked out.",
         "Discharge the fan capacitor before handling.",
         "Replacement motors must match HP, RPM, voltage, frame, rotation, shaft size and the capacitor µF the motor label calls for."
       ],
@@ -449,7 +451,7 @@
           "name": "Belt, alignment and bearings",
           "energized": false,
           "steps": [
-            "Lock out. Check belt tension (≈ 1/2 to 3/4 in. deflection per 12 in. of span, or use a tension gauge) and condition (glazing, cracks, dust piles under the drive).",
+            "Lock out. Check belt tension with a tension gauge against the belt maker's force table, or the rule of thumb of 1/64 in. deflection per inch of span at mid-span (≈ 3/16 in. on a 12-in span, ≈ 1/2 in. on a 32-in span), and condition (glazing, cracks, dust piles under the drive).",
             "Check sheave alignment with a straightedge and wear (dish-shaped grooves = worn sheave).",
             "Rotate the wheel by hand: rough, noisy, or wobbling = bearings; check set-screw tightness on the wheel and sheaves."
           ],
@@ -492,10 +494,10 @@
           "name": "Test order: high-voltage first, then the command",
           "energized": true,
           "steps": [
-            "1. Verify line voltage at the motor's power plug (L/G/N or L1/L2) with the unit powered — an ECM with no line voltage does nothing regardless of the command.",
-            "2. Verify the low-voltage command: X13/constant torque — 24 VAC between the energized tap (1–5) and C with a fan call; variable-speed — the control signal per the board (serial/PWM/0–10 V) and 24 V common.",
-            "3. Both present and the motor does not run: with power off, spin the wheel (bearings, obstruction); if free, the motor/module has failed.",
-            "4. If separable (ECM 2.3/3.0 with a detachable module): power off, unplug the module, ohm the three motor phase leads — equal within ±10 % and none to the shell — a good motor with a dead module = replace the module only."
+            "Verify line voltage at the motor's power plug (L/G/N or L1/L2) with the unit powered — an ECM with no line voltage does nothing regardless of the command.",
+            "Verify the low-voltage command: X13/constant torque — 24 VAC between the energized tap (1–5) and C with a fan call; variable-speed — the control signal per the board (serial/PWM/0–10 V) and 24 V common.",
+            "Both present and the motor does not run: with power off, spin the wheel (bearings, obstruction); if free, the motor/module has failed.",
+            "If separable (ECM 2.3/3.0 with a detachable module): power off, unplug the module, ohm the three motor phase leads — equal within ±10 % and none to the shell — a good motor with a dead module = replace the module only."
           ],
           "expected": "Line voltage present at all times; 24 V (or data) on command; motor ramps up smoothly.",
           "tolerance": "Missing line voltage → wiring/door switch/fuse; missing command → board/thermostat; both present, no run → motor/module."
@@ -659,7 +661,7 @@
           "energized": true,
           "steps": [
             "Gauge the high side while watching the switch/board input as pressure rises.",
-            "Typical R-410A trip 600–650 psig (reset ~420–500); R-22 ~ 400–450 psig; R-454B similar to R-410A — verify on the switch label/IOM and note some boards lock out after several trips.",
+            "R-410A typically 590–650 psig open (Lennox ≈ 590, Carrier ≈ 650), reset ≈ 420–450; R-22 ≈ 400–450 psig; R-454B similar to R-410A — verify on the switch label/IOM and note some boards lock out after several trips.",
             "If the unit trips at normal pressure: the switch is bad or a refrigerant/oil-fouled capillary; if the unit trips at the correct pressure: solve the high head (condenser, fan, charge, non-condensables)."
           ],
           "expected": "Switch closed (~0 V across it) below the setpoint; opens only at the rated pressure.",
@@ -700,7 +702,7 @@
           "name": "Pressure vs switch state",
           "energized": true,
           "steps": [
-            "Gauge the suction (or liquid, for LOC) side and compare with the label: R-410A LPS commonly opens ~ 20–50 psig and closes ~ 45–95 psig (e.g. Carrier 48TC LPS 27 open / 44 close; LOC ~ 7 psig); R-22 ~ 5–25 psig — verify the IOM.",
+            "Gauge the suction (or liquid, for LOC) side and compare with the label: R-410A LPS commonly opens ~ 20–50 psig and closes ~ 45–95 psig (e.g. Carrier R-410A LPS ≈ 27 psig open / 44–60 close per the part; Carrier R-410A LOC ≈ 20 open / 45 close; the ≈ 7 psig LOC is the R-22 liquid-line type — always read the switch label/IOM); R-22 ~ 5–25 psig — verify the IOM.",
             "Trip at a normal pressure = switch; trip at the setpoint = find the low-pressure cause (low charge, restriction, iced coil, no airflow, TXV starved, low load, cold ambient with no head-pressure control)."
           ],
           "expected": "Closed at normal running suction pressure; opens only below its setpoint.",
@@ -726,7 +728,7 @@
       "safety": [
         "Never jumper the LPS to 'get cooling'; running a low-charge compressor overheats the motor and pumps oil out.",
         "A2L (R-32/R-454B) units: an LPS/LOC trip can mean a leak — check the RDS state and ventilate before opening the system; no ignition sources.",
-        "Momentary diagnostic jumpers only, attended, gauges on, and removed before leaving."
+        "A momentary attended diagnostic jumper across the LPS is allowed only with gauges showing standing/suction pressure well above the switch setting (a switch that is open at a pressure it should be closed at), and removed before leaving. Never jumper an LPS/LOC when standing pressure is at or below its setting or the system is near-empty — the compressor pulls a vacuum and draws in air/moisture (and, on A2L, creates a flammable mixture in the circuit)."
       ],
       "tools": ["Gauges", "Multimeter"],
       "notes": ["Many boards ignore the LPS during the first 90–180 s and during defrost; a 'random' LPS code often traces to the coil icing at the end of a long run."]
@@ -819,7 +821,7 @@
           "energized": true,
           "steps": [
             "Put a DC µA meter in series with the flame-sensor lead (or use the board's diagnostic readout if it has one).",
-            "Read steady-state flame current with the burners lit. Minimum and healthy values are BOARD-SPECIFIC — read the board label/IOM. Typical guidance: Honeywell S86xx/S89xx/SmartValve families ≈ 1.0 µA minimum, 2–6 µA healthy; White-Rodgers 50A55/50E47 family ≈ 0.7 µA minimum, 1–5 µA typical; many OEM integrated furnace/RTU boards (Carrier/Bryant IGC, Lennox SureLight, Trane/American Standard) are satisfied at 0.5–1.5 µA with 2–6 µA typical — verify.",
+            "Read steady-state flame current with the burners lit. Minimum and healthy values are BOARD-SPECIFIC — read the board label/IOM. Typical guidance: Honeywell S86xx/S89xx/SmartValve families ≈ 1.0 µA minimum, 2–6 µA healthy; White-Rodgers 50A55/50E47 family: 1.0 µA DC minimum for flame detection (< 0.1 µA = no flame), 2–5 µA typical; many OEM integrated furnace/RTU boards (Carrier/Bryant IGC, Lennox SureLight, Trane/American Standard) prove flame at well under 1 µA (Lennox field guidance: 0.5–1.5 µA typical, nuisance faults below ~0.7 µA) — the only authoritative minimum is the one printed on the board/IOM.",
             "Low current: clean the flame rod with fine Scotch-Brite/steel wool (not sandpaper), check the rod position in the flame envelope, the ceramic insulator for cracks, the burner ground strap and the board ground, and polarity/neutral of the 120 V supply (rectification needs a good ground and correct polarity)."
           ],
           "expected": "Steady flame current above the board's minimum with margin (commonly 2–6 µA DC).",
@@ -829,7 +831,7 @@
           "name": "Hot-surface igniter resistance",
           "energized": false,
           "steps": [
-            "Power off, unplug the igniter and ohm it: silicon carbide ≈ 40–200 Ω, silicon nitride (120 V) ≈ 10–20 Ω or (24–80 V types) as specified — compare to the part spec; inspect for cracks.",
+            "Power off, unplug the igniter and ohm it: silicon carbide ≈ 40–100 Ω cold (replace when drifting above ~100–120 Ω or on any crack); silicon nitride 120 V ≈ 9–20 Ω; 24–80 V types per part spec — compare to the part spec; inspect for cracks.",
             "Handle by the base only; skin oils shorten silicon-carbide igniter life."
           ],
           "expected": "Within the spec range, no cracks.",
@@ -1016,7 +1018,7 @@
           "name": "Fan cycling switch",
           "energized": true,
           "steps": [
-            "Gauge the high side and watch the fan: it should stop when pressure falls to the cut-out and restart at the cut-in (typical R-410A settings ~ 250–300 psig on / 175–225 off — verify on the switch/IOM).",
+            "Gauge the high side and watch the fan: it should stop when pressure falls to the cut-out and restart at the cut-in (rule of thumb by saturation temperature: fan off ≈ 90 °F condensing (≈ 275 psig R-410A / ≈ 170 psig R-22), on ≈ 110 °F (≈ 365 / 225 psig), differential 30–50 psi — exact setpoints from the switch label/IOM).",
             "Read across the switch contacts: ~0 V closed (fan on), line voltage open (fan off).",
             "Fan short-cycling (seconds) = differential too narrow or a switch failing; fan never stopping in cold weather = switch stuck closed or the wrong control."
           ],
@@ -1038,7 +1040,7 @@
           "name": "Flooding (head pressure) valve",
           "energized": false,
           "steps": [
-            "Confirm the setting (dome charge, e.g. 180 or 220 psig types for R-22/R-410A families) and that the system carries the extra winter charge and receiver the valve requires.",
+            "Confirm the setting (stamped on the valve — the dome charge is refrigerant-specific) and that the system carries the extra winter charge and receiver the valve requires.",
             "In cold weather with the fan running: liquid pressure should hold near the valve setting; in warm weather the valve should be fully closed to bypass (no effect).",
             "Valve failed: low head in winter (flashing sight glass, TXV starving, LPS trips) or high head in summer (valve stuck bypassing)."
           ],
@@ -1075,7 +1077,7 @@
           "energized": true,
           "steps": [
             "Read voltage across the coil with the call (24 VAC for reversing valve; 24/120/240 V for others per the diagram).",
-            "Magnetism check: with the coil energized, a screwdriver blade held near the coil is attracted (or slide the coil partly off the stem — never fully remove an energized AC coil: it overheats and burns out within seconds).",
+            "Magnetism check: with the coil energized, a screwdriver blade held near the top of the coil is attracted; never move an energized AC coil on its stem (even partly off the plunger the current rises sharply and the coil overheats within seconds).",
             "Reversing valve: energize and listen for the shift ('whoosh'); compare the four line temperatures — the two hot lines and two cold lines swap when it shifts. A valve energized and not shifting: low charge/pressure differential, stuck valve, or a bad pilot.",
             "Hot-gas bypass: with the solenoid energized, the bypass line should get hot and suction pressure should rise/hold; no change = coil, plugged pilot, or the bypass regulator."
           ],
@@ -1250,7 +1252,7 @@
         "After any power work (new service, utility transformer change, disconnect or contactor replacement, VFD bypass work), verify phase sequence at the unit with a phase-rotation meter before starting a scroll.",
         "To correct: swap any two of the three incoming line leads at the unit's line side (disconnect load side or contactor line side) — all motors then reverse together. Never swap at a single motor unless only that motor is reversed (e.g. after a motor replacement).",
         "Phase monitors lock out on reversal; a compressor that trips 'reverse rotation' on a CoreSense/phase monitor after utility work is telling the truth.",
-        "Source: Copeland/Emerson AE4-1294 (Copeland scroll compressors: reverse rotation); Danfoss scroll application guidelines."
+        "Source: Copeland AE4-1331 / AE4-1365 / AE4-1303 application guidelines (Reverse Rotation section); Danfoss scroll application guidelines."
       ]
     },
     {
@@ -1313,10 +1315,11 @@
       "topic": "Megohm (insulation resistance) testing of compressors and motors",
       "content": [
         "Test at 500 VDC (hermetic compressors and motors up to 600 V), leads removed, each terminal to a clean ground on the shell/discharge line. Take the reading after ~60 s.",
-        "Bands: > 100 MΩ good; 20–100 MΩ investigate (moisture, acid, contaminated oil — check the oil/acid test, drier, moisture indicator, re-test after run time); < 20 MΩ suspect winding insulation breakdown; < 1 MΩ condemn (grounded winding; treat the system as contaminated/burnout).",
+        "Bands (general field guidance, IEEE 43 style): > 100 MΩ good; 20–100 MΩ investigate (moisture, acid, contaminated oil — check the oil/acid test, drier, moisture indicator, re-test after run time); < 20 MΩ suspect winding insulation breakdown; < 1 MΩ condemn (grounded winding; treat the system as contaminated/burnout).",
+        "Copeland AE4-1294 (Megohm Values of Copeland Compressors): ≥ 0.5 MΩ acceptable on a new, never-installed compressor; 0.5–20 MΩ on an installed compressor = contaminated system — clean up (driers, oil change) and re-test rather than condemn; < 0.5 MΩ = condemn.",
         "Readings are affected by refrigerant dissolved in the oil (lower when cold and just after shutdown), temperature (rise as the compressor warms) and moisture. Trend readings over time rather than relying on a single number; compare all three terminals.",
         "Never megger in a vacuum: the thin gas inside the shell ionizes and arcs to the shell, damaging the motor. Never megger with a VFD or electronic control connected — it destroys the drive's output stage. Discharge the winding after the test.",
-        "Source: Copeland/Emerson AE bulletins (e.g. AE4-1294 scroll service and application engineering guidance on insulation resistance); IEEE 43 general practice."
+        "Source: Copeland/Emerson AE4-1294 R1 (Megohm Values of Copeland Compressors) and Copeland KB a_id 763/785 for the 0.5 MΩ limits; IEEE 43 general practice for the 100/20/1 MΩ field bands."
       ]
     },
     {

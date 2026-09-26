@@ -57,11 +57,6 @@
     "criticalTempF": 233.5,
     "criticalPsig": 585.2,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.5,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R12\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
   {
@@ -71,7 +66,6 @@
       "22",
       "R-22",
       "HCFC-22",
-      "Freon",
       "Freon 22",
       "Genetron 22",
       "Forane 22",
@@ -100,7 +94,7 @@
     "criticalPsig": 709,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "against": "Hudson Technologies / Arkema Forane 22 PT chart: 0/40/45/100/120/130 °F = 24.0/68.5/76.0/195.9/260/296.8 psig (table 24.03/68.56/76.07/195.91/259.96/296.89)",
       "maxErrorPsi": 0.1,
       "pointsChecked": 6
     },
@@ -128,7 +122,7 @@
       "Ultra-low-temperature cascade systems (−60 to −110 °F: lab freezers, environmental chambers)"
     ],
     "serviceNotes": [
-      "Critical temperature 79.1 °F — the table stops at 78 °F; at room temperature the fluid is transcritical and standing pressure exceeds 650 psig. Cascade low stages use expansion tanks/fade-out vessels for off-cycle pressure.",
+      "Critical temperature 79.1 °F — the table stops at 78 °F; at room temperature the fluid is near/above critical and standing pressure is ≈ 600–650 psig at 70–75 °F, approaching the 686 psig critical pressure. Cascade low stages use expansion tanks/fade-out vessels for off-cycle pressure.",
       "Extremely high GWP (14,800): strictly recover; replaced by R-508B/R-170 (ethane, A3) or R-1150 in newer equipment.",
       "Very high pressure at moderate temps (393 psig at 40 °F): use rated gauges and recovery cylinders."
     ],
@@ -145,7 +139,6 @@
       "HFC-32",
       "difluoromethane",
       "Forane 32",
-      "Solstice 32",
       "Genetron 32"
     ],
     "type": "pure",
@@ -164,7 +157,7 @@
     "serviceNotes": [
       "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
       "Pure fluid — no glide; may be charged as liquid or vapor per the equipment IOM.",
-      "NEVER charge R-32 into R-410A equipment; it runs ~10 % higher pressure and much higher discharge temperature (compressor injection/ cooling designs differ). Not a drop-in.",
+      "NEVER charge R-32 into R-410A equipment: pressures are only ~2 % above R-410A (121 vs 119 psig at 40 °F, 489 vs 478 at 130 °F), but discharge temperature runs ~20–30 °F hotter, oil/compressor cooling designs differ and the equipment is not listed for an A2L. Not a drop-in.",
       "Higher discharge temperature than R-410A — watch superheat; excessive superheat can overheat the compressor.",
       "Typical 40 °F ≈ 121 psig; 100 °F ≈ 326 psig; 130 °F ≈ 489 psig."
     ],
@@ -175,9 +168,9 @@
     "criticalPsig": 823.9,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "against": "Hudson Technologies R-32 PT chart: 0/20/40/70/100/130 °F = 49.3/80.0/121.0/205.8/325.7/489.5 psig (table 49.25/80.02/120.95/205.83/325.67/489.48)",
       "maxErrorPsi": 0.1,
-      "pointsChecked": 5
+      "pointsChecked": 6
     },
     "sourceNote": "CoolProp predefined fluid \"R32\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
@@ -213,11 +206,6 @@
     "criticalTempF": 362.6,
     "criticalPsig": 516.4,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 3
-    },
     "sourceNote": "CoolProp predefined fluid \"R123\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
   {
@@ -229,7 +217,6 @@
       "R-134A",
       "HFC-134a",
       "Suva 134a",
-      "Klea",
       "Klea 134a",
       "Genetron 134a",
       "Forane 134a",
@@ -253,7 +240,7 @@
     "serviceNotes": [
       "Pure fluid — no glide; charge as liquid or vapor per equipment instructions.",
       "Stationary equipment uses POE; automotive uses PAG. Do not mix oil types.",
-      "Low pressure fluid: below ~15 °F evaporating the suction side is in a vacuum (air/moisture ingress risk).",
+      "Low pressure fluid: below about −15 °F evaporating (0 psig) the low side is in a vacuum (air/moisture ingress risk).",
       "Common replacements: R-513A (drop-in style, A1, GWP 631), R-450A (A1), R-1234yf (A2L, automotive).",
       "Typical 40 °F ≈ 35 psig; 100 °F ≈ 124 psig; 130 °F ≈ 199 psig."
     ],
@@ -264,9 +251,9 @@
     "criticalPsig": 574,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "against": "Arkema Forane 134a / Hudson Technologies R-134a PT chart: 0/40/60/100/130 °F = 6.5/35.0/57.4/124.2/198.7 psig (table 6.47/35.05/57.41/124.16/198.72)",
       "maxErrorPsi": 0.1,
-      "pointsChecked": 6
+      "pointsChecked": 5
     },
     "sourceNote": "CoolProp predefined fluid \"R134a\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
@@ -369,11 +356,6 @@
     "criticalTempF": 206.1,
     "criticalPsig": 601.9,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R290\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
   {
@@ -489,11 +471,11 @@
       },
       {
         "component": "R-143a",
-        "massPercent": 4
+        "massPercent": 52
       },
       {
         "component": "R-134a",
-        "massPercent": 52
+        "massPercent": 4
       }
     ],
     "safetyClass": "A1",
@@ -522,9 +504,9 @@
     "criticalPsig": 527,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "against": "Hudson Technologies / Chemours R-404A PT chart: 0 °F dew 32.6; 40 °F bubble/dew 86.9/85.4; 100 °F 236.8/234.6 psig (table 32.61; 86.90/85.37; 236.78/234.68)",
       "maxErrorPsi": 0.1,
-      "pointsChecked": 6
+      "pointsChecked": 5
     },
     "sourceNote": "CoolProp predefined fluid \"R404A\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
@@ -631,9 +613,9 @@
     "criticalPsig": 656.8,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
+      "against": "Arkema Forane 407C PT chart: 40 °F bubble/dew 80/63; 70 °F bubble 140.5; 100 °F dew 196.1; 130 °F 340.7/306.7 psig (table 80.24/63.16; 140.52; 196.10; 340.74/306.63)",
+      "maxErrorPsi": 0.3,
+      "pointsChecked": 6
     },
     "sourceNote": "CoolProp predefined fluid \"R407C\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
@@ -697,7 +679,7 @@
       "408-A",
       "Forane FX10",
       "FX10",
-      "Suva 408A"
+      "Genetron 408A"
     ],
     "type": "zeotrope",
     "composition": [
@@ -746,7 +728,8 @@
       "409-A",
       "Forane FX56",
       "FX56",
-      "Suva 409A"
+      "Suva 409A",
+      "Genetron 409A"
     ],
     "type": "zeotrope",
     "composition": [
@@ -824,7 +807,7 @@
     "serviceNotes": [
       "Near-azeotropic blend: charge as liquid from the cylinder; glide is small enough that a single saturation temperature is adequate for field superheat/subcooling. (glide ≈ 0.2 °F).",
       "There is NO drop-in replacement for R-410A. Never charge R-454B or R-32 into R-410A equipment: they are A2L and the equipment is not listed for them.",
-      "Operates at ~50–70 % higher pressure than R-22: use R-410A-rated gauges, hoses (800 psi working), recovery machine and cylinders (DOT-39 400 psi minimum).",
+      "Operates at ~50–70 % higher pressure than R-22: use R-410A-rated gauges, hoses (800 psi working), an R-410A-rated recovery machine and recovery cylinders rated 400 psig (DOT-4BA400 / DOT-4BW400); never recover into a DOT-39 disposable cylinder (single-use, never refillable) and never use a 300-psig (R-22) recovery cylinder.",
       "POE oil is hygroscopic — keep the system open as briefly as possible, use a new filter-drier, and pull a deep vacuum (500 microns, decay test).",
       "Typical 40 °F evaporating ≈ 118–119 psig; 100 °F condensing ≈ 318 psig; 130 °F ≈ 477 psig.",
       "AIM Act: new residential/light-commercial R-410A AC equipment could not be manufactured after 1 Jan 2025 (install-by dates apply); service continues with new and reclaimed refrigerant."
@@ -836,9 +819,9 @@
     "criticalPsig": 696.1,
     "tableSource": "coolprop_predefined",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 6
+      "against": "Hudson Technologies / BPA R-410A PT charts (liquid): 0/40/65/70/85/100/130 °F = 48.2/118/185.7/201.5/254.6/317/476–477 psig (table 48.44/118.79/185.77/201.74/255.4/318.53/478.03); charts differ from each other by ~1 psi at condensing temperatures",
+      "maxErrorPsi": 1.6,
+      "pointsChecked": 7
     },
     "sourceNote": "CoolProp predefined fluid \"R410A\" (scripts/gen_refrigerants.py), 220 points, 1 °F steps."
   },
@@ -1071,7 +1054,7 @@
     ],
     "serviceNotes": [
       "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
-      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. Arkema allows up to ~20 % residual mineral oil with R-427A.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. Arkema allows up to 15 % residual mineral oil/AB in the POE with R-427A (usually one oil change, no flush).",
       "Capacity ~5 % below R-22; check TXV superheat."
     ],
     "replacementFor": [
@@ -1138,8 +1121,7 @@
       "438-A",
       "MO99",
       "ISCEON MO99",
-      "Freon MO99",
-      "Opteon MO99"
+      "Freon MO99"
     ],
     "type": "zeotrope",
     "composition": [
@@ -1176,8 +1158,8 @@
       "R-22 retrofit in DX air conditioning, heat pumps and medium/low-temp refrigeration (most common R-22 drop-in-style blend)"
     ],
     "serviceNotes": [
-      "Mixture table is APPROXIMATE (CoolProp had no fitted binary interaction parameters for one or more component pairs) — confirm against the manufacturer's PT chart before making charge decisions. (No binary parameters for the R-601a pairs.) The table was also generated with component mass fractions summing to 96.8 % (R-134a entered as 41.0 % instead of the published 44.2 %), so it may read a few psi off a published MO99 chart — verify against the Chemours chart.",
-      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 13 °F — do not use a single-point chart.",
+      "Mixture table is APPROXIMATE — DO NOT use it for superheat/subcooling decisions on an MO99 retrofit. CoolProp had no binary interaction parameters for the R-601a pairs and the table was generated with R-134a at 41.0 % (fractions summing to 96.8 %, not the published 44.2 %). Checked against the Chemours Freon/ISCEON MO99 PT chart (k22220): at 40/100/130 psig the chart gives bubble/dew 13.6/23.5, 54.9/63.9 and 69.6/78.1 °F, while this table gives 12.7/27.3, 54.1/66.9 and 68.7/80.9 °F — dew pressures read 4–6 psi low, so a superheat computed from this table is 3–4 °F LOW and the glide is overstated (table ≈ 13.5 °F vs published ≈ 9–10 °F). Use the Chemours chart until the table is regenerated.",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Published glide ≈ 9–10 °F (this CoolProp table overstates it at ≈ 13.5 °F) — do not use a single-point chart.",
       "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. MO99 is designed for mineral oil (hydrocarbon carriers), but POE may be needed with long suction risers.",
       "Capacity and pressures close to R-22 (slightly higher condensing pressure); check TXV superheat and readjust pressure controls.",
       "Never top off an R-22 system with MO99 — recover, evacuate, charge liquid, relabel."
@@ -1248,9 +1230,9 @@
     "criticalTempF": 181.6,
     "tableSource": "coolprop_mixture",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.5,
-      "pointsChecked": 5
+      "against": "Honeywell Solstice N40 PT chart (0 psig at bubble −51.0 °F / dew −39.9 °F — table −51.1/−39.4; 0 °F liquid 34.2, 40 °F liquid ≈ 89 psig — table 34.33/89.26) and Hudson Technologies R-448A chart (liquid −40/−35/−30/−25/−20 °F = 4.9/7.5/10.4/13.5/17.0 psig — table 4.96/7.58/10.46/13.62/17.09); 100/130 °F (incl. extrapolated range) NOT checked",
+      "maxErrorPsi": 0.3,
+      "pointsChecked": 9
     },
     "extrapolatedAboveF": 148,
     "sourceNote": "CoolProp mass-fraction mixture of 26% R32/26% R125/20% R1234yf/21% R134a/7% R1234ze(E) (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
@@ -1310,7 +1292,7 @@
     "criticalTempF": 180,
     "tableSource": "coolprop_mixture",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "against": "Hudson Technologies R-449A PT chart (liquid −40/−35/−30/−25/−20 °F = 4.8/7.4/10.2/13.3/16.7 psig — table 4.67/7.26/10.10/13.22/16.64); 40/100/130 °F (incl. extrapolated range) NOT checked",
       "maxErrorPsi": 0.2,
       "pointsChecked": 5
     },
@@ -1501,9 +1483,9 @@
     "criticalTempF": 172.3,
     "tableSource": "coolprop_mixture",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.3,
-      "pointsChecked": 5
+      "against": "Chemours Opteon XL41 PT chart: 0 °F bubble/dew 45.3/42.7; 100 °F 303.6/291.6; 130 °F 454.2/440.5 psig (table 45.91/42.91; 303.27/291.90; 453.64/439.98)",
+      "maxErrorPsi": 0.7,
+      "pointsChecked": 6
     },
     "extrapolatedAboveF": 133,
     "sourceNote": "CoolProp mass-fraction mixture of 68.9% R32/31.1% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
@@ -1633,7 +1615,12 @@
     ],
     "criticalTempF": 221.9,
     "tableSource": "coolprop_mixture",
-    "sourceNote": "CoolProp mass-fraction mixture of 73.8% R12/26.2% R152A (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+    "sourceNote": "CoolProp mass-fraction mixture of 73.8% R12/26.2% R152A (scripts/gen_refrigerants.py; mass fractions as generated), 221 points.",
+    "tableVerified": {
+      "against": "Hudson Technologies R-500 PT chart: −40 °F −3.7 psig (table −3.52); one point only — other temperatures NOT checked",
+      "maxErrorPsi": 0.2,
+      "pointsChecked": 1
+    }
   },
   {
     "id": "R-502",
@@ -1672,9 +1659,9 @@
     "criticalPsig": 568.4,
     "tableSource": "coolprop_mixture",
     "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 6.9,
-      "pointsChecked": 5
+      "against": "published R-502 PT chart: 40 °F 80.5 psig (table 77.92), 130 °F ≈ 324 psig (table 316.6) — table reads ~3 % low",
+      "maxErrorPsi": 7.4,
+      "pointsChecked": 2
     },
     "sourceNote": "CoolProp mass-fraction mixture of 48.8% R22/51.2% R115 (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
   },
@@ -1725,11 +1712,6 @@
     "criticalTempF": 159.1,
     "criticalPsig": 522.7,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R507A\" (scripts/gen_refrigerants.py), 219 points, 1 °F steps."
   },
   {
@@ -1764,7 +1746,7 @@
       "Vending, transport"
     ],
     "serviceNotes": [
-      "Azeotropic (essentially zero glide) — R-134a-like pressures (40 psig at 40 °F vs 35 for R-134a, ~5 % higher).",
+      "Azeotropic (essentially zero glide) — R-134a-like pressures: ~14 % higher at 40 °F (40 vs 35 psig), ~5 % higher at condensing temperatures (131 vs 124 psig at 100 °F, 206 vs 199 at 130 °F).",
       "R-134a retrofit: compatible with POE; recover, replace drier, charge liquid to ~ the same weight, expect ~3 % capacity change. Never top off R-134a with R-513A or vice versa.",
       "Charge as liquid from the cylinder (blend)."
     ],
@@ -1774,11 +1756,6 @@
     "criticalTempF": 205.5,
     "criticalPsig": 532.1,
     "tableSource": "coolprop_mixture",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp mass-fraction mixture of 56% R1234yf/44% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
   },
   {
@@ -1803,8 +1780,8 @@
     ],
     "safetyClass": "A1",
     "gwp": {
-      "ar4": 299,
-      "ar5": 293
+      "ar4": 293,
+      "ar5": 299
     },
     "glideF": 0,
     "lubricant": "POE",
@@ -1848,7 +1825,7 @@
     ],
     "serviceNotes": [
       "A3 (flammable): treat as a flammable gas — ventilate, no ignition sources, spark-proof tools, A3-rated detector and recovery equipment, charge limited by the equipment listing; never use in equipment not designed for it.",
-      "Very low pressure: evaporator in vacuum below ~15 °F (−3 psig at 0 °F) — air ingress risk on the low side; charge is tiny (typically < 150 g) so charge by weight on a scale.",
+      "Very low pressure: evaporator in vacuum below ~10 °F (−3 psig at 0 °F) — air ingress risk on the low side; charge is tiny (typically < 150 g) so charge by weight on a scale.",
       "Never use in equipment not designed for hydrocarbons; ensure ignition sources (thermostats, relays) are sealed/sparkless."
     ],
     "replacementFor": [
@@ -1890,11 +1867,6 @@
     "criticalTempF": 270.3,
     "criticalPsig": 1629,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R717\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
   {
@@ -1928,11 +1900,6 @@
     "criticalTempF": 87.8,
     "criticalPsig": 1055.2,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R744\" (scripts/gen_refrigerants.py), 147 points, 1 °F steps."
   },
   {
@@ -1993,7 +1960,7 @@
     "lubricant": "PAG (automotive, yf-specific); POE (stationary)",
     "applications": [
       "Automotive air conditioning (2015+)",
-      "Component of many A2L blends (R-454B, R-448A, R-449A, R-513A, R-454A/C, R-455A)"
+      "Component of many low-GWP blends: A2L R-454A/B/C and R-455A; A1 R-448A, R-449A, R-513A and R-452A"
     ],
     "serviceNotes": [
       "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
@@ -2006,11 +1973,6 @@
     "criticalTempF": 202.5,
     "criticalPsig": 475.8,
     "tableSource": "coolprop_predefined",
-    "tableVerified": {
-      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
-      "maxErrorPsi": 0.1,
-      "pointsChecked": 5
-    },
     "sourceNote": "CoolProp predefined fluid \"R1234yf\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
   },
   {
@@ -2023,8 +1985,7 @@
       "1234ze(E)",
       "HFO-1234ze",
       "HFO-1234ze(E)",
-      "Solstice ze",
-      "Opteon ze"
+      "Solstice ze"
     ],
     "type": "pure",
     "safetyClass": "A2L",
