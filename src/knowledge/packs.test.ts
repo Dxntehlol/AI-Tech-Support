@@ -117,8 +117,15 @@ describe("refrigerants", () => {
       if (!t.id || !ids.has(t.id.toUpperCase())) missing.push(f);
     }
     assert.deepEqual(missing, [], `tables without an index entry: ${missing.join(", ")}`);
+    // Table files drop parentheses from the id (R-1233zd(E) -> R-1233zdE.json); compare by the id inside each file.
+    const tableIds = new Set<string>();
+    for (const f of readdirSync(refDir)) {
+      if (!f.endsWith(".json") || f === "index.json" || f.startsWith("_")) continue;
+      const t = JSON.parse(readFileSync(join(refDir, f), "utf8")) as { id?: string };
+      if (t.id) tableIds.add(t.id.toUpperCase());
+    }
     for (const m of meta) {
-      assert.ok(existsSync(join(refDir, `${m.id}.json`)), `index entry ${m.id} has no table file`);
+      assert.ok(tableIds.has(String(m.id).toUpperCase()), `index entry ${m.id} has no table file`);
     }
   });
 });

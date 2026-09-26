@@ -655,7 +655,7 @@
   {
    "id": "simplicity-ucb",
    "name": "York Simplicity / Simplicity LITE unit control board (UCB) LED flash codes",
-   "description": "Single-LED flash-code diagnostics on the York unit control board. Original Simplicity (Sunline 2000 / Predator D-series, ~1998-2009: LAST ERROR button, Modbus/BAS port, fault history) and Simplicity LITE (Z-series 3-12.5 t, ~2009-2015) use different flash tables; only states confirmed from a cited source are listed here. Enrichment pass (2026-09-26) added no codes: no manufacturer document or corroborating source could be retrieved during the pass, and the verification protocol forbids transcribing codes from memory. The flash-code list here remains limited to the four states cited from ZE036 IOM 5188235-YIM-B-1016 p.66 and one secondary thread; for any other flash count, or for Simplicity SE / Elite alarm and history codes (SE-MOBILE app or display), read the flash-code / alarm table printed on the unit's control-box label or in the unit IOM (e.g. 5188244-YIM, 826081-XIM) before acting.",
+   "description": "Single-LED flash-code diagnostics on the York unit control board. Original Simplicity (Sunline 2000 / Predator D-series, ~1998-2009: LAST ERROR button, Modbus/BAS port, fault history) and Simplicity LITE (Z-series 3-12.5 t, ~2009-2015) use different flash tables; only states confirmed from a cited source are listed here. Enrichment pass (2026-09-26) added no codes: no manufacturer document or corroborating source could be retrieved during the pass, and the verification protocol forbids transcribing codes from memory. The flash-code list here remains limited to the four states cited from ZE036 IOM 5188235-YIM-B-1016 p.66 and one secondary thread; for any other flash count, or for Simplicity SE / Elite alarm and history codes (SE-MOBILE app or display), read the flash-code / alarm table printed on the unit's control-box label or in the unit IOM (e.g. 5188244-YIM, 826081-XIM) before acting. Enrichment pass 2026-09-26 (search-only; WebFetch blocked). Flash codes were read from search summaries of the York ZE036 IOM 5188235-YIM-B-1016 p.66, ZJ078/ZF150 Sun Pro IOM p.60, Predator BP120 IOM p.40, Sunline DCG IOM p.55 and DUQ024-060 IOM p.28; meanings are transcribed as the summaries quoted them and should be spot-checked against the printed tables by a verifier. Coverage is 'partial': the UCB flash table (steady/heartbeat/off, 1-14) and ICB flash table (heartbeat, 1-10) are believed complete for original Simplicity and Simplicity LITE (the DM090 IOM table also ends at 14 flashes), b",
    "appliesTo": [
     "york-z-series-rtu-r410a",
     "york-x-series-hp-rtu-r410a",
@@ -665,61 +665,1002 @@
    "faultCodes": [
     {
      "code": "LED steady ON",
-     "meaning": "Control failure - replace control",
+     "meaning": "On Steady - Control Failure - Replace Control",
      "likelyCauses": [
-      "Failed unit control board",
-      "Board processor not running (check 24 VAC supply before condemning)"
+      "Failed unit control board processor",
+      "Board not booting (check 24 VAC supply and board fuse before condemning)"
      ],
      "checks": [
-      "Verify 24 VAC at the board R-C terminals and the board fuse",
-      "Cycle power once; if the LED stays steady with good supply, replace the UCB"
+      "Verify 24 VAC at the board R-C terminals and check the board fuse",
+      "Cycle 24 V control power once; York Central Tech Talk: a steady-on LED (or one that never lights with power applied) that does not clear after a power cycle means the board must be replaced"
      ],
      "severity": "shutdown",
-     "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes' ('On Steady - Control Failure - Replace Control'); same row in Predator BP120 IOM p.40 and ZJ078 IOM p.60",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "LED heartbeat (slow blink)",
-     "meaning": "Normal operation",
+     "meaning": "Heart Beat - Normal Operation",
      "likelyCauses": [],
      "checks": [
-      "No fault stored; if the unit does not respond, check thermostat inputs (Y1/Y2/W1/W2/G) at the board"
+      "No active fault; the ZE036 IOM describes normal operation as a 1 second on / 1 second off heartbeat, while fault codes flash at about 200 ms on / 200 ms off",
+      "If the unit is not responding, check the thermostat inputs (Y1/Y2/W1/W2/G) at the board and the ASCD timer (field practice)"
      ],
      "severity": "info",
-     "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes' ('Heart Beat - Normal Operation')",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "2 flashes",
-     "meaning": "Control waiting",
+     "meaning": "2 Flashes - Control waiting ASCD",
      "likelyCauses": [
-      "Anti-short-cycle / minimum off-time delay in progress",
-      "Board waiting on a pending call (delay timers)"
+      "Anti-short-cycle delay (ASCD) timer running after a compressor stop or power-up",
+      "Call for cooling arrived before the minimum off time expired"
      ],
      "checks": [
-      "Wait out the delay (typically a few minutes) and confirm the compressor starts",
-      "Verify the call is still present at the thermostat inputs"
+      "Wait out the ASCD (typically a few minutes) and confirm the compressor starts",
+      "Verify the Y call is still present at the board; a code that never clears while Y is present indicates a board or input problem (field practice)"
      ],
      "severity": "info",
-     "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('2 Flashes - Control waiting ASCD'); Predator BP120 IOM p.40; ZJ078 IOM p.60",
      "evidence": "manufacturer_doc",
      "notes": "The manual's condition text for this code was not fully visible in the search summary; causes are interpretive."
     },
     {
      "code": "10 flashes",
-     "meaning": "Compressors locked out because the low ambient switch is closed",
+     "meaning": "10 Flashes - Compressors Locked Out On Low Outdoor Air Temperature",
      "likelyCauses": [
-      "Outdoor ambient below the low-ambient switch setpoint (switch is normally open, closes at about 45 F, opens at about 55 F)",
-      "Failed/shorted low ambient switch or wiring"
+      "Outdoor ambient below the low-ambient switch setpoint (York Central Tech Talk: the low ambient switch is normally open, closes at about 45 F and opens at about 55 F)",
+      "Failed/shorted low ambient switch or wiring, or low-ambient switch installed where a low-ambient kit is not fitted"
      ],
      "checks": [
-      "Measure outdoor ambient; if above 55 F, ohm the low ambient switch - it should be open",
-      "Check the switch wiring to the UCB for a short to common"
+      "Measure outdoor ambient; above about 55 F the switch should be open - ohm it and its wiring to the UCB",
+      "If the unit must cool at low ambient, confirm a low-ambient kit is installed and the switch is wired per the kit instructions (field practice)"
+     ],
+     "severity": "warning",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('10 Flashes - Compressors Locked Out On Low Outdoor Air Temperature'); York Central Tech Talk 'Simplicity Diagnostics Flash Codes' (FC 10); ZJ078 IOM p.60",
+     "evidence": "manufacturer_doc",
+     "notes": "LOW confidence - from a secondary source only; confirm against the flash-code table printed on the unit's control-box label or IOM."
+    },
+    {
+     "code": "LED OFF",
+     "meaning": "OFF - No Power or Control Failure",
+     "likelyCauses": [
+      "No 24 VAC to the board (open transformer, blown board fuse, tripped breaker, open safety in the 24 V feed)",
+      "Failed unit control board"
+     ],
+     "checks": [
+      "Measure 24 VAC at the board power terminals; check the control transformer secondary and the board fuse",
+      "With good 24 VAC and no LED after a power cycle, replace the UCB (York Central Tech Talk: an LED that does not light at all with power applied indicates a possibly defective board)"
+     ],
+     "severity": "shutdown",
+     "source": "York ZJ078 Sun Pro IOM 'Unit Control Board Flash Codes' p.60 ('OFF - No Power or Control Failure'); York Central Tech Talk 'Simplicity Diagnostics Flash Codes'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "1 flash",
+     "meaning": "1 Flash - Not Applicable",
+     "likelyCauses": [
+      "Not a defined fault on this board"
+     ],
+     "checks": [
+      "Re-count the flashes; a single flash is not used as a code (the ICB table states a 1-flash code is not used to prevent confusion)",
+      "If the LED truly shows one flash between pauses, treat the board as suspect and confirm the flash pattern printed on the control-box label"
+     ],
+     "severity": "info",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes' ('1 Flash - Not Applicable'); Predator BP120 IOM p.40",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "3 flashes",
+     "meaning": "3 Flashes - HPS1 - Compressor Lock out",
+     "likelyCauses": [
+      "High pressure switch on circuit 1 opened (dirty condenser coil, failed condenser fan motor, overcharge, non-condensables, restricted liquid line)",
+      "Open HPS1 wiring or a failed switch (the HVAC-Talk 'York Rooftop Alarm Codes' case showed a 3-flash lockout in winter with the switch closed and the unit tied to a BAS - check the board input and any BAS-written lockout)"
+     ],
+     "checks": [
+      "Read head pressure on circuit 1 and compare with the HPS trip rating on the unit label; check condenser coil cleanliness and condenser fan operation",
+      "Ohm HPS1 and its wiring back to the board input with the circuit at rest; the switch should be closed",
+      "Clear the lockout by removing the thermostat call or cycling 24 V power after correcting the cause (field practice)"
      ],
      "severity": "lockout",
-     "source": "JustAnswer HVAC thread on York rooftop flash code 10 (secondary; cites the York manual description)",
-     "evidence": "single_secondary",
-     "notes": "LOW confidence - from a secondary source only; confirm against the flash-code table printed on the unit's control-box label or IOM."
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('3 Flashes - HPS1 - Compressor Lock out'); Predator BP120 IOM p.40 ('HPS1 Compressor Lockout'); ZJ078 IOM p.60",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "4 flashes",
+     "meaning": "4 Flashes - HPS2 Compressor Lockout",
+     "likelyCauses": [
+      "High pressure switch on circuit 2 opened (dirty condenser coil, condenser fan failure, overcharge, non-condensables, liquid-line restriction)",
+      "Open HPS2 wiring or failed switch"
+     ],
+     "checks": [
+      "Read circuit 2 head pressure and compare with the HPS rating; inspect condenser coil and fan",
+      "Ohm HPS2 and its wiring to the board with the circuit at rest",
+      "Clear by removing the call or cycling 24 V power once the cause is corrected (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Predator BP120 IOM p.40 'Unit Control Board Flash Codes' ('4 Flashes - HPS2 Compressor Lockout'); York ZJ078 Sun Pro IOM p.60 (same row); not present on single-compressor ZE036 table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "5 flashes",
+     "meaning": "5 Flashes - LPS1 - Compressor Lock out",
+     "likelyCauses": [
+      "Low pressure switch on circuit 1 opened (low charge / leak, restricted metering device or filter drier, low indoor airflow, low ambient without low-ambient controls)",
+      "Open LPS1 wiring or failed switch"
+     ],
+     "checks": [
+      "Check circuit 1 suction pressure against the LPS rating; verify charge by superheat/subcooling and check for leaks",
+      "Verify indoor airflow (filters, blower, coil) and evaporator condition",
+      "Ohm LPS1 and wiring to the board input; clear by removing the call or cycling 24 V power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('5 Flashes - LPS1 - Compressor Lock out'); Predator BP120 IOM p.40 ('LPS1 Compressor Lockout'); ZJ078 IOM p.60",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "6 flashes",
+     "meaning": "6 Flashes - LPS2 Compressor Lockout",
+     "likelyCauses": [
+      "Low pressure switch on circuit 2 opened (low charge / leak, restriction, low airflow, low ambient)",
+      "Open LPS2 wiring or failed switch"
+     ],
+     "checks": [
+      "Check circuit 2 suction pressure against the LPS rating; verify charge and look for leaks",
+      "Verify indoor airflow and evaporator condition",
+      "Ohm LPS2 and wiring to the board input; clear by removing the call or cycling 24 V power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Predator BP120 IOM p.40 'Unit Control Board Flash Codes' ('6 Flashes - LPS2 Compressor Lockout'); two-compressor Sun Pro (ZJ078/ZF150 IOM p.60) carries the same row",
+     "evidence": "manufacturer_doc",
+     "notes": "One search summary of the ZJ078 p.60 table appeared to list LPS2 at 7 flashes; the Predator BP120 table read explicitly (6 = LPS2, 7 = FS1) and the ZE036 table (5 = LPS1, 7 = FS1) support this numbering. Confirm against the flash-code label in the unit control box."
+    },
+    {
+     "code": "7 flashes",
+     "meaning": "7 Flashes - FS1 - Compressor Lock out",
+     "likelyCauses": [
+      "Freeze stat (FS1) on evaporator circuit 1 opened - coil running too cold: low indoor airflow (dirty filters, iced coil, blower problem), low charge, or low return-air temperature",
+      "Open FS1 wiring or failed freeze stat; on some units a lockout with a warm coil points to a wiring/board input problem"
+     ],
+     "checks": [
+      "Inspect the evaporator for ice; check filters, blower speed/belt and external static (GHAC: code 7 = Compressor 1 Freezestat open)",
+      "Verify circuit 1 charge and suction saturation temperature; a low charge drives the coil below freezing",
+      "Ohm FS1 and its wiring at the board with the coil thawed; the switch should be closed",
+      "Clear by removing the call or cycling 24 V power after the coil has thawed and the cause is corrected (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('7 Flashes - FS1 - Compressor Lock out'); Predator BP120 IOM p.40 ('FS1 Compressor Lockout'); GHAC 'Predator - Flashing Code 7' (secondary corroboration)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "8 flashes",
+     "meaning": "8 Flashes - FS2 Compressor Lockout",
+     "likelyCauses": [
+      "Freeze stat (FS2) on evaporator circuit 2 opened - low airflow, low charge or low return-air temperature",
+      "Open FS2 wiring or failed freeze stat"
+     ],
+     "checks": [
+      "Inspect the evaporator for ice; check filters, blower and external static",
+      "Verify circuit 2 charge and suction saturation temperature",
+      "Ohm FS2 and its wiring at the board with the coil thawed; clear by removing the call or cycling 24 V power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Predator BP120 IOM p.40 'Unit Control Board Flash Codes' ('8 Flashes - FS2 Compressor Lockout'); two-compressor Sun Pro (ZJ078/ZF150 IOM p.60) carries the same row",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "9 flashes",
+     "meaning": "9 Flashes - Ignition Control Locked Out / Ignition Control Failure / Limit Switch Trip / No Jumper Plug in Heat Section",
+     "likelyCauses": [
+      "Ignition control board (ICB) in lockout after repeated ignition failures (no gas, weak flame signal, dirty flame sensor, bad igniter, pressure switch)",
+      "Limit switch or rollout switch open, or the heat-section jumper plug missing on a cooling-only unit",
+      "York Central Tech Talk: five separate conditions can cause FC 9; read the ICB LED to tell which. A contactor coil with high resistance can drop board voltage and also trigger a 9 (HVAC-Talk 9-flash thread)"
+     ],
+     "checks": [
+      "Go to the ignition control board and read its own flash code (see the 'ICB ...' codes in this table) before touching the UCB",
+      "Check the limit and rollout switches for continuity; verify the heat-section jumper plug is installed on units without gas heat",
+      "Check gas pressure, flame-sensor microamps and igniter; clean the flame sensor",
+      "Clear the ICB lockout by removing the W call or cycling power after the cause is corrected (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('9 Flashes - Ignition Control Locked Out/Ignition Control Failure/Limit Switch Trip/No Jumper Plug in Heat Section'); Predator BP120 IOM p.40 ('Ignition Control Locked Out / Ignition Control Failure'); York Central Tech Talk 'Simplicity Diagnostics Flash Codes'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "11 flashes",
+     "meaning": "11 Flashes - Compressors Locked Out Because The Economizer Is Using Free Cooling",
+     "likelyCauses": [
+      "Normal: economizer is in free-cooling mode and the board is holding the compressors off (York Central Tech Talk: on units shipped with a factory economizer the switch is set ON, so compressors are locked out while the economizer is in free cooling)",
+      "Economizer wrongly signalling free cooling (enthalpy/changeover setting, failed economizer control, wiring) while outdoor conditions are not suitable"
+     ],
+     "checks": [
+      "Check the economizer changeover setting and outdoor conditions; if free cooling is not appropriate, check the economizer control and its free-cooling signal to the UCB",
+      "On units with no economizer, verify the board economizer option switch / jumper is set correctly"
+     ],
+     "severity": "info",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('11 Flashes - Compressors Locked Out Because The Economizer Is Using Free Cooling'); York Central Tech Talk (FC 11); ZJ078 IOM p.60",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "12 flashes",
+     "meaning": "12 Flashes - Unit Locked Out due to Fan Overload Switch Failure",
+     "likelyCauses": [
+      "Supply fan motor overload tripped (belt-drive units): high amps from overloaded blower, wrong pulley setting, failed bearings, or a failed overload relay",
+      "York Central Tech Talk: FC 12 indicates 24 VAC is not detected on the Fan Over terminal - open overload contact, wiring, or missing jumper on units without an overload"
+     ],
+     "checks": [
+      "Check the supply fan motor overload for a trip; measure fan motor amps against nameplate and check pulley setting / external static",
+      "Verify 24 VAC at the board Fan Over(load) terminal; on units without an overload confirm the factory jumper is in place",
+      "Reset the overload and clear the lockout by cycling 24 V power after correcting the cause (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York ZF150 / ZJ078 Sun Pro IOM p.60 'Unit Control Board Flash Codes' ('12 Flashes - Unit Locked Out due to Fan Overload Switch Failure'); York Central Tech Talk (FC 12 - Fan Overload Lockout)",
+     "evidence": "manufacturer_doc",
+     "notes": "Not listed on the single-compressor 3-5 t ZE036 table (direct-drive blower, no overload)."
+    },
+    {
+     "code": "13 flashes",
+     "meaning": "13 Flashes - Compressor Held Off Due To Low Voltage",
+     "likelyCauses": [
+      "Low 24 VAC at the board - York Central Tech Talk: the control sensed less than about 19.2 VAC while attempting to energize a relay, or less than about 16 VAC with relays already energized; it is an information code, not a lockout",
+      "Undersized or failing control transformer, overloaded 24 V circuit (extra relays, economizer, thermostat), high-resistance contactor coils, low line voltage or loose connections"
+     ],
+     "checks": [
+      "Measure 24 VAC at the board with the compressor contactor(s) pulling in; look for the dip below ~19 V",
+      "Check line voltage and the transformer tap, then the total 24 V load (contactor coils, economizer, accessories) and connections",
+      "Ohm the contactor coils - a high-resistance coil drops board voltage (HVAC-Talk 9-flash thread)"
+     ],
+     "severity": "warning",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('13 Flashes - Compressor Held Off Due To Low Voltage'); York Central Tech Talk (FC 13); ZJ078 IOM p.60",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "14 flashes",
+     "meaning": "14 Flashes - EEPROM Storage Failure (Control Failure)",
+     "likelyCauses": [
+      "Internal board memory (EEPROM) fault - York Central Tech Talk: an internal control fault; if it does not reset after cycling power the board must be replaced",
+      "Electrical noise / power event corrupting stored settings"
+     ],
+     "checks": [
+      "Cycle power to the board once; if 14 flashes returns, replace the UCB",
+      "Check for a poor ground or a failing transformer before fitting the new board (field practice)"
+     ],
+     "severity": "shutdown",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('14 Flashes - EEPROM Storage Failure (Control Failure)'); York Central Tech Talk (FC 14 - EPROM failure)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB heartbeat",
+     "meaning": "Heart Beat - Normal Operation (ignition control board)",
+     "likelyCauses": [],
+     "checks": [
+      "ICB is healthy; if there is no heat, check the W call reaching the ICB, gas supply and the UCB flash code"
+     ],
+     "severity": "info",
+     "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 'Ignition Control Board Flash Codes'; York Sunline DCG IOM p.55; DUQ024-060 IOM p.28",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 1 flash",
+     "meaning": "1 Flash - Not Applicable (a 1-flash code is not used to prevent confusion)",
+     "likelyCauses": [
+      "Not a defined ICB code"
+     ],
+     "checks": [
+      "Re-count the flashes between pauses"
+     ],
+     "severity": "info",
+     "source": "York Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('1 Flash - Not Applicable'; note that a 1-flash code is not used to prevent confusion)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 2 flashes",
+     "meaning": "2 Flashes - Pressure / Centrifugal Switch Open With Inducer On",
+     "likelyCauses": [
+      "Inducer (combustion blower) running but the pressure switch has not closed: blocked or restricted flue / vent, blocked pressure-switch tubing, weak inducer motor, failed pressure switch, wind or condensate in the switch line",
+      "On centrifugal-switch designs, the inducer is not reaching speed or the centrifugal switch has failed"
+     ],
+     "checks": [
+      "Confirm the inducer runs; measure pressure-switch draw with a manometer and compare with the switch rating",
+      "Inspect the flue, vent terminal, heat exchanger outlet and switch tubing for blockage or water",
+      "Jumper the switch only as a test to confirm the switch vs the draw"
+     ],
+     "severity": "warning",
+     "source": "York Sunline DCG IOM p.55 / DUQ024-060 IOM p.28 'Ignition Control Board Flash Codes' ('2 Flashes - Pressure/Centrifugal Switch Open With Inducer On'); same table in ZE036 IOM p.66",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 3 flashes",
+     "meaning": "3 Flashes - Pressure / Centrifugal Switch Closed With Inducer Off",
+     "likelyCauses": [
+      "Pressure switch stuck closed or contacts welded",
+      "Miswired pressure-switch circuit, or a jumper left on the switch terminals"
+     ],
+     "checks": [
+      "With the inducer off, ohm the pressure switch - it should be open; replace if closed",
+      "Check for a test jumper left on the switch terminals and for wiring shorts"
+     ],
+     "severity": "warning",
+     "source": "York Sunline DCG IOM p.55 / DUQ024-060 IOM p.28 'Ignition Control Board Flash Codes' ('3 Flashes - Pressure/Centrifugal Switch Closed With Inducer Off')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 4 flashes",
+     "meaning": "4 Flashes - Not Applicable",
+     "likelyCauses": [
+      "Not a defined ICB code on this table"
+     ],
+     "checks": [
+      "Re-count the flashes; confirm against the ICB label"
+     ],
+     "severity": "info",
+     "source": "York Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('4 Flashes - Not Applicable')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 5 flashes",
+     "meaning": "5 Flashes - Lock Out From Too Many Flame Losses",
+     "likelyCauses": [
+      "Flame established then lost repeatedly: dirty or cracked flame sensor, poor ground, low gas pressure, flame lifting off the burners, burner carryover problems, unstable draft",
+      "Gas valve dropping out or low supply pressure under load"
+     ],
+     "checks": [
+      "Clean the flame sensor and measure flame current; check burner ground and the sensor lead",
+      "Check manifold and inlet gas pressure with all burners lit; check burner alignment and carryover",
+      "Reset by removing the W call or cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Sunline DCG IOM p.55 / DUQ024-060 IOM p.28 'Ignition Control Board Flash Codes' ('5 Flashes - Lock Out From Too Many Flame Losses')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 6 flashes",
+     "meaning": "6 Flashes - High Temperature Switch Open",
+     "likelyCauses": [
+      "High-limit switch open: low airflow across the heat exchanger (dirty filters, blower or belt problem, closed dampers, high static), overfired burners, or a failed limit",
+      "Blower not running during heat (blower delay, motor)"
+     ],
+     "checks": [
+      "Check filters, blower operation, belt, and temperature rise against the nameplate range",
+      "Check manifold pressure / firing rate; ohm the limit switch when cool",
+      "Repeated limit trips also lock out the UCB with 9 flashes - clear both after repair (field practice)"
+     ],
+     "severity": "warning",
+     "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('6 Flashes - High Temperature Switch Open')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 7 flashes",
+     "meaning": "7 Flashes - Rollout Switch Open",
+     "likelyCauses": [
+      "Flame rollout switch tripped (manual reset): restricted heat exchanger or flue, cracked heat exchanger, blocked burners, inducer/venting problem, delayed ignition",
+      "Open rollout wiring"
+     ],
+     "checks": [
+      "Do not simply reset: inspect the heat exchanger, burners and flue for the cause of rollout before returning the unit to service",
+      "Check for delayed ignition (gas pressure, igniter position, burner carryover)",
+      "Reset the rollout switch(es) and ohm the circuit after the cause is corrected"
+     ],
+     "severity": "lockout",
+     "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('7 Flashes - Rollout Switch Open')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 8 flashes",
+     "meaning": "8 Flashes - Flame Present With Gas Off",
+     "likelyCauses": [
+      "Gas valve leaking through or stuck open",
+      "Flame-sense circuit falsely detecting flame (shorted sensor lead, moisture, board fault)"
+     ],
+     "checks": [
+      "Close the manual gas valve and see if the code clears; check for burner flame with the valve de-energized - replace a leaking gas valve",
+      "Inspect the flame sensor lead for shorts to ground and moisture on the board"
+     ],
+     "severity": "shutdown",
+     "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('8 Flashes - Flame Present With Gas Off')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 9 flashes",
+     "meaning": "9 Flashes - Gas Valve Stuck OFF or ON",
+     "likelyCauses": [
+      "ICB sees the gas valve output state disagreeing with the flame / valve feedback: failed gas valve coil, open valve wiring, or a valve stuck open",
+      "Low 24 V at the valve or a failed ICB relay"
+     ],
+     "checks": [
+      "Measure 24 VAC at the gas valve terminals during the trial for ignition; check inlet/manifold pressure",
+      "Check the valve wiring and coil resistance; replace the valve if it fails to open or close"
+     ],
+     "severity": "lockout",
+     "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('9 Flashes - Gas Valve Stuck OFF or ON')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ICB 10 flashes",
+     "meaning": "10 Flashes - Flame Sense Circuit Failure",
+     "likelyCauses": [
+      "Internal ICB flame-sense circuit fault",
+      "Shorted / grounded flame sensor lead"
+     ],
+     "checks": [
+      "Inspect the flame sensor and lead for shorts to ground; cycle power",
+      "If the code returns with a good sensor and lead, replace the ignition control board"
+     ],
+     "severity": "shutdown",
+     "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('10 Flashes - Flame Sense Circuit Failure')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: C1 Locked Out Due to High Pressure",
+     "meaning": "Critical alarm - C1 Locked Out Due to High Pressure: three HPS1 trips within two hours (same alarm exists as C2/C3/C4 for HPS2/HPS3/HPS4)",
+     "likelyCauses": [
+      "High pressure switch trips on the named compressor: dirty or blocked condenser coil, condenser fan / ECM fan failure, overcharge, non-condensables, liquid-line restriction, high ambient recirculation",
+      "Intermittent HPS wiring or a weak switch"
+     ],
+     "checks": [
+      "Open Details > Alarms (or the SE-MOBILE / MAP view) and note which circuit and how many trips",
+      "Check head pressure against the HPS rating, condenser coil, condenser fan operation and charge",
+      "Hard lockouts are cleared by cycling power or via the ResetLO parameter (see diagnostic tips); York states high pressure lockout occurs after 3 trips in 2 hours"
+     ],
+     "severity": "lockout",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C1 Locked Out Due to High Pressure - Three HPS1 trips within two hours' ... C4/HPS4); York 'Alarm Reset / Hard Lockout Ver 3.3 or later' (high pressure lockout after 3 trips in 2 hours)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: C2 Locked Out Due to High Pressure",
+     "meaning": "Critical alarm - C2 Locked Out Due to High Pressure: three HPS2 trips within two hours",
+     "likelyCauses": [
+      "High pressure switch trips on compressor 2: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction",
+      "Intermittent HPS2 wiring or a weak switch"
+     ],
+     "checks": [
+      "Check circuit 2 head pressure, condenser coil and fan, and charge",
+      "Clear the hard lockout by cycling power or via ResetLO after repair"
+     ],
+     "severity": "lockout",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C2 Locked Out Due to High Pressure - Three HPS2 trips within two hours')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: C1 Locked Out Due to Low Pressure",
+     "meaning": "Critical alarm - C1 Locked Out Due to Low Pressure: three LPS1 trips within one hour (same alarm exists as C2/C3/C4 for LPS2/LPS3/LPS4)",
+     "likelyCauses": [
+      "Low pressure switch trips on the named compressor: low charge / leak, restricted filter drier or TXV, low indoor airflow, iced evaporator, low ambient operation without low-ambient control",
+      "Intermittent LPS wiring or a weak switch"
+     ],
+     "checks": [
+      "Check suction pressure and superheat/subcooling on the named circuit; look for leaks",
+      "Check indoor airflow (filters, blower, coil) and evaporator icing",
+      "York states low pressure lockout occurs after 3 trips in 1 hour; clear by cycling power or via ResetLO after repair"
+     ],
+     "severity": "lockout",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C1 Locked Out Due to Low Pressure - Three LPS1 trips within one hour' ... C4/LPS4); York 'Alarm Reset / Hard Lockout Ver 3.3 or later'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: C2 Locked Out Due to Low Pressure",
+     "meaning": "Critical alarm - C2 Locked Out Due to Low Pressure: three LPS2 trips within one hour",
+     "likelyCauses": [
+      "Low pressure switch trips on compressor 2: low charge / leak, restriction, low airflow, iced evaporator, low ambient",
+      "Intermittent LPS2 wiring or a weak switch"
+     ],
+     "checks": [
+      "Check circuit 2 suction pressure, superheat/subcooling and airflow",
+      "Clear the hard lockout by cycling power or via ResetLO after repair"
+     ],
+     "severity": "lockout",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C2 Locked Out Due to Low Pressure - Three LPS2 trips within one hour')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: Coil Freeze Lockout",
+     "meaning": "Compressor locked out on evaporator coil freeze: York states coil freeze lockout occurs after 3 trips in 2 hours (the SE sequence takes protective action when an evaporator coil sensor EC1-EC4 reads below 42 F; freezestat alarm documented under Unit protection)",
+     "likelyCauses": [
+      "Evaporator coil running too cold: low indoor airflow (filters, blower, VFD/IntelliSpeed setting, high static), low charge, low return-air temperature or economizer bringing in cold air with cooling on",
+      "Failed or miswired evaporator coil temperature sensor (EC1-EC4) or freezestat"
+     ],
+     "checks": [
+      "Read the evaporator coil sensor values in Details/Summary > Sensors and compare with the actual coil temperature; check sensor resistance if the reading is wrong",
+      "Check filters, blower operation and airflow setting; verify charge by superheat/subcooling",
+      "Clear the hard lockout by cycling power or via ResetLO after the coil has thawed and the cause is corrected"
+     ],
+     "severity": "lockout",
+     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Coil freeze lockout occurs after 3 trips in 2 hours'); Smart Equipment Controls Sequence of Operation LIT-12011950 'Unit protection - Evaporator coil freeze condition' and 'Freezestat alarm'",
+     "evidence": "manufacturer_doc",
+     "notes": "The exact alarm string shown on the display was not visible in the sources; the lockout rule and the coil-freeze protection are from the manufacturer documents."
+    },
+    {
+     "code": "SE: Limit Switch Lockout (LS1/LS2/LS3)",
+     "meaning": "Heat locked out on limit switch trips: York states limit switch lockout occurs after 3 trips in 1 hour (three LS1, LS2 or LS3 trips within one hour trigger a limit switch lockout)",
+     "likelyCauses": [
+      "High-limit trips on the named heat section: low airflow across the heat exchanger (dirty filters, blower / VFD setting, closed dampers, high static), overfiring, blower delay or failure",
+      "Failed or loose limit switch wiring"
+     ],
+     "checks": [
+      "Check filters, blower and heating airflow setting; measure temperature rise against the nameplate range",
+      "Check manifold pressure / firing rate; ohm the limit switch when cool",
+      "Clear the hard lockout by cycling power or via ResetLO after repair"
+     ],
+     "severity": "lockout",
+     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Limit switch lockout occurs after 3 trips in 1 hour'); York Smart Equipment Control Troubleshooting Guide 6138895-UTG (three LS1, LS2 or LS3 trips within one hour)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: Air Pressure Switch (APS) Lockout",
+     "meaning": "Heat locked out on air (pressure) switch trips: York states air pressure switch (APS) lockout occurs after 3 trips in 1.5 hours (three APS trips within 1.5 hours triggers a lockout alarm)",
+     "likelyCauses": [
+      "Combustion air pressure switch not proving with the inducer running: blocked flue / vent, blocked or wet switch tubing, weak inducer, failed switch, wind",
+      "Switch closing intermittently during the heat cycle"
+     ],
+     "checks": [
+      "Measure pressure-switch draw with a manometer against the switch rating; inspect the flue, vent and switch tubing",
+      "Check the inducer motor and wheel; check the switch contacts",
+      "Clear the hard lockout by cycling power or via ResetLO after repair"
+     ],
+     "severity": "lockout",
+     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Air pressure switch (APS) lockout occurs after 3 trips in 1.5 hours'); York Smart Equipment Control Troubleshooting Guide 6138895-UTG",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: Unit Shutdown Due to Smoke",
+     "meaning": "Critical alarm - Unit Shutdown Due to Smoke (the SD/24V shutdown input opened: smoke detector, condensate overflow and/or user shutdown relay wired in series)",
+     "likelyCauses": [
+      "Duct smoke detector tripped (smoke, dirty detector, or a detector needing reset)",
+      "Condensate overflow switch or a field shutdown contact in the same series loop opened; open wiring in the SD loop"
+     ],
+     "checks": [
+      "Check the smoke detector status and reset it if tripped after the cause is cleared; check the condensate pan / overflow switch",
+      "Verify 24 VAC returns to the board shutdown input through the series loop (SD-24 is the 24 VAC hot out for smoke detector, condensate overflow and/or user shutdown relay switching in series)",
+      "The unit restarts when the input closes; power cycle if it remains latched (field practice)"
+     ],
+     "severity": "shutdown",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 alarm list ('Unit Shutdown Due to Smoke'); Johnson Controls J ZB Series IOM 'Smart Equipment Unit Control Board' (SD-24 description); LIT-12011950 'Unit protection - Condensate Overflow Switch'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE: Economizer board Offline",
+     "meaning": "Service alarm - Economizer board goes from Online to Offline (SA bus communication with the economizer controller lost)",
+     "likelyCauses": [
+      "SA bus wiring / connector fault between the UCB and the SE-ECO economizer controller",
+      "Economizer controller unpowered or failed; wrong SA bus address / duplicate device"
+     ],
+     "checks": [
+      "Check the green SA Bus LED on the UCB (flashing = communicating with SA bus devices; steady = awaiting communication)",
+      "Check SA bus cable, connectors and 24 V at the economizer board; confirm the board shows as Online under the device/commissioning menu",
+      "Cycle power and re-run device discovery if the board was replaced (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Service alarms ('Economizer board goes from Online to Offline'); Smart Equipment Quick Start Guide (SA Bus LED behavior)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Air temperature sensor failure",
+     "meaning": "Title 24 economizer FDD - Air temperature sensor failure/fault: 'Problem with one of the air temperature sensors. Check Outdoor Air, Return Air, or Supply Air sensors.'",
+     "likelyCauses": [
+      "Open, shorted or out-of-range OAT, RAT or SAT sensor; damaged sensor lead",
+      "Sensor unplugged after service"
+     ],
+     "checks": [
+      "Read OAT/RAT/SAT in the controller sensor menu; a reading at the range limit points to the failed sensor",
+      "Ohm the suspect 10k thermistor against a thermometer reading and check its wiring/connector"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors with Fault Code Capability instructions 24-10094-76 (same code text)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Not economizing when it should",
+     "meaning": "Title 24 economizer FDD - Not economizing when it should: 'The economizer is not using outdoor air when it should.'",
+     "likelyCauses": [
+      "Damper actuator not opening (failed actuator, linkage, no signal), economizer disabled or changeover setpoint too low",
+      "Failed OAT / enthalpy sensor making the controller think outdoor air is unsuitable"
+     ],
+     "checks": [
+      "Compare OAT/RAT readings and the changeover setting with actual conditions; command the damper open from the controller and watch it move",
+      "Check actuator power and signal, linkage and damper blades"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Economizing when it should not",
+     "meaning": "Title 24 economizer FDD - Economizing when it should not (economizer using outdoor air when conditions do not permit)",
+     "likelyCauses": [
+      "Damper stuck open or actuator failed open; changeover setpoint too high",
+      "Failed OAT / enthalpy sensor reading falsely cool"
+     ],
+     "checks": [
+      "Check the damper position against the commanded position; check the actuator and linkage",
+      "Verify OAT/enthalpy sensor readings and the changeover setting"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes ('Economizing when it should not')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Damper not modulating",
+     "meaning": "Title 24 economizer FDD - Damper not modulating: 'The economizer damper is not able to modulate properly. Check damper, linkage to actuator, or the actuator.'",
+     "likelyCauses": [
+      "Failed or unpowered actuator, broken or slipping linkage, damper blades seized or obstructed",
+      "Loss of feedback / control signal to the actuator"
+     ],
+     "checks": [
+      "Command the damper through its range from the controller and watch the blades; check actuator power, signal and feedback",
+      "Free and lubricate the damper and linkage; replace the actuator if it does not track the signal"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Excess outdoor air",
+     "meaning": "Title 24 economizer FDD - Excess outdoor air: 'The economizer is allowing excess outdoor air inside.'",
+     "likelyCauses": [
+      "Damper not closing to the minimum position (actuator, linkage, minimum position set too high)",
+      "Damper blades or seals damaged; return damper stuck"
+     ],
+     "checks": [
+      "Check the minimum position setting and the damper's actual closed position; inspect blades and seals",
+      "Check the actuator and linkage for full travel to the closed stop"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SE FDD: Recover Charge",
+     "meaning": "Refrigeration circuit FDD - Recover Charge: higher than expected subcooling indicates the system may have more refrigerant charge than expected; consider recovering refrigerant",
+     "likelyCauses": [
+      "Circuit overcharged (charged by weight without accounting for line length, or topped off on a hot day)",
+      "Condenser airflow restriction or a failed pressure/temperature sensor giving a false subcooling reading"
+     ],
+     "checks": [
+      "Verify subcooling with gauges and a clamp thermometer against the unit charging chart before recovering refrigerant",
+      "Check condenser coil and fan; check the FDD board's pressure and temperature sensors if the calculated subcooling disagrees with gauges"
+     ],
+     "severity": "warning",
+     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 3 refrigeration circuit FDDs ('Recover Charge' - higher than expected subcooling)",
+     "evidence": "manufacturer_doc",
+     "notes": "Only this one Table 3 entry was readable in search results; the FDD board reports other charge/efficiency/capacity diagnostics that are not transcribed here."
+    },
+    {
+     "code": "Intelli-Comfort alarm 1",
+     "meaning": "Compr 1 locked out due to excessive high pressure switch trips",
+     "likelyCauses": [
+      "Repeated HPS1 trips: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction",
+      "Intermittent HPS1 wiring"
+     ],
+     "checks": [
+      "Check circuit 1 head pressure, condenser coil and fan, and charge",
+      "Read the alarm on the Intelli-Comfort display / BAS (BACnet values above 128: subtract 128 to get the alarm code); clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list (codes 1-25) as reproduced in HVAC-Talk 'York Bacnet Alarm Values' (2012) - alarm 1",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 2",
+     "meaning": "Compr 2 locked out due to excessive high pressure switch trips",
+     "likelyCauses": [
+      "Repeated HPS2 trips: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction"
+     ],
+     "checks": [
+      "Check circuit 2 head pressure, condenser coil and fan, and charge; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 2",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 3",
+     "meaning": "Compr 1 locked out due to excessive low pressure switch trips",
+     "likelyCauses": [
+      "Repeated LPS1 trips: low charge / leak, restriction, low airflow, iced coil, low ambient"
+     ],
+     "checks": [
+      "Check circuit 1 suction pressure, superheat/subcooling, airflow and leaks; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 3",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 4",
+     "meaning": "Compr 2 locked out due to excessive low pressure switch trips",
+     "likelyCauses": [
+      "Repeated LPS2 trips: low charge / leak, restriction, low airflow, iced coil, low ambient"
+     ],
+     "checks": [
+      "Check circuit 2 suction pressure, superheat/subcooling, airflow and leaks; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 4",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 5",
+     "meaning": "Compr 1 locked out due to excessive freezestat trips",
+     "likelyCauses": [
+      "Evaporator circuit 1 running too cold: low airflow, low charge, low return-air temperature",
+      "Failed or miswired freezestat"
+     ],
+     "checks": [
+      "Inspect the coil for ice; check filters, blower and charge; ohm the freezestat with the coil thawed; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 5",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 6",
+     "meaning": "Compr 2 locked out due to excessive freezestat trips",
+     "likelyCauses": [
+      "Evaporator circuit 2 running too cold: low airflow, low charge, low return-air temperature",
+      "Failed or miswired freezestat"
+     ],
+     "checks": [
+      "Inspect the coil for ice; check filters, blower and charge; ohm the freezestat with the coil thawed; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 6",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 7",
+     "meaning": "Heating locked out due to excessive limit switch trips",
+     "likelyCauses": [
+      "Low airflow across the heat exchanger (filters, blower, dampers, static), overfiring, blower failure",
+      "Failed limit switch"
+     ],
+     "checks": [
+      "Check filters, blower and temperature rise; check manifold pressure; ohm the limit when cool; clear by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 7",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 8",
+     "meaning": "Microelectronics failure, control operating on defaults",
+     "likelyCauses": [
+      "Stored setpoints / configuration corrupted; the control has reverted to factory defaults",
+      "Power event or failing board memory"
+     ],
+     "checks": [
+      "Re-enter the unit configuration and setpoints; cycle power and see whether the alarm returns",
+      "Replace the control if it repeats (field practice)"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 8",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 9",
+     "meaning": "Microelectronics failure, control shut down due to a fatal fault",
+     "likelyCauses": [
+      "Internal control board failure"
+     ],
+     "checks": [
+      "Cycle power once; if the fatal fault returns, replace the control board (field practice)"
+     ],
+     "severity": "shutdown",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 9",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 10",
+     "meaning": "Control locked out due to fan overload trips",
+     "likelyCauses": [
+      "Supply fan motor overload tripped: high motor amps, wrong pulley setting, bearings, failed overload",
+      "Open overload wiring to the control"
+     ],
+     "checks": [
+      "Check the fan motor overload, motor amps against nameplate and external static; reset and clear the lockout by cycling power after repair (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 10",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 11",
+     "meaning": "Control locked out due to low 24 vac",
+     "likelyCauses": [
+      "Low control voltage: transformer undersized or failing, overloaded 24 V circuit, low line voltage, loose connections, high-resistance contactor coils"
+     ],
+     "checks": [
+      "Measure 24 VAC at the control with contactors energized; check line voltage, transformer tap and total 24 V load"
+     ],
+     "severity": "lockout",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 11 (alarms 12-18 are listed as not used on Intelli-Comfort)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 19",
+     "meaning": "Space temperature sensor has failed open",
+     "likelyCauses": [
+      "Open space sensor or sensor wiring; sensor not installed but enabled in configuration"
+     ],
+     "checks": [
+      "Ohm the space sensor and its wiring at the control; check the configuration if no space sensor is used"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 19",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 20",
+     "meaning": "Supply air temperature sensor has failed open",
+     "likelyCauses": [
+      "Open supply air temperature sensor or wiring; sensor unplugged"
+     ],
+     "checks": [
+      "Ohm the SAT sensor against a thermometer reading and check its plug and wiring to the control"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 20",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 21",
+     "meaning": "Return air temperature sensor has failed open",
+     "likelyCauses": [
+      "Open return air temperature sensor or wiring; sensor unplugged"
+     ],
+     "checks": [
+      "Ohm the RAT sensor against a thermometer reading and check its plug and wiring to the control"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 21",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 22",
+     "meaning": "Outside air temperature sensor has failed open",
+     "likelyCauses": [
+      "Open outdoor air temperature sensor or wiring (weather-exposed lead damage), sensor unplugged"
+     ],
+     "checks": [
+      "Ohm the OAT sensor against a thermometer reading and check its lead and plug; economizer and low-ambient functions depend on it"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 22",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 23",
+     "meaning": "Dirty filter switch tripped",
+     "likelyCauses": [
+      "Filter pressure drop above the field-installed dirty filter switch setpoint (loaded filters)",
+      "Switch setpoint too low, tubing reversed or blocked, or switch fitted but filters removed"
+     ],
+     "checks": [
+      "Replace the filters and confirm the alarm clears; check the switch setpoint and tubing against the filter pressure drop with a manometer"
+     ],
+     "severity": "info",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 23",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Intelli-Comfort alarm 24",
+     "meaning": "Air proving switch open",
+     "likelyCauses": [
+      "Supply fan not producing airflow (motor, belt, VFD), air-proving switch tubing blocked or reversed, or the switch failed",
+      "Switch enabled in configuration but not installed"
+     ],
+     "checks": [
+      "Confirm the supply fan runs and moves air; check the air-proving switch tubing and setpoint with a manometer; check the configuration if no switch is fitted"
+     ],
+     "severity": "warning",
+     "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 24 (alarm 25 was truncated in the source and is not included)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Millennium Elite alarm 1",
+     "meaning": "Compressor number one locked out on High Pressure Control",
+     "likelyCauses": [
+      "HPS1 trips on the 25-40 t Millennium: dirty or blocked condenser coil, condenser fan failure, overcharge, non-condensables, restriction",
+      "Intermittent HPS1 wiring"
+     ],
+     "checks": [
+      "Check circuit 1 head pressure, condenser coil and fans, and charge",
+      "Read the alarm through the Simplicity Elite display / Millennium interface; clear per the manual's Troubleshooting a Millennium section after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 1",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 2",
+     "meaning": "Compressor number two locked out on High Pressure Control",
+     "likelyCauses": [
+      "HPS2 trips: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction"
+     ],
+     "checks": [
+      "Check circuit 2 head pressure, condenser coil and fans, and charge; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 2",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 3",
+     "meaning": "Compressor number three locked out on High Pressure Control",
+     "likelyCauses": [
+      "HPS3 trips: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction"
+     ],
+     "checks": [
+      "Check circuit 3 head pressure, condenser coil and fans, and charge; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 4",
+     "meaning": "Compressor number four locked out on High Pressure Control",
+     "likelyCauses": [
+      "HPS4 trips: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction"
+     ],
+     "checks": [
+      "Check circuit 4 head pressure, condenser coil and fans, and charge; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 4",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 5",
+     "meaning": "Compressor number one locked out on Low Pressure Control",
+     "likelyCauses": [
+      "LPS1 trips: low charge / leak, restriction, low airflow, iced evaporator, low ambient"
+     ],
+     "checks": [
+      "Check circuit 1 suction pressure, superheat/subcooling, airflow and leaks; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 5",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 6",
+     "meaning": "Compressor number two locked out on Low Pressure Control",
+     "likelyCauses": [
+      "LPS2 trips: low charge / leak, restriction, low airflow, iced evaporator, low ambient"
+     ],
+     "checks": [
+      "Check circuit 2 suction pressure, superheat/subcooling, airflow and leaks; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 6",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 7",
+     "meaning": "Compressor number three locked out on Low Pressure Control",
+     "likelyCauses": [
+      "LPS3 trips: low charge / leak, restriction, low airflow, iced evaporator, low ambient"
+     ],
+     "checks": [
+      "Check circuit 3 suction pressure, superheat/subcooling, airflow and leaks; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 7",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Millennium Elite alarm 8",
+     "meaning": "Compressor number four locked out on Low Pressure Control",
+     "likelyCauses": [
+      "LPS4 trips: low charge / leak, restriction, low airflow, iced evaporator, low ambient"
+     ],
+     "checks": [
+      "Check circuit 4 suction pressure, superheat/subcooling, airflow and leaks; clear after repair"
+     ],
+     "severity": "lockout",
+     "source": "York Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS Table 13 'Alarm Default Codes' (p.42) - code 8 (Table 13 continues to code 43 - sensor failures for SAT/RAT/OAT/IAQ/space/RH and duct static / building pressure - which were not readable and are not transcribed)",
+     "evidence": "manufacturer_doc"
     }
    ],
    "ledPatterns": [
@@ -730,13 +1671,92 @@
     {
      "pattern": "Heartbeat",
      "meaning": "Normal operation"
+    },
+    {
+     "pattern": "UCB LED: steady on",
+     "meaning": "Control Failure - Replace Control (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Verify 24 VAC and the board fuse, cycle power once, then replace the board if it stays steady"
+     ]
+    },
+    {
+     "pattern": "UCB LED: heartbeat (1 s on / 1 s off)",
+     "meaning": "Normal Operation (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "No fault stored; fault codes are distinguished by a fast ~200 ms on / 200 ms off flash counted between pauses"
+     ]
+    },
+    {
+     "pattern": "UCB LED: off",
+     "meaning": "No Power or Control Failure (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Check 24 VAC at the board, transformer secondary and board fuse; replace the board if powered with no LED"
+     ]
+    },
+    {
+     "pattern": "UCB LED: N fast flashes then pause",
+     "meaning": "Fault code N - see the '1 flash' through '14 flashes' entries (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Count flashes between pauses; on original Simplicity boards press LAST ERROR once to replay the last five codes (most recent first)"
+     ]
+    },
+    {
+     "pattern": "ICB LED: heartbeat",
+     "meaning": "Normal Operation (ignition control board on gas units)",
+     "checks": [
+      "If the UCB shows 9 flashes but the ICB heartbeats, look at the limit / rollout switches and the heat-section jumper plug"
+     ]
+    },
+    {
+     "pattern": "ICB LED: N flashes",
+     "meaning": "Ignition fault N - see the 'ICB 1 flash' through 'ICB 10 flashes' entries",
+     "checks": [
+      "Read the ICB LED whenever the UCB shows 9 flashes"
+     ]
+    },
+    {
+     "pattern": "SE UCB green POWER LED: on",
+     "meaning": "24 VAC present at the C and 24V terminals (display backlight also lit) - Simplicity SE / Smart Equipment UCB",
+     "checks": [
+      "If off, check 24 VAC at the board C/24V terminals, transformer and fuse"
+     ]
+    },
+    {
+     "pattern": "SE UCB red FAULT LED: flashing during the 90-120 s start-up, then off",
+     "meaning": "Normal start-up sequence; the red fault LED lights, goes off briefly, flashes throughout start-up, then stops flashing and turns off - Simplicity SE / Smart Equipment UCB",
+     "checks": [
+      "If it keeps flashing after start-up, read the alarms on the display (Home screen shows up to 5 active alarms) or via SE-MOBILE / MAP Gateway"
+     ]
+    },
+    {
+     "pattern": "SE UCB green SA BUS LED: flashing",
+     "meaning": "UCB has established communication with SA bus devices (economizer, FDD, 4-stage boards) - Simplicity SE / Smart Equipment UCB",
+     "checks": [
+      "Normal; a device that still shows Offline has an addressing or wiring problem on its own leg"
+     ]
+    },
+    {
+     "pattern": "SE UCB green SA BUS LED: steady on",
+     "meaning": "UCB has not established communication and is awaiting communication from SA bus devices (about 15 s after power-up) - Simplicity SE / Smart Equipment UCB",
+     "checks": [
+      "Check SA bus wiring, connectors and power to the economizer / FDD / 4-stage boards; expect the 'Economizer board Offline' type service alarm"
+     ]
     }
    ],
    "diagnosticTips": [
     "The flash-code LED is on the unit control board in the control compartment; codes are counted as flashes between pauses.",
     "Original Simplicity boards: press and release the LAST ERROR button once (within 5 s) and the LED replays the last five stored fault codes, most recent first; history is also readable over the Modbus/BAS port.",
     "The complete flash-code table (and the separate Ignition Control Board flash codes on gas units) is printed in the unit installation manual, e.g. ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes / Ignition Control Board Flash Codes', and on the label inside the control box.",
-    "Most lockouts clear by removing the thermostat call (or cycling 24 V control power) once the cause is corrected."
+    "Most lockouts clear by removing the thermostat call (or cycling 24 V control power) once the cause is corrected.",
+    "Original Simplicity and Simplicity LITE boards: the single flash-code LED is on the UCB in the control compartment. Normal operation is a 1 s on / 1 s off heartbeat; fault codes flash fast (about 200 ms on / 200 ms off) and are counted between pauses. The same numbering (2 = ASCD ... 14 = EEPROM) is used on original Simplicity (Sunline 2000 / Predator, BP/DM IOMs) and Simplicity LITE (ZE/ZF/ZJ Sun Pro IOMs); 3-5 t single-compressor LITE tables omit the HPS2/LPS2/FS2 and fan-overload rows.",
+    "Original Simplicity boards (Sunline 2000 / Predator): press and release the LAST ERROR button once within five seconds and the LED flashes the last five stored codes, most recent first; press and release it twice within five seconds to clear the fault history. Fault history is also available over the Modbus/BAS port (York Wireless monitoring / BAS).",
+    "Gas units carry a separate ignition control board (ICB) with its own LED; a UCB 9-flash code means go read the ICB LED (2 = pressure switch open, 3 = pressure switch closed, 5 = flame-loss lockout, 6 = limit open, 7 = rollout open, 8 = flame with gas off, 9 = gas valve, 10 = flame-sense circuit).",
+    "Most Simplicity / LITE lockouts clear by removing the thermostat call (Y or W) or cycling 24 V control power after the cause is corrected; York Central Tech Talk notes the flash code reports the symptom, not the root cause.",
+    "Simplicity SE / Smart Equipment UCB: the board has a 2-line LCD, joystick, ENTER and CANCEL buttons; the Home screen shows the unit mode and up to 5 active alarms. From Home, joystick down to reach the Status / Alarms page; repeatedly pressing CANCEL returns to the Status/Alarms screen. Alarms are grouped as critical (lockouts / shutdowns), service priority and service. The same alarms are available through a network sensor, thermostat X output, the MAP Gateway browser interface, SE-MOBILE (Bluetooth app on newer boards) and BACnet/Modbus/N2 integration.",
+    "Simplicity SE hard-lockout reset (firmware 3.3-3.4, York 'Alarm Reset / Hard Lockout' sheet): from IDLE joystick down to Summary > ENTER, down to Sensors > ENTER, down to Unit > ENTER, down to ResetLO > ENTER, move the joystick right until OFF changes to ON, press ENTER and wait for it to return to OFF. Lockouts can also be broken by cycling power. Lockout rules: high pressure 3 trips in 2 h, low pressure 3 trips in 1 h, coil freeze 3 trips in 2 h, limit switch 3 trips in 1 h, air pressure switch (APS) 3 trips in 1.5 h. On firmware 4.0 use the Board Navigation and New Board Setup 4.0 sheet (York Tech Corner) for the menu path.",
+    "Simplicity SE start-up: the red FAULT LED flashes throughout the 90-120 s start-up and then turns off; the green SA BUS LED flashes once the UCB is talking to its SA bus boards. A FAULT LED still flashing after start-up means an alarm is active - read it on the display.",
+    "Simplicity SE economizer / Title 24 FDD faults (air temperature sensor failure, not economizing when it should, economizing when it should not, damper not modulating, excess outdoor air) are reported on the local LCD, on an NS-series network sensor with fault-code display, via the thermostat X terminal, or through the MAP Gateway.",
+    "Intelli-Comfort / Simplicity Elite (D-series 15-25 t and Millennium 25-40 t): alarms are numbered and shown on the controller display or over BACnet/Modbus; on BACnet, alarm values above 128 are the alarm code plus 128 (subtract 128). Millennium Simplicity Elite Table 13 runs to code 43; only codes 1-8 were readable in this pass."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -751,13 +1771,161 @@
     {
      "title": "York Simplicity Controls catalog page (UPGnet)",
      "url": "https://www.upgnet.com"
+    },
+    {
+     "title": "York ZE036-ZE060 (3-5 t R-410A) Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes' and 'Ignition Control Board Flash Codes' (p.66)",
+     "docId": "5188235-YIM-B-1016 (ManualsLib 1468524 p.66)",
+     "url": "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66"
+    },
+    {
+     "title": "York ZE036-ZE060 Installation Manual (PDF mirror)",
+     "docId": "5188235-YIM-B-1016",
+     "url": "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf"
+    },
+    {
+     "title": "York ZJ078-ZJ150 R-410A Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60; two-compressor rows HPS2/LPS2/FS2, fan overload, OFF)",
+     "docId": "ZJ078-ZJ150 IOM (ManualsLib 1445006 p.60)",
+     "url": "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60"
+    },
+    {
+     "title": "York ZF150 Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60)",
+     "docId": "ZF078-ZF150 IOM (ManualsLib 3265815 p.60)",
+     "url": "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60"
+    },
+    {
+     "title": "Johnson Controls TempMaster ZD Series Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes; Ignition Control Board Flash Codes' (p.65)",
+     "docId": "ManualsLib 1652427 p.65",
+     "url": "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65"
+    },
+    {
+     "title": "York Predator BP120 Installation Manual - 'Unit Control Board Flash Codes' (p.40; original Simplicity table, codes 1-9)",
+     "docId": "ManualsLib 198078 p.40",
+     "url": "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40"
+    },
+    {
+     "title": "York Predator BP078 Installation Manual YIM-C - 'Unit Control Board Flash Codes' (p.49)",
+     "docId": "ManualsLib 1224625 p.49",
+     "url": "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49"
+    },
+    {
+     "title": "York DM090 Installation Manual YIM-B - 'Predator Flash Codes / Unit Control Board Flash Codes' (p.50) and 'Ignition Control Flash Codes' (p.51)",
+     "docId": "ManualsLib 197965 p.50-51",
+     "url": "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50"
+    },
+    {
+     "title": "York Sunline DCG Series Installation Manual YIM-B - 'Ignition Control Board Flash Codes' (p.55)",
+     "docId": "ManualsLib 1706953 p.55",
+     "url": "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55"
+    },
+    {
+     "title": "York International DUQ024-060 Installation Manual - 'Ignition Control Board Flash Codes' (p.28)",
+     "docId": "ManualsLib 892544 p.28",
+     "url": "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28"
+    },
+    {
+     "title": "York Central Tech Talk - 'Simplicity Diagnostics Flash Codes' (2013; FC 9 through FC 14 explained)",
+     "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/"
+    },
+    {
+     "title": "Simplicity SE (SMART Equipment) Controls Technical Guide - Table 2 Title 24 FDD codes, Table 3 refrigeration circuit FDDs",
+     "docId": "5127914-UTG-A-0515",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content"
+    },
+    {
+     "title": "Smart Equipment Control Technical Bulletin - Alarm appendix (critical / service priority / service alarms), Active alarms at start-up",
+     "docId": "LIT-12011998-UTB-B-0418 / 5.0",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0"
+    },
+    {
+     "title": "Smart Equipment Controls Sequence of Operation Technical Bulletin - Unit protection (HPS, LPS, Freezestat alarm, Condensate Overflow Switch), Alarms",
+     "docId": "LIT-12011950 5.0",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms"
+    },
+    {
+     "title": "York Smart Equipment Control Troubleshooting Guide",
+     "docId": "6138895-UTG-A-0721",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
+    },
+    {
+     "title": "York Tech Corner - 'Alarm Reset / Hard Lockout Ver 3.3 or later' (lockout trip counts and ResetLO procedure)",
+     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
+    },
+    {
+     "title": "US Air Conditioning Distributors - 'Performing a relearn or reset lockouts on a Simplicity Smart Equipment board'",
+     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
+    },
+    {
+     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.2) - start-up LED sequence, board navigation",
+     "url": "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf"
+    },
+    {
+     "title": "Simplicity Smart Equipment (SSE) Quick Start Guide",
+     "docId": "1136326-USG-A-0414",
+     "url": "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf"
+    },
+    {
+     "title": "York Tech Corner - 'Board Navigation and New Board Setup 4.0'",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf"
+    },
+    {
+     "title": "York Millennium Simplicity Elite Series (25/30/40 t) Technical Application and Programming Manual - Table 13 'Alarm Default Codes' (p.42)",
+     "docId": "351579-YTS-B-0608 / 351579-YTS-C-0111 (ManualsLib 1800932 p.42)",
+     "url": "https://www.manualslib.com/manual/1800932/York-Millenium-Simplicity-Elite-Series.html?page=42"
+    },
+    {
+     "title": "Johnson Controls NS Series Network Sensors with Fault Code Capability Installation Instructions (Title 24 economizer FDD code display)",
+     "docId": "24-10094-76",
+     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content"
+    },
+    {
+     "title": "HVAC-Talk thread 'York Bacnet Alarm Values' (2012) - reproduces the York Intelli-Comfort alarm list 1-25 (secondary)",
+     "url": "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values"
+    },
+    {
+     "title": "HVAC-Talk thread 'York Rooftop Alarm Codes' (J10ZHE36 flashing 3 = HP#1) (secondary)",
+     "url": "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/"
+    },
+    {
+     "title": "GHAC Knowledgebase - 'Predator - Flashing Code 7' (secondary)",
+     "url": "https://ghac.makekb.com/entry/557/"
+    },
+    {
+     "title": "JustAnswer - York rooftop flash code 10 / FS1 flashing threads (secondary)",
+     "url": "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
     }
    ],
    "confidence": "medium",
    "sources": [
     "York ZE036 Installation Manual 5188235-YIM-B-1016 p.66 (ManualsLib 1468524)",
     "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
-    "JustAnswer: York rooftop unit flash code 10 / flash code 9 threads (secondary)"
+    "JustAnswer: York rooftop unit flash code 10 / flash code 9 threads (secondary)",
+    "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66",
+    "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf",
+    "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60",
+    "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60",
+    "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65",
+    "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40",
+    "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49",
+    "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50",
+    "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55",
+    "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28",
+    "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
+    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
+    "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf",
+    "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf",
+    "https://www.manualslib.com/manual/1800932/York-Millenium-Simplicity-Elite-Series.html?page=42",
+    "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content",
+    "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values",
+    "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/",
+    "https://ghac.makekb.com/entry/557/",
+    "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
    ]
   },
   {

@@ -1,0 +1,2055 @@
+[
+  {
+    "id": "R-11",
+    "aliases": [
+      "R11",
+      "11",
+      "CFC-11",
+      "Freon 11",
+      "trichlorofluoromethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 4750,
+      "ar5": 4660
+    },
+    "glideF": 0,
+    "lubricant": "MO",
+    "applications": [
+      "Obsolete low-pressure centrifugal chillers (pre-1996)"
+    ],
+    "serviceNotes": [
+      "CFC — production banned since 1996; only reclaimed stock. Most R-11 chillers have been retrofitted to R-123 or replaced.",
+      "Low-pressure: evaporator in deep vacuum (−8 psig at 40 °F); purge units and air leakage dominate service.",
+      "Recover with a low-pressure recovery unit; EPA §608 no venting."
+    ],
+    "criticalTempF": 388.3,
+    "criticalPsig": 624.6,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R11\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-12",
+    "aliases": [
+      "R12",
+      "12",
+      "CFC-12",
+      "Freon 12",
+      "dichlorodifluoromethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 10900,
+      "ar5": 10200
+    },
+    "glideF": 0,
+    "lubricant": "MO",
+    "applications": [
+      "Obsolete domestic and commercial medium-temp refrigeration, automotive AC (pre-1994)"
+    ],
+    "serviceNotes": [
+      "CFC — production banned since 1996; only reclaimed/stockpiled supply. Retrofit paths: R-134a (POE, capacity change), R-401A/MP39, R-409A/FX56, R-413A, hydrocarbon blends where legal.",
+      "Mineral oil; pressures very close to R-134a (37 psig at 40 °F).",
+      "Recover before opening; §608 no venting."
+    ],
+    "criticalTempF": 233.5,
+    "criticalPsig": 585.2,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.5,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R12\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-22",
+    "aliases": [
+      "R22",
+      "22",
+      "R-22",
+      "HCFC-22",
+      "Freon",
+      "Freon 22",
+      "Genetron 22",
+      "Forane 22",
+      "chlorodifluoromethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1810,
+      "ar5": 1760
+    },
+    "glideF": 0,
+    "lubricant": "MO/AB (mineral oil or alkylbenzene); POE in some late-model and most retrofit situations",
+    "applications": [
+      "Legacy residential and commercial DX air conditioning and heat pumps (pre-2010)",
+      "Medium- and low-temperature commercial refrigeration",
+      "Chillers (older)"
+    ],
+    "serviceNotes": [
+      "HCFC — production and import ended 1 Jan 2020 (US); service only with reclaimed or stockpiled R-22. EPA §608: no venting, recover before opening.",
+      "Runs on mineral oil (or alkylbenzene). When converting to an HFC/HFO blend, most require POE or at least a partial POE changeover for oil return.",
+      "Common R-22 retrofit options: R-407C (needs POE, ~5 % capacity loss, 10 °F glide), R-438A/MO99 and R-422B/NU-22B (mineral-oil compatible, capacity change, glide), R-421A, R-417A, R-422D/MO29, R-427A. Never mix or top off with another refrigerant.",
+      "Typical 40 °F evaporating ≈ 68.5 psig; 100 °F condensing ≈ 196 psig. Discharge temperatures run higher than R-410A at the same conditions."
+    ],
+    "criticalTempF": 205.1,
+    "criticalPsig": 709,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 6
+    },
+    "sourceNote": "CoolProp predefined fluid \"R22\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-23",
+    "aliases": [
+      "R23",
+      "23",
+      "HFC-23",
+      "Genetron 23",
+      "Forane 23",
+      "trifluoromethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 14800,
+      "ar5": 12400
+    },
+    "glideF": 0,
+    "lubricant": "POE",
+    "applications": [
+      "Ultra-low-temperature cascade systems (−60 to −110 °F: lab freezers, environmental chambers)"
+    ],
+    "serviceNotes": [
+      "Critical temperature 79.1 °F — the table stops at 78 °F; at room temperature the fluid is transcritical and standing pressure exceeds 650 psig. Cascade low stages use expansion tanks/fade-out vessels for off-cycle pressure.",
+      "Extremely high GWP (14,800): strictly recover; replaced by R-508B/R-170 (ethane, A3) or R-1150 in newer equipment.",
+      "Very high pressure at moderate temps (393 psig at 40 °F): use rated gauges and recovery cylinders."
+    ],
+    "criticalTempF": 79.1,
+    "criticalPsig": 686.1,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R23\" (scripts/gen_refrigerants.py), 139 points, 1 °F steps."
+  },
+  {
+    "id": "R-32",
+    "aliases": [
+      "R32",
+      "32",
+      "HFC-32",
+      "difluoromethane",
+      "Forane 32",
+      "Solstice 32",
+      "Genetron 32"
+    ],
+    "type": "pure",
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 675,
+      "ar5": 677
+    },
+    "glideF": 0,
+    "lubricant": "POE (PVE in some VRF/mini-split systems)",
+    "applications": [
+      "Residential and light-commercial AC and heat pumps (2025+ US; earlier in Asia/EU)",
+      "Mini-splits and VRF",
+      "Rooftop units and chillers (some)"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Pure fluid — no glide; may be charged as liquid or vapor per the equipment IOM.",
+      "NEVER charge R-32 into R-410A equipment; it runs ~10 % higher pressure and much higher discharge temperature (compressor injection/ cooling designs differ). Not a drop-in.",
+      "Higher discharge temperature than R-410A — watch superheat; excessive superheat can overheat the compressor.",
+      "Typical 40 °F ≈ 121 psig; 100 °F ≈ 326 psig; 130 °F ≈ 489 psig."
+    ],
+    "replacementFor": [
+      "R-410A (new equipment only)"
+    ],
+    "criticalTempF": 172.6,
+    "criticalPsig": 823.9,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R32\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-123",
+    "aliases": [
+      "R123",
+      "123",
+      "HCFC-123",
+      "Suva 123",
+      "Genetron 123",
+      "Forane 123"
+    ],
+    "type": "pure",
+    "safetyClass": "B1",
+    "gwp": {
+      "ar4": 77,
+      "ar5": 79
+    },
+    "glideF": 0,
+    "lubricant": "MO (or AB/POE per chiller manufacturer)",
+    "applications": [
+      "Low-pressure centrifugal chillers (Trane CenTraVac etc.)"
+    ],
+    "serviceNotes": [
+      "B1 — higher toxicity: AEL 50 ppm; machinery room with refrigerant monitor and ventilation per ASHRAE 15; respirator required for leak work.",
+      "Low-pressure refrigerant: evaporator runs in a vacuum (−9 psig at 40 °F), so air/moisture leak IN — the purge unit run time is the leak indicator.",
+      "HCFC — phased out for new equipment (2020); service with reclaimed supply. R-1233zd(E) and R-514A are the new-equipment low-pressure alternatives, not drop-ins."
+    ],
+    "replacementFor": [
+      "R-11"
+    ],
+    "criticalTempF": 362.6,
+    "criticalPsig": 516.4,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 3
+    },
+    "sourceNote": "CoolProp predefined fluid \"R123\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-134a",
+    "aliases": [
+      "R134a",
+      "134a",
+      "134A",
+      "R-134A",
+      "HFC-134a",
+      "Suva 134a",
+      "Klea",
+      "Klea 134a",
+      "Genetron 134a",
+      "Forane 134a",
+      "Freon 134a",
+      "tetrafluoroethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1430,
+      "ar5": 1300
+    },
+    "glideF": 0,
+    "lubricant": "POE (stationary); PAG (automotive A/C)",
+    "applications": [
+      "Automotive air conditioning (pre-2021 US models)",
+      "Centrifugal and screw chillers",
+      "Medium-temperature commercial refrigeration, vending, domestic refrigerators",
+      "Transport refrigeration"
+    ],
+    "serviceNotes": [
+      "Pure fluid — no glide; charge as liquid or vapor per equipment instructions.",
+      "Stationary equipment uses POE; automotive uses PAG. Do not mix oil types.",
+      "Low pressure fluid: below ~15 °F evaporating the suction side is in a vacuum (air/moisture ingress risk).",
+      "Common replacements: R-513A (drop-in style, A1, GWP 631), R-450A (A1), R-1234yf (A2L, automotive).",
+      "Typical 40 °F ≈ 35 psig; 100 °F ≈ 124 psig; 130 °F ≈ 199 psig."
+    ],
+    "replacementFor": [
+      "R-12"
+    ],
+    "criticalTempF": 213.9,
+    "criticalPsig": 574,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 6
+    },
+    "sourceNote": "CoolProp predefined fluid \"R134a\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-152a",
+    "aliases": [
+      "R152a",
+      "152a",
+      "R-152A",
+      "HFC-152a",
+      "difluoroethane"
+    ],
+    "type": "pure",
+    "safetyClass": "A2",
+    "gwp": {
+      "ar4": 124,
+      "ar5": 138
+    },
+    "glideF": 0,
+    "lubricant": "POE or MO",
+    "applications": [
+      "Component of R-500 and R-401A/B",
+      "Aerosol propellant",
+      "Secondary-loop automotive AC (limited)"
+    ],
+    "serviceNotes": [
+      "A2 — flammable (lower flammability limit ~3.9 %): ventilate, no ignition sources, rated detector and recovery equipment.",
+      "Pressures somewhat below R-134a (30 psig at 40 °F); not used in mainstream stationary equipment as a pure fluid."
+    ],
+    "criticalTempF": 235.9,
+    "criticalPsig": 640.4,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R152A\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-245fa",
+    "aliases": [
+      "R245fa",
+      "245fa",
+      "HFC-245fa",
+      "Genetron 245fa",
+      "Enovate 3000"
+    ],
+    "type": "pure",
+    "safetyClass": "B1",
+    "gwp": {
+      "ar4": 1030,
+      "ar5": 858
+    },
+    "glideF": 0,
+    "lubricant": "POE or MO per manufacturer",
+    "applications": [
+      "Low-pressure centrifugal chillers (some)",
+      "ORC / waste-heat power, high-temperature heat pumps",
+      "Foam blowing agent"
+    ],
+    "serviceNotes": [
+      "B1 — higher toxicity: OEL 300 ppm; ventilation and monitoring per ASHRAE 15.",
+      "Low pressure (−5 psig at 40 °F); vacuum on the low side.",
+      "Being replaced by R-1233zd(E) in new equipment."
+    ],
+    "criticalTempF": 308.9,
+    "criticalPsig": 514.8,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R245fa\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-290",
+    "aliases": [
+      "R290",
+      "290",
+      "propane",
+      "HC-290",
+      "CARE 40"
+    ],
+    "type": "pure",
+    "safetyClass": "A3",
+    "gwp": {
+      "ar4": 3,
+      "ar5": 3
+    },
+    "glideF": 0,
+    "lubricant": "MO, AB or POE per manufacturer (hydrocarbon-compatible)",
+    "applications": [
+      "Self-contained commercial refrigeration (reach-ins, display cases, ice machines)",
+      "Bottle coolers, vending",
+      "Heat pumps and small AC (charge-limited)"
+    ],
+    "serviceNotes": [
+      "A3 (flammable): treat as a flammable gas — ventilate, no ignition sources, spark-proof tools, A3-rated detector and recovery equipment, charge limited by the equipment listing; never use in equipment not designed for it.",
+      "Charge limits per UL 60335-2-89 (up to 500 g for commercial refrigeration under the 2019 edition) — never exceed the nameplate charge.",
+      "Pressures very close to R-22 (≈ 64 psig at 40 °F). Hermetic sealed systems: recover with an A3-rated machine or vent only where legally permitted (EPA allows venting of listed HC substitutes) in a ventilated area.",
+      "Use only refrigerant-grade propane (R-290), never LPG/fuel propane."
+    ],
+    "replacementFor": [
+      "R-134a",
+      "R-404A",
+      "R-22 (self-contained)"
+    ],
+    "criticalTempF": 206.1,
+    "criticalPsig": 601.9,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R290\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-401A",
+    "aliases": [
+      "R401A",
+      "401A",
+      "401-A",
+      "Suva MP39",
+      "MP39"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-22",
+        "massPercent": 53
+      },
+      {
+        "component": "R-152a",
+        "massPercent": 13
+      },
+      {
+        "component": "R-124",
+        "massPercent": 34
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1182
+    },
+    "glideF": 9.9,
+    "blendType": "high_glide",
+    "lubricant": "AB or POE (mineral oil marginal)",
+    "applications": [
+      "R-12 retrofit in medium-temperature commercial refrigeration (> 0 °F evaporating)"
+    ],
+    "serviceNotes": [
+      "Mixture table is APPROXIMATE (CoolProp had no fitted binary interaction parameters for one or more component pairs) — confirm against the manufacturer's PT chart before making charge decisions. (No binary parameters for the R-124 pairs.)",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
+      "HCFC blend (contains R-22 and R-124) — phased out; reclaimed stock only. R-12 retrofit: alkylbenzene or POE oil, new drier, charge liquid to ~ 90 % of R-12 charge by weight."
+    ],
+    "replacementFor": [
+      "R-12"
+    ],
+    "criticalTempF": 226,
+    "tableSource": "coolprop_mixture_approx",
+    "sourceNote": "CoolProp mass-fraction mixture of 53% R22/13% R152A/34% R124 (scripts/gen_refrigerants.py; mass fractions as generated), 221 points; approximate — missing binary interaction parameters for R22/R124, R152A/R124."
+  },
+  {
+    "id": "R-402A",
+    "aliases": [
+      "R402A",
+      "402A",
+      "402-A",
+      "Suva HP80",
+      "HP80"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 60
+      },
+      {
+        "component": "R-290",
+        "massPercent": 2
+      },
+      {
+        "component": "R-22",
+        "massPercent": 38
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2788
+    },
+    "glideF": 2.8,
+    "lubricant": "AB or POE (contains propane for mineral-oil return)",
+    "applications": [
+      "R-502 retrofit in low-temperature commercial refrigeration"
+    ],
+    "serviceNotes": [
+      "Blend with ≈ 3 °F glide: charge as liquid; dew point for superheat, bubble for subcooling.",
+      "HCFC blend (38 % R-22) — phased out; reclaimed stock only. Pressures ~8–10 % above R-502 — check pressure-control settings and relief ratings.",
+      "Table values above 144 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 144 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-502"
+    ],
+    "criticalTempF": 167.2,
+    "tableSource": "coolprop_mixture",
+    "extrapolatedAboveF": 144,
+    "sourceNote": "CoolProp mass-fraction mixture of 60% R125/2% R290/38% R22 (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-404A",
+    "aliases": [
+      "R404A",
+      "404A",
+      "404-A",
+      "Suva 404A",
+      "HP62",
+      "Suva HP62",
+      "Forane 404A",
+      "Genetron 404A",
+      "Freon 404A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 44
+      },
+      {
+        "component": "R-143a",
+        "massPercent": 4
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 52
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 3922,
+      "ar5": 3943
+    },
+    "glideF": 0.9,
+    "blendType": "near_azeotrope",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration (walk-ins, reach-ins, supermarket racks, ice machines)",
+      "Transport refrigeration"
+    ],
+    "serviceNotes": [
+      "Near-azeotropic blend: charge as liquid from the cylinder; glide is small enough that a single saturation temperature is adequate for field superheat/subcooling. (glide ≈ 0.9 °F).",
+      "Very high GWP (3922) — AIM Act/EPA restrictions on new equipment and on service in some jurisdictions; common replacements are R-448A (Solstice N40) and R-449A (Opteon XP40), which need TXV/head-pressure re-evaluation and are higher glide.",
+      "Uses POE oil; hygroscopic — new drier and deep vacuum after opening.",
+      "Typical 40 °F ≈ 87 psig; 100 °F ≈ 237 psig; −20 °F ≈ 17 psig."
+    ],
+    "replacementFor": [
+      "R-502",
+      "R-22 (low temp)"
+    ],
+    "criticalTempF": 161.8,
+    "criticalPsig": 527,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 6
+    },
+    "sourceNote": "CoolProp predefined fluid \"R404A\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-407A",
+    "aliases": [
+      "R407A",
+      "407A",
+      "407-A",
+      "Klea 407A",
+      "Genetron 407A",
+      "Forane 407A",
+      "Freon 407A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 20
+      },
+      {
+        "component": "R-125",
+        "massPercent": 40
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 40
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2107,
+      "ar5": 1923
+    },
+    "glideF": 9.7,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration (R-22 and R-404A replacement)"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant.",
+      "Higher discharge temperature than R-404A; check compressor cooling at low temp."
+    ],
+    "replacementFor": [
+      "R-22 (refrigeration)",
+      "R-404A"
+    ],
+    "criticalTempF": 180.1,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 20% R32/40% R125/40% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-407C",
+    "aliases": [
+      "R407C",
+      "407C",
+      "407-C",
+      "Suva 9000",
+      "Klea 66",
+      "Genetron 407C",
+      "Forane 407C",
+      "Freon 407C"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 23
+      },
+      {
+        "component": "R-125",
+        "massPercent": 25
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 52
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1774,
+      "ar5": 1624
+    },
+    "glideF": 10.8,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "R-22 replacement in DX air conditioning, rooftop units and chillers (retrofit and some new equipment)",
+      "Medium-temperature refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10–11 °F — do not use a single-point chart.",
+      "R-22 retrofit: POE oil REQUIRED (flush mineral oil to < 5 % residual), expect ~5 % capacity loss, check and readjust TXV superheat, replace filter-drier and elastomer seals as needed.",
+      "Never top off an R-22 charge with a different refrigerant and never mix refrigerants; recover, evacuate, then charge.",
+      "Composition shifts if a leaking system loses vapor — after a large leak recover the remainder and recharge with virgin liquid.",
+      "Typical 40 °F evaporating: bubble ≈ 80 psig, dew ≈ 63 psig."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 187.2,
+    "criticalPsig": 656.8,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R407C\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-407F",
+    "aliases": [
+      "R407F",
+      "407F",
+      "407-F",
+      "Genetron Performax LT",
+      "Performax LT",
+      "Performax"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 30
+      },
+      {
+        "component": "R-125",
+        "massPercent": 30
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 40
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1825,
+      "ar5": 1674
+    },
+    "glideF": 9.7,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration (supermarket)",
+      "R-22 and R-404A replacement"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant.",
+      "Higher discharge temperature than R-404A/R-22 — verify compressor discharge < 225 °F, consider liquid injection at low temp.",
+      "Table values above 118 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 118 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-22 (refrigeration)",
+      "R-404A"
+    ],
+    "criticalTempF": 180.1,
+    "tableSource": "coolprop_mixture",
+    "extrapolatedAboveF": 118,
+    "sourceNote": "CoolProp mass-fraction mixture of 30% R32/30% R125/40% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-408A",
+    "aliases": [
+      "R408A",
+      "408A",
+      "408-A",
+      "Forane FX10",
+      "FX10",
+      "Suva 408A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 7
+      },
+      {
+        "component": "R-143a",
+        "massPercent": 46
+      },
+      {
+        "component": "R-22",
+        "massPercent": 47
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 3152
+    },
+    "glideF": 0.5,
+    "blendType": "near_azeotrope",
+    "lubricant": "MO or AB (POE optional)",
+    "applications": [
+      "R-502 retrofit in low-temperature commercial refrigeration"
+    ],
+    "serviceNotes": [
+      "Mixture table is APPROXIMATE (CoolProp had no fitted binary interaction parameters for one or more component pairs) — confirm against the manufacturer's PT chart before making charge decisions. (No binary parameters for the R-125/R-22 pair.)",
+      "Near-azeotropic blend: charge as liquid from the cylinder; glide is small enough that a single saturation temperature is adequate for field superheat/subcooling. (glide ≈ 0.5 °F).",
+      "HCFC blend (47 % R-22) — phased out; reclaimed stock only. Mineral-oil compatible R-502 replacement; discharge temperature runs higher than R-502.",
+      "Table values above 138 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 138 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-502"
+    ],
+    "criticalTempF": 182.5,
+    "tableSource": "coolprop_mixture_approx",
+    "extrapolatedAboveF": 138,
+    "sourceNote": "CoolProp mass-fraction mixture of 7% R125/46% R143a/47% R22 (scripts/gen_refrigerants.py; mass fractions as generated), 211 points; approximate — missing binary interaction parameters for R125/R22."
+  },
+  {
+    "id": "R-409A",
+    "aliases": [
+      "R409A",
+      "409A",
+      "409-A",
+      "Forane FX56",
+      "FX56",
+      "Suva 409A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-22",
+        "massPercent": 60
+      },
+      {
+        "component": "R-124",
+        "massPercent": 25
+      },
+      {
+        "component": "R-142b",
+        "massPercent": 15
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1585
+    },
+    "glideF": 14.1,
+    "blendType": "high_glide",
+    "lubricant": "MO or AB",
+    "applications": [
+      "R-12 retrofit in medium- and low-temperature commercial refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 14 °F.",
+      "HCFC blend (R-22/R-124/R-142b) — phased out; reclaimed stock only. Mineral-oil compatible R-12 replacement; charge liquid to ~ 85–90 % of the R-12 charge and trim."
+    ],
+    "replacementFor": [
+      "R-12"
+    ],
+    "criticalTempF": 224.4,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 60% R22/25% R124/15% R142b (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-410A",
+    "aliases": [
+      "R410A",
+      "410A",
+      "410-A",
+      "Puron",
+      "AZ-20",
+      "Genetron AZ-20",
+      "Suva 410A",
+      "Forane 410A",
+      "Freon 410A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 50
+      },
+      {
+        "component": "R-125",
+        "massPercent": 50
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2088,
+      "ar5": 1924
+    },
+    "glideF": 0.2,
+    "blendType": "near_azeotrope",
+    "lubricant": "POE",
+    "applications": [
+      "Residential and commercial DX air conditioning and heat pumps (2010–2025 mainstream)",
+      "Rooftop units, split systems, mini-splits",
+      "Some chillers"
+    ],
+    "serviceNotes": [
+      "Near-azeotropic blend: charge as liquid from the cylinder; glide is small enough that a single saturation temperature is adequate for field superheat/subcooling. (glide ≈ 0.2 °F).",
+      "There is NO drop-in replacement for R-410A. Never charge R-454B or R-32 into R-410A equipment: they are A2L and the equipment is not listed for them.",
+      "Operates at ~50–70 % higher pressure than R-22: use R-410A-rated gauges, hoses (800 psi working), recovery machine and cylinders (DOT-39 400 psi minimum).",
+      "POE oil is hygroscopic — keep the system open as briefly as possible, use a new filter-drier, and pull a deep vacuum (500 microns, decay test).",
+      "Typical 40 °F evaporating ≈ 118–119 psig; 100 °F condensing ≈ 318 psig; 130 °F ≈ 477 psig.",
+      "AIM Act: new residential/light-commercial R-410A AC equipment could not be manufactured after 1 Jan 2025 (install-by dates apply); service continues with new and reclaimed refrigerant."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 160.4,
+    "criticalPsig": 696.1,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 6
+    },
+    "sourceNote": "CoolProp predefined fluid \"R410A\" (scripts/gen_refrigerants.py), 220 points, 1 °F steps."
+  },
+  {
+    "id": "R-417A",
+    "aliases": [
+      "R417A",
+      "417A",
+      "417-A",
+      "ISCEON 59",
+      "ISCEON MO59",
+      "MO59",
+      "NU-22",
+      "NU22"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 46.6
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 50
+      },
+      {
+        "component": "R-600",
+        "massPercent": 3.4
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2346,
+      "ar5": 2127
+    },
+    "glideF": 6.9,
+    "blendType": "high_glide",
+    "lubricant": "MO/AB compatible; POE optional",
+    "applications": [
+      "R-22 retrofit in DX air conditioning and medium-temp refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 7 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant.",
+      "Capacity typically 10–15 % below R-22; lower discharge temperature than R-22."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 191.5,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 46.6% R125/50% R134a/3.4% R600 (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-421A",
+    "aliases": [
+      "R421A",
+      "421A",
+      "421-A",
+      "Choice R421A",
+      "Choice 421A"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 58
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 42
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2631,
+      "ar5": 2385
+    },
+    "glideF": 7.4,
+    "blendType": "high_glide",
+    "lubricant": "MO/AB compatible; POE optional",
+    "applications": [
+      "R-22 retrofit in DX air conditioning and heat pumps"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 7 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant.",
+      "Pressures very close to R-22 on the low side; check TXV superheat after conversion."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 180.3,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 58% R125/42% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-422B",
+    "aliases": [
+      "R422B",
+      "422B",
+      "422-B",
+      "NU-22B",
+      "NU22B",
+      "ICOR NU-22B"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 55
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 42
+      },
+      {
+        "component": "R-600a",
+        "massPercent": 3
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2526,
+      "ar5": 2290
+    },
+    "glideF": 7.3,
+    "blendType": "high_glide",
+    "lubricant": "MO/AB compatible; POE optional",
+    "applications": [
+      "R-22 retrofit in DX air conditioning, heat pumps and medium-temp refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 7 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. NU-22B is marketed for mineral oil; add POE if oil return is marginal.",
+      "Capacity ~5–10 % below R-22; slightly higher condensing pressure; readjust TXV superheat and pressure controls."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 183,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 55% R125/42% R134a/3% R600a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-422D",
+    "aliases": [
+      "R422D",
+      "422D",
+      "422-D",
+      "ISCEON MO29",
+      "MO29",
+      "Freon MO29"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 65.1
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 31.5
+      },
+      {
+        "component": "R-600a",
+        "massPercent": 3.4
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2729,
+      "ar5": 2473
+    },
+    "glideF": 6.4,
+    "blendType": "high_glide",
+    "lubricant": "MO/AB compatible (isobutane carrier); POE improves oil return",
+    "applications": [
+      "R-22 retrofit in DX air conditioning and medium-temp refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 6 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. R-422D is mineral-oil compatible for many systems, but long/low-velocity suction lines may still need POE added.",
+      "Capacity typically 5–15 % below R-22 with slightly higher pressures at condensing temperatures; check TXV superheat."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 174.9,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 65.1% R125/31.5% R134a/3.4% R600a (scripts/gen_refrigerants.py; mass fractions as generated), 218 points."
+  },
+  {
+    "id": "R-427A",
+    "aliases": [
+      "R427A",
+      "427A",
+      "427-A",
+      "Forane 427A",
+      "Forane FX100"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 15
+      },
+      {
+        "component": "R-125",
+        "massPercent": 25
+      },
+      {
+        "component": "R-143a",
+        "massPercent": 10
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 50
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2138
+    },
+    "glideF": 10.2,
+    "blendType": "high_glide",
+    "lubricant": "POE (partial changeover acceptable per Arkema; mineral oil tolerated in many systems)",
+    "applications": [
+      "R-22 retrofit in AC and medium/low-temp refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. Arkema allows up to ~20 % residual mineral oil with R-427A.",
+      "Capacity ~5 % below R-22; check TXV superheat."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 186.8,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 15% R32/25% R125/10% R143a/50% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-434A",
+    "aliases": [
+      "R434A",
+      "434A",
+      "434-A",
+      "RS-45",
+      "RS45"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 63.2
+      },
+      {
+        "component": "R-143a",
+        "massPercent": 18
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 16
+      },
+      {
+        "component": "R-600a",
+        "massPercent": 2.8
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 3245
+    },
+    "glideF": 3.5,
+    "lubricant": "MO/AB compatible; POE optional",
+    "applications": [
+      "R-22 retrofit in AC, chillers and low/medium-temp refrigeration"
+    ],
+    "serviceNotes": [
+      "Blend with ≈ 3.5 °F glide: charge as liquid; dew point for superheat, bubble for subcooling.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant.",
+      "Higher pressures than R-22 (83 psig bubble at 40 °F vs 68.5); verify pressure-control settings and high-side component ratings."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 175.1,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 63.2% R125/18% R143a/16% R134a/2.8% R600a (scripts/gen_refrigerants.py; mass fractions as generated), 212 points."
+  },
+  {
+    "id": "R-438A",
+    "aliases": [
+      "R438A",
+      "438A",
+      "438-A",
+      "MO99",
+      "ISCEON MO99",
+      "Freon MO99",
+      "Opteon MO99"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 8.5
+      },
+      {
+        "component": "R-125",
+        "massPercent": 45
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 44.2
+      },
+      {
+        "component": "R-600",
+        "massPercent": 1.7
+      },
+      {
+        "component": "R-601a",
+        "massPercent": 0.6
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2265,
+      "ar5": 2059
+    },
+    "glideF": 13.5,
+    "blendType": "high_glide",
+    "lubricant": "MO/AB compatible; POE where oil return is marginal",
+    "applications": [
+      "R-22 retrofit in DX air conditioning, heat pumps and medium/low-temp refrigeration (most common R-22 drop-in-style blend)"
+    ],
+    "serviceNotes": [
+      "Mixture table is APPROXIMATE (CoolProp had no fitted binary interaction parameters for one or more component pairs) — confirm against the manufacturer's PT chart before making charge decisions. (No binary parameters for the R-601a pairs.) The table was also generated with component mass fractions summing to 96.8 % (R-134a entered as 41.0 % instead of the published 44.2 %), so it may read a few psi off a published MO99 chart — verify against the Chemours chart.",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 13 °F — do not use a single-point chart.",
+      "R-22 retrofit blend: replace/verify the oil per the manufacturer's procedure (most blends need POE or at least some POE for oil return with mineral oil), check TXV superheat setting and expect a capacity change; do not top off an R-22 system with this blend — recover fully, replace filter-drier, evacuate and charge as liquid; label the unit with the new refrigerant. MO99 is designed for mineral oil (hydrocarbon carriers), but POE may be needed with long suction risers.",
+      "Capacity and pressures close to R-22 (slightly higher condensing pressure); check TXV superheat and readjust pressure controls.",
+      "Never top off an R-22 system with MO99 — recover, evacuate, charge liquid, relabel."
+    ],
+    "replacementFor": [
+      "R-22"
+    ],
+    "criticalTempF": 183.9,
+    "tableSource": "coolprop_mixture_approx",
+    "sourceNote": "CoolProp mass-fraction mixture of 8.5% R32/45% R125/41% R134a/1.7% R600/0.6% R601a (scripts/gen_refrigerants.py; mass fractions as generated — NOTE they sum to 96.8 %, not 100 %), 221 points; approximate — missing binary interaction parameters for R32/R601a, R125/R601a, R134a/R601a."
+  },
+  {
+    "id": "R-448A",
+    "aliases": [
+      "R448A",
+      "448A",
+      "448-A",
+      "Solstice N40",
+      "N40"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 26
+      },
+      {
+        "component": "R-125",
+        "massPercent": 26
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 20
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 21
+      },
+      {
+        "component": "R-1234ze(E)",
+        "massPercent": 7
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1387,
+      "ar5": 1273
+    },
+    "glideF": 10.7,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration (supermarket racks, walk-ins, condensing units)",
+      "R-404A/R-507A/R-22 replacement in refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10–11 °F.",
+      "R-404A retrofit: recover fully, replace filter-drier and elastomer seals, charge liquid ~90–95 % of the R-404A charge by weight, then trim; TXV superheat and pressure controls must be re-set for the new PT relationship. Discharge temperatures run 20–40 °F hotter than R-404A — check compressor cooling/injection at low temp.",
+      "Never top off an R-22 charge with a different refrigerant and never mix refrigerants; recover, evacuate, then charge.",
+      "Typical 40 °F: bubble ≈ 89 psig, dew ≈ 71 psig; −20 °F: bubble ≈ 17 psig, dew ≈ 9.5 psig.",
+      "Table values above 148 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 148 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-404A",
+      "R-507A",
+      "R-22 (refrigeration)"
+    ],
+    "criticalTempF": 181.6,
+    "tableSource": "coolprop_mixture",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.5,
+      "pointsChecked": 5
+    },
+    "extrapolatedAboveF": 148,
+    "sourceNote": "CoolProp mass-fraction mixture of 26% R32/26% R125/20% R1234yf/21% R134a/7% R1234ze(E) (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-449A",
+    "aliases": [
+      "R449A",
+      "449A",
+      "449-A",
+      "Opteon XP40",
+      "XP40"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 24.3
+      },
+      {
+        "component": "R-125",
+        "massPercent": 24.7
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 25.3
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 25.7
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1397,
+      "ar5": 1282
+    },
+    "glideF": 9.9,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration",
+      "R-404A/R-507A/R-22 replacement in refrigeration"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 10 °F.",
+      "R-404A retrofit: same procedure as R-448A (recover, new drier, charge liquid ~90–95 % by weight, re-set TXV superheat and pressure controls, watch discharge temperature at low evaporating temps).",
+      "Never top off an R-22 charge with a different refrigerant and never mix refrigerants; recover, evacuate, then charge.",
+      "Typical 40 °F: bubble ≈ 88 psig, dew ≈ 71 psig.",
+      "Table values above 148 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 148 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-404A",
+      "R-507A",
+      "R-22 (refrigeration)"
+    ],
+    "criticalTempF": 180,
+    "tableSource": "coolprop_mixture",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.2,
+      "pointsChecked": 5
+    },
+    "extrapolatedAboveF": 148,
+    "sourceNote": "CoolProp mass-fraction mixture of 24.3% R32/24.7% R125/25.3% R1234yf/25.7% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-450A",
+    "aliases": [
+      "R450A",
+      "450A",
+      "450-A",
+      "Solstice N13",
+      "N13"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-134a",
+        "massPercent": 42
+      },
+      {
+        "component": "R-1234ze(E)",
+        "massPercent": 58
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 605,
+      "ar5": 547
+    },
+    "glideF": 1.1,
+    "blendType": "near_azeotrope",
+    "lubricant": "POE",
+    "applications": [
+      "Chillers and medium-temperature refrigeration replacing R-134a"
+    ],
+    "serviceNotes": [
+      "Near-azeotropic blend: charge as liquid from the cylinder; glide is small enough that a single saturation temperature is adequate for field superheat/subcooling. (glide ≈ 1 °F).",
+      "Pressures ~10–15 % below R-134a (30 psig bubble at 40 °F vs 35) with ~10 % lower capacity — not a drop-in without capacity check; compatible with POE."
+    ],
+    "replacementFor": [
+      "R-134a"
+    ],
+    "criticalTempF": 220.5,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 42% R134a/58% R1234ze(E) (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-452A",
+    "aliases": [
+      "R452A",
+      "452A",
+      "452-A",
+      "Opteon XP44",
+      "XP44"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 11
+      },
+      {
+        "component": "R-125",
+        "massPercent": 59
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 30
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 2140,
+      "ar5": 1945
+    },
+    "glideF": 7.5,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Transport refrigeration (truck/trailer, containers)",
+      "Low-temperature commercial refrigeration (R-404A replacement)"
+    ],
+    "serviceNotes": [
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 7–8 °F (moderate).",
+      "Closest R-404A match in pressures and discharge temperature (lower discharge temp than R-448A/R-449A) — preferred where compressor discharge temperature is the limit.",
+      "Never top off an R-22 charge with a different refrigerant and never mix refrigerants; recover, evacuate, then charge.",
+      "Table values above 136 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 136 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-404A",
+      "R-507A"
+    ],
+    "criticalTempF": 167.2,
+    "tableSource": "coolprop_mixture",
+    "extrapolatedAboveF": 136,
+    "sourceNote": "CoolProp mass-fraction mixture of 11% R32/59% R125/30% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-454A",
+    "aliases": [
+      "R454A",
+      "454A",
+      "454-A",
+      "Opteon XL40",
+      "XL40"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 35
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 65
+      }
+    ],
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 239,
+      "ar5": 238
+    },
+    "glideF": 12.2,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration (new A2L equipment: condensing units, racks)"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 12 °F.",
+      "Pressures close to R-404A at low temp; not a retrofit for A1 equipment."
+    ],
+    "replacementFor": [
+      "R-404A (new equipment)",
+      "R-448A/R-449A (new equipment)"
+    ],
+    "criticalTempF": 189.5,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 35% R32/65% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 213 points."
+  },
+  {
+    "id": "R-454B",
+    "aliases": [
+      "R454B",
+      "454B",
+      "454-B",
+      "Opteon XL41",
+      "XL41",
+      "Puron Advance",
+      "Solstice 454B"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 68.9
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 31.1
+      }
+    ],
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 466,
+      "ar5": 467
+    },
+    "glideF": 2.7,
+    "lubricant": "POE",
+    "applications": [
+      "Residential and light-commercial AC and heat pumps (2025+ US replacement for R-410A in new equipment)",
+      "Rooftop units, split systems"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "NEVER charge R-454B into R-410A equipment, and never top off an R-454B system with R-410A: it is not a drop-in, the equipment listing (UL 60335-2-40) and the refrigerant detection system (RDS) mitigation are specific to A2L.",
+      "Near-azeotropic (≈ 2.7 °F glide at 40 °F): charge as liquid; use dew point for superheat and bubble point for subcooling.",
+      "Pressures ≈ 5 % below R-410A (113 psig bubble at 40 °F vs 119). R-410A gauges and hoses are pressure-rated, but the detector and recovery machine must be A2L-rated; cylinders are left-hand thread.",
+      "Equipment with an RDS: on a leak alarm the unit runs the blower and disables the compressor/ignition — check the RDS fault before refrigerant work.",
+      "Table values above 133 °F are extrapolated with a Clausius–Clapeyron fit (CoolProp mixture flash failed above that temperature); treat high-side readings above 133 °F saturation as approximate."
+    ],
+    "replacementFor": [
+      "R-410A (new equipment only)"
+    ],
+    "criticalTempF": 172.3,
+    "tableSource": "coolprop_mixture",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.3,
+      "pointsChecked": 5
+    },
+    "extrapolatedAboveF": 133,
+    "sourceNote": "CoolProp mass-fraction mixture of 68.9% R32/31.1% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 211 points."
+  },
+  {
+    "id": "R-454C",
+    "aliases": [
+      "R454C",
+      "454C",
+      "454-C",
+      "Opteon XL20",
+      "XL20"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-32",
+        "massPercent": 21.5
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 78.5
+      }
+    ],
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 148,
+      "ar5": 146
+    },
+    "glideF": 14.7,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Commercial refrigeration and AC in new A2L equipment (R-22/R-404A-pressure class)"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 15 °F.",
+      "R-22-like pressures (81 psig bubble at 40 °F); only in equipment listed for it."
+    ],
+    "replacementFor": [
+      "R-22 (new equipment)",
+      "R-404A (new equipment)"
+    ],
+    "criticalTempF": 187.9,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 21.5% R32/78.5% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 220 points."
+  },
+  {
+    "id": "R-455A",
+    "aliases": [
+      "R455A",
+      "455A",
+      "455-A",
+      "Solstice L40X",
+      "L40X"
+    ],
+    "type": "zeotrope",
+    "composition": [
+      {
+        "component": "R-744",
+        "massPercent": 3
+      },
+      {
+        "component": "R-32",
+        "massPercent": 21.5
+      },
+      {
+        "component": "R-1234yf",
+        "massPercent": 75.5
+      }
+    ],
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 148,
+      "ar5": 146
+    },
+    "glideF": 22.3,
+    "blendType": "high_glide",
+    "lubricant": "POE",
+    "applications": [
+      "Commercial refrigeration in new A2L equipment (condensing units, plug-ins, heat pumps in EU)"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Zeotropic blend: charge as LIQUID only (invert the cylinder or use a liquid feed with a metering/flash device) so the composition stays correct; superheat uses dew point, subcooling uses bubble point. Glide ≈ 22 °F — the highest of the common blends; ALWAYS use dew point for superheat and bubble point for subcooling.",
+      "Contains 3 % CO2 — vapor leaks change composition markedly; after a large leak recover and recharge with virgin liquid."
+    ],
+    "replacementFor": [
+      "R-404A (new equipment)",
+      "R-22 (new equipment)"
+    ],
+    "criticalTempF": 185.4,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 3% CO2/21.5% R32/75.5% R1234yf (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-500",
+    "aliases": [
+      "R500",
+      "500",
+      "Freon 500"
+    ],
+    "type": "azeotrope",
+    "composition": [
+      {
+        "component": "R-12",
+        "massPercent": 73.8
+      },
+      {
+        "component": "R-152a",
+        "massPercent": 26.2
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 8077
+    },
+    "glideF": 0,
+    "lubricant": "MO",
+    "applications": [
+      "Obsolete reciprocating chillers and medium-temp refrigeration (pre-1996)"
+    ],
+    "serviceNotes": [
+      "CFC blend (R-12/R-152a azeotrope) — production banned since 1996; reclaimed stock only. Typical retrofit: R-134a with POE (capacity check) or R-401B.",
+      "Azeotrope — no glide; pressures ~25 % above R-12."
+    ],
+    "criticalTempF": 221.9,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 73.8% R12/26.2% R152A (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-502",
+    "aliases": [
+      "R502",
+      "502",
+      "Freon 502",
+      "Suva 502"
+    ],
+    "type": "azeotrope",
+    "composition": [
+      {
+        "component": "R-22",
+        "massPercent": 48.8
+      },
+      {
+        "component": "R-115",
+        "massPercent": 51.2
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 4657
+    },
+    "glideF": 0.3,
+    "lubricant": "MO/AB",
+    "applications": [
+      "Obsolete low-temperature commercial refrigeration (pre-1996)"
+    ],
+    "serviceNotes": [
+      "TABLE ACCURACY WARNING: this CoolProp mixture table reads about 3 % LOW versus published R-502 charts (≈ 2.6 psi low at 40 °F, ≈ 7 psi low at 130 °F) — treat as approximate and prefer a published chart for charge decisions.",
+      "CFC blend (contains R-115) — production banned since 1996; only reclaimed stock. Systems are usually retrofitted to R-404A, R-507A, R-408A (mineral oil) or R-402A.",
+      "Azeotrope — no glide; mineral oil."
+    ],
+    "criticalTempF": 179.9,
+    "criticalPsig": 568.4,
+    "tableSource": "coolprop_mixture",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 6.9,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp mass-fraction mixture of 48.8% R22/51.2% R115 (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-507A",
+    "aliases": [
+      "R507A",
+      "507A",
+      "R-507",
+      "R507",
+      "507",
+      "AZ-50",
+      "Genetron AZ-50",
+      "Forane 507",
+      "Suva 507A"
+    ],
+    "type": "azeotrope",
+    "composition": [
+      {
+        "component": "R-125",
+        "massPercent": 50
+      },
+      {
+        "component": "R-143a",
+        "massPercent": 50
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 3985,
+      "ar5": 3985
+    },
+    "glideF": 0,
+    "lubricant": "POE",
+    "applications": [
+      "Low- and medium-temperature commercial refrigeration",
+      "Supermarket racks, ice machines, transport"
+    ],
+    "serviceNotes": [
+      "Azeotrope — no glide; can be charged as liquid or vapor, but liquid charging is still recommended. Slightly higher pressure than R-404A.",
+      "Very high GWP (3985) — same phase-down pressure as R-404A; replacements R-448A/R-449A.",
+      "POE oil. Typical 40 °F ≈ 89 psig; 100 °F ≈ 242 psig."
+    ],
+    "replacementFor": [
+      "R-502",
+      "R-404A"
+    ],
+    "criticalTempF": 159.1,
+    "criticalPsig": 522.7,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R507A\" (scripts/gen_refrigerants.py), 219 points, 1 °F steps."
+  },
+  {
+    "id": "R-513A",
+    "aliases": [
+      "R513A",
+      "513A",
+      "513-A",
+      "Opteon XP10",
+      "XP10"
+    ],
+    "type": "azeotrope",
+    "composition": [
+      {
+        "component": "R-1234yf",
+        "massPercent": 56
+      },
+      {
+        "component": "R-134a",
+        "massPercent": 44
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 631,
+      "ar5": 573
+    },
+    "glideF": 0,
+    "lubricant": "POE",
+    "applications": [
+      "Chillers (centrifugal/screw) and medium-temperature refrigeration replacing R-134a",
+      "Vending, transport"
+    ],
+    "serviceNotes": [
+      "Azeotropic (essentially zero glide) — R-134a-like pressures (40 psig at 40 °F vs 35 for R-134a, ~5 % higher).",
+      "R-134a retrofit: compatible with POE; recover, replace drier, charge liquid to ~ the same weight, expect ~3 % capacity change. Never top off R-134a with R-513A or vice versa.",
+      "Charge as liquid from the cylinder (blend)."
+    ],
+    "replacementFor": [
+      "R-134a"
+    ],
+    "criticalTempF": 205.5,
+    "criticalPsig": 532.1,
+    "tableSource": "coolprop_mixture",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp mass-fraction mixture of 56% R1234yf/44% R134a (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-515B",
+    "aliases": [
+      "R515B",
+      "515B",
+      "515-B",
+      "Solstice N15",
+      "N15"
+    ],
+    "type": "azeotrope",
+    "composition": [
+      {
+        "component": "R-1234ze(E)",
+        "massPercent": 91.1
+      },
+      {
+        "component": "R-227ea",
+        "massPercent": 8.9
+      }
+    ],
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 299,
+      "ar5": 293
+    },
+    "glideF": 0,
+    "lubricant": "POE",
+    "applications": [
+      "Chillers and heat pumps replacing R-134a/R-1234ze(E) where an A1 fluid is required",
+      "Medium-temperature refrigeration"
+    ],
+    "serviceNotes": [
+      "Azeotropic (zero glide); pressures essentially identical to R-1234ze(E) (22 psig at 40 °F) and well below R-134a — not an R-134a drop-in.",
+      "Charge as liquid from the cylinder (blend)."
+    ],
+    "replacementFor": [
+      "R-1234ze(E)",
+      "R-134a (new equipment)"
+    ],
+    "criticalTempF": 226.4,
+    "tableSource": "coolprop_mixture",
+    "sourceNote": "CoolProp mass-fraction mixture of 91.1% R1234ze(E)/8.9% R227ea (scripts/gen_refrigerants.py; mass fractions as generated), 221 points."
+  },
+  {
+    "id": "R-600a",
+    "aliases": [
+      "R600a",
+      "600a",
+      "R-600A",
+      "isobutane",
+      "HC-600a",
+      "CARE 10"
+    ],
+    "type": "pure",
+    "safetyClass": "A3",
+    "gwp": {
+      "ar4": 3,
+      "ar5": 3
+    },
+    "glideF": 0,
+    "lubricant": "MO or POE per manufacturer",
+    "applications": [
+      "Domestic refrigerators and freezers",
+      "Small self-contained commercial units (bottle coolers, under-counter)"
+    ],
+    "serviceNotes": [
+      "A3 (flammable): treat as a flammable gas — ventilate, no ignition sources, spark-proof tools, A3-rated detector and recovery equipment, charge limited by the equipment listing; never use in equipment not designed for it.",
+      "Very low pressure: evaporator in vacuum below ~15 °F (−3 psig at 0 °F) — air ingress risk on the low side; charge is tiny (typically < 150 g) so charge by weight on a scale.",
+      "Never use in equipment not designed for hydrocarbons; ensure ignition sources (thermostats, relays) are sealed/sparkless."
+    ],
+    "replacementFor": [
+      "R-134a (domestic)",
+      "R-12"
+    ],
+    "criticalTempF": 274.4,
+    "criticalPsig": 511.6,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R600a\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-717",
+    "aliases": [
+      "R717",
+      "717",
+      "ammonia",
+      "NH3",
+      "anhydrous ammonia"
+    ],
+    "type": "pure",
+    "safetyClass": "B2L",
+    "gwp": {
+      "ar4": 0,
+      "ar5": 0
+    },
+    "glideF": 0,
+    "lubricant": "MO or PAO (immiscible; oil separation/draining required)",
+    "applications": [
+      "Industrial refrigeration (cold storage, food processing, ice rinks)",
+      "Large chillers and absorption systems"
+    ],
+    "serviceNotes": [
+      "B2L — HIGHER TOXICITY and mildly flammable. Odor threshold ~5 ppm; IDLH 300 ppm. Wear a full-face respirator with ammonia cartridge (SCBA for releases), gloves and eye protection; know the emergency shutoff and eyewash locations; follow the site's PSM/RMP procedures where the charge is > 10,000 lb.",
+      "Ammonia attacks copper and brass: steel/stainless piping only; oil is immiscible and must be drained from oil pots (purge/drain with the valve procedure, never crack a plugged drain open).",
+      "Trace water raises the boiling point; air/non-condensables collect in the condenser (purger).",
+      "Typical 40 °F ≈ 59 psig; 100 °F ≈ 197 psig; suction goes into vacuum below −28 °F."
+    ],
+    "criticalTempF": 270.3,
+    "criticalPsig": 1629,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R717\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-744",
+    "aliases": [
+      "R744",
+      "744",
+      "CO2",
+      "carbon dioxide",
+      "carbondioxide"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1,
+      "ar5": 1
+    },
+    "glideF": 0,
+    "lubricant": "POE (CO2-specific) or PAG",
+    "applications": [
+      "Supermarket transcritical booster racks and cascade low stages",
+      "Heat-pump water heaters",
+      "Transport and industrial refrigeration (cascade)"
+    ],
+    "serviceNotes": [
+      "Critical temperature 87.8 °F (31 °C): above that there is no saturation — the system runs TRANSCRITICAL (gas cooler, not condenser) and high-side pressure is controlled, not a function of temperature. Table stops at 86 °F.",
+      "Very high pressures: 553 psig at 40 °F, ~955 psig at 80 °F, transcritical high side 1,200–1,600 psig. Use CO2-rated gauges/hoses/components; standby PRVs lift near 500–650 psig on the low side when power is lost.",
+      "Never isolate liquid CO2 between closed valves (hydrostatic burst). Vapor charge to above the triple point (60.4 psig / −69.8 °F) before adding liquid, or dry ice forms and blocks lines.",
+      "A1 but an asphyxiant: monitor with a CO2 detector in machine rooms (alarm 5,000 ppm typical)."
+    ],
+    "criticalTempF": 87.8,
+    "criticalPsig": 1055.2,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R744\" (scripts/gen_refrigerants.py), 147 points, 1 °F steps."
+  },
+  {
+    "id": "R-1233zd(E)",
+    "aliases": [
+      "R1233zd(E)",
+      "R-1233zd",
+      "R1233zd",
+      "1233zd",
+      "1233zd(E)",
+      "HFO-1233zd",
+      "HFO-1233zd(E)",
+      "Solstice zd",
+      "Solstice 1233zd"
+    ],
+    "type": "pure",
+    "safetyClass": "A1",
+    "gwp": {
+      "ar4": 1,
+      "ar5": 1
+    },
+    "glideF": 0,
+    "lubricant": "MO or POE per chiller manufacturer",
+    "applications": [
+      "Low-pressure centrifugal chillers (new equipment)",
+      "High-temperature heat pumps, ORC"
+    ],
+    "serviceNotes": [
+      "Low-pressure fluid (−6 psig at 40 °F): evaporator in vacuum; purge system and air leakage dominate service, like R-123.",
+      "Not a drop-in for R-123 — different capacity and pressure; use only in equipment designed for it.",
+      "Low-pressure recovery unit required."
+    ],
+    "replacementFor": [
+      "R-123 (new equipment)"
+    ],
+    "criticalTempF": 330.3,
+    "criticalPsig": 510.9,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R1233zd(E)\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-1234yf",
+    "aliases": [
+      "R1234yf",
+      "1234yf",
+      "HFO-1234yf",
+      "Opteon YF",
+      "Solstice yf",
+      "yf"
+    ],
+    "type": "pure",
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 4,
+      "ar5": 1
+    },
+    "glideF": 0,
+    "lubricant": "PAG (automotive, yf-specific); POE (stationary)",
+    "applications": [
+      "Automotive air conditioning (2015+)",
+      "Component of many A2L blends (R-454B, R-448A, R-449A, R-513A, R-454A/C, R-455A)"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Automotive: SAE J2843 recovery/recycle/recharge machine, J2927 detector; left-hand-thread service couplers differ from R-134a.",
+      "Pressures very close to R-134a (≈ 3 psi higher at 40 °F); do not substitute for R-134a in non-A2L equipment."
+    ],
+    "replacementFor": [
+      "R-134a (automotive)"
+    ],
+    "criticalTempF": 202.5,
+    "criticalPsig": 475.8,
+    "tableSource": "coolprop_predefined",
+    "tableVerified": {
+      "against": "published manufacturer PT chart values (Chemours/Honeywell/Arkema-style charts; recalled, web verification unavailable this session)",
+      "maxErrorPsi": 0.1,
+      "pointsChecked": 5
+    },
+    "sourceNote": "CoolProp predefined fluid \"R1234yf\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  },
+  {
+    "id": "R-1234ze(E)",
+    "aliases": [
+      "R1234ze(E)",
+      "R-1234ze",
+      "R1234ze",
+      "1234ze",
+      "1234ze(E)",
+      "HFO-1234ze",
+      "HFO-1234ze(E)",
+      "Solstice ze",
+      "Opteon ze"
+    ],
+    "type": "pure",
+    "safetyClass": "A2L",
+    "gwp": {
+      "ar4": 6,
+      "ar5": 1
+    },
+    "glideF": 0,
+    "lubricant": "POE",
+    "applications": [
+      "Centrifugal and screw chillers (medium-pressure)",
+      "Heat pumps, commercial refrigeration",
+      "Component of R-450A, R-448A and R-515B"
+    ],
+    "serviceNotes": [
+      "A2L (mildly flammable): ventilate the work area, no ignition sources or open flame nearby, use an A2L-rated leak detector and A2L-rated recovery machine, cylinders have left-hand-thread valves, purge with dry nitrogen before brazing, never retrofit A1 equipment to an A2L refrigerant.",
+      "Lower pressure than R-134a (≈ 22 psig at 40 °F): evaporator side in vacuum below ~0 °F; not a drop-in for R-134a.",
+      "Non-flammable at room temperature by ASTM E681 but classed A2L (flammable above ~86 °F) — treat as A2L."
+    ],
+    "replacementFor": [
+      "R-134a (chillers, new equipment)"
+    ],
+    "criticalTempF": 228.9,
+    "criticalPsig": 512.7,
+    "tableSource": "coolprop_predefined",
+    "sourceNote": "CoolProp predefined fluid \"R1234ze(E)\" (scripts/gen_refrigerants.py), 221 points, 1 °F steps."
+  }
+]
