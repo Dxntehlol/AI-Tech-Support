@@ -1,0 +1,65 @@
+{
+  "pack": "lennox",
+  "platformId": "imc",
+  "name": "Lennox IMC (Integrated Modular Controller) M1-7 / M1-8 unit controller",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Lennox M1-7 Version 5.02 Integrated Modular Control (IMC) L Series / S-Class manual (Table 4 error codes)",
+      "docId": "IMC V7 (webmanuals.lennoxeurope.com mirror)",
+      "url": "http://webmanuals.lennoxeurope.com/Out%20of%20Production/Rooftop/CHA/Controls/IMC%20V7.pdf"
+    },
+    {
+      "title": "Lennox Integrated Modular Controller M1-7 Version 5.2x User Manual (manualzz text-indexed copy)",
+      "docId": "manualzz 10426901",
+      "url": "https://manualzz.com/doc/10426901/imcmanualv7"
+    },
+    {
+      "title": "Lennox IMC BACnet Module manual",
+      "docId": "Corp. 0624-L5",
+      "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/0624b.pdf"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "12",
+      "meaning": "S4 high pressure switch (compressor 1) is open.",
+      "likelyCauses": [
+        "High head pressure: dirty condenser coil, outdoor fan failure, overcharge, non-condensables",
+        "Failed S4 switch or wiring"
+      ],
+      "checks": [
+        "Check head pressure vs. ambient, outdoor fan operation and coil cleanliness (field practice)",
+        "Verify S4 continuity when pressure is below the reset point (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control manual, Table 4 error codes (manualzz mirror; transcribed from search excerpt)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "13",
+      "meaning": "First-stage high pressure switch has opened three times (default) and the control has de-energized the compressor (lockout).",
+      "likelyCauses": [
+        "Repeated high-pressure trips on compressor 1 (see code 12)"
+      ],
+      "checks": [
+        "Correct the high-pressure cause, then reset the IMC (power cycle or reset per the IMC manual) to clear the lockout"
+      ],
+      "severity": "lockout",
+      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control manual, Table 4 error codes (manualzz mirror; transcribed from search excerpt)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [],
+  "diagnosticTips": [
+    "Error codes are shown on the A55 IMC board's 2-digit display and stored for later recall (IMC manual Table 4 and Figure 16 list every code; M1-7 v5.02 is at webmanuals.lennoxeurope.com / manualzz 'IMC V7').",
+    "Codes seen in the field but not transcribed here: 59 (sensor-related), 73/74, 92 (DIP-switch configuration) and 93 - look them up in Table 4 or the LennoxPros Error Code Lookup tool before acting.",
+    "The IMC shunts the low-pressure switches (S87/S88) during compressor start until pressure stabilizes, so a low-pressure trip logged after the delay is a real refrigerant/airflow problem.",
+    "Lennox Technical Support 800-453-6669 is referenced in the IMC documentation."
+  ],
+  "notes": [
+    "ENRICHMENT NOT PERFORMED: the session's WebSearch budget (200/200) was already exhausted when this sidecar was built, so no source could be consulted. Per the verification protocol (fault codes only from the controller manual, never from memory) this sidecar carries only the two codes that already had documented source evidence in the existing pack entry; nothing new was added.",
+    "The full IMC Table 4 error-code table (codes 1 through ~100+, including 59, 73, 74, 92, 93) remains untranscribed. A follow-up run with search budget should transcribe it from the M1-7 v5.02 / M1-8 IMC Application Guide (Table 4 / Figure 16) and set coverage accordingly.",
+    "The IMC uses a 2-digit 7-segment display on the A55 board rather than blink-code LEDs, so ledPatterns is intentionally empty pending a sourced description of the board's status LEDs."
+  ]
+}

@@ -1,0 +1,1998 @@
+{
+  "id": "rheem-aaon",
+  "manufacturer": "Rheem / Ruud (commercial) and AAON",
+  "brands": [
+    "Rheem",
+    "Ruud",
+    "Rheem Commercial",
+    "Ruud Commercial",
+    "AAON",
+    "AAONAIRE"
+  ],
+  "aliases": [
+    "rheem",
+    "ruud",
+    "rheem commercial air",
+    "renaissance",
+    "aaon",
+    "aaon inc",
+    "orion",
+    "wattmaster"
+  ],
+  "serialFormats": [
+    {
+      "id": "rheem-hvac-letter-wwyy",
+      "description": "Rheem/Ruud HVAC (current style): 1 plant letter + WW (week) + YY (year) + 5-digit sequence, 10 characters total (e.g. W3520xxxxx = week 35 of 2020).",
+      "eraStart": 1995,
+      "regex": "^([A-Z])(\\d{2})(\\d{2})(\\d{5})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 3,
+        "weekGroup": 2,
+        "pivot": 70
+      },
+      "plant": {
+        "group": 1,
+        "map": {
+          "M": "Montgomery, AL (per building-center/pickhvac plant list)",
+          "N": "Fort Smith, AR (per building-center/pickhvac plant list)",
+          "F": "Oxnard, CA (historic plant, per building-center/pickhvac)",
+          "G": "Eagan, MN (historic plant, per building-center/pickhvac)"
+        }
+      },
+      "examples": [
+        {
+          "serial": "W352012345",
+          "expect": {
+            "year": 2020,
+            "week": 35
+          }
+        },
+        {
+          "serial": "M221512345",
+          "expect": {
+            "year": 2015,
+            "week": 22
+          }
+        },
+        {
+          "serial": "W371512345",
+          "expect": {
+            "year": 2015,
+            "week": 37
+          }
+        },
+        {
+          "serial": "N421712345",
+          "expect": {
+            "year": 2017,
+            "week": 42
+          }
+        }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Building Intelligence Center — Rheem HVAC age (https://www.building-center.org/rheem-hvac-age/): Style 1 = letter + 9 digits; first two digits after the letter = week, next two = year",
+        "PickHVAC — Rheem HVAC age / serial number decoding (https://www.pickhvac.com/hvac/age-serial-number/rheem/): M2215… = 22nd week of 2015; factory letter F, M, G, W or N",
+        "hvacchecker.com Rheem HVAC age: 10 characters = 1 factory letter, 4 date digits (WWYY), 5 sequence digits; W3520 = week 35 of 2020",
+        "Ruud HVAC age (https://www.building-center.org/ruud-hvac-age/): Ruud uses the same styles"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Week/year prefixes in the examples come from the cited decoders (W3520, M2215, 42/17); the 5-digit sequence portions are illustrative — the sequence does not affect the date.",
+        "Two-digit year with pivot 70: 95–99 → 1995–1999, 00–69 → 2000–2069. Serials in this style are common from the late 1990s on; a plate with an R-22 charge or a mid-1990s compressor date stamp with a yy of 95–99 is consistent with 199x.",
+        "Plant letter W appears on most current units; its plant is not documented in the cited sources (not mapped — do not guess).",
+        "Rheem's own page rheem.com/rheem_model_serial_numbers/ exists but its text could not be read in this session, so confidence stays 'medium' (two independent secondary decoders agree) rather than 'high'.",
+        "Ruud-branded units use the same serial styles (building-center Ruud page)."
+      ]
+    },
+    {
+      "id": "rheem-hvac-prefixed-plant-wwyy",
+      "description": "Rheem/Ruud HVAC older style: leading characters, then a mid-string plant letter (F, M, G, N or W) followed by WW (week) and YY (year) and a sequence (e.g. 5983 F 1096 12345 = week 10 of 1996).",
+      "eraStart": 1980,
+      "eraEnd": 2005,
+      "regex": "^([A-Z0-9]{2,6}) ?([FMGNW]) ?(\\d{2})(\\d{2}) ?(\\d{3,6})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 4,
+        "weekGroup": 3,
+        "pivot": 70
+      },
+      "plant": {
+        "group": 2,
+        "map": {
+          "M": "Montgomery, AL",
+          "N": "Fort Smith, AR",
+          "F": "Oxnard, CA",
+          "G": "Eagan, MN"
+        }
+      },
+      "examples": [
+        {
+          "serial": "5983F109612345",
+          "expect": {
+            "year": 1996,
+            "week": 10
+          }
+        },
+        {
+          "serial": "5983 M 3595 12345",
+          "expect": {
+            "year": 1995,
+            "week": 35
+          }
+        },
+        {
+          "serial": "5983N088812345",
+          "expect": {
+            "year": 1988,
+            "week": 8
+          }
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "PickHVAC — Rheem HVAC age: 'the middle letter of the serial number is the factory code (F, M, G, W or N); week = 1st & 2nd numbers following it, year = 3rd & 4th' and 'Style 2: date coded in four numbers following the letter F, M, G or N (factory location)'",
+        "Building Intelligence Center — Rheem HVAC age: plant letters M = Montgomery AL, N = Fort Smith AR, F = Oxnard CA, G = Eagan MN"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW CONFIDENCE: the position/length of the characters preceding the plant letter could not be confirmed from a dated nameplate in this session; the regex tolerates 2–6 leading characters. The examples are synthetic (built from the published rule), not sourced nameplates — treat them as regex tests, not as dated evidence.",
+        "The rule itself (plant letter, then WW, then YY) is the same as the current style; the era filter (≤ 2005) is what separates this from 'rheem-hvac-letter-wwyy'. If both match, confirm the year from the compressor date code and the refrigerant on the plate (R-22 on pre-2010 units).",
+        "Oxnard CA and Eagan MN were closed long ago, so plant letters F and G on an HVAC plate point to an older unit."
+      ]
+    },
+    {
+      "id": "rheem-wh-mmyy-plant",
+      "description": "Rheem/Ruud/Richmond WATER HEATER 10-digit style: MM YY P 12345 (month, 2-digit year, plant letter, sequence), optionally prefixed R / RN / RNG / RHNG. Included so a tech reading a Rheem plate in a mechanical room is not misled — not an HVAC style.",
+      "eraStart": 1975,
+      "regex": "^(?:R|RN|RNG|RHNG)? ?(\\d{2})(\\d{2})([A-Z])(\\d{5})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 2,
+        "monthGroup": 1,
+        "pivot": 70
+      },
+      "plant": {
+        "group": 3
+      },
+      "examples": [
+        {
+          "serial": "R 0884B10488",
+          "expect": {
+            "year": 1984,
+            "month": 8
+          }
+        },
+        {
+          "serial": "0523M12345",
+          "expect": {
+            "year": 2023,
+            "month": 5
+          }
+        },
+        {
+          "serial": "1119W54321",
+          "expect": {
+            "year": 2019,
+            "month": 11
+          }
+        }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Rheem — How to locate and read your Rheem water heating serial numbers (https://www.rheem.com/how-to-locate-and-read-your-rheem-water-heating-serial-numbers/): current 10-digit code MMYYP12345, P = plant code",
+        "Building Intelligence Center — Rheem water heater age (https://www.building-center.org/rheem-water-heater-age/): Style 1 example 'R 0884B10488', month = 1st & 2nd digits, year = 3rd & 4th"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Only the first example is a sourced serial; the other two are synthetic tests of the published MMYYP rule.",
+        "Water heaters only. HVAC serials start with a single letter followed by 9 digits (see rheem-hvac-letter-wwyy)."
+      ]
+    },
+    {
+      "id": "rheem-wh-rhln-wwyy",
+      "description": "Rheem WATER HEATER style 2: RHLN (or R/RN/RNG) prefix + WW YY + 6-digit sequence (e.g. RHLN 0106534307 = week 1 of 2006).",
+      "eraStart": 1995,
+      "regex": "^(?:RHLN|RNG|RN|R) ?(\\d{2})(\\d{2})(\\d{6})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 2,
+        "weekGroup": 1,
+        "pivot": 70
+      },
+      "examples": [
+        {
+          "serial": "RHLN 0106534307",
+          "expect": {
+            "year": 2006,
+            "week": 1
+          }
+        },
+        {
+          "serial": "RHLN0820123456",
+          "expect": {
+            "year": 2020,
+            "week": 8
+          }
+        }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Building Intelligence Center — Rheem water heater age: Style 2 example 'RHLN 0106534307', week = 1st & 2nd digits, year = 3rd & 4th",
+        "fastwaterheater.com water heater model/serial lookup guide: for RHLN prefixes the four digits after the prefix are WWYY, RHLN0820 = week 8 of 2020"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Water heaters only; second example's sequence digits are illustrative.",
+        "Overlap: an RHLN serial also satisfies rheem-hvac-prefixed-plant-wwyy (its trailing N reads as a plant letter); both readings use the same WWYY digits, so the date is identical, and that format's era (≤ 2005) drops later units anyway."
+      ]
+    },
+    {
+      "id": "aaon-yyyymm",
+      "description": "AAON: serial starts with the four-digit year and two-digit month of manufacture, followed by letters and a sequence (e.g. 200108AKG26241 = August 2001).",
+      "eraStart": 1990,
+      "regex": "^(\\d{4})(\\d{2})-?([A-Z]{2,5})-?(\\d{4,6})$",
+      "date": {
+        "method": "fourDigitYear",
+        "yearGroup": 1,
+        "monthGroup": 2
+      },
+      "examples": [
+        {
+          "serial": "200108AKG26241",
+          "expect": {
+            "year": 2001,
+            "month": 8
+          }
+        },
+        {
+          "serial": "201503BKGD12345",
+          "expect": {
+            "year": 2015,
+            "month": 3
+          }
+        },
+        {
+          "serial": "202211-CKLM23456",
+          "expect": {
+            "year": 2022,
+            "month": 11
+          }
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Building Intelligence Center — AAON HVAC age (https://www.building-center.org/aaon-hvac-age/): Style 1 example 200108AKG26241, year = 1st–4th digits, month = 5th–6th digits",
+        "AAON — What is my AAON product model? (https://www.aaon.com/resources/what-is-my-aaon-product-model): provide the serial to an AAON rep for full unit data"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Only the first example is a sourced serial; the other two are synthetic tests of the year-first rule (one secondary decoder plus builder field recollection — hence 'low'). Confirm with AAON (866-918-1100) or the unit's IOM, which is normally shipped in the control compartment with the order-specific drawings.",
+        "The four-digit year makes this unambiguous; the decoder's month sanity check (01–12) rejects strings that merely start with four digits.",
+        "AAONAIRE-branded units use the same style (building-center AAONAIRE page)."
+      ]
+    }
+  ],
+  "modelFormats": [
+    {
+      "id": "rheem-commercial-package-rk-rl-rq",
+      "family": "Rheem/Ruud commercial packaged rooftops: RKKL/RKNL/RKPL/RKPN (gas/electric), RLKL/RLNL/RLPN (cooling, opt. electric heat), RQNL (heat pump), incl. Renaissance and Classic/Value series",
+      "description": "Series (4 letters) - revision letter, 3-digit nominal cooling code in MBH, voltage letter, then heat/blower/option codes. Covers 3–25 tons (RKNL-A036 … RKNL-B300).",
+      "productType": "packaged_rtu",
+      "eraStart": 2000,
+      "regex": "^([RU]([KLQ])[A-Z]{2})-?([A-Z])(\\d{3})([A-Z])([A-Z0-9]{0,6})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RKKL": "RKKL Commercial Value Series packaged gas/electric (7.5–12.5 t)",
+            "RKNL": "RKNL packaged gas/electric (3–25 t across revisions; RKNL-C and later carry the Renaissance RTU-C controller; RKNL-G/H = 7–12.5 t)",
+            "RKPL": "RKPL packaged gas/electric (Ruud form R22-852 lists RKNL/RKPL together)",
+            "RKPN": "RKPN packaged gas/electric (map entry from scope list — description unverified)",
+            "RLKL": "RLKL packaged air conditioner (7.5–12.5 t, cooling with optional electric heat)",
+            "RLNL": "RLNL packaged air conditioner (cooling counterpart of RKNL; description unverified)",
+            "RLPN": "RLPN packaged air conditioner (map entry from scope list — description unverified)",
+            "RQNL": "RQNL packaged heat pump (description unverified)",
+            "RKKA": "RKKA older Classic-series packaged gas/electric (1990s–2000s; unverified)",
+            "RKKB": "RKKB older Classic-series packaged gas/electric (unverified)"
+          },
+          "notes": "Map is partial. RKKL/RKNL/RLKL/RKPL descriptions come from Rheem/Ruud spec-sheet titles (R11-858, R11-855, S11-959/960, R22-852); the other entries are from the scope list and builder recollection — verify on the spec sheet."
+        },
+        {
+          "group": 2,
+          "name": "Unit type letter",
+          "attribute": "unit_type",
+          "map": {
+            "K": "packaged gas heat / electric cooling",
+            "L": "packaged cooling only (electric heat optional)",
+            "Q": "packaged heat pump"
+          },
+          "notes": "K = gas/electric and L = air conditioner confirmed by spec-sheet titles (RKNL-B 'Package Gas Electric', RLKL-B 'Package Air Conditioner'); Q = heat pump from builder recollection."
+        },
+        {
+          "group": 3,
+          "name": "Design revision",
+          "attribute": "revision",
+          "notes": "A, B, C … H; revision C and later on RKNL carry the RTU-C controller (IOM 92-23577-80 covers RKNL-B and RKNL-C)."
+        },
+        {
+          "group": 4,
+          "name": "Nominal cooling capacity (MBH)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "mbh",
+          "map": {
+            "151": "12.5",
+            "073": "6",
+            "079": "6.5",
+            "091": "7.5"
+          },
+          "notes": "036 = 36,000 Btu/h (3 t) … 300 = 25 t. Irregular codes mapped explicitly: 073 = 6 t (RKNL-B 6–12.5 t line), 151 = 12.5 t, 079 = 6.5 t, 091 = 7.5 t (high-efficiency variants)."
+        },
+        {
+          "group": 5,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "C": "208-230/3/60",
+            "D": "460/3/60",
+            "Y": "575/3/60",
+            "J": "208-230/1/60"
+          },
+          "notes": "C = 208/230 V 3-phase is supported by the RKNL-B spec (187–253 V models carry C). D = 460 V is inferred from RAWL-090CAZ vs RAWL-090DAZ / RLKL-B240DL (414–506 V range) pairs; Y = 575 V and J = 208/230 single-phase are builder recollection of Rheem nomenclature — confirm on the nameplate."
+        },
+        {
+          "group": 6,
+          "name": "Heat input / blower drive / option codes",
+          "attribute": "options",
+          "notes": "On gas/electric units the first letter after voltage varies by heat input (RKNL-B090CL, -CM, -CN exist as low/medium/high heat variants); the two digits (08, 10, 15, 22, 25 seen in the catalog) select the blower motor/drive package; a trailing 000 means no factory options. Position meanings not transcribed from a nomenclature page — read the 'Model Number Identification' table on the spec sheet."
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "rheem-rtu-c",
+        "rheem-ifc-flash",
+        "honeywell-jade-w7220"
+      ],
+      "examples": [
+        {
+          "model": "RKNL-B090CL15E",
+          "expect": {
+            "series": "RKNL packaged gas/electric (3–25 t across revisions; RKNL-C and later carry the Renaissance RTU-C controller; RKNL-G/H = 7–12.5 t)",
+            "unit_type": "packaged gas heat / electric cooling",
+            "revision": "B",
+            "tonnage": "7.5",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RKNL-A036CL08E",
+          "expect": {
+            "unit_type": "packaged gas heat / electric cooling",
+            "revision": "A",
+            "tonnage": "3",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RLKL-B151CM000",
+          "expect": {
+            "unit_type": "packaged cooling only (electric heat optional)",
+            "revision": "B",
+            "tonnage": "12.5",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RLKL-B240DL000",
+          "expect": {
+            "unit_type": "packaged cooling only (electric heat optional)",
+            "revision": "B",
+            "tonnage": "20"
+          }
+        },
+        {
+          "model": "RKKL-B090CL15E",
+          "expect": {
+            "series": "RKKL Commercial Value Series packaged gas/electric (7.5–12.5 t)",
+            "tonnage": "7.5",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RKNL-B073CL15E",
+          "expect": {
+            "tonnage": "6",
+            "voltage": "208-230/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: the model number is on the unit data plate on the outside of the control-box side of the cabinet; it appears again on the wiring diagram and on the spec sheet title (e.g. 'RKNL-B090CL15E'). Serial is on the same plate.",
+        "Ruud-branded commercial units carry the same R-prefixed model numbers (Ruud spec form R22-852 is titled 'Package Gas Electric RKNL/RKPL Series'); the regex also accepts a leading U in case a Ruud plate uses one, but no U-prefixed commercial model was confirmed.",
+        "Pre-2010 units (RKNL-A, RKKA/RKKB) shipped with R-22; the refrigerant default above applies to R-410A revisions — always read the plate.",
+        "The 2019+ Renaissance line uses a different, longer nomenclature (spec S11-983 lists 'RACDZT' Commercial Prestige models) that this format does not decode — see pack notes.",
+        "Examples are real catalog model numbers from the cited spec sheets / distributor listings; expected voltages are asserted only for C (208/230-3-60)."
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Rheem spec sheet FORM R11-855 'Air Package Gas Electric RKNL-B Series' (RKNL-B090CL15E/22E; 6–12.5 tons; 187–253 V and 414–506 V voltage groups)",
+        "Rheem spec sheet FORM R11-858 'Air Package Gas Electric RKKL-B Series' / 'Commercial Value Series' (7.5, 10, 12.5 t)",
+        "Rheem spec sheets FORM S11-959 / S11-960 'Air Package Air Conditioner RLKL-B Series' (RLKL-B151CM000, RLKL-B240DL000)",
+        "Rheem IOM 92-23577-80 (RKNL-B, RKNL-C 6–12.5 t) and 92-23577-75-00 (RKNL/RKPL); RKNL-B parts list (RKNL-B180–300)",
+        "Rheem FORM R11-852 'Package Gas Electric RKNL/RKPL Series, RKNL-13 SEER' (RKNL-A036CK12E) and distributor listings RKNL-A036CL08E, RKNL-A048CL10E, RKNL-B073CL15E",
+        "Ruud FORM R22-852 'Package Gas Electric RKNL/RKPL Series'",
+        "rheem.com product page 'Commercial Package Gas Electric RKNL-G, RKNL-H (7–12.5 Ton)'"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "rheem-light-commercial-package-rs-rj",
+      "family": "Rheem/Ruud light-commercial packaged units RSPM/RSPL/RJPL/RJNL (2–5 t, incl. 3-phase)",
+      "description": "Same shape as the commercial packaged nomenclature: series - revision, 3-digit MBH code, voltage letter, option codes.",
+      "productType": "packaged_rtu",
+      "eraStart": 2005,
+      "regex": "^([RU][SJ][A-Z]{2})-?([A-Z])(\\d{3})([A-Z])([A-Z0-9]{0,6})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RSPM": "RSPM packaged air conditioner, 13/14 SEER class, 2–5 t (scope list; unverified)",
+            "RSPL": "RSPL packaged air conditioner 2–5 t (scope list; unverified)",
+            "RJPL": "RJPL packaged air conditioner 2–5 t (scope list; unverified)",
+            "RJNL": "RJNL packaged air conditioner 2–5 t (unverified)"
+          },
+          "notes": "Descriptions not confirmed from a nomenclature page."
+        },
+        {
+          "group": 2,
+          "name": "Design revision",
+          "attribute": "revision"
+        },
+        {
+          "group": 3,
+          "name": "Nominal cooling capacity (MBH)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "mbh"
+        },
+        {
+          "group": 4,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "J": "208-230/1/60",
+            "C": "208-230/3/60",
+            "D": "460/3/60"
+          },
+          "notes": "J = 208/230 single-phase follows Rheem residential usage (e.g. RACA-036JAZ); C/D as in the commercial packaged family. Other letters (e.g. K) not mapped."
+        },
+        {
+          "group": 5,
+          "name": "Option codes",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "rheem-ifc-flash",
+        "honeywell-jade-w7220"
+      ],
+      "examples": [
+        {
+          "model": "RSPM-A036JK",
+          "expect": {
+            "revision": "A",
+            "tonnage": "3",
+            "voltage": "208-230/1/60"
+          }
+        },
+        {
+          "model": "RJPL-B048CK000",
+          "expect": {
+            "revision": "B",
+            "tonnage": "4",
+            "voltage": "208-230/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "LOW CONFIDENCE: no spec sheet for these series was readable in this session; the examples are pattern-consistent, not catalog-verified. Tonnage (MBH code) is the only attribute to rely on.",
+        "Nameplate: model on the data plate near the control box; distributors sometimes quote a sales model (e.g. 'RSPM-A036JK') without the trailing option digits."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Scope list for this pack; Rheem model-number pattern shared with the RKNL/RLKL spec sheets cited in rheem-commercial-package-rk-rl-rq"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "rheem-commercial-condensing-ra",
+      "family": "Rheem/Ruud commercial split-system condensing units RAWL (6.5–25 t high-efficiency), RACL (Commercial Classic 6.5–20 t) and residential/light-commercial RACA",
+      "description": "RA + type letter + L/A, optional revision, 3-digit MBH code, voltage letter, 2-letter suffix (e.g. RAWL-090CAZ = 7.5 t, 208/230-3-60).",
+      "productType": "split_condensing_unit",
+      "eraStart": 2000,
+      "regex": "^([RU]A([WC])[AL])-?([A-Z]?)(\\d{3})([A-Z])([A-Z]{0,4})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RAWL": "RAWL Commercial high-efficiency air-cooled condensing unit (6.5–25 t, R-410A)",
+            "RACL": "RACL Commercial Classic condensing unit (6.5–20 t)",
+            "RACA": "RACA 13 SEER residential/light-commercial condensing unit (1.5–5 t)"
+          },
+          "notes": "RAWL and RACL from Rheem spec titles (A11-209, A11-193/208, A22-194, 'Commercial Classic Series Condenser 6.5–20 ton'); RACA description from builder recollection."
+        },
+        {
+          "group": 2,
+          "name": "Efficiency tier letter",
+          "attribute": "efficiency",
+          "map": {
+            "W": "high efficiency (RAWL)",
+            "C": "standard / Classic (RACL, RACA)"
+          },
+          "notes": "Inferred from the two series titles; not from a nomenclature table."
+        },
+        {
+          "group": 3,
+          "name": "Design revision (often absent)",
+          "attribute": "revision"
+        },
+        {
+          "group": 4,
+          "name": "Nominal cooling capacity (MBH)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "mbh",
+          "map": {
+            "079": "6.5",
+            "091": "7.5"
+          },
+          "notes": "RAWL-079 = 6.5 t (budgetheating listing); 090 = 7.5 t; 091 mapped to 7.5 t as a high-efficiency 7.5 t variant (verify); 120 = 10 t; 240 = 20 t."
+        },
+        {
+          "group": 5,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "C": "208-230/3/60",
+            "D": "460/3/60",
+            "J": "208-230/1/60",
+            "Y": "575/3/60"
+          },
+          "notes": "RAWL-090CAZ and RAWL-090DAZ both exist in the catalog (C vs D voltage variants); Y and J from builder recollection."
+        },
+        {
+          "group": 6,
+          "name": "Suffix (metering/options)",
+          "attribute": "options",
+          "notes": "'AZ' on all cited RAWL examples; meaning not transcribed."
+        }
+      ],
+      "refrigerant": "R-410A",
+      "examples": [
+        {
+          "model": "RAWL-090CAZ",
+          "expect": {
+            "series": "RAWL Commercial high-efficiency air-cooled condensing unit (6.5–25 t, R-410A)",
+            "tonnage": "7.5",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RAWL-240CAZ",
+          "expect": {
+            "tonnage": "20",
+            "voltage": "208-230/3/60"
+          }
+        },
+        {
+          "model": "RAWL-079CAZ",
+          "expect": {
+            "tonnage": "6.5"
+          }
+        },
+        {
+          "model": "RAWL-090DAZ",
+          "expect": {
+            "tonnage": "7.5",
+            "voltage": "460/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: model on the plate beside the service valves / control box; the spec sheet title uses the same string (e.g. 'RAWL-090CAZ').",
+        "Matching air handlers (RHKL/RHLL etc.) are not decoded by this pack (no nomenclature source available in this session)."
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Rheem FORM A11-209 'Air Condensing Units RAWL Series' (Rheem Commercial)",
+        "Rheem FORM A11-208 / A11-193 / A22-194 'Commercial High-Efficiency Condensing Units' (RAWL-091DAZ, RAWL-240CAZ, RAWL-090DAZ)",
+        "Gemaire spec listing '7.5 ton R-410A Commercial Condensing Unit' RAWL-090CAZ",
+        "budgetheating.com listing '6.5 Ton Rheem Condenser Three Phase, RAWL-079' and 'Rheem Commercial Classic Series Condenser RACL 6.5–20 ton technical specifications'"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "aaon-rn-legacy",
+      "family": "AAON RN Series packaged rooftop / heat pump / outdoor air handler, legacy feature-string nomenclature (RN-030-3-0-EB09-…), 6–140 t",
+      "description": "RN - size (nominal tons) - voltage digit - model option A - option B code - … long feature string. Only the base model is decoded.",
+      "productType": "packaged_rtu",
+      "eraStart": 2005,
+      "regex": "^(RN)-(\\d{3})-([1-9])-([A-Z0-9])-([A-Z0-9]{2,4})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RN": "AAON RN Series packaged rooftop (6–140 t; A/B/C/E cabinets)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Unit size (nominal tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "105": "105",
+            "120": "120",
+            "130": "130",
+            "140": "140",
+            "006": "6",
+            "007": "7",
+            "008": "8",
+            "010": "10",
+            "011": "11",
+            "013": "13",
+            "015": "15",
+            "016": "16",
+            "020": "20",
+            "025": "25",
+            "026": "26",
+            "030": "30",
+            "031": "31",
+            "035": "35",
+            "040": "40",
+            "045": "45",
+            "050": "50",
+            "055": "55",
+            "060": "60",
+            "065": "65",
+            "070": "70",
+            "075": "75",
+            "090": "90"
+          },
+          "unit": "tons",
+          "notes": "Size code is nominal tons (RN-030 = 30 t; RN E-cabinet 075/090/105/120/130/140 = 75–140 t per IOM). Map lists catalog sizes; unlisted codes are also tons."
+        },
+        {
+          "group": 3,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "230/1/60",
+            "2": "230/3/60",
+            "3": "460/3/60",
+            "4": "575/3/60",
+            "8": "208/3/60",
+            "9": "208/1/60"
+          },
+          "notes": "Complete per RN/RQ IOM feature-string nomenclature (1, 2, 3, 4, 8, 9)."
+        },
+        {
+          "group": 4,
+          "name": "Model option A (cooling / heat-pump configuration)",
+          "attribute": "other",
+          "notes": "'0' on the catalog examples; the value table lives on the IOM feature-string page — not transcribed."
+        },
+        {
+          "group": 5,
+          "name": "Model option B (heating type/capacity block)",
+          "attribute": "options",
+          "notes": "e.g. 'EB09' on the catalog examples; decode with the IOM feature-string page."
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "orion-vccx2"
+      ],
+      "examples": [
+        {
+          "model": "RN-030-3-0-EB09-2E3:AAG0-000-000",
+          "expect": {
+            "series": "AAON RN Series packaged rooftop (6–140 t; A/B/C/E cabinets)",
+            "tonnage": "30",
+            "voltage": "460/3/60"
+          }
+        },
+        {
+          "model": "RN-010-3-0-EB09",
+          "expect": {
+            "tonnage": "10",
+            "voltage": "460/3/60"
+          }
+        },
+        {
+          "model": "RN-050-8-0-EB09-1B2",
+          "expect": {
+            "tonnage": "50",
+            "voltage": "208/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: AAON plates print the full feature string (base model followed by colon-separated option blocks). The base model is the part before the first colon; the decoder's normalization drops colons and keeps hyphens, which this regex tolerates.",
+        "Units built from ~2024 on may use the unified nomenclature (RNA-…), see aaon-rn-unified. 2024+ units may ship with R-454B — read the plate.",
+        "Examples: first two follow the pattern used in the project design notes; none was confirmed against a catalog page in this session (hence medium, not high)."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "AAON RN Series IOM (Feature String Nomenclature page; ManualsLib copy p.13): base model = RN - size - voltage - option A - option B …",
+        "AAON RN Series Next Gen IOM (RN_NextGen_IOM_240502_410A.pdf) and RN E-cabinet IOM (RNE_IOM_240729_454B.pdf): unit sizes 075–140 = 75–140 tons; voltage 3 = 460V/3/60",
+        "AAON RQ Series IOM (RQ_IOM_240625_410a.pdf): voltage digits 1 = 230/1, 2 = 230/3, 3 = 460/3, 4 = 575/3, 8 = 208/3, 9 = 208/1",
+        "Building Intelligence Center — AAON HVAC model number nomenclature (https://www.building-center.org/aaon-hvac-model-number-nomenclature/)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "aaon-rn-unified",
+      "family": "AAON RN Series packaged rooftop, unified nomenclature (RNA-030-C-0-3-CAB0A-…)",
+      "description": "RNA (series + revision letter) - size - cabinet/config letter - option - voltage digit - 5-character option block - … feature string.",
+      "productType": "packaged_rtu",
+      "eraStart": 2023,
+      "regex": "^(RN[A-Z])-(\\d{3})-([A-Z0-9])-([A-Z0-9])-([1-9])-([A-Z0-9]{5})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series + revision",
+          "attribute": "series",
+          "map": {
+            "RNA": "AAON RN Series, unified nomenclature revision A (not the same as 'RN A-cabinet')"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Unit size (nominal tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "105": "105",
+            "120": "120",
+            "130": "130",
+            "140": "140",
+            "006": "6",
+            "007": "7",
+            "008": "8",
+            "010": "10",
+            "011": "11",
+            "013": "13",
+            "015": "15",
+            "016": "16",
+            "020": "20",
+            "025": "25",
+            "026": "26",
+            "030": "30",
+            "031": "31",
+            "035": "35",
+            "040": "40",
+            "045": "45",
+            "050": "50",
+            "055": "55",
+            "060": "60",
+            "065": "65",
+            "070": "70",
+            "075": "75",
+            "090": "90"
+          },
+          "unit": "tons"
+        },
+        {
+          "group": 3,
+          "name": "Position 3 (cabinet/configuration letter)",
+          "attribute": "other",
+          "notes": "'C' on the IOM example; value table not transcribed."
+        },
+        {
+          "group": 4,
+          "name": "Position 4 (model option)",
+          "attribute": "other"
+        },
+        {
+          "group": 5,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "230/1/60",
+            "2": "230/3/60",
+            "3": "460/3/60",
+            "4": "575/3/60",
+            "8": "208/3/60",
+            "9": "208/1/60"
+          }
+        },
+        {
+          "group": 6,
+          "name": "Option block",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "R-454B",
+      "controlPlatformIds": [
+        "orion-vccx2"
+      ],
+      "examples": [
+        {
+          "model": "RNA-030-C-0-3-CAB0A",
+          "expect": {
+            "tonnage": "30",
+            "voltage": "460/3/60"
+          }
+        },
+        {
+          "model": "RNA-050-C-0-8-CAB0A-000",
+          "expect": {
+            "tonnage": "50",
+            "voltage": "208/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "First example is the nomenclature example printed in the RN Next Gen IOM; the second is pattern-consistent (not catalog-verified).",
+        "'RNA' = series RN + revision letter A per AAON's 'Comparison of Legacy and Unified Feature Strings for RN Product'. Refrigerant default R-454B applies to 2025+ builds; earlier unified-nomenclature units may still be R-410A — read the plate.",
+        "Position meanings other than size and voltage were not transcribed — use the IOM feature-string page."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "AAON RN Series Next Gen IOM (RN_NextGen_IOM_240502_410A.pdf), nomenclature example 'RN A - 030 - C - 0 - 3 - C A B 0 A'",
+        "AAON resource 'Comparison of Legacy and the Unified Feature Strings for RN Product' (https://www.aaon.com/resources/comparison-of-legacy-and-the-new-unified-feature-strings-for-rn-product)",
+        "AAON RN E-cabinet IOM (RNE_IOM_240729_454B.pdf)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "aaon-rq-legacy",
+      "family": "AAON RQ Series packaged rooftop / heat pump / outdoor air handler, legacy nomenclature (RQ-005-3-V-BB01-…), 2–6 t",
+      "productType": "packaged_rtu",
+      "eraStart": 2005,
+      "regex": "^(RQ)-(\\d{3})-([1-9])-([A-Z0-9])-([A-Z0-9]{2,4})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RQ": "AAON RQ Series packaged rooftop (2–6 t)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Unit size (nominal tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "002": "2",
+            "003": "3",
+            "004": "4",
+            "005": "5",
+            "006": "6"
+          },
+          "unit": "tons",
+          "notes": "Complete per RQ IOM: 002–006 = 2–6 t."
+        },
+        {
+          "group": 3,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "230/1/60",
+            "2": "230/3/60",
+            "3": "460/3/60",
+            "4": "575/3/60",
+            "8": "208/3/60",
+            "9": "208/1/60"
+          }
+        },
+        {
+          "group": 4,
+          "name": "Model option A (cooling / heat pump)",
+          "attribute": "other",
+          "notes": "'V' seen on a variable-speed catalog example; table not transcribed."
+        },
+        {
+          "group": 5,
+          "name": "Model option B",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "orion-vccx2"
+      ],
+      "examples": [
+        {
+          "model": "RQ-005-3-V-BB01-334",
+          "expect": {
+            "tonnage": "5",
+            "voltage": "460/3/60"
+          }
+        },
+        {
+          "model": "RQ-003-8-0-AB01",
+          "expect": {
+            "tonnage": "3",
+            "voltage": "208/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "First example is from the RQ IOM search result; second is pattern-consistent.",
+        "Unified nomenclature units read RQA-003-A-A-3-GAB0A (see aaon-rq-unified)."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "AAON RQ Series IOM (RQ_IOM_240625_410a.pdf) — feature string nomenclature: sizes 002–006, voltage digits 1/2/3/4/8/9",
+        "AAON RQ-006/005/004/003/002 user manual, 'RQ series feature string nomenclature, base model, model option A: cooling/heat pump' (manualsdir p.14)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "aaon-rq-unified",
+      "family": "AAON RQ Series packaged rooftop, unified nomenclature (RQA-003-A-A-3-GAB0A-…), 2–5 t",
+      "productType": "packaged_rtu",
+      "eraStart": 2023,
+      "regex": "^(RQ[A-Z])-(\\d{3})-([A-Z0-9])-([A-Z0-9])-([1-9])-([A-Z0-9]{5})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series + revision",
+          "attribute": "series",
+          "map": {
+            "RQA": "AAON RQ Series, unified nomenclature revision A"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Unit size (nominal tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "002": "2",
+            "003": "3",
+            "004": "4",
+            "005": "5",
+            "006": "6"
+          },
+          "unit": "tons"
+        },
+        {
+          "group": 3,
+          "name": "Position 3",
+          "attribute": "other"
+        },
+        {
+          "group": 4,
+          "name": "Position 4",
+          "attribute": "other"
+        },
+        {
+          "group": 5,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "230/1/60",
+            "2": "230/3/60",
+            "3": "460/3/60",
+            "4": "575/3/60",
+            "8": "208/3/60",
+            "9": "208/1/60"
+          }
+        },
+        {
+          "group": 6,
+          "name": "Option block",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "R-454B",
+      "controlPlatformIds": [
+        "orion-vccx2"
+      ],
+      "examples": [
+        {
+          "model": "RQA-003-A-A-3-GAB0A",
+          "expect": {
+            "tonnage": "3",
+            "voltage": "460/3/60"
+          }
+        },
+        {
+          "model": "RQA-005-A-A-8-GAB0A-000",
+          "expect": {
+            "tonnage": "5",
+            "voltage": "208/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "First example from the RQ IOM (2025/2026 revisions); second is pattern-consistent. Refrigerant default R-454B for 2025+ builds — read the plate."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "AAON RQ Series (2–5 ton) IOM Rev A 20251205 / Rev B 20260615 (https://www.aaon.com/hubfs/RQ%20Series%20IOM%2020260615.pdf)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "aaon-other-series-identify",
+      "family": "AAON other series (RL, RM/RG legacy, RK legacy, CN/CB condensing units, H3/V3 air handlers, M2/M3, F1, LL/LN/LF chillers) — identification only",
+      "productType": "other",
+      "regex": "^(RL|RM|RG|RK|CN|CB|CL|CF|H3|V3|M2|M3|F1|LL|LN|LF|LZ|SA|SB)-?(\\d{3})(?:[-A-Z0-9/ ]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "RL": "AAON RL Series large packaged rooftop (nominal 45–240 t; size code = tons — unverified)",
+            "RM": "AAON RM Series legacy packaged rooftop (predecessor of RN)",
+            "RG": "AAON RG Series legacy packaged rooftop",
+            "RK": "AAON RK Series legacy packaged rooftop",
+            "CN": "AAON CN Series air-cooled condensing unit",
+            "CB": "AAON CB Series air-cooled condensing unit",
+            "CL": "AAON CL Series air-cooled condensing unit / chiller family",
+            "CF": "AAON CF Series condensing unit",
+            "H3": "AAON H3 Series horizontal indoor air handler",
+            "V3": "AAON V3 Series vertical indoor air handler",
+            "M2": "AAON M2 Series indoor air handler",
+            "M3": "AAON M3 Series indoor air handler",
+            "F1": "AAON F1 Series indoor air handler",
+            "LL": "AAON LL Series chiller",
+            "LN": "AAON LN Series chiller",
+            "LF": "AAON LF Series chiller / condensing unit",
+            "LZ": "AAON LZ Series chiller",
+            "SA": "AAON SA Series self-contained unit",
+            "SB": "AAON SB Series self-contained unit"
+          },
+          "notes": "Series identification from builder recollection of the AAON product line — NOT from a nomenclature page. Size code meaning differs by series (tons for rooftops/condensers, airflow-based for air handlers) and is deliberately not decoded."
+        },
+        {
+          "group": 2,
+          "name": "Size code (meaning varies by series)",
+          "attribute": "other"
+        }
+      ],
+      "examples": [
+        {
+          "model": "RL-060-3-0-EB09",
+          "expect": {
+            "series": "AAON RL Series large packaged rooftop (nominal 45–240 t; size code = tons — unverified)"
+          }
+        },
+        {
+          "model": "CB-010-3-0-1",
+          "expect": {
+            "series": "AAON CB Series air-cooled condensing unit"
+          }
+        }
+      ],
+      "notes": [
+        "LOW CONFIDENCE identification aid only. Use the IOM shipped with the unit (or aaon.com literature) to decode the feature string."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Builder recollection of AAON product families; AAON product pages (aaon.com/products)"
+      ],
+      "lastVerified": "2026-09-26"
+    }
+  ],
+  "controls": [
+    {
+      "id": "rheem-rtu-c",
+      "name": "Rheem Renaissance Rooftop Unit Controller (RTU-C) with PlusOne Diagnostics / ClearControl",
+      "description": "Factory-mounted solid-state microprocessor rooftop unit controller on RKNL-C/RLNL-C and later Renaissance packaged units. Provides staging, economizer integration, diagnostics with alphanumeric fault codes on the local display and via ClearControl (DDL) / Modbus. The gas-heat IFC reports to the RTU-C over Modbus.",
+      "appliesTo": [
+        "rheem-commercial-package-rk-rl-rq (revision C and later)",
+        "^R[KLQ][NP][LN]-[C-Z]"
+      ],
+      "faultCodes": [
+        {
+          "code": "A15",
+          "meaning": "Controller fault — error with the control board itself.",
+          "likelyCauses": [
+            "Controller internal fault / firmware error",
+            "Power-quality event (brown-out, transient) on the 24 VAC supply",
+            "Failed RTU-C board"
+          ],
+          "checks": [
+            "Cycle unit power off/on and see whether the code clears",
+            "Check 24 VAC control voltage at the controller under load (≥ 21 VAC) and the control transformer secondary fuse/breaker",
+            "If A15 returns after a power cycle with clean control power, replace the RTU-C board"
+          ],
+          "severity": "lockout",
+          "source": "Third-party service Q&A (justanswer: 'A15 controller fault — cycle power; if it persists the board must be replaced'); corroborated by parts-list description of the RTU-C as a solid-state controller",
+          "evidence": "single_secondary",
+          "notes": "Only code confirmed in this session. The full alphanumeric fault table is in the unit IOM (92-23577-80 series for RKNL-B/C) and the Renaissance Technology Guide — transcribe from there before relying on other codes."
+        }
+      ],
+      "diagnosticTips": [
+        "Fault/status codes are shown on the controller display in the control compartment; PlusOne Diagnostics ('ClearControl') exposes the same data through the optional DDL/BAS interface (install instructions 92-103249-01).",
+        "The IFC (ignition control) on gas units communicates with the RTU-C via Modbus; an ignition fault will appear on the RTU-C display as well as on the IFC LED.",
+        "Clearing: most faults clear on power cycle; a lockout that returns immediately points to the safety that caused it (check HPS/LPS, limit, pressure switch history) rather than the board."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Rheem IOM 92-23577-80 Rev. 01/03 — RKNL-B, RKNL-C 6–12.5 ton Package Gas Electric (RTU-C description)",
+          "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/GE_Package/RKNL/92-23577-80-03_RKNL-B_RKNL-C_6-12.5.pdf"
+        },
+        {
+          "title": "Rheem ClearControl (DDL) Installation Instructions 92-103249-01 Rev. 03/04",
+          "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Accessories/ClearControl/92-103249-01-04_ClearControl_DDL.pdf"
+        },
+        {
+          "title": "Rheem Renaissance Technology Guide M11-1997",
+          "url": "https://media.rheem.com/media/uploads/iat/sites/36/2020/08/RHM5470_Renaissance_Technology_Brochure_M11-1997_R3_SPRDS.pdf"
+        },
+        {
+          "title": "Rheem PlusOne Diagnostics ClearControl overview",
+          "url": "https://discover.rheem.com/commercial-air/innovations/clearcontrol"
+        }
+      ],
+      "confidence": "low",
+      "sources": [
+        "See sourceDocs; fault meaning A15 from a third-party service thread only"
+      ]
+    },
+    {
+      "id": "rheem-ifc-flash",
+      "name": "Rheem/Ruud Integrated Furnace Control (IFC) LED flash codes — standard gas furnace / gas-pack ignition control",
+      "description": "Single-LED flash-code ignition control used across Rheem and Ruud gas furnaces and gas/electric packaged units (Rheem and Ruud share the platform, so codes are identical). The LED flashes a count, pauses, and repeats. On RKNL-C and later the IFC also reports the fault to the RTU-C via Modbus.",
+      "appliesTo": [
+        "rheem-commercial-package-rk-rl-rq (gas heat section)",
+        "rheem-light-commercial-package-rs-rj",
+        "^R[KG]"
+      ],
+      "faultCodes": [
+        {
+          "code": "2 flashes",
+          "meaning": "Pressure switch stuck open — the switch will not close when the inducer is on.",
+          "likelyCauses": [
+            "Blocked or restricted flue/vent or combustion-air inlet",
+            "Condensate backed up into the pressure-switch hose (clogged drain/trap)",
+            "Inducer motor weak or not running",
+            "Cracked/loose pressure-switch tubing, failed pressure switch"
+          ],
+          "checks": [
+            "With the inducer running, measure draft at the switch tap with a manometer and compare with the switch's setpoint printed on it",
+            "Inspect and clear the condensate drain/trap and the switch tubing",
+            "Verify inducer runs at full speed and the vent is clear end to end",
+            "Jumper the switch only to prove the switch itself (never leave it jumpered)"
+          ],
+          "severity": "lockout",
+          "source": "Rheem 'Standard Gas Furnace Flash Codes' (pts.myrheem.com GF_Flash_Code) as summarized by multiple third-party guides (bcwide.ca, burkhardtheating.com, honestfix.com)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "3 flashes",
+          "meaning": "Limit switch open — main limit or roll-out (flame roll-out) control open.",
+          "likelyCauses": [
+            "Low airflow: dirty filter, dirty evaporator coil, blower/belt problem, closed dampers, high external static",
+            "Blower not running / failed blower motor or capacitor",
+            "Roll-out switch tripped (blocked heat exchanger, flue restriction, burner misalignment) — manual-reset roll-out must be reset",
+            "Over-fired unit (gas pressure too high)"
+          ],
+          "checks": [
+            "Check whether a manual-reset roll-out switch is tripped before anything else",
+            "Measure temperature rise against the nameplate range and external static pressure",
+            "Verify blower operation in heat (speed/belt/motor amps)",
+            "Check manifold gas pressure and clocked input"
+          ],
+          "severity": "lockout",
+          "source": "Rheem 'Standard Gas Furnace Flash Codes' as summarized by multiple third-party guides (bcwide.ca, burkhardtheating.com, honestfix.com)",
+          "evidence": "multi_secondary"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "Repeating group of N flashes, then pause",
+          "meaning": "Fault code N — count the flashes in one group",
+          "checks": [
+            "Compare the count with the flash-code label on the control-box cover / IFC"
+          ]
+        }
+      ],
+      "diagnosticTips": [
+        "The LED is on the IFC board in the burner/control compartment; the code legend is printed on the board label and the unit's flash-code label (e.g. 92-103343-01 for 2-digit-display furnaces).",
+        "A clogged condensate line that backs up into the pressure-switch hose is a common cause of a 2-flash fault on gas packs.",
+        "Clear a lockout by cycling thermostat demand (W off/on) or unit power; a roll-out switch is manual reset and must be pressed after the cause is fixed."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Rheem Service — Standard Gas Furnace Flash Codes (pts.myrheem.com Trouble2a GF_Flash_Code)",
+          "url": "https://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/Topics/GF_Flash_Code.asp"
+        },
+        {
+          "title": "Rheem 92-103343-01 Fault Code Label (2-digit display furnace controls: 0 Standby, 22 Main Limit Open …)",
+          "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Gas_Furnace/IO/92-103343-01-00_Fault_Code_Label.pdf"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "bcwide.ca Rheem furnace error codes",
+        "burkhardtheating.com Rheem/Ruud furnace error codes",
+        "honestfix.com Rheem furnace flash/LED codes guide",
+        "Rheem pts.myrheem.com Standard Gas Furnace Flash Codes page (title only readable)"
+      ]
+    },
+    {
+      "id": "honeywell-jade-w7220",
+      "name": "Honeywell/Resideo JADE W7220 economizer module (Rheem/Ruud factory and field economizers)",
+      "description": "Two-line LCD economizer controller with alarms shown in the ALARMS menu. Used on Rheem/Ruud commercial packaged units with factory economizers (and widely on other brands).",
+      "appliesTo": [
+        "rheem-commercial-package-rk-rl-rq",
+        "rheem-light-commercial-package-rs-rj"
+      ],
+      "faultCodes": [
+        {
+          "code": "MAT SENS ERR",
+          "meaning": "Mixed air sensor has failed or become disconnected.",
+          "likelyCauses": [
+            "Open/shorted MAT sensor (20k NTC) or wiring",
+            "Sensor unplugged at the module"
+          ],
+          "checks": [
+            "Check wiring at the MAT terminals; measure sensor resistance against the 20k NTC table",
+            "Replace the sensor if the alarm persists"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331 JADE W7220 Installation Instructions, Alarms table",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "OA SYLK T ERR",
+          "meaning": "Outdoor air Sylk-bus temperature/enthalpy sensor has failed or become disconnected.",
+          "likelyCauses": [
+            "C7400S Sylk sensor failed, wiring open, or wrong sensor address"
+          ],
+          "checks": [
+            "Check the S-bus wiring and sensor; replace the sensor if the alarm persists"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms table",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "OA SYLK H ERR",
+          "meaning": "Outdoor air Sylk-bus humidity (enthalpy) sensor has failed or become disconnected.",
+          "likelyCauses": [
+            "C7400S sensor humidity element failed or disconnected"
+          ],
+          "checks": [
+            "Check wiring and sensor; replace if the alarm persists"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms table",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "ACT UNDER V",
+          "meaning": "Voltage received by the actuator is below the expected range.",
+          "likelyCauses": [
+            "Low 24 VAC supply / undersized transformer",
+            "Voltage drop in the actuator wiring"
+          ],
+          "checks": [
+            "Measure 24 VAC at the actuator under load",
+            "Check transformer VA rating and wiring"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms table",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "CO2 SENS ERR",
+          "meaning": "CO2 (demand-control ventilation) sensor error — sensor failed or disconnected (meaning expanded from the alarm name; see 62-0331 for exact text).",
+          "checks": [
+            "Check the 2–10 V CO2 sensor wiring and output"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "RA SYLK T ERR",
+          "meaning": "Return air Sylk-bus temperature sensor error (name expanded).",
+          "checks": [
+            "Check S-bus wiring/sensor"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "RA SYLK H ERR",
+          "meaning": "Return air Sylk-bus humidity sensor error (name expanded).",
+          "checks": [
+            "Check S-bus wiring/sensor"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "DA SYLK T ERR",
+          "meaning": "Discharge air Sylk-bus temperature sensor error (name expanded).",
+          "checks": [
+            "Check S-bus wiring/sensor"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "OA SENS T ERR",
+          "meaning": "Outdoor air (hard-wired 20k) temperature sensor error (name expanded).",
+          "checks": [
+            "Check OAT sensor wiring and resistance"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "ACT ERROR",
+          "meaning": "General actuator error (name expanded).",
+          "checks": [
+            "Check actuator wiring and S-bus connection; replace the actuator if it persists"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "FREEZE ALARM",
+          "meaning": "Freeze-protection alarm — mixed/discharge air too cold; economizer driven to minimum (name expanded).",
+          "checks": [
+            "Check MAT reading, damper minimum position and low-ambient operation"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "SHUTDOWN ACTIVE",
+          "meaning": "Shutdown input active — dampers closed by the shutdown/smoke input (name expanded).",
+          "checks": [
+            "Check the shutdown (SD) input and the device driving it"
+          ],
+          "severity": "info",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "DMP CAL RUNNING",
+          "meaning": "Damper calibration in progress (name expanded).",
+          "checks": [
+            "Wait for calibration to complete after power-up before judging damper response"
+          ],
+          "severity": "info",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "DA SENS ALM",
+          "meaning": "Discharge air sensor alarm (name expanded).",
+          "checks": [
+            "Check DAT sensor"
+          ],
+          "severity": "warning",
+          "source": "Honeywell 62-0331, Alarms menu list",
+          "evidence": "single_secondary"
+        }
+      ],
+      "diagnosticTips": [
+        "Display/LEDs: the module is in the economizer/control compartment; use the ▲/▼/Enter/Esc buttons to walk STATUS → SETPOINTS → SYSTEM SETUP → ADVANCED SETUP → CHECKOUT → ALARMS.",
+        "CHECKOUT drives the damper open/closed and exercises outputs for testing; STATUS shows live MAT/OAT/RAT, economizer availability and damper position.",
+        "Alarms clear automatically when the condition is resolved (e.g. a sensor reconnected); a persistent alarm after wiring is verified means the sensor or actuator is bad."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Honeywell JADE Economizer Module W7220 Installation Instructions 62-0331",
+          "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/62-0331.pdf"
+        },
+        {
+          "title": "Honeywell JADE W7220 Installation/Operator manual (ManualsLib p.24, alarms)",
+          "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Honeywell 62-0331 JADE W7220 installation instructions (alarm names and four alarm meanings transcribed from search summary)"
+      ]
+    },
+    {
+      "id": "orion-vccx2",
+      "name": "AAON Orion (WattMaster) VCCX2 / VCC-X unit controller",
+      "description": "Factory-installed AAON unit controller (Orion Control Systems / WattMaster) on RN, RQ and other AAON rooftops. Alarms are text alarms shown on the LCD / System Manager TS-L/TS II and via BACnet; the red ALARM LED lights continuously while any alarm is present. Companion modules: RSMD/RSMD2R refrigerant system module, CPM compressor protection module, head-pressure control module.",
+      "appliesTo": [
+        "aaon-rn-legacy",
+        "aaon-rn-unified",
+        "aaon-rq-legacy",
+        "aaon-rq-unified"
+      ],
+      "faultCodes": [
+        {
+          "code": "Low Suction Pressure Failure",
+          "meaning": "Suction pressure stays below the Low Suction Pressure Setpoint for one minute or falls below 40 psi for five seconds; the system shuts down and power must be cycled to clear the alarm.",
+          "likelyCauses": [
+            "Low refrigerant charge / leak",
+            "Low evaporator airflow (dirty filters, VFD/fan fault, iced coil)",
+            "Restricted TXV/EEV or liquid line",
+            "Failed suction pressure transducer or wiring"
+          ],
+          "checks": [
+            "Verify suction transducer reading against a gauge on the same port",
+            "Check charge by subcooling with the compressor forced to full capacity",
+            "Check airflow: filters, fan speed command vs actual, coil condition",
+            "Inspect for frost at the metering device (restriction)"
+          ],
+          "severity": "lockout",
+          "source": "VCCX2 Controller Technical Guide (G039840, software SS1088), alarm description",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Mechanical Cooling Failure",
+          "meaning": "Mechanical cooling failure alarm — the controller detected that mechanical cooling did not produce the expected result (exact text per technical guide).",
+          "likelyCauses": [
+            "Compressor not running (CPM/safety trip, contactor, overload)",
+            "Refrigerant circuit fault",
+            "Failed supply-air/coil temperature sensor giving no cooling proof"
+          ],
+          "checks": [
+            "Check compressor status and safeties (HPS/LPS, CPM)",
+            "Verify the supply air temperature sensor reads correctly",
+            "Confirm cooling stage outputs at the relay LEDs"
+          ],
+          "severity": "warning",
+          "source": "VCCX2 Controller Technical Guide (G039840), alarm list",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Mechanical Heating Failure",
+          "meaning": "Mechanical heating failure alarm — heating stages energized without the expected supply-air temperature response (exact text per technical guide).",
+          "likelyCauses": [
+            "Gas heat lockout (ignition control fault)",
+            "Electric heat limit/contactor fault",
+            "Supply air sensor fault"
+          ],
+          "checks": [
+            "Check the heat section's own ignition/limit diagnostics",
+            "Verify heat relay outputs and supply-air temperature"
+          ],
+          "severity": "warning",
+          "source": "VCCX2 Controller Technical Guide (G039840), alarm list",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Fan Proving Alarm",
+          "meaning": "Supply fan proving input did not close after the fan was commanded on.",
+          "likelyCauses": [
+            "Supply fan/VFD not running (VFD fault, belt, overload)",
+            "Proving switch (differential pressure or current sensor) failed or mis-set",
+            "Wiring open to the proving input"
+          ],
+          "checks": [
+            "Check VFD status/fault log and fan rotation",
+            "Verify the proving switch closes with the fan running (24 VAC at the input)"
+          ],
+          "severity": "shutdown",
+          "source": "VCCX2 Controller Technical Guide (G039840), alarm list",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Dirty Filter Alarm",
+          "meaning": "Dirty filter status — a differential pressure switch provides a 24 VAC wet-contact closure to indicate a dirty filter.",
+          "likelyCauses": [
+            "Loaded filters",
+            "Filter switch set too low or tubing reversed"
+          ],
+          "checks": [
+            "Inspect filters; verify switch setpoint and tubing (high side upstream of the filters)"
+          ],
+          "severity": "info",
+          "source": "VCCX2 Controller Technical Guide (G039840), input description",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Sensor failure alarms (space, supply, outdoor, return, etc.)",
+          "meaning": "Alarm generated when a configured temperature/humidity/pressure sensor reads open or shorted (see 'Alarm Detection and Sensor Failure Alarms' section).",
+          "likelyCauses": [
+            "Open/shorted 10k Type III thermistor or wiring",
+            "Sensor not installed but configured"
+          ],
+          "checks": [
+            "Measure sensor resistance at the controller input",
+            "Check configuration for sensors that are not actually installed"
+          ],
+          "severity": "warning",
+          "source": "AAON Orion VCCX2 Technical Manual, section 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89)",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "ALARM (red) LED on continuously",
+          "meaning": "An alarm is present; the specific alarm is displayed on the LCD / System Manager",
+          "checks": [
+            "Read the alarm text on the LCD or via the System Manager TS-L / TS II"
+          ]
+        },
+        {
+          "pattern": "POWER, APP HB, OS HB, WDOG, STATUS 1/2, EBUS, LOOP COMM, BACNET, RLY1–RLY8 LEDs",
+          "meaning": "Power, application and OS heartbeats, watchdog, status, E-BUS, loop communication, BACnet activity and relay output states — used for diagnostics",
+          "checks": [
+            "A steady heartbeat LED that stops blinking indicates a halted controller — cycle power",
+            "RLY LEDs show which outputs (fan, cooling/heating stages) are commanded"
+          ]
+        }
+      ],
+      "diagnosticTips": [
+        "The controller LCD and LEDs are on the VCCX2 board in the unit control compartment; the System Manager TS-L / TS II (wall or unit mounted) shows status, alarms and setpoints.",
+        "The Low Suction Pressure alarm is a hard lockout: fix the cause, then cycle controller power to clear.",
+        "Many AAON compressor and refrigerant faults are detected by the RSMD/CPM modules and then reported by the VCCX2 — check those modules' own LEDs (CPM technical guide G143890, RSMD guide G039810).",
+        "Controls support: AAON Controls (918) 382-6450 / support.controls@aaon.com."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "VCCX2 Controller Technical Guide, Orion Control Systems / AAON, ASM01698, software SS1088 (G039840)",
+          "url": "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/G039840-VCCX2-T.pdf"
+        },
+        {
+          "title": "AAON Orion VCCX2 Technical Manual (ManualsLib), 'Alarm Detection and Sensor Failure Alarms' p.89",
+          "url": "https://www.manualslib.com/manual/2182541/Aaon-Orion-Vccx2.html?page=89"
+        },
+        {
+          "title": "VCCX2 Component & System Wiring Technical Guide OR-VCCX2WIRE-TGD-01B",
+          "url": "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/OR-VCCX2WIRE-TGD-01B.pdf"
+        },
+        {
+          "title": "Orion VCC-X Controller Technical Guide (predecessor)",
+          "url": "https://manualzz.com/doc/11848113/vcc-x-controller-technical-guide-01c"
+        },
+        {
+          "title": "AAON RSMD2R Technical Guide G088350 and CPM Technical Guide G143890",
+          "url": "https://www.aaon.com/hubfs/Controls%20Literature/G088350-RSMD2R-TGD-E.pdf"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "VCCX2 Controller Technical Guide G039840 (alarm descriptions transcribed from search summaries — full table not read)",
+        "AAON Orion VCCX2 Technical Manual (ManualsLib)"
+      ]
+    }
+  ],
+  "electrical": [
+    {
+      "familyRegex": "rheem-commercial-package-rk-rl-rq|rheem-light-commercial-package-rs-rj|^R[KLQSJ]",
+      "familyLabel": "Rheem/Ruud commercial packaged rooftops (RKNL/RKKL/RLKL/RLNL and small packaged units)",
+      "controlVoltage": "24 VAC from the unit control transformer (TRAN/TRANS), secondary fused; RTU-C (Renaissance) or thermostat-driven relay logic",
+      "components": [
+        {
+          "designator": "CC / C",
+          "name": "Compressor contactor",
+          "notes": "One per compressor on 2-circuit units"
+        },
+        {
+          "designator": "IFC",
+          "name": "Integrated furnace (ignition) control",
+          "notes": "LED flash codes; Modbus link to the RTU-C on RKNL-C+"
+        },
+        {
+          "designator": "RTU-C",
+          "name": "Rooftop unit controller (Renaissance)",
+          "notes": "RKNL-C and later"
+        },
+        {
+          "designator": "TRAN / TRANS",
+          "name": "Control transformer (24 VAC)"
+        },
+        {
+          "designator": "HPS / HPC",
+          "name": "High-pressure switch (per circuit)"
+        },
+        {
+          "designator": "LPS / LPC",
+          "name": "Low-pressure switch (per circuit)"
+        },
+        {
+          "designator": "OFM / OFC",
+          "name": "Outdoor (condenser) fan motor / capacitor"
+        },
+        {
+          "designator": "IFM / BM",
+          "name": "Indoor blower motor (belt drive or ECM depending on size)"
+        },
+        {
+          "designator": "PS",
+          "name": "Combustion-air pressure switch (gas units)"
+        },
+        {
+          "designator": "LS / RO",
+          "name": "Main limit switch / roll-out switch (gas units)"
+        },
+        {
+          "designator": "IGN / FS",
+          "name": "Igniter / flame sensor (gas units)"
+        },
+        {
+          "designator": "GV",
+          "name": "Gas valve"
+        },
+        {
+          "designator": "IDM",
+          "name": "Induced-draft (combustion) motor"
+        },
+        {
+          "designator": "ECON",
+          "name": "Economizer module (Honeywell JADE W7220 on units with factory economizer)"
+        },
+        {
+          "designator": "PM",
+          "name": "Phase monitor (3-phase scroll units)"
+        },
+        {
+          "designator": "TB",
+          "name": "Low-voltage terminal board"
+        }
+      ],
+      "safetyDevices": [
+        "High-pressure switch per circuit",
+        "Low-pressure switch per circuit",
+        "Compressor internal overload / CLO",
+        "Main limit and roll-out switches (gas)",
+        "Combustion-air pressure switch (gas)",
+        "Freeze protection via economizer/low-ambient controls where fitted",
+        "Phase monitor on 3-phase scroll units"
+      ],
+      "terminalLabels": {
+        "R": "24 VAC hot",
+        "C": "24 VAC common",
+        "G": "Indoor fan",
+        "Y1": "Cooling stage 1",
+        "Y2": "Cooling stage 2",
+        "W1": "Heat stage 1",
+        "W2": "Heat stage 2",
+        "OCC": "Occupied input (economizer/RTU-C)",
+        "X / A": "Alarm / auxiliary output (RTU-C)"
+      },
+      "sequenceOfOperation": [
+        "Cooling (thermostat/RTU-C): Y1 + G → indoor blower energized (G, or after the controller's fan delay); with HPS/LPS closed the controller closes CC for compressor 1 and starts the condenser fan; Y2 adds compressor 2 / second stage. With a JADE economizer and suitable outdoor air, the economizer satisfies first-stage cooling with the dampers before mechanical cooling is staged.",
+        "Gas heating: W1 → IFC starts the inducer (IDM), proves the pressure switch (PS), runs pre-purge, energizes the hot-surface igniter and gas valve (GV), proves flame at FS, then starts the indoor blower after the heat-on delay; W2 drives high fire on two-stage units. Limit (LS) or roll-out (RO) opening shuts the gas valve and produces a 3-flash code.",
+        "Electric heat (RL units): W1/W2 energize heater contactors through the limit string with the blower running."
+      ],
+      "notes": [
+        "LOW CONFIDENCE — designators are common Rheem wiring-diagram usage from builder recollection, NOT transcribed from a specific IOM legend. Read the legend on the wiring diagram glued inside the control-box cover; the same diagram is in the IOM (92-23577-80 series for RKNL-B/C).",
+        "Phase-monitor fitment year was not confirmed; treat 'PM' as present only if shown on the unit diagram."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Builder recollection; Rheem IOM 92-23577-80 (RKNL-B/C) named as the authoritative diagram source"
+      ]
+    },
+    {
+      "familyRegex": "aaon-rn-legacy|aaon-rn-unified|aaon-rq-legacy|aaon-rq-unified|^R[NQ]",
+      "familyLabel": "AAON RN / RQ packaged rooftops",
+      "controlVoltage": "24 VAC from the unit control transformer; Orion VCCX2 controller with 24 VAC relay outputs and 0–10 VDC / E-BUS expansion outputs",
+      "components": [
+        {
+          "designator": "VCCX2",
+          "name": "Orion unit controller"
+        },
+        {
+          "designator": "RSMD / RSMD2R",
+          "name": "Refrigerant system module (suction/discharge transducers, digital scroll and EEV control)"
+        },
+        {
+          "designator": "CPM",
+          "name": "Compressor protection module (AAON G143890)"
+        },
+        {
+          "designator": "VFD",
+          "name": "Supply fan (and condenser fan on larger units) variable-frequency drive"
+        },
+        {
+          "designator": "HPCM",
+          "name": "Head-pressure control module driving an EC condenser fan motor or condenser-fan VFD"
+        },
+        {
+          "designator": "VCC",
+          "name": "Copeland digital scroll (variable-capacity) compressor, first stage on most newer units"
+        },
+        {
+          "designator": "HPS / LPS",
+          "name": "High / low pressure switches per circuit"
+        },
+        {
+          "designator": "PM",
+          "name": "Phase / brown-out monitor"
+        },
+        {
+          "designator": "ECON",
+          "name": "Economizer actuator(s) with outdoor/return air sensors, controlled by the VCCX2"
+        },
+        {
+          "designator": "TB",
+          "name": "Field wiring terminal block(s)"
+        }
+      ],
+      "safetyDevices": [
+        "High- and low-pressure switches per circuit",
+        "Compressor protection module (CPM) with phase/rotation and overload monitoring",
+        "Low suction pressure lockout in the VCCX2 (power cycle to clear)",
+        "Fan proving switch",
+        "Gas heat ignition control limits / roll-out",
+        "Phase/brown-out monitor"
+      ],
+      "terminalLabels": {
+        "R": "24 VAC hot",
+        "C": "24 VAC common",
+        "G": "Fan (thermostat mode)",
+        "Y1/Y2": "Cooling stages (thermostat mode)",
+        "W1/W2": "Heating stages (thermostat mode)",
+        "E-BUS": "Orion expansion bus (RSMD, modules, System Manager)",
+        "BACnet MS/TP": "Building automation interface on the VCCX2"
+      },
+      "sequenceOfOperation": [
+        "Cooling: on a space/supply-air demand the VCCX2 proves the supply fan (fan proving input), then stages cooling — the digital scroll (VCC) modulates 10–100 % as first stage, fixed compressors add capacity; condenser fan speed is modulated by the head-pressure module for head-pressure control. Economizer dampers modulate first when outdoor conditions allow.",
+        "Heating: the VCCX2 stages gas or electric heat through its relay outputs (or modulates a gas valve) to hold the supply-air setpoint; the gas heat section's own ignition control handles ignition and limits.",
+        "Low suction pressure below setpoint for 1 minute (or < 40 psi for 5 s) shuts the system down; power must be cycled to clear."
+      ],
+      "notes": [
+        "LOW CONFIDENCE — component list is builder recollection plus the AAON technical training guides and controls literature named below, not a transcribed wiring-diagram legend. Every AAON unit ships with order-specific wiring diagrams in the control compartment — use those.",
+        "Digital scroll modulation (VCC) means measured superheat/subcooling swing with loading — force 100 % capacity via the controller before evaluating charge."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "AAON Rooftop Unit Technical Training Guide (Total HVAC Inc., squarespace copies)",
+        "VCCX2 Controller Technical Guide G039840",
+        "AAON CPM Technical Guide G143890; RSMD Technical Guide G039810"
+      ]
+    }
+  ],
+  "commonIssues": [
+    {
+      "symptom": "Gas heat locks out with 2 flashes on the IFC (pressure switch open) — often after rain or during cooling season changeover",
+      "likelyCauses": [
+        "Condensate line clogged, backing water into the pressure-switch hose",
+        "Blocked vent/flue or combustion-air inlet (nests, debris)",
+        "Weak inducer"
+      ],
+      "checks": [
+        "Pull the pressure-switch hose and check for water; clear the drain/trap",
+        "Measure draft at the switch with the inducer running",
+        "Inspect the vent hood and flue"
+      ],
+      "appliesTo": "^R[KG]",
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "bcwide.ca / burkhardtheating.com Rheem-Ruud flash-code guides"
+      ]
+    },
+    {
+      "symptom": "Renaissance unit (RKNL-C+) shows A15 and will not run",
+      "likelyCauses": [
+        "RTU-C controller fault",
+        "Control-power quality problem"
+      ],
+      "checks": [
+        "Cycle power; verify 24 VAC control power under load",
+        "Replace the RTU-C if A15 returns"
+      ],
+      "appliesTo": "^R[KLQ][NP][LN]-[C-Z]",
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "justanswer thread: A15 controller fault on Rheem commercial unit"
+      ]
+    },
+    {
+      "symptom": "Economizer not economizing / JADE shows a sensor error; unit runs mechanical cooling in mild weather",
+      "likelyCauses": [
+        "Failed or disconnected OA/MA sensor (MAT SENS ERR, OA SYLK T/H ERR)",
+        "Actuator undervoltage (ACT UNDER V) from a loaded 24 VAC transformer",
+        "Damper linkage or actuator failure"
+      ],
+      "checks": [
+        "Read the ALARMS menu on the JADE",
+        "Check sensor wiring/resistance; measure 24 VAC at the actuator",
+        "Use CHECKOUT to stroke the damper"
+      ],
+      "appliesTo": "^R[KLQSJ]",
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Honeywell 62-0331 JADE W7220 alarms table"
+      ]
+    },
+    {
+      "symptom": "AAON unit trips on Low Suction Pressure and locks out until power is cycled",
+      "likelyCauses": [
+        "Low charge/leak",
+        "Low airflow (filters, fan VFD speed, iced coil)",
+        "Restricted metering device",
+        "Suction transducer/wiring fault"
+      ],
+      "checks": [
+        "Compare transducer to gauge",
+        "Force compressor to 100 % via the controller before charge evaluation",
+        "Check filters, VFD speed command and coil"
+      ],
+      "appliesTo": "^R[NQ]",
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "VCCX2 Controller Technical Guide G039840 (alarm description)"
+      ]
+    },
+    {
+      "symptom": "AAON digital scroll (VCC) unit: erratic superheat/subcooling readings, apparent under/overcharge",
+      "likelyCauses": [
+        "Digital scroll unloading (10–100 % modulation) during the reading — pressures swing with the loading cycle",
+        "Genuine charge problem masked by modulation"
+      ],
+      "checks": [
+        "Force the VCC to 100 % from the controller and let pressures stabilize before reading",
+        "Charge to the nameplate subcooling with the compressor at full capacity",
+        "Check the RSMD/CPM status LEDs for compressor faults"
+      ],
+      "appliesTo": "^R[NQ]",
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "AAON Rooftop Unit Technical Training Guide (Total HVAC Inc.) describing VCC modulation; charging-at-100 % practice from builder recollection"
+      ]
+    },
+    {
+      "symptom": "AAON unit: high head pressure / condenser fan not modulating",
+      "likelyCauses": [
+        "Head-pressure control module or EC condenser fan motor failure",
+        "Condenser fan VFD fault or min/max frequency mis-set",
+        "Dirty condenser coil"
+      ],
+      "checks": [
+        "Verify the 0–10 V signal from the head-pressure module to the EC motor/VFD",
+        "Check VFD fault log and programmed min/max frequencies",
+        "Clean the coil"
+      ],
+      "appliesTo": "^R[NQL]",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "AAON Rooftop Unit Technical Training Guide (Total HVAC Inc.): head-pressure module paired with EC motor or VFD"
+      ]
+    },
+    {
+      "symptom": "AAON unit: economizer damper stuck / excess outdoor air, poor temperature control and high energy use",
+      "likelyCauses": [
+        "Economizer damper or actuator failure",
+        "Poor economizer control setup (sensors, changeover setpoints)",
+        "Blocked/binding damper blades"
+      ],
+      "checks": [
+        "Command the damper via the controller and watch the actuator",
+        "Verify OA/RA sensor readings and economizer setpoints in the VCCX2",
+        "Inspect blades/linkage for obstruction"
+      ],
+      "appliesTo": "^R[NQ]",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Purdue open-access thesis on rooftop unit fault detection (economizer damper failure and excess outdoor air as common degradation modes)",
+        "AAON RN IOM economizer section"
+      ]
+    },
+    {
+      "symptom": "AAON unit: vibration and rattling noises",
+      "likelyCauses": [
+        "Loose panels or screws",
+        "Fan wheel / belt / bearing wear",
+        "Compressor mounting"
+      ],
+      "checks": [
+        "Tighten panels and hardware",
+        "Inspect blower bearings, belts and wheel balance"
+      ],
+      "appliesTo": "^R[NQL]",
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "troubleshootinglab.com AAON rooftop units troubleshooting"
+      ]
+    }
+  ],
+  "support": {
+    "phone": "Rheem/Ruud HVAC technical support: (800) 432-8373 (Mon–Fri 7:00–19:00 CT; press 2 for contractor/business partner). AAON technical support: (866) 918-1100 (Mon–Fri 7:00–17:00 CT); AAON Controls support: (918) 382-6450, support.controls@aaon.com; AAON rep locator: (918) 583-2266",
+    "url": "https://www.rheem.com/contact ; https://www.aaon.com/resources/how-to-contact-support",
+    "literatureUrl": "Rheem: http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/ (service literature docstore) and https://www.rheem.com/professionals/commercial-heating-and-cooling/ ; AAON: https://www.aaon.com (product pages → Documents) and https://www.aaon.com/resources/controls-technical-support",
+    "literatureSearchHint": "Rheem: search '<series>-<revision> installation instructions 92-' (e.g. 'RKNL-B RKNL-C 92-23577-80') or the spec form number (R11-855, S11-983); distributor sites (Gemaire/Baker resource.gemaire.com) mirror the spec sheets. AAON: search '<series> Series IOM' on aaon.com (e.g. 'RN Series IOM', 'RQ Series IOM'); the order-specific wiring diagrams ship inside the unit control compartment; controls guides are under aaon.com/hubfs/Controls Literature (VCCX2 G039840).",
+    "notes": "Rheem's general line routes commercial-air calls; there is no separately published commercial rooftop number in the sources found. AAON prefers the direct controls line for on-site troubleshooting."
+  },
+  "notes": [
+    "This pack combines two manufacturers because AAON and Rheem/Ruud commercial share a scope; check the brand on the nameplate first — Rheem/Ruud plates carry 'RKNL-…' style models with a letter-first serial, AAON plates carry a long hyphen/colon feature string with a year-first serial.",
+    "Research constraint: the session's web-search budget ran out after the first rounds; several items were therefore left at 'low' or omitted rather than guessed (see lowConfidence/unresolved in the build report).",
+    "Not decoded: Rheem 2019+ Renaissance long-form nomenclature (e.g. 'RACDZT…' per spec S11-983), Rheem RHKL/RHLL commercial air handlers, Ruud U-prefixed commercial models (Ruud commercial spec R22-852 uses R-prefixed RKNL/RKPL), AAON RL/RM/RG/CN/CB/H3/V3 feature strings (identification only), AAON Touch and AAON Field Controller platforms, the full RTU-C fault table.",
+    "Refrigerant defaults: Rheem R-410A revisions from ~2010 (earlier RKNL-A/RKKA units R-22); AAON RN/RQ R-410A with 2025+ builds moving to R-454B (A2L — ventilate, no ignition sources, A2L-rated tools)."
+  ],
+  "sources": [
+    "https://www.building-center.org/rheem-hvac-age/",
+    "https://www.building-center.org/ruud-hvac-age/",
+    "https://www.pickhvac.com/hvac/age-serial-number/rheem/",
+    "https://hvacchecker.com/rheem-hvac-age",
+    "https://www.rheem.com/how-to-locate-and-read-your-rheem-water-heating-serial-numbers/",
+    "https://www.building-center.org/rheem-water-heater-age/",
+    "https://fastwaterheater.com/water-heaters/water-heater-model-numbers-rating-plates/",
+    "https://www.building-center.org/aaon-hvac-age/",
+    "https://www.building-center.org/aaon-hvac-model-number-nomenclature/",
+    "https://www.aaon.com/resources/what-is-my-aaon-product-model",
+    "https://www.aaon.com/hubfs/Documents/IOM/410A/RN_NextGen_IOM_240502_410A.pdf",
+    "https://www.aaon.com/hubfs/Documents/IOM/454B/RNE_IOM_240729_454B.pdf",
+    "https://www.aaon.com/hubfs/Documents/IOM/410A/RQ_IOM_240625_410a.pdf",
+    "https://www.aaon.com/hubfs/RQ%20Series%20IOM%2020260615.pdf",
+    "https://www.aaon.com/resources/comparison-of-legacy-and-the-new-unified-feature-strings-for-rn-product",
+    "https://www.manualslib.com/manual/817789/Aaon-Rn-Series.html?page=13",
+    "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/G039840-VCCX2-T.pdf",
+    "https://www.manualslib.com/manual/2182541/Aaon-Orion-Vccx2.html?page=89",
+    "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/OR-VCCX2WIRE-TGD-01B.pdf",
+    "https://www.aaon.com/hubfs/Controls%20Literature/CPM_TGD_D.pdf",
+    "https://www.aaon.com/aaon-controls-technical-support",
+    "https://www.aaon.com/resources/how-to-contact-support",
+    "Rheem FORM R11-855 Rev.1/2 Air Package Gas Electric RKNL-B Series",
+    "Rheem FORM R11-858 Air Package Gas Electric RKKL-B Series (Commercial Value Series)",
+    "Rheem FORM S11-959 / S11-960 Rev.1 Air Package Air Conditioner RLKL-B Series",
+    "Rheem FORM S11-983 Rev.7 Commercial 7.5–12.5 Ton Renaissance Line",
+    "Rheem FORM R11-852 Package Gas Electric RKNL/RKPL Series (RKNL-13 SEER)",
+    "Ruud FORM R22-852 Package Gas Electric RKNL/RKPL Series",
+    "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/GE_Package/RKNL/92-23577-80-03_RKNL-B_RKNL-C_6-12.5.pdf",
+    "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Accessories/ClearControl/92-103249-01-04_ClearControl_DDL.pdf",
+    "https://media.rheem.com/media/uploads/iat/sites/36/2020/08/RHM5470_Renaissance_Technology_Brochure_M11-1997_R3_SPRDS.pdf",
+    "https://www.justanswer.com/plumbing/n7ud2-clear-reset-error-codes-1-lockout-a15-controller.html",
+    "https://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/Topics/GF_Flash_Code.asp",
+    "https://bcwide.ca/rheem-furnace-error-codes-greater-vancouver/",
+    "https://www.burkhardtheating.com/blog/rheem-ruud-furnace-error-codes",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/62-0331.pdf",
+    "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24",
+    "Rheem FORM A11-209 Rev.3 Air Condensing Units RAWL Series; A11-208 / A11-193 / A22-194 Commercial High-Efficiency Condensing Units",
+    "https://www.budgetheating.com/6-5-Ton-Rheem-Condenser-Three-Phase-RAWL-079-p/172279.htm",
+    "https://www.rheem.com/contact",
+    "https://static1.squarespace.com/static/5c533efab91449768c1f8f70/t/5c543fdda4222fdb76834d0a/1549025252550/AAON+RTU+Guide.pdf"
+  ],
+  "confidence": "medium",
+  "lastReviewed": "2026-09-26"
+}

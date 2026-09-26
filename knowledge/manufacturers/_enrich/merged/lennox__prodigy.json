@@ -1,0 +1,1025 @@
+{
+  "pack": "lennox",
+  "platformId": "prodigy",
+  "name": "Lennox Prodigy 2.0 (M3 Unit Controller) / Prodigy M2 unit controller",
+  "coverage": "partial",
+  "sourceDocs": [
+    { "title": "Prodigy 2.0 (M3 Unit Controller) Application Guide - Table 65/66 'Prodigy 2.0 Alarm and Event Codes', Table 62 'LED Operation Indicators'", "docId": "507242-07", "url": "https://www.lennox.com/dA/526b549aa6/507242-07f.pdf" },
+    { "title": "Prodigy 2.0 (M3 Unit Controller) Application Manual (mirror, alarm table pages 147-156, LED page 109)", "docId": "507242 (ManualsLib 1251298)", "url": "https://www.manualslib.com/manual/1251298/Lennox-Prodigy2-0.html?page=147" },
+    { "title": "Prodigy 2.0 Controller Application Manual (mirror, Table 66 alarm codes pages 138-140)", "docId": "507242 (ManualsLib 1593305)", "url": "https://www.manualslib.com/manual/1593305/Lennox-Prodigy-2-0.html?page=138" },
+    { "title": "Prodigy 2.0 (M3 Unit Controller) Setup Guide - Table 1 LED Operation Indications, alarm display/dismiss, Service > Test", "docId": "507241-07", "url": "https://www.lennox.com/dA/2b19b90e67/507241-07b.pdf" },
+    { "title": "Prodigy M2 Unit Controller Installation & Setup Guide - Event Codes (p.22), Table 8 Alarm Codes (p.31)", "docId": "506215-01", "url": "https://literature.neuco.com/IS-59W47.pdf" },
+    { "title": "Prodigy Application Guide (M2) - Table 40 alarm codes", "docId": "506457-01", "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/506457d.pdf" },
+    { "title": "Lennox Commercial Controls FAQs - Prodigy M3 Unit Controller", "docId": "507398-01", "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/507398.pdf" }
+  ],
+  "faultCodes": [
+    {
+      "code": "2",
+      "meaning": "RESET CONTROLLER - Check unit settings; contact Lennox if problem persists.",
+      "likelyCauses": ["Controller reset / watchdog restart (power glitch, firmware fault)", "Corrupt or conflicting unit configuration"],
+      "checks": ["Verify unit configuration ID and parameters after the reset (Settings > Install)", "Check incoming power quality and 24 VAC transformer output (field practice)", "If it repeats, record alarm history and call Lennox technical support"],
+      "severity": "warning",
+      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Event Codes ('CODE 2: RESET CONTROLLER, CHECK UNIT SETTINGS, CONTACT LENNOX IF PROBLEM PERSISTS'); code also listed in Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4",
+      "meaning": "SMOKE MODE - Check for source of smoke. While the Smoke Alarm is active the M3 unit controller will not service any cooling, heating or ventilation demands.",
+      "likelyCauses": ["Smoke detector A171/A172 tripped or in fault", "Smoke-detector wiring open / detector needs reset"],
+      "checks": ["Locate and clear the source of smoke before resetting", "Reset the smoke detector(s) A171/A172 and verify the input returns to normal", "Smoke-mode blower/damper/exhaust behaviour is set by parameter 109"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.147-156) and Prodigy M2 guide 506215-01 ('CODE 4: SMOKE MODE, CHECK FOR SOURCE OF SMOKE')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6",
+      "meaning": "DIRTY FILTER S27 - Replace filter or check filter switch S27. Alarm clears automatically once the switch is detected open.",
+      "likelyCauses": ["Dirty filters (S27 closes on high filter pressure drop)", "Mis-set or failed dirty-filter switch or its tubing"],
+      "checks": ["Replace filters", "If filters are clean, check S27 setpoint and sensing tubing; S27 is open during normal operation", "Service alarm output (if configured) turns on with this code"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'Dirty Filter Switch (S27)' section (ManualsLib 1251298 p.20); Prodigy M2 guide 506215-01 ('CODE 6: REPLACE FILTER OR CHECK FILTER SWITCH S27')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "8",
+      "meaning": "STRIKE 3 ON BLOWER S52 - Lockout, multiple code 5 (air flow switch) events; check blower parts. Can be manually cleared through the user interface.",
+      "likelyCauses": ["Repeated air-flow proving failures (belt, blower motor/VFD, S52 switch or tubing)"],
+      "checks": ["Correct the underlying code 5 cause, then clear the lockout from the Service menu", "Number of strikes is 3 by default (parameter 43)"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 ('STRIKE 3 ON BLOWER S52'); Prodigy M2 guide 506215-01 ('CODE 8: LOCKOUT, MULTIPLE CODE 5, CHECK BLOWER PARTS')",
+      "evidence": "manufacturer_doc",
+      "notes": "Same alarm as the existing text entry 'STRIKE 3 ON BLOWER'; this is its numeric code."
+    },
+    {
+      "code": "12",
+      "meaning": "COMP 1 HIGH PRESS S4 - Compressor is off. Check charge, fans, coil.",
+      "likelyCauses": ["Dirty/blocked condenser coil or failed condenser fan", "Overcharge or non-condensables", "On some compressors a high-temperature switch is in series with S4, so a high-temperature trip also gives this code"],
+      "checks": ["Check condenser fan operation and coil cleanliness", "Check charge (subcooling) and head pressure", "Compressor restarts only after S4 closes and the minimum off delay expires; 3 trips in one demand (parameter 98) locks out (code 13)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.138 / 1251298 p.153)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "13",
+      "meaning": "STRIKE 3 ON COMP 1 HIGH PRESS S4 - Compressor lockout. Check charge, fans, coil. Use service menu to clear lockouts.",
+      "likelyCauses": ["Three high-pressure (or high-temperature) trips in a single demand cycle"],
+      "checks": ["Fix the cause of code 12, then clear the lockout via Service > Lockouts"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.138)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "14",
+      "meaning": "COMP 2 HIGH PRESS S7 - Compressor is off. Check charge, fans, coil.",
+      "likelyCauses": ["Condenser airflow problem, overcharge, non-condensables, or high-temperature switch S8 trip (in series on some units)"],
+      "checks": ["As for code 12, on circuit/compressor 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.138)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "15",
+      "meaning": "STRIKE 3 ON COMP 2 HIGH PRESS S7 - Compressor lockout. Use service menu to clear lockouts.",
+      "likelyCauses": ["Three S7 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 14, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.138)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "16",
+      "meaning": "COMP 3 HIGH PRESS S28 - Compressor is off. Check charge, fans and coil.",
+      "likelyCauses": ["Condenser airflow problem, overcharge, non-condensables, or thermal switch S31 trip"],
+      "checks": ["As for code 12, on compressor 3"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.153)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "17",
+      "meaning": "STRIKE 3 ON COMP 3 HIGH PRESS S28 - Compressor lockout (three high-pressure/high-temperature trips in one demand cycle).",
+      "likelyCauses": ["Three S28 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 16, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 ('Events 12-19 could also be caused by a high temperature condition on some compressors'); high pressure switches S4, S7, S28, S96",
+      "evidence": "manufacturer_doc",
+      "notes": "Display text follows the documented 12/13 and 14/15 pattern for compressor 3 (S28); the guide states events 12-19 are the high-pressure/high-temperature events. Verify exact wording in Table 65."
+    },
+    {
+      "code": "18",
+      "meaning": "COMP 4 HIGH PRESS S96 - Compressor is off. Check charge, fans and coil.",
+      "likelyCauses": ["Condenser airflow problem, overcharge, non-condensables, or thermal switch S180 trip"],
+      "checks": ["As for code 12, on compressor 4"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'High Pressure Switches (S4, S7, S28 and S96)' section (ManualsLib 1593305 p.16)",
+      "evidence": "manufacturer_doc",
+      "notes": "Display text follows the documented pattern for compressor 4 (S96); verify exact wording in Table 65."
+    },
+    {
+      "code": "19",
+      "meaning": "STRIKE 3 ON COMP 4 HIGH PRESS S96 - Compressor lockout.",
+      "likelyCauses": ["Three S96 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 18, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 ('Events 12-19 ... high pressure / high temperature')",
+      "evidence": "manufacturer_doc",
+      "notes": "Display text inferred from the 12-19 pattern; verify exact wording in Table 65."
+    },
+    {
+      "code": "20",
+      "meaning": "PHASE MONITOR (A42) - Unit shutdown; check phase monitor. Alarm is set if the installed phase monitor (A42) is detected open and clears automatically when A42 is detected closed.",
+      "likelyCauses": ["Phase loss, phase reversal, or voltage imbalance tripping the external phase monitor A42", "A42 wiring/configuration on DI-2 or DI-3 wrong (Config ID 2 position 5)"],
+      "checks": ["Check incoming three-phase voltage and phase rotation", "Check the A42 monitor's LED/status and its output to DI-2/DI-3", "If A42 is not fitted, set the phase/voltage detection option to Not Installed or Internal"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (alarm 20 'PHASE MONITOR (A42)' - 'Check phase monitor') and 'Safety Switch Input (A42)' section; Prodigy M2 guide 506215-01 Event Code 20 'UNIT SHUTDOWN - CHECK PHASE MONITOR'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "22",
+      "meaning": "COMP 1 LOW PRESS S87 - Compressor de-energized due to open low pressure switch S87 (five-minute off, default).",
+      "likelyCauses": ["Low charge / leak", "Low evaporator airflow (filters, belt, dampers) or low outdoor ambient", "Restriction (TXV, filter drier); switch trips more readily at low outdoor temperatures"],
+      "checks": ["Check suction pressure and superheat; look for leaks", "Check airflow and filters", "Switch is ignored for the ignore time after demand (parameter 100); three trips in one demand (parameter 99) lock out the compressor (code 23)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'Low Pressure Switches (S87, S88, S97 and S98)' section (ManualsLib 1593305 p.17)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "23",
+      "meaning": "STRIKE 3 ON COMP 1 S87 - Compressor lockout after three low-pressure trips within the same thermostat demand.",
+      "likelyCauses": ["Repeated S87 trips (see code 22)"],
+      "checks": ["Fix the cause of code 22, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.138)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "24",
+      "meaning": "COMP 2 LOW PRESS S88 - Compressor de-energized due to open low pressure switch S88.",
+      "likelyCauses": ["Low charge, low airflow, low ambient, restriction on circuit 2"],
+      "checks": ["As for code 22, on compressor 2 (Ultra-High Efficiency B-Box units use only S87)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and low pressure switch section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "25",
+      "meaning": "STRIKE 3 ON COMP 2 S88 - Compressor lockout after three low-pressure trips in one demand.",
+      "likelyCauses": ["Repeated S88 trips"],
+      "checks": ["Fix the cause of code 24, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "26",
+      "meaning": "COMP 3 LOW PRESS S98 - Compressor de-energized due to open low pressure switch S98.",
+      "likelyCauses": ["Low charge, low airflow, low ambient, restriction on compressor 3 circuit"],
+      "checks": ["As for code 22, on compressor 3"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "27",
+      "meaning": "STRIKE 3 ON COMP 3 S98 - Compressor lockout.",
+      "likelyCauses": ["Repeated S98 trips"],
+      "checks": ["Fix the cause of code 26, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "28",
+      "meaning": "COMP 4 LOW PRESS S97 - Compressor de-energized due to open low pressure switch S97.",
+      "likelyCauses": ["Low charge, low airflow, low ambient, restriction on compressor 4 circuit"],
+      "checks": ["As for code 22, on compressor 4"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "29",
+      "meaning": "STRIKE 3 ON COMP 4 S97 - Compressor lockout.",
+      "likelyCauses": ["Repeated S97 trips"],
+      "checks": ["Fix the cause of code 28, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "30",
+      "meaning": "DRAIN PAN OVERFLOW S149 - Check for blocked drain, condensate lines and drain pan overflow switch. Alarm set if overflow switch is detected opened and compressor will be locked out.",
+      "likelyCauses": ["Blocked condensate drain / trap", "Drain pan overflow float switch S149 tripped, failed, or wired to the wrong digital input"],
+      "checks": ["Clear the drain and trap; verify pan drains", "Check S149 (S179 on the second input) and its DI-2/DI-3 configuration; setting the option to N disables monitoring", "Clear the compressor lockout via the Service menu after correcting"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (alarm 30, ManualsLib 1251298 p.153) and 'Overflow Switches (S149 / S179)' section (p.20)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "32",
+      "meaning": "COMP 1 FRZSTAT OPEN S49 - Compressor is off. Check freezestat, air flow, charge, coil, air filter and outside air temperature.",
+      "likelyCauses": ["Low evaporator airflow (dirty filters, belt, blower, closed dampers)", "Low charge or low outdoor ambient", "Freeze-stat S49 defective or poorly mounted"],
+      "checks": ["Check airflow, filters and blower", "Check charge and suction pressure", "Freeze-stat auto-resets when coil temperature rises; 3 trips in one demand (parameter 81 MAX FREEZE STAT OCC) lock out the compressor (code 33)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'Freeze-Stats (S49, S50, S53 and S95)' section (ManualsLib 1593305 p.16)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "33",
+      "meaning": "STRIKE 3 COMP 1 FRZSTAT OPEN S49 - Compressor lockout. Check freezestat, air flow, charge, coil, filter, and outside temperature.",
+      "likelyCauses": ["Three S49 freeze-stat trips in one demand cycle"],
+      "checks": ["Fix the cause of code 32, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "34",
+      "meaning": "COMP 2 FRZSTAT OPEN S50 - Compressor is off. Check freezestat, air flow, charge, coil, air filter and outside air temperature.",
+      "likelyCauses": ["Low airflow, low charge, low ambient, or faulty S50"],
+      "checks": ["As for code 32, on compressor 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "35",
+      "meaning": "STRIKE 3 COMP 2 FRZSTAT OPEN S50 - Compressor lockout.",
+      "likelyCauses": ["Three S50 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 34, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "36",
+      "meaning": "COMP 3 FRZSTAT OPEN S53 - Compressor is off. Check freezestat, air flow, charge, coil, air filter and outside air temperature.",
+      "likelyCauses": ["Low airflow, low charge, low ambient, or faulty S53"],
+      "checks": ["As for code 32, on compressor 3"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "37",
+      "meaning": "STRIKE 3 COMP 3 FRZSTAT OPEN S53 - Compressor lockout.",
+      "likelyCauses": ["Three S53 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 36, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "38",
+      "meaning": "COMP 4 FRZSTAT OPEN S95 - Compressor is off. Check freezestat, air flow, charge, coil, air filter and outside air temperature.",
+      "likelyCauses": ["Low airflow, low charge, low ambient, or faulty S95"],
+      "checks": ["As for code 32, on compressor 4"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "39",
+      "meaning": "STRIKE 3 COMP 4 FRZSTAT OPEN S95 - Compressor lockout.",
+      "likelyCauses": ["Three S95 trips in one demand cycle"],
+      "checks": ["Fix the cause of code 38, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "40",
+      "meaning": "RETURN AIR OVER HEAT LIMIT RT16 - Heat is above set point. Check space conditions and sensors. (Displayed but not stored in memory for recall.)",
+      "likelyCauses": ["Return air temperature above the heat return-air limit (parameter 115) - heating demand is interrupted", "Faulty RT16 return air sensor or thermostat calling for heat with a warm space"],
+      "checks": ["Verify space and return-air temperature against the limit", "Check RT16 resistance/wiring", "Review parameter 115 (heat return air limit)"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150) and 'Return Air Temperature Limits' text ('Codes 40 or 41 are displayed but not stored in memory for recall')",
+      "evidence": "manufacturer_doc",
+      "notes": "Display label reconstructed from the alarm 41 wording ('RETURN AIR UNDER COOL LIMIT RT16'); the action text is verbatim."
+    },
+    {
+      "code": "41",
+      "meaning": "RETURN AIR UNDER COOL LIMIT RT16 - Cool below setpoint. Check space conditions or sensor. (Displayed but not stored in memory for recall.)",
+      "likelyCauses": ["Return air temperature below the cool return-air limit (parameter 114) - cooling demand is interrupted", "Faulty RT16 sensor or thermostat calling for cooling in a cold space"],
+      "checks": ["Verify return-air temperature; check RT16 and wiring", "Review parameter 114 (cool return air limit)"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "42",
+      "meaning": "UNIT SHUTDOWN S42 OR S135 - Check 2 amp fuse; check external motor overloads.",
+      "likelyCauses": ["Blower overload relay S42 (or S135) tripped", "Blown 2 A control fuse", "Motor overload / high amps, wrong VFD settings"],
+      "checks": ["Check the 2 amp fuse on the control board", "Check blower motor amps vs FLA, belt tension, and the overload setting", "Reset the overload; three occurrences give code 43"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "43",
+      "meaning": "STRIKE 3 UNIT SHUTDOWN S42 OR S135 - Check external motor overloads.",
+      "likelyCauses": ["Repeated S42/S135 overload trips"],
+      "checks": ["Fix the cause of code 42, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "44",
+      "meaning": "GAS VALVE ON NO DEMAND GV1 - Unit off. Check gas pressure, gas valve. (M2 wording: 'GV1 POWER BUT NO DEMAND'.)",
+      "likelyCauses": ["Gas valve GV1 sensed energized with no heating demand (welded relay, miswire, ignition control fault)"],
+      "checks": ["Check for 24 VAC at GV1 with no W1 demand; check ignition control A3 and gas valve wiring", "Check manifold and supply gas pressure"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150); Prodigy M2 guide Table 8",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "45",
+      "meaning": "GAS VALVE ON NO DEMAND GV3 - Unit off. Check gas pressure, gas valve.",
+      "likelyCauses": ["Gas valve GV3 (heat section 2) sensed energized with no demand"],
+      "checks": ["As for code 44, on heat section 2 / GV3"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "50",
+      "meaning": "PRIMARY HEAT 1 LIMIT OPEN S10 - Heat section 1 primary gas heat limit switch is open. Check air flow, air filter, limit switch and wiring.",
+      "likelyCauses": ["Low airflow across the heat exchanger (filters, belt, blower speed, closed dampers)", "Over-fired burner / high gas pressure", "Failed or miswired S10 limit"],
+      "checks": ["Check airflow, filters and blower", "Check temperature rise and manifold pressure", "Gas valve is de-energized and blower energized; three opens in a thermostat cycle lock out the heat section for one hour (code 51)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 50-51, ManualsLib 1251298 p.150) and 'Primary or Secondary Limits (S10 and S99)' section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "51",
+      "meaning": "STRIKE 3 PRIMARY HEAT 1 LIMIT OPEN S10 - Heat section 1 locked out (one hour) after the primary limit opened three times in a thermostat cycle. Check air flow, limit switch and wiring.",
+      "likelyCauses": ["Repeated S10 limit trips"],
+      "checks": ["Fix the cause of code 50, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 50-51)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "52",
+      "meaning": "SECONDARY HEAT 1 LIMIT OPEN S21 - Heat section 1 secondary gas heat limit switch is open. Check air flow, air filter, limit switch and wiring.",
+      "likelyCauses": ["Low airflow, over-firing, or failed S21 secondary limit"],
+      "checks": ["As for code 50; also check the secondary limit S21 location and wiring"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 52-53, ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "53",
+      "meaning": "STRIKE 3 SECONDARY HEAT 1 LIMIT OPEN S21 - Heat section 1 locked out after the secondary limit opened three times.",
+      "likelyCauses": ["Repeated S21 trips"],
+      "checks": ["Fix the cause of code 52, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 52-53)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "54",
+      "meaning": "HEAT 1 ROLLOUT OPEN S47 - Heat section 1 flame roll out burner 1 switch is open. Check gas roll out switch S47 and gas supply.",
+      "likelyCauses": ["Flame rollout (blocked heat exchanger / flue, cracked heat exchanger, poor combustion air)", "Tripped manual-reset rollout switch S47"],
+      "checks": ["Find the cause of rollout before resetting: inspect heat exchanger, flue and burners", "Gas valve is de-energized; S47 requires a manual reset"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 54-55 heat section 1, 'Heat section 1 flame roll out burner 1 switch is open. Check gas roll out switch S47'; parallel entry 64 'HEAT 2 ROLLOUT OPEN S69')",
+      "evidence": "manufacturer_doc",
+      "notes": "One summary of Table 65 rendered rows 54-55 as 'HEAT 1 LIMIT OPEN'; the row text seen is the roll-out description. Verify the exact display label."
+    },
+    {
+      "code": "55",
+      "meaning": "STRIKE 3 HEAT 1 ROLLOUT OPEN S47 - Heat section 1 locked out after repeated roll-out switch opens. Check roll out sensor and gas supply.",
+      "likelyCauses": ["Repeated rollout trips"],
+      "checks": ["Fix the cause of code 54, reset S47, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 54-55; parallel entry 65 'STRIKE 3 ROLLOUT OPEN S69')",
+      "evidence": "manufacturer_doc",
+      "notes": "Label inferred from the heat-2 pair 64/65; verify exact wording."
+    },
+    {
+      "code": "56",
+      "meaning": "HEAT 1 CAI SWITCH S18 - Check heat section 1 combustion air motor and proof switch. Set if S18 is not sensed closed within 30 seconds of energizing the combustion air inducer (closed-proof alarm).",
+      "likelyCauses": ["Combustion air inducer not running or weak (motor, capacitor, wiring)", "Blocked flue / inlet, cracked or plugged pressure-switch tubing", "Failed S18 proof switch"],
+      "checks": ["Confirm the inducer runs on a heat call and check its amps", "Check S18 tubing and switch make/break", "Check flue and combustion air inlet for obstruction"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 56-57) and 'Combustion Air Inducer Proof Switch (S18 and S45)' section (ManualsLib 1593305 p.18)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "57",
+      "meaning": "STRIKE 3 HEAT 1 CAI SWITCH S18 - Heat section 1 locked out after three CAI proof-switch failures during a single demand. Check heat section 1 combustion air motor and proof switch.",
+      "likelyCauses": ["Repeated S18 proving failures"],
+      "checks": ["Fix the cause of code 56, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1593305 p.139 'ALARM STRIKE 3 HEAT 1 CAI SWITCH S18') and CAI section ('alarm(s) 57 and/or 67 when three-strikes occur during a single-demand')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "58",
+      "meaning": "HEAT 1 NO PROOF GAS VALVE GV1 - The M3 unit controller did not detect that the gas valve was energized within two minutes after a heating demand. Check ignition control, flame proof, GV1, gas supply.",
+      "likelyCauses": ["Ignition control A3 lockout (no flame / no spark)", "Gas supply off or low pressure", "Gas valve or its sensing feedback wiring open"],
+      "checks": ["Watch the ignition control's status LED during a heat call", "Verify gas supply and manifold pressure", "Check GV1 feedback wiring to the M3"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 58-59) and 'Gas Valve Sensing' text ('error code 58 for gas heat section 1 and alarm 68 for gas heat section 2')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "59",
+      "meaning": "STRIKE 3 NO PROOF GAS VALVE GV1 - Gas valve was energized and de-energized three times (default) during a single heating demand; heat section 1 locked out. Check ignition control, flame proof, GV1, gas supply.",
+      "likelyCauses": ["Flame loss / flame-sense problems (dirty flame rod, poor ground, low gas pressure)", "Intermittent ignition control"],
+      "checks": ["Check flame signal, flame rod and burner ground", "Check gas pressure under load", "Clear the lockout via the Service menu after repair"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'Gas Valve Sensing' text ('error code 59 for the gas heat section 1')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "60",
+      "meaning": "PRIMARY HEAT 2 LIMIT OPEN S99 - Heat section 2 primary gas heat limit switch is open. Check air flow, air filter, limit switch and wiring.",
+      "likelyCauses": ["Low airflow, over-firing, or failed S99 limit on heat section 2"],
+      "checks": ["As for code 50, on heat section 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (code 61 'STRIKE 3 PRIMARY HEAT 2 LIMIT OPEN S99' implies 60 is the first-strike entry) and 'Primary or Secondary Limits (S10 and S99)' section",
+      "evidence": "manufacturer_doc",
+      "notes": "The guide's gas-valve-sensing narrative also cites 'alarm 60 for gas heat section 2' for a cycled gas valve; Table 65 lists that condition as 69. Treat 60 as the heat 2 primary limit and verify against the table."
+    },
+    {
+      "code": "61",
+      "meaning": "STRIKE 3 PRIMARY HEAT 2 LIMIT OPEN S99 - Check heat section 2 primary burner limit switch to see if it is open. Check air flow, limit switch and wiring.",
+      "likelyCauses": ["Repeated S99 trips"],
+      "checks": ["Fix the cause of code 60, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "62",
+      "meaning": "HEAT 2 LIMIT OPEN S100 - Heat section 2 secondary heat limit switch is open. Check air flow, limit switch and wiring.",
+      "likelyCauses": ["Low airflow, over-firing, or failed S100 secondary limit"],
+      "checks": ["As for code 52, on heat section 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "63",
+      "meaning": "STRIKE 3 HEAT 2 LIMIT OPEN S100 - Heat section 2 secondary heat limit switch is open (three strikes). Check air flow, limit switch and wiring.",
+      "likelyCauses": ["Repeated S100 trips"],
+      "checks": ["Fix the cause of code 62, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "64",
+      "meaning": "HEAT 2 ROLLOUT OPEN S69 - Check roll out sensor and gas supply.",
+      "likelyCauses": ["Flame rollout on heat section 2 (blocked flue/heat exchanger, combustion air)", "Tripped manual-reset rollout switch S69"],
+      "checks": ["Find the cause before resetting S69; inspect heat exchanger, flue and burners"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "65",
+      "meaning": "STRIKE 3 ROLLOUT OPEN S69 - Check roll out sensor and gas supply.",
+      "likelyCauses": ["Repeated rollout trips on heat section 2"],
+      "checks": ["Fix the cause of code 64, reset S69, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "66",
+      "meaning": "HEAT 2 CAI SWITCH S45 - Check heat section 2 combustion air motor and proof switch. Set if S45 is not sensed closed within 30 seconds of energizing the combustion air inducer.",
+      "likelyCauses": ["Inducer 2 not running, blocked flue/inlet, tubing, or failed S45"],
+      "checks": ["As for code 56, on heat section 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and CAI proof switch section ('Alarm 56 or 66')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "67",
+      "meaning": "STRIKE 3 HEAT 2 CAI SWITCH S45 - Heat section 2 locked out after three CAI proof-switch failures in a single demand.",
+      "likelyCauses": ["Repeated S45 proving failures"],
+      "checks": ["Fix the cause of code 66, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and CAI section ('alarm(s) 57 and/or 67')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "68",
+      "meaning": "HEAT 2 NO PROOF GAS VALVE GV3 - Gas valve for heat section 2 not detected energized within two minutes after a heating demand. Check heat section 2 ignition control, flame proof, gas valve and gas supply.",
+      "likelyCauses": ["Ignition control lockout on heat section 2, gas supply, or valve feedback wiring"],
+      "checks": ["As for code 58, on heat section 2"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 68-69) and 'Gas Valve Sensing' text ('alarm 68 for gas heat section 2')",
+      "evidence": "manufacturer_doc",
+      "notes": "Heat section 2 valve is designated GV3 in Table 65 (codes 45 and 69); one summary labelled 68 as GV2."
+    },
+    {
+      "code": "69",
+      "meaning": "STRIKE 3 NO PROOF GAS VALVE GV3 HEAT SECT 2 - Check ignition control, flame proof, GV3, gas supply.",
+      "likelyCauses": ["Repeated flame loss / gas valve cycling on heat section 2"],
+      "checks": ["Fix the cause of code 68, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "73",
+      "meaning": "NETWORK SENSOR ERROR - Check with integrator for refresh rate, network status lights and wiring. Alarm is removed when all BACnet network sensor inputs are received.",
+      "likelyCauses": ["BAS not writing a required network sensor value (zone temp, setpoint, etc.) within the refresh time", "BACnet/LonTalk module or network wiring problem"],
+      "checks": ["Confirm the BAS is writing every network sensor the configuration expects", "Check module TX/RX LEDs and network wiring/termination"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150); M3 BACnet Module guide 1404",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "74",
+      "meaning": "NO ZONE SENSOR - No zone sensor input; check zone sensor and wiring. (Backup sensor mode / code 93 follows if configured.)",
+      "likelyCauses": ["Unit configured for zone-sensor mode but wired for a thermostat", "Open/shorted zone sensor A2 or its wiring"],
+      "checks": ["Determine whether the unit should be in zone sensor or thermostat mode; setting it back to thermostat mode clears 74 and 93", "Check A2 zone sensor resistance and wiring"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65; Lennox Commercial Controls FAQ 507398 (codes 74/93)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "75",
+      "meaning": "OUTDOOR TEMP SENSOR RT17 - Check sensor and wiring.",
+      "likelyCauses": ["Open or shorted RT17 outdoor air thermistor or wiring"],
+      "checks": ["Measure RT17 resistance vs temperature (two-wire thermistor); check wiring and plug"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "76",
+      "meaning": "HUMIDITY SENSOR A91 - Check 2 amp fuse and sensor/wiring.",
+      "likelyCauses": ["Blown 2 A fuse feeding the sensor", "Open/shorted humidity sensor A91 or wiring; sensor not installed but enabled"],
+      "checks": ["Check the 2 amp fuse", "Check A91 supply voltage and signal; verify the humidity-sensor configuration if no sensor is fitted"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "77",
+      "meaning": "DISCHARGE AIR TEMP SENSOR RT6 - Check sensor and wiring.",
+      "likelyCauses": ["Open or shorted RT6 discharge air thermistor (located in the discharge air just beyond the heat exchanger, accessible through the blower compartment)"],
+      "checks": ["Measure RT6 resistance and check wiring"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "78",
+      "meaning": "RETURN AIR TEMP SENSOR RT16 - Check sensor and wiring.",
+      "likelyCauses": ["Open or shorted RT16 return air thermistor or wiring"],
+      "checks": ["Measure RT16 resistance and check wiring"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "79",
+      "meaning": "ADD-ON BOARD PROBLEM - Check add-on board and reset to clear.",
+      "likelyCauses": ["Add-on controller (e.g. C1/ECTO expansion, GP board) not communicating or failed"],
+      "checks": ["Check add-on board connections and power; reset the controller to clear"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.150)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "81",
+      "meaning": "REHEAT SETUP ERROR",
+      "likelyCauses": ["Humiditrol / supermarket reheat option configured without the required hardware or settings"],
+      "checks": ["Review reheat (Humiditrol) settings in the unit configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.151)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "82",
+      "meaning": "CONTROLLER RESET",
+      "likelyCauses": ["Controller restarted (power interruption, firmware watchdog)"],
+      "checks": ["Check power quality; note frequency of resets in alarm history"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.151)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "83",
+      "meaning": "INCORRECT SETTINGS",
+      "likelyCauses": ["Conflicting unit configuration ID / parameter settings"],
+      "checks": ["Re-check the unit configuration ID against the nameplate and the setup guide"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.151)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "85",
+      "meaning": "INCORRECT HUMIDITROL SETTINGS",
+      "likelyCauses": ["Humiditrol dehumidification configured inconsistently with the installed hardware"],
+      "checks": ["Review the Humiditrol settings and dehumidification mode configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.151)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "86",
+      "meaning": "CONFLICTING THERMOSTAT INPUT",
+      "likelyCauses": ["Simultaneous heating and cooling (Y and W) demands, or stage inputs present without the first stage", "Thermostat wiring or thermostat fault"],
+      "checks": ["Check thermostat inputs at the M3 (Y1/Y2/W1/W2/G) with a meter", "Verify thermostat wiring and staging"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.151)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "93",
+      "meaning": "BACKUP SENSOR MODE - Communication with the zone sensor was lost and the unit switched to the redundant back-up sensor (code broadcast over BACnet and shown on the Prodigy display). Check zone sensor and wiring; usually accompanies code 74.",
+      "likelyCauses": ["Zone sensor failure or wiring (see code 74)", "Unit left in zone-sensor mode on a thermostat installation"],
+      "checks": ["Fix the code 74 cause; change the unit back to thermostat mode if a thermostat is used"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65; Lennox Commercial Controls FAQ 507398; M3 BACnet Module guide 1404",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "101",
+      "meaning": "MGV CONTROL SETUP ERROR",
+      "likelyCauses": ["Modulating gas valve control option configured without the required settings/hardware"],
+      "checks": ["Review the modulating gas heat configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "102",
+      "meaning": "GP CONTROL SETUP ERROR",
+      "likelyCauses": ["General-purpose (GP) control add-on configured inconsistently"],
+      "checks": ["Review GP board configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "103",
+      "meaning": "ADVANCED CONTROL SETUP ERROR",
+      "likelyCauses": ["Advanced control option settings conflict"],
+      "checks": ["Review advanced control settings in the configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "106",
+      "meaning": "BUILDING PRESSURE SENSOR A34",
+      "likelyCauses": ["Building pressure sensor A34 signal out of range, missing, or wiring open"],
+      "checks": ["Check A34 power, signal and tubing; verify the building pressure control option matches installed hardware"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "107",
+      "meaning": "SUPPLY STATIC PRESSURE SENSOR ERROR (A30) - The Prodigy controller locks out unit operation after the Max Static Duct Pressure Occurrences have occurred.",
+      "likelyCauses": ["Duct static sensor A30 signal out of range, tubing disconnected, or wiring fault"],
+      "checks": ["Check A30 supply voltage, output signal and sensing tubing", "Verify the MSAV / VAV static-pressure configuration"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "108",
+      "meaning": "HIGH SUPPLY STATIC (DUCT) PRESSURE - Unit operation locked out after the Max Static Duct Pressure Occurrences.",
+      "likelyCauses": ["Closed VAV boxes / dampers, blocked ductwork, high-limit static setpoint too low", "VFD not responding to the static-pressure control"],
+      "checks": ["Check duct static against the high-limit setpoint; check VAV box operation and VFD control", "Clear the lockout via the Service menu after correcting"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "109",
+      "meaning": "STRIKE 3 DUCT SUPPLY PRESS SENSOR A30",
+      "likelyCauses": ["Repeated supply static sensor errors"],
+      "checks": ["Fix the cause of code 107, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "110",
+      "meaning": "WAITING ON NETWORK DATA",
+      "likelyCauses": ["Unit configured for network (BAS) control and required network values have not yet been received"],
+      "checks": ["Confirm the BAS is writing the required points; check network wiring and module LEDs"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "111",
+      "meaning": "PROFILE ERROR",
+      "likelyCauses": ["Unit profile / configuration data invalid"],
+      "checks": ["Reload or verify the unit configuration; contact Lennox technical support if it persists"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.152)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "120",
+      "meaning": "ADD-ON BOARD MCB PROBLEM",
+      "likelyCauses": ["Add-on control board communication or hardware fault"],
+      "checks": ["Check add-on board connections; reset the controller"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "121",
+      "meaning": "LINE FREQ DOES NOT MATCH UNIT CONFIG",
+      "likelyCauses": ["50/60 Hz configuration does not match the measured line frequency", "Poor power quality (generator) confusing the phase/voltage detection"],
+      "checks": ["Verify the unit configuration frequency setting against the supply", "Check power source quality"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "122",
+      "meaning": "24VAC PRIMARY VOLTAGE LOW - Set when the calculated RMS 24 VAC is below the low-voltage alarm threshold (30 VAC per the guide's low-voltage text) for more than two seconds; the controller stops cooling, heating and ventilation.",
+      "likelyCauses": ["Low line voltage or wrong transformer primary tap", "Overloaded / failing control transformer T1", "High-resistance connections on the 24 VAC circuit"],
+      "checks": ["Measure T1 secondary under load and line voltage at the unit", "Check transformer tap selection for the supply voltage", "Check 24 VAC wiring and connections"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155) and 'Phase-Voltage Detection' section (p.147)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "123",
+      "meaning": "24VAC PRIMARY VOLTAGE HIGH - Calculated RMS 24 VAC above the high-voltage alarm threshold for more than two seconds.",
+      "likelyCauses": ["High line voltage or wrong transformer tap"],
+      "checks": ["Measure T1 output and line voltage; correct the tap"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "124",
+      "meaning": "24VAC SECONDARY VOLTAGE LOW",
+      "likelyCauses": ["Low secondary 24 VAC supply (second transformer/circuit) - overload, loose connection, transformer failing"],
+      "checks": ["Measure the secondary 24 VAC circuit under load; check connections"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "125",
+      "meaning": "24VAC SECONDARY VOLTAGE HIGH",
+      "likelyCauses": ["High secondary 24 VAC supply (line voltage / tap)"],
+      "checks": ["Measure the secondary 24 VAC circuit; correct transformer tap"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "126",
+      "meaning": "LINE PHASING DOES NOT MATCH UNIT CONFIG",
+      "likelyCauses": ["Phase rotation reversed (scroll compressors run backwards)", "Single-phase/three-phase setting wrong in the configuration; DI-2 misconfigured when phase/voltage detection is enabled (unit goes to demand hold and restarts after 3 minutes)"],
+      "checks": ["Check phase rotation with a meter and swap two incoming legs if reversed", "Verify Config ID 2 position 5 (phase/voltage detection) and DI-2 settings"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155) and 'Phase-Voltage Detection' section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "128",
+      "meaning": "24VAC POWER LOSS",
+      "likelyCauses": ["Interruption of 24 VAC control power (transformer, fuse, disconnect, erratic supply)"],
+      "checks": ["Check the control transformer, 2 A fuse and incoming power connections"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "129",
+      "meaning": "VFD SHUTDOWN - VFD fault detected. Check belt and for blower overload. Fix source of fault and reset.",
+      "likelyCauses": ["VFD tripped (overcurrent, overload, DC bus, overtemperature)", "Seized blower bearing, belt, or motor fault"],
+      "checks": ["Read the fault code on the VFD keypad", "Check belt, bearings and motor amps; reset the VFD after repair"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "130",
+      "meaning": "VFD BYPASS ENGAGED - VFD bypass mode is engaged. Blower may or may not be on. Disengage at MSAV menu.",
+      "likelyCauses": ["Bypass selected in the MSAV (VFD) menu, or bypass contactor engaged"],
+      "checks": ["Disengage bypass from the MSAV menu once the VFD is repaired"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "136",
+      "meaning": "ADVANCED AIRFLOW OUTSIDE AIR DAMPER/ECON MECHANICAL FAULT - Damper feedback voltage not within +/- 0.15 V (+/- 2%) of the target within the predefined time.",
+      "likelyCauses": ["Damper actuator failed, binding linkage, or feedback wiring open", "Damper blades obstructed / seized"],
+      "checks": ["Command the damper in Service > Test and watch the 2-10 V feedback", "Check actuator power, control and feedback wiring, and linkage"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Damper Diagnostics' (ManualsLib 1251298 p.82) and Table 65",
+      "evidence": "manufacturer_doc",
+      "notes": "'Advanced Airflow' on the user interface means Smart Airflow."
+    },
+    {
+      "code": "137",
+      "meaning": "ADVANCED AIRFLOW LOW OUTDOOR AIRFLOW - Actual outdoor air less than target by the percentage set by parameter 239 (default 25%) for the time set by parameter 243 (default 1800 s).",
+      "likelyCauses": ["Blocked outdoor air hood / filters, damper not opening fully", "Damper pressure sensor PT5 or supply CFM measurement error"],
+      "checks": ["Check outdoor-air hood, filters and damper travel", "Check PT5 tubing and sensor", "Review parameters 239 and 243"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Ventilation Errors' (ManualsLib 1251298 p.82) and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "139",
+      "meaning": "ADVANCED AIRFLOW OUTDOOR AIRFLOW TOO HIGH - Actual outdoor air greater than target by the percentage set by parameter 240 for the duration set by parameter 244.",
+      "likelyCauses": ["Damper stuck open or over-travelling; leaking damper blades", "PT5 measurement error"],
+      "checks": ["Check damper closing and blade seals", "Check PT5 tubing/sensor; review parameters 240 and 244"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Ventilation Errors' (ManualsLib 1251298 p.82) and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "143",
+      "meaning": "ADVANCED AIRFLOW DAMPER PRESSURE ERROR - Differential pressure across the damper (PT5) found not legitimate for the period set by parameter 245.",
+      "likelyCauses": ["PT5 pressure transducer or tubing fault (disconnected, kinked, wrong ports)", "Damper position feedback inconsistent with measured pressure"],
+      "checks": ["Check PT5 tubing to both sides of the damper and the transducer output", "Verify damper feedback and blade condition"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Damper Diagnostics' (ManualsLib 1251298 p.82) and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "166",
+      "meaning": "CAI PRESSURE SWITCH STUCK CLOSED - GV1 - Set if S18 is not proved open while the combustion air blower is not energized (open-proof check).",
+      "likelyCauses": ["Proof switch S18 contacts welded / stuck closed", "Switch wiring shorted", "Inducer still spinning or draft holding the switch closed"],
+      "checks": ["With the inducer off, verify S18 contacts are open", "Replace S18 if stuck; check wiring for shorts"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Combustion Air Inducer Proof Switch (S18 and S45)' (ManualsLib 1593305 p.18) and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "167",
+      "meaning": "CAI PRESSURE SWITCH STUCK CLOSED - GV2 - Set if S45 is not proved open while the combustion air blower is not energized.",
+      "likelyCauses": ["Proof switch S45 stuck closed or wiring shorted"],
+      "checks": ["As for code 166, on heat section 2 (S45)"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 CAI proof switch section and Table 65",
+      "evidence": "manufacturer_doc",
+      "notes": "Table labels this GV2 although heat section 2 alarms elsewhere use GV3; label is as displayed."
+    },
+    {
+      "code": "168",
+      "meaning": "COMBUSTION AIR SW NOT OPEN LOCKOUT - GV1 - Set (instead of 166) when S18 is not proved open, with the combustion air blower not energized, 5 consecutive times during a single cycle.",
+      "likelyCauses": ["Repeated stuck-closed S18"],
+      "checks": ["Replace/repair S18, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 CAI proof switch section and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "169",
+      "meaning": "COMBUSTION AIR SW NOT OPEN LOCKOUT - GV2 - Set (instead of 167) when S45 is not proved open 5 consecutive times during a single cycle.",
+      "likelyCauses": ["Repeated stuck-closed S45"],
+      "checks": ["Replace/repair S45, then clear the lockout via the Service menu"],
+      "severity": "lockout",
+      "source": "Prodigy 2.0 Application Guide 507242 CAI proof switch section and Table 65",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "182",
+      "meaning": "ULTRA: COMPRESSOR 1 SUMP TEMPERATURE SENSOR ERROR",
+      "likelyCauses": ["Compressor 1 sump (crankcase) temperature sensor open/shorted or wiring fault (Energence Ultra-High Efficiency variable-speed units)"],
+      "checks": ["Check the sump sensor resistance and wiring at the inverter/M3"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "183",
+      "meaning": "ULTRA: COMPRESSOR 2 SUMP TEMPERATURE SENSOR ERROR",
+      "likelyCauses": ["Compressor 2 sump temperature sensor open/shorted or wiring fault"],
+      "checks": ["Check the sump sensor resistance and wiring"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "184",
+      "meaning": "ENGINEERING USE ONLY",
+      "likelyCauses": ["Internal/engineering diagnostic event"],
+      "checks": ["No field action defined; note in alarm history and contact Lennox if recurring"],
+      "severity": "info",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "185",
+      "meaning": "BLOWER MOTOR FAULT",
+      "likelyCauses": ["Blower motor / motor controller reporting a fault (overload, overtemperature, communication)"],
+      "checks": ["Check blower motor amps, bearings, belt and the motor controller/VFD fault log"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "187",
+      "meaning": "INVERTER LOW LEVEL ALARM",
+      "likelyCauses": ["Compressor inverter reporting a non-lockout (low-level) warning"],
+      "checks": ["Read the inverter's own status/error code; check inverter power, cooling and communications"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "188",
+      "meaning": "INVERTER ERROR - The alarming value is the inverter error code (e.g. 21 = Peak DC current, 22 = Maximum current reached lockout, 23 = DC Link low voltage). Alarm clears automatically when the inverter error clears.",
+      "likelyCauses": ["Inverter overcurrent / DC bus problems from power quality, compressor mechanical load, or inverter hardware", "Loose power wiring to the inverter"],
+      "checks": ["Record the alarming value and look it up in the inverter error list in the application guide", "Check incoming voltage/phase balance and inverter power connections", "Check compressor windings and mechanical condition if current-related"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.155-156)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "189",
+      "meaning": "INVERTER COMMUNICATION - Unable to communicate with inverter. Prodigy will disable compressor operation. Replace communication cable between inverter and M3 unit controller; if alarm continues, replace M3 unit controller or inverter.",
+      "likelyCauses": ["Damaged or unplugged inverter-to-M3 communication cable", "Inverter unpowered or failed; M3 comm port failure"],
+      "checks": ["Check the inverter has power and its status LEDs", "Reseat/replace the communication cable", "Replace M3 or inverter if communication does not return"],
+      "severity": "shutdown",
+      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (ManualsLib 1251298 p.156)",
+      "evidence": "manufacturer_doc",
+      "notes": "Two search summaries of the same page cited this row as 189 and as 190; verify the code number in Table 65."
+    },
+    {
+      "code": "ERRATIC POWER",
+      "meaning": "Erratic Power - Set whenever service is turned off due to detection of power loss (loss-of-power detection, single-phase units). Check power connections. User can clear the alarm via the user interface.",
+      "likelyCauses": ["Loose or corroded power connections, failing disconnect or contactor", "Utility power interruptions / brownouts"],
+      "checks": ["Check incoming power connections and voltage stability", "Clear the alarm from the user interface after correcting"],
+      "severity": "warning",
+      "source": "Prodigy 2.0 Application Guide 507242 'Loss of Power Detection (Single-Phase Units Only)' (ManualsLib 1593305 p.17) and Table 65",
+      "evidence": "manufacturer_doc",
+      "notes": "Numeric code not captured; on the M3 the related numeric alarm is 128 '24VAC POWER LOSS'."
+    },
+    {
+      "code": "112",
+      "meaning": "CONTROLLER PROBLEM - INTERNAL CONTROLLER PROBLEM (Prodigy M2 only).",
+      "likelyCauses": ["Internal M2 controller hardware/firmware fault"],
+      "checks": ["Reset the controller; if it persists replace the M2 (kit 102630-01)"],
+      "severity": "shutdown",
+      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Table 8 Alarm Codes",
+      "evidence": "manufacturer_doc",
+      "notes": "On the Prodigy 2.0 M3, codes 112-119 are reserved."
+    },
+    {
+      "code": "114",
+      "meaning": "CONTROLLER PROBLEM - POWER NOISE PROBLEM (Prodigy M2 only). See Service Flash CU-10-2 for an in-depth look at error 114.",
+      "likelyCauses": ["Electrical noise on the 24 VAC / ground (poor grounding, shared transformer, VFD noise)"],
+      "checks": ["Check unit and controller grounding and transformer wiring per Service Flash CU-10-2", "Isolate noisy loads from the control transformer"],
+      "severity": "warning",
+      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Table 8; Lennox Service Flash CU-10-2",
+      "evidence": "manufacturer_doc",
+      "notes": "On the Prodigy 2.0 M3, codes 112-119 are reserved."
+    },
+    {
+      "code": "118",
+      "meaning": "NO DISPLAY - DISPLAY NOT DETECTED (Prodigy M2 only).",
+      "likelyCauses": ["Display module unplugged or failed; ribbon cable damaged"],
+      "checks": ["Reseat the display cable; replace the display module if not detected"],
+      "severity": "warning",
+      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Table 8",
+      "evidence": "manufacturer_doc",
+      "notes": "On the Prodigy 2.0 M3, codes 112-119 are reserved."
+    }
+  ],
+  "ledPatterns": [
+    { "pattern": "Heartbeat HB (D33) green - slow flash", "meaning": "Normal operation", "checks": ["No action"] },
+    { "pattern": "Heartbeat HB (D33) green - fast flash", "meaning": "Bootloader / firmware update mode", "checks": ["Wait for the update to finish; do not remove power"] },
+    { "pattern": "Heartbeat HB (D33) green - steady on", "meaning": "Unit in configuration or test mode", "checks": ["Exit Service > Test or the configuration menu to return to normal operation"] },
+    { "pattern": "Heartbeat HB (D33) - unlit / steady off", "meaning": "No voltage to the M3 board or defective board", "checks": ["Check 24 VAC to the M3 and the 2 A fuse", "Replace the M3 if powered but no heartbeat"] },
+    { "pattern": "S-BUS / PC connection BUS (green, D70/D71) flickering", "meaning": "Network traffic present on the S-Bus", "checks": ["Normal when a laptop or Lennox device is connected"] },
+    { "pattern": "S-BUS TX (yellow) flickering / RX (green) flickering", "meaning": "Unit controller is transmitting / receiving", "checks": ["If a device does not talk, check cable and port"] },
+    { "pattern": "BACnet module TX (yellow) / RX (green) flickering", "meaning": "Unit controller transmitting / receiving on the BACnet module", "checks": ["No RX activity: check network wiring, termination, MAC/baud settings"] },
+    { "pattern": "SERVICE (red) flashing 1 s on / 1 s off", "meaning": "Node is not configured; application loaded (LonTalk module)", "checks": ["Commission the node on the LonWorks network"] },
+    { "pattern": "SERVICE (red) steady off", "meaning": "Node is completely configured", "checks": ["No action"] },
+    { "pattern": "SERVICE (red) constant on", "meaning": "Node is configured; no application", "checks": ["Load the application / replace the network module"] }
+  ],
+  "diagnosticTips": [
+    "The M3 has an LCD with menu buttons on the controller face (unit control box). Active alarms take over the screen; press BACK to dismiss the full-screen alarm - the condition still exists and up to two alarm codes stay displayed along the right side of the screen above the thermostat-demand status.",
+    "Alarm history: error codes are stored and can be recalled later from the Alarms menu (Settings/Service); the Prodigy M2 Installation & Setup Guide covers viewing and silencing alarms via the user interface.",
+    "Test mode: SERVICE > TEST lets you run individual outputs (blower, compressors, heat, damper, exhaust); press SELECT to disable the active test when done. The heartbeat LED is steady green while in test/configuration mode.",
+    "Lockouts ('STRIKE 3 ...' alarms) are cleared from the Service menu (Service > Lockouts / clear lockouts) after the fault is corrected; the number of strikes defaults to 3 (parameter 43 for blower; parameter 98 for high pressure/high temp, 99 for low pressure, 81 for freeze-stat). Even if an alternate occurrence count is set, the alarm text still says 'STRIKE 3'.",
+    "Alarms marked with * in Table 65 close the service relay output DO1 (service alarm output) when configured.",
+    "Phase/voltage detection (Config ID 2, position 5): N = not installed, 1 = internal Lennox detection, 2/3 = external A42 phase monitor on DI-2 / DI-3. Wrong DI-2 configuration with detection enabled on three-phase units causes demand hold and a 3-minute restart.",
+    "Use the LennoxPros Error Code Lookup tool (Technical Tools on LennoxPros.com / LennoxPros app) to look up any Prodigy alarm number with troubleshooting steps."
+  ],
+  "notes": [
+    "Coverage is partial: this file transcribes roughly 100 of the Prodigy 2.0 Table 65 rows that could be seen through search excerpts. Rows not yet captured: 1, 3, 7, 9-11, 21, 31, 46-49, 80, 87-92, 94-100, 131-135, 138, 140-142, 144-165, 170-177, 186, 190+ (some of these are RESERVED: 70-72, 84, 104-105, 112-119 (M3), 127, 178-181).",
+    "Codes 17, 18, 19 (compressor 3/4 high-pressure strike entries), 40, 54, 55 and 60 have display text reconstructed from the documented row pattern; the guide states events 12-19 are the high-pressure/high-temperature events. Verify exact wording against Table 65 (ManualsLib 1251298 pages 153-156 or 507242-07 PDF).",
+    "The Prodigy 2.0 application guide narrative and Table 65 disagree on 'alarm 60' (narrative: gas valve cycled on heat section 2; table sequence: heat section 2 primary limit S99, with 69 as the heat-2 gas-valve strike). Table numbering is used here.",
+    "Prodigy M2 (Prodigy 1.0, application guide 506457 / setup guide 506215) uses the same numbering for the common codes (2, 4, 5, 6, 8, 20, 74, 93 confirmed) but has its own controller-hardware codes 112, 114 and 118 that are reserved on the M3.",
+    "Thermal protection switches S5, S8, S31, S180 are wired in series with the high-pressure switches on some compressors, so a compressor high-temperature trip reports as the corresponding high-pressure alarm (12-19); the action text reads 'Check temperature trip switch. Compressor is off. Check charge, fans and coil.'",
+    "Electric heat: if an electric heat limit (S15 or S63) opens, electric heat is de-energized; three opens in a thermostat cycle turn on the service alarm output (ECTO 2.04 / parameter 61). The corresponding alarm number was not captured."
+  ]
+}

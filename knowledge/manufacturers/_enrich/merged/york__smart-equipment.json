@@ -1,0 +1,13 @@
+{
+  "pack": "york",
+  "platformId": "smart-equipment",
+  "name": "Johnson Controls Smart Equipment (Simplicity SE) controller - SE-SPU1001/1002/1011/1012",
+  "coverage": "partial",
+  "sourceDocs": [],
+  "faultCodes": [],
+  "ledPatterns": [],
+  "diagnosticTips": [],
+  "notes": [
+    "Smart Equipment alarm table NOT transcribed: the enrichment run for this platform had no working source access (WebSearch budget exhausted before the agent started; WebFetch/curl blocked; no cached LIT-12011998 / LIT-12011950 / Verasys alarm-summary material on disk). Per the verification protocol no alarm meanings were added from memory. The existing four paraphrased entries remain LOW confidence / 'inferred' and must be verified or replaced from the LIT-12011998 Alarm appendix (Service alarms, FDD alarms) and the Verasys Alarms Summary Technical Bulletin in a follow-up run."
+  ]
+}

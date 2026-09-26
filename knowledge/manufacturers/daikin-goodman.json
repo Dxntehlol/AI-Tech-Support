@@ -1,0 +1,2129 @@
+{
+  "id": "daikin-goodman",
+  "manufacturer": "Daikin / Goodman (Daikin Applied, McQuay, Goodman, Amana, Daikin Comfort Technologies)",
+  "brands": [
+    "Daikin",
+    "Daikin Applied",
+    "McQuay",
+    "Goodman",
+    "Amana",
+    "Daikin Comfort"
+  ],
+  "aliases": [
+    "daikin applied",
+    "mcquay",
+    "mc quay",
+    "goodman",
+    "amana",
+    "daikin north america",
+    "daikin comfort technologies",
+    "rebel",
+    "maverick",
+    "roofpak",
+    "microtech",
+    "vrv"
+  ],
+  "serialFormats": [
+    {
+      "id": "goodman-amana-daikin-yymm-10digit",
+      "description": "Goodman / Amana / Daikin-branded (Goodman-built) 10-digit all-numeric serial: YYMM + 6-digit production sequence",
+      "eraStart": 1995,
+      "eraEnd": 2027,
+      "regex": "^(\\d{2})(\\d{2})(\\d{6})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 1,
+        "monthGroup": 2,
+        "pivot": 70
+      },
+      "examples": [
+        {
+          "serial": "1806123456",
+          "expect": {
+            "year": 2018,
+            "month": 6
+          }
+        },
+        {
+          "serial": "9704001234",
+          "expect": {
+            "year": 1997,
+            "month": 4
+          }
+        },
+        {
+          "serial": "0211123456",
+          "expect": {
+            "year": 2002,
+            "month": 11
+          }
+        },
+        {
+          "serial": "1509012345",
+          "expect": {
+            "year": 2015,
+            "month": 9
+          }
+        }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "PickHVAC – Goodman HVAC age: serial number decoding (pickhvac.com/hvac/age-serial-number/goodman)",
+        "PickHVAC – Amana HVAC age: serial number decoding (pickhvac.com/hvac/age-serial-number/amana)",
+        "Waypoint Property Inspection – Goodman AC age (waypointinspection.com/goodman-ac-age)",
+        "hvacdecoder.com – Goodman serial number decoder",
+        "Building Intelligence Center – Amana HVAC age (building-center.org/amana-hvac-age)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Digits 1-2 = year, digits 3-4 = month (01-12), digits 5-10 = production sequence. All ten characters are numeric; no letters.",
+        "Applies to Goodman, Amana (after the 1997 Goodman purchase), and Daikin-branded units built by Daikin Comfort Technologies / Goodman (DCG/DCC/DCH, DBG/DBC/DBH, DX/DZ splits, Daikin Fit). Not for Daikin Applied / McQuay or Japanese/Thai-built Daikin VRV.",
+        "Example dates above are the ones stated by the cited secondary decoders (1806 -> June 2018, 9704 -> April 1997, 02/11 -> Nov 2002) plus the 1509 -> Sept 2015 example from the pack brief; confidence held at medium because no manufacturer document or warranty lookup was checked in this session. Goodman's online warranty lookup (goodmanmfg.com) or the Daikin Comfort warranty lookup confirms the ship date from the serial.",
+        "Collision: legacy McQuay numeric serials also start YYMM. Eras are disjoint (McQuay numeric <= 1994, this format >= 1995); if a Goodman/Amana plate reads a YY of 80-94 the pre-1995 style has not been verified - confirm from the data-plate design (Goodman logo style) and compressor date code.",
+        "Amana units built before 1997 (Raytheon era) use different serial styles (a letter year code in the 7th position for 1980-82 and the 'BLACKHORSE' letter-digit cipher before the Goodman purchase per PickHVAC/building-center); those rules were not verifiable in this session and are not decoded here."
+      ]
+    },
+    {
+      "id": "mcquay-daikin-applied-plant-yymm",
+      "description": "McQuay / Daikin Applied: four-letter plant prefix followed by YYMM and a production sequence (date in characters 5-8)",
+      "eraStart": 1995,
+      "eraEnd": 2027,
+      "regex": "^([A-Z]{4})(\\d{2})(\\d{2})(\\d{4,8})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 2,
+        "monthGroup": 3,
+        "pivot": 70
+      },
+      "plant": {
+        "group": 1,
+        "map": {
+          "STOU": "Staunton, VA (rooftop / applied air) - plant code from field memory, unverified",
+          "FBOU": "Faribault, MN (applied air handling) - plant code from field memory, unverified"
+        }
+      },
+      "examples": [
+        {
+          "serial": "STOU0703001234",
+          "expect": {
+            "year": 2007,
+            "month": 3
+          }
+        },
+        {
+          "serial": "FBOU1211000456",
+          "expect": {
+            "year": 2012,
+            "month": 11
+          }
+        }
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Building Intelligence Center – McQuay HVAC age (building-center.org/mcquay-hvac-age): 'date of manufacture is coded in the 5th thru 8th digits of the serial number and represents the year and month of manufacture'"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Characters 1-4 are letters (plant / product code), characters 5-6 = year, 7-8 = month, remainder = sequence. building-center.org documents the 5th-8th digit YYMM rule; the four-letter prefix and the plant meanings (STOU = Staunton VA, FBOU = Faribault MN) are from field memory only and are NOT confirmed - treat the plant field as advisory.",
+        "The two worked examples are rule-derived (synthetic) serials, not dated nameplate photos; they exercise the regex/group mapping only. Confirm real dates through Daikin Applied technical support or the unit's MFG DATE field, which most McQuay/Daikin Applied plates also print explicitly.",
+        "Era start is an estimate; McQuay used all-numeric serials before this style (see mcquay-legacy-numeric-yymm). Year is two-digit with pivot 70 (00-69 -> 2000s, 70-99 -> 1900s)."
+      ]
+    },
+    {
+      "id": "mcquay-legacy-numeric-yymm",
+      "description": "McQuay legacy all-numeric serial: YYMM in the first four digits (1971 to mid-1990s)",
+      "eraStart": 1971,
+      "eraEnd": 1994,
+      "regex": "^(\\d{2})(\\d{2})(\\d{5,8})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 1,
+        "monthGroup": 2,
+        "pivot": 70
+      },
+      "examples": [
+        {
+          "serial": "8806012345",
+          "expect": {
+            "year": 1988,
+            "month": 6
+          }
+        },
+        {
+          "serial": "9210123456",
+          "expect": {
+            "year": 1992,
+            "month": 10
+          }
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Building Intelligence Center – McQuay HVAC age (building-center.org/mcquay-hvac-age): 'date of manufacture is coded in the 1st thru 4th digits of the serial number and represents the year and month of manufacture' (later format after the 1964-1970 letter style)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW confidence: one secondary source describes the rule and the era boundaries are estimated; the examples are synthetic. Confirm with the MFG DATE on the plate or the compressor date code.",
+        "Collides with the Goodman/Amana 10-digit YYMM format; the decoder separates them by era (this format is dropped for years >= 1995). A McQuay plate is easy to tell apart from a Goodman plate (McQuay/Daikin Applied logo, RPS/RDT/RAH model prefixes).",
+        "McQuay 1964-1970 serials encoded year and month in two leading letters (building-center.org); that pre-1980 style is out of scope and not decoded."
+      ]
+    },
+    {
+      "id": "daikin-vrv-ductless-letter-prefix",
+      "description": "Daikin Industries (Japan/Thailand/Texas VRV and ductless) serial: one letter followed by six digits - date not decodable without Daikin's year chart",
+      "eraStart": 2000,
+      "eraEnd": 2027,
+      "regex": "^([A-Z])(\\d{6})$",
+      "date": {
+        "method": "manual",
+        "note": "Daikin VRV / ductless serials do not carry a plain YYMM. building-center.org describes a letter-coded year (first characters map to a year via a chart, later characters give week/month) that varies by product line and plant. Use the Daikin Comfort / Daikin AC warranty lookup (daikincomfort.com or daikinac.com, enter the serial) or Daikin ductless/commercial support at 1-855-324-5461 to get the build date. The MFG DATE or the outdoor-unit PCB date label is often printed on the plate."
+      },
+      "examples": [
+        {
+          "serial": "E006789",
+          "expect": {}
+        },
+        {
+          "serial": "J123456",
+          "expect": {}
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Building Intelligence Center – Daikin HVAC age (building-center.org/daikin-hvac-age)",
+        "howtolookatahouse.com – How can you tell the age of a Daikin air conditioner from the serial number"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW confidence / manual: the letter-year chart could not be retrieved in this session, so the engine reports the match but not a date. The examples only exercise the regex.",
+        "Goodman-built Daikin-branded products (DCG/DCC/DBG, DX/DZ splits, Daikin Fit) use the 10-digit YYMM serial instead - see goodman-amana-daikin-yymm-10digit."
+      ]
+    }
+  ],
+  "modelFormats": [
+    {
+      "id": "goodman-cpg-daikin-dcg-commercial-packaged",
+      "family": "Goodman CPG/CPC/CPH and Daikin DCG/DCC/DCH commercial packaged rooftop (3-25 tons, R-410A)",
+      "description": "Goodman commercial packaged units (2008+) and the Daikin-branded successor line (2014+): prefix, cooling MBH, heating MBH (XXX = none), voltage code, drive/motor code, option/revision suffix",
+      "productType": "packaged_rtu",
+      "eraStart": 2008,
+      "eraEnd": 2027,
+      "regex": "^([CD])([CP])([GCH])(\\d{3})(\\d{3}|XXX)(\\d)([A-Z])([A-Z0-9]{0,3})(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Brand",
+          "attribute": "series",
+          "map": {
+            "C": "Goodman commercial (CP-)",
+            "D": "Daikin light commercial (DC-)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Product category",
+          "attribute": "other",
+          "map": {
+            "P": "Packaged multi-position (Goodman)",
+            "C": "Commercial packaged (Daikin)"
+          },
+          "notes": "Goodman uses CP (Commercial Packaged); Daikin uses DC (Daikin Commercial)."
+        },
+        {
+          "group": 3,
+          "name": "Unit type",
+          "attribute": "unit_type",
+          "map": {
+            "G": "Gas heat / electric cooling",
+            "C": "Cooling only (electric heat kit optional)",
+            "H": "Heat pump"
+          }
+        },
+        {
+          "group": 4,
+          "name": "Nominal gross cooling capacity (MBH)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "tons",
+          "notes": "036=3, 048=4, 060=5, 072=6, 090=7.5, 102=8.5, 120=10, 150=12.5, 180=15, 210=17.5, 240=20, 300=25 tons (3-8.5 t codes confirmed from the SS-CPG spec sheet; larger codes by the same MBH rule)."
+        },
+        {
+          "group": 5,
+          "name": "Nominal gross heating capacity (MBH input)",
+          "attribute": "heat_capacity",
+          "transform": "kbtuh",
+          "unit": "kbtuh",
+          "map": {
+            "XXX": "none (cooling-only / heat pump)"
+          },
+          "notes": "CPG codes confirmed: 070, 105, 140, 210 (7.5-12.5 t); 3-6 t units use 045/070/090/115/140 (partial)."
+        },
+        {
+          "group": 6,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "208/230-1-60",
+            "2": "220/240-1-50",
+            "3": "208/230-3-60",
+            "4": "460-3-60",
+            "5": "380/415-3-50",
+            "7": "575-3-60"
+          },
+          "notes": "Map transcribed from the Goodman SS-CPG90-120 / SS-CPG36-60 product specifications nomenclature (complete for the published codes)."
+        },
+        {
+          "group": 7,
+          "name": "Supply fan drive / motor",
+          "attribute": "airflow",
+          "map": {
+            "B": "Belt drive",
+            "D": "Direct drive"
+          },
+          "notes": "B = belt drive confirmed (SS-CPG). D = direct drive inferred from the Daikin DCG0600903DXXX product overview. 'V' appears on DCC/DCG 3-6 ton models (DCC072XXX3VXXX) - meaning not confirmed; left unmapped."
+        },
+        {
+          "group": 8,
+          "name": "Options / revision",
+          "attribute": "options",
+          "notes": "XXX = no factory options; other letters denote factory options or revision - not mapped."
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "goodman-integrated-ignition-control"
+      ],
+      "examples": [
+        {
+          "model": "CPG1022103BXXX",
+          "expect": {
+            "unit_type": "Gas heat / electric cooling",
+            "tonnage": "8.5",
+            "heat_capacity": "210",
+            "voltage": "208/230-3-60",
+            "airflow": "Belt drive"
+          }
+        },
+        {
+          "model": "DCG0600903DXXX",
+          "expect": {
+            "series": "Daikin light commercial (DC-)",
+            "unit_type": "Gas heat / electric cooling",
+            "tonnage": "5",
+            "heat_capacity": "090",
+            "voltage": "208/230-3-60",
+            "airflow": "Direct drive"
+          }
+        },
+        {
+          "model": "DCC072XXX3VXXX",
+          "expect": {
+            "unit_type": "Cooling only (electric heat kit optional)",
+            "tonnage": "6",
+            "heat_capacity": "none (cooling-only / heat pump)",
+            "voltage": "208/230-3-60"
+          }
+        },
+        {
+          "model": "DCG1502103BXXX",
+          "expect": {
+            "tonnage": "12.5",
+            "heat_capacity": "210",
+            "voltage": "208/230-3-60",
+            "airflow": "Belt drive"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: the factory model number is the 14-character string (e.g. CPG1022103BXXX). Distributor listings often show only the first 7-10 characters (CPG1022103, DCG0600903); these still decode because the regex only needs the leading positions plus one drive letter - but short sales names such as CPG0903 do not encode heat/voltage and should not be trusted for tonnage. Always read the full plate.",
+        "The DCG/DCC/DCH line is the Daikin-branded continuation of Goodman CPG/CPC/CPH (same Houston/Waller factory, same nomenclature layout). Examples CPG1022103BXXX and DCC072XXX3VXXX are real catalog part numbers seen in distributor literature filenames (Gemaire/ECMDI); DCG0600903DXXX is from the SupplyHouse product overview; DCG1502103BXXX is reconstructed from the ECMDI listing '12-1/2 Ton - 210K BTU - 208-230 V - Belt Drive'.",
+        "Newer (2019+) Daikin DCG/DCC/DCH 7.5-25 ton and 2023+ SEER2 revisions may carry a different tail; the regex tolerates trailing characters but only the first eight positions are decoded.",
+        "Heat capacity attribute keeps the plate code (e.g. '090' = 90 MBH input).",
+        "Coverage is partial: the drive code map and the 3-6 ton heat codes were not fully transcribed."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Goodman Product Specifications SS-CPG90-120 (7/08) and SS-CPG36-60 (7/08) - nomenclature page (climatesolutionsinc.com mirror)",
+        "Goodman CPG Series 7.5-12.5 ton installation instructions (Gemaire mirror: goodman_cpg1022103bxxx_..._ii.pdf)",
+        "Daikin DCG Commercial product overview DCG0600903DXXX (supplyhouse.com)",
+        "Daikin SS-DCC3 (6/14) light commercial spec sheet (daikin_dcc072xxx3vxxx_..._ss.pdf)",
+        "Daikin Catalog 257-2 Light Commercial Packaged Air Conditioners (tahoeweb.daikinapplied.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "goodman-gpg-gpc-gph-packaged-legacy",
+      "family": "Goodman GPG/GPC/GPH (and Amana APG/APC/APH, Daikin DBG/DBC/DBH) residential/light-commercial packaged units 2-5 tons, 13-16 SEER nomenclature (c. 2006-2022)",
+      "productType": "packaged_rtu",
+      "eraStart": 2006,
+      "eraEnd": 2023,
+      "regex": "^([GAD])([PB])([GCH])(\\d{2})(\\d{2})(\\d{3})?([MH])(\\d)(\\d)([A-Z]{0,2})$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Brand",
+          "attribute": "series",
+          "map": {
+            "G": "Goodman",
+            "A": "Amana",
+            "D": "Daikin (Goodman-built)"
+          },
+          "notes": "G confirmed from Goodman spec sheets; A (Amana APG/APC/APH) and D (Daikin DBG/DBC/DBH) are believed to share the layout - not confirmed."
+        },
+        {
+          "group": 2,
+          "name": "Product category",
+          "attribute": "other",
+          "map": {
+            "P": "Packaged unit",
+            "B": "Packaged unit (Daikin DB-)"
+          }
+        },
+        {
+          "group": 3,
+          "name": "Unit type",
+          "attribute": "unit_type",
+          "map": {
+            "G": "Gas/electric packaged",
+            "C": "Packaged air conditioner (cooling only)",
+            "H": "Packaged heat pump"
+          }
+        },
+        {
+          "group": 4,
+          "name": "Efficiency (SEER)",
+          "attribute": "efficiency",
+          "map": {
+            "13": "13 SEER",
+            "14": "14 SEER",
+            "15": "15 SEER",
+            "16": "16 SEER"
+          }
+        },
+        {
+          "group": 5,
+          "name": "Nominal cooling capacity (kBTU/h)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "tons",
+          "notes": "24=2, 30=2.5, 36=3, 42=3.5, 48=4, 60=5 tons (SS-GPG14M nomenclature)."
+        },
+        {
+          "group": 6,
+          "name": "Heat input (MBH) - gas/electric only",
+          "attribute": "heat_capacity",
+          "transform": "kbtuh",
+          "unit": "kbtuh",
+          "notes": "060-120 MBH per SS-GPG14M; absent on GPC/GPH."
+        },
+        {
+          "group": 7,
+          "name": "Cabinet / airflow",
+          "attribute": "cabinet",
+          "map": {
+            "M": "Multi-position (horizontal or downflow)",
+            "H": "Horizontal cabinet (GPC14H / GPH14H series)"
+          }
+        },
+        {
+          "group": 8,
+          "name": "Refrigerant",
+          "attribute": "refrigerant",
+          "map": {
+            "4": "R-410A"
+          },
+          "notes": "4 = R-410A confirmed from SS-GPG14M nomenclature. Earlier R-22 GPG13 units used a different digit (not confirmed - left unmapped)."
+        },
+        {
+          "group": 9,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "208/230-1-60",
+            "3": "208/230-3-60",
+            "4": "460-3-60"
+          },
+          "notes": "1 = 208/230 V single phase confirmed; 3-phase codes 3/4 follow Goodman's standard electrical code list (GSX13 nomenclature) - treat as medium."
+        },
+        {
+          "group": 10,
+          "name": "Revision",
+          "attribute": "revision"
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "goodman-integrated-ignition-control"
+      ],
+      "examples": [
+        {
+          "model": "GPG1436080M41",
+          "expect": {
+            "series": "Goodman",
+            "unit_type": "Gas/electric packaged",
+            "efficiency": "14 SEER",
+            "tonnage": "3",
+            "heat_capacity": "080",
+            "cabinet": "Multi-position (horizontal or downflow)",
+            "refrigerant": "R-410A",
+            "voltage": "208/230-1-60"
+          }
+        },
+        {
+          "model": "GPC1448H41",
+          "expect": {
+            "unit_type": "Packaged air conditioner (cooling only)",
+            "efficiency": "14 SEER",
+            "tonnage": "4",
+            "cabinet": "Horizontal cabinet (GPC14H / GPH14H series)",
+            "refrigerant": "R-410A",
+            "voltage": "208/230-1-60"
+          }
+        },
+        {
+          "model": "GPG1560090M41",
+          "expect": {
+            "efficiency": "15 SEER",
+            "tonnage": "5",
+            "heat_capacity": "090"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: model is the 10-13 character string beginning GPG/GPC/GPH (e.g. GPG1436080M41). Distributors drop the trailing revision letters.",
+        "GPG1436080M41 is a real Alpine Home Air catalog listing (3 ton / 80,000 BTU / 14 SEER / R-410A / multi-position). GPC1448H41 follows the SS-GPC14H (8/20) spec sheet series; GPG1560090M41 is a common 15 SEER 5 ton listing.",
+        "Positional layout (SEER, capacity, heat input, cabinet, refrigerant, voltage) is from the SS-GPG14M-ARG nomenclature page as summarized in search; the R-22-era digit and the exact voltage list for this family were not transcribed, so confidence is medium.",
+        "For 2023+ SEER2 units see goodman-gpgm-packaged-seer2."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Goodman Product Specifications SS-GPG14M-ARG (4/18) - nomenclature (apps.goodmanmfg.com/brochures)",
+        "Goodman Product Specifications SS-GPC14H (8/20)",
+        "Alpine Home Air listing GPG1436080M41",
+        "Building Intelligence Center – Goodman model number nomenclature"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "goodman-gpgm-packaged-seer2",
+      "family": "Goodman GPGM3/GPCM3/GPHM3 (and Amana/Daikin equivalents) SEER2-era packaged units 2-5 tons (2023+)",
+      "productType": "packaged_rtu",
+      "eraStart": 2023,
+      "eraEnd": 2027,
+      "regex": "^([GAD])([PB])([GCH])M(\\d)(\\d{2})(\\d{3})?(\\d)(\\d)([A-Z]{0,2})$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Brand",
+          "attribute": "series",
+          "map": {
+            "G": "Goodman",
+            "A": "Amana",
+            "D": "Daikin (Goodman-built)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Product category",
+          "attribute": "other",
+          "map": {
+            "P": "Packaged unit",
+            "B": "Packaged unit (Daikin DB-)"
+          }
+        },
+        {
+          "group": 3,
+          "name": "Unit type",
+          "attribute": "unit_type",
+          "map": {
+            "G": "Gas/electric packaged",
+            "C": "Packaged air conditioner (cooling only)",
+            "H": "Packaged heat pump"
+          }
+        },
+        {
+          "group": 4,
+          "name": "Series / efficiency tier",
+          "attribute": "efficiency",
+          "map": {
+            "3": "GP-M3 series (13.4 SEER2 class)"
+          },
+          "notes": "Only the '3' tier is confirmed (goodmanmfg.com GPGM3 product page: 13.4 SEER2)."
+        },
+        {
+          "group": 5,
+          "name": "Nominal cooling capacity (kBTU/h)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "tons"
+        },
+        {
+          "group": 6,
+          "name": "Heat input (MBH) - gas/electric only",
+          "attribute": "heat_capacity",
+          "transform": "kbtuh",
+          "unit": "kbtuh"
+        },
+        {
+          "group": 7,
+          "name": "Refrigerant",
+          "attribute": "refrigerant",
+          "map": {
+            "4": "R-410A"
+          },
+          "notes": "R-32 successors (2025+) likely use another digit - not confirmed, unmapped."
+        },
+        {
+          "group": 8,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "1": "208/230-1-60",
+            "3": "208/230-3-60",
+            "4": "460-3-60"
+          }
+        },
+        {
+          "group": 9,
+          "name": "Revision",
+          "attribute": "revision"
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "goodman-integrated-ignition-control"
+      ],
+      "examples": [
+        {
+          "model": "GPGM33608041",
+          "expect": {
+            "unit_type": "Gas/electric packaged",
+            "tonnage": "3",
+            "heat_capacity": "080",
+            "refrigerant": "R-410A",
+            "voltage": "208/230-1-60"
+          }
+        },
+        {
+          "model": "GPCM34841",
+          "expect": {
+            "unit_type": "Packaged air conditioner (cooling only)",
+            "tonnage": "4",
+            "voltage": "208/230-1-60"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence: the GPGM3 family name and 13.4 SEER2 rating are confirmed from goodmanmfg.com, but the positional breakdown (M + tier digit, capacity, heat, refrigerant, voltage) is from field memory of listings such as GPGM33608041 and was not verified against a nomenclature page. Read the plate and the spec sheet before relying on the decoded attributes."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Goodman Manufacturing – Packaged Units GPGM3 13.4 SEER2 gas/electric product page (goodmanmfg.com/products/packaged-units/gas-electric/gpgm3)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "daikin-rebel-dps-dph",
+      "family": "Daikin Applied Rebel DPS (packaged cooling with gas/electric heat) and DPH (heat pump) commercial rooftops 3-28 tons",
+      "productType": "packaged_rtu",
+      "eraStart": 2012,
+      "eraEnd": 2027,
+      "regex": "^DP([SH])(\\d{3})([A-Z])([A-Z])(\\d)(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Product category",
+          "attribute": "unit_type",
+          "map": {
+            "S": "Packaged system - cooling with gas, electric, hot-water or steam heat (DPS)",
+            "H": "Packaged heat pump (DPH)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Nominal capacity (tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "003": "3",
+            "004": "4",
+            "005": "5",
+            "006": "6",
+            "007": "7.5",
+            "010": "10",
+            "012": "12",
+            "015": "15",
+            "016": "16",
+            "018": "18",
+            "020": "20",
+            "025": "25",
+            "028": "28"
+          },
+          "unit": "tons",
+          "notes": "003-028 range per Catalog 256; 006=6, 007=7.5, 010=10, 012=12 confirmed. Map is partial - intermediate sizes not listed fall through as the raw code."
+        },
+        {
+          "group": 3,
+          "name": "Design vintage",
+          "attribute": "revision",
+          "map": {
+            "A": "Vintage 1 (A)",
+            "B": "Vintage B",
+            "C": "Vintage C"
+          },
+          "notes": "A = Vintage 1 confirmed; later letters follow the same convention."
+        },
+        {
+          "group": 4,
+          "name": "Cooling efficiency",
+          "attribute": "efficiency",
+          "map": {
+            "H": "High efficiency (exceeds ASHRAE 90.1)"
+          }
+        },
+        {
+          "group": 5,
+          "name": "Line voltage",
+          "attribute": "voltage",
+          "map": {
+            "2": "208-3-60",
+            "3": "230-3-60",
+            "4": "460-3-60",
+            "5": "575-3-60"
+          }
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "microtech-iii"
+      ],
+      "examples": [
+        {
+          "model": "DPS006AH2",
+          "expect": {
+            "unit_type": "Packaged system - cooling with gas, electric, hot-water or steam heat (DPS)",
+            "tonnage": "6",
+            "revision": "Vintage 1 (A)",
+            "efficiency": "High efficiency (exceeds ASHRAE 90.1)",
+            "voltage": "208-3-60"
+          }
+        },
+        {
+          "model": "DPH015AH4",
+          "expect": {
+            "unit_type": "Packaged heat pump (DPH)",
+            "tonnage": "15",
+            "voltage": "460-3-60"
+          }
+        },
+        {
+          "model": "DPS007AH3ADAA",
+          "expect": {
+            "tonnage": "7.5",
+            "voltage": "230-3-60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: the Daikin Applied plate lists 'Model' as DPS/DPH + size + vintage + a long option string (heat medium, unit style, ERV, controls...). Only the first eight positions are decoded; the remaining option string is ignored.",
+        "Rebel uses an inverter (variable-speed) scroll compressor on the lead circuit with EEV, EC condenser fans and a MicroTech III unit controller; 2022+ Rebel Applied (DPSA) and 2025 A2L refrigerant revisions exist - check the plate refrigerant.",
+        "Segment order (size, vintage, efficiency, voltage) follows the Catalog 256 nomenclature summary; the full string of the examples beyond position 8 is illustrative."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Daikin Applied Catalog 256-1 / 256-17 Rebel Commercial Packaged Rooftop Systems - model nomenclature",
+        "Daikin Rebel DPS 003-028 product brochure (stinebaugh.com mirror of DAIKIN-APPLIED-DPS003-028A.pdf)",
+        "Daikin Rebel DPS Series installation and maintenance manual (manualslib 3156613)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "daikin-maverick-mps-mph",
+      "family": "Daikin Applied / McQuay Maverick I and Maverick II MPS (packaged) / MPH (heat pump) commercial rooftops 15-75 tons",
+      "productType": "packaged_rtu",
+      "eraStart": 2003,
+      "eraEnd": 2027,
+      "regex": "^MP([SH])(\\d{3})([A-Z])(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Product category",
+          "attribute": "unit_type",
+          "map": {
+            "S": "Maverick packaged system (cooling with gas/electric heat)",
+            "H": "Maverick packaged heat pump"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Nominal capacity (tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "015": "15",
+            "020": "20",
+            "025": "25",
+            "030": "30",
+            "035": "35",
+            "040": "40",
+            "045": "45",
+            "050": "50",
+            "060": "60",
+            "070": "70",
+            "075": "75"
+          },
+          "unit": "tons",
+          "notes": "Maverick I: 015-025 (IM/catalog 251: 15-25 t); Maverick II: 015-050 (IM 1058) and later 060-075. Partial map."
+        },
+        {
+          "group": 3,
+          "name": "Design vintage",
+          "attribute": "revision",
+          "map": {
+            "A": "Vintage A",
+            "E": "Vintage E",
+            "F": "Vintage F (R-410A, MicroTech III)",
+            "G": "Vintage G (R-410A, MicroTech III)"
+          },
+          "notes": "Vintages A/E/F/G confirmed from replacement parts lists (RPL: MPS 030-050 Vintage A,E; Vintage F; MPS 020 Vintage G). Other letters unmapped."
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "microtech-iii"
+      ],
+      "examples": [
+        {
+          "model": "MPS020G",
+          "expect": {
+            "unit_type": "Maverick packaged system (cooling with gas/electric heat)",
+            "tonnage": "20",
+            "revision": "Vintage G (R-410A, MicroTech III)"
+          }
+        },
+        {
+          "model": "MPS040F",
+          "expect": {
+            "tonnage": "40",
+            "revision": "Vintage F (R-410A, MicroTech III)"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: 'Model' reads MPS + size + vintage + option string; the 8th character can flag factory-furnished options (e.g. 'W' per the Maverick II quick start guide). Only the first seven positions are decoded.",
+        "Early Maverick I (vintage A, c. 2003-2008) may be R-22; confirm refrigerant on the plate. Maverick II vintage F/G are R-410A with MicroTech III (IM 1058 covers MPS015F-050F).",
+        "Positions beyond the vintage letter (voltage, heat type) were not transcribed - read them from the unit data plate / IM 1058 nomenclature."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Daikin Applied IM 1058 Maverick II Commercial Packaged Rooftop Systems MPS015F-050F installation and maintenance manual",
+        "Daikin Applied OM 1294 Maverick II Quick Start and Operations Manual",
+        "Daikin/McQuay RPL MPS 020 Vintage G and RPL MPS 030-050 Vintage A,E / Vintage F replacement parts lists",
+        "McQuay Catalog 251-1 Maverick I Commercial Packaged Rooftop Systems 15-25 tons"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "mcquay-roofpak-rps-rdt-rfs-rcs-rah",
+      "family": "McQuay / Daikin Applied RoofPak applied rooftops: RPS (heating + mechanical cooling, blow-through), RFS (future cooling), RCS (condensing section), RDT (draw-through), RAH (applied air handler) 15-135 tons",
+      "productType": "packaged_rtu",
+      "eraStart": 1990,
+      "eraEnd": 2027,
+      "regex": "^R([PFCDA])([STH])(\\d{3})([A-Z])(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Unit function",
+          "attribute": "unit_type",
+          "map": {
+            "P": "Heating with mechanical cooling (packaged DX)",
+            "F": "Future mechanical cooling (coil, no condensing section)",
+            "C": "Condensing section only",
+            "D": "Draw-through cooling (RDT)",
+            "A": "Applied air handler, no DX (RAH)"
+          },
+          "notes": "P/F/C/D per the RoofPak catalog nomenclature; A (RAH) added from the MicroTech II/III model lists."
+        },
+        {
+          "group": 2,
+          "name": "Arrangement",
+          "attribute": "other",
+          "map": {
+            "S": "Blow-through single-zone",
+            "T": "Draw-through",
+            "H": "Air handler"
+          },
+          "notes": "Partial: R-P-R / R-F-R / R-A-R variants (third letter R) are not matched by this regex."
+        },
+        {
+          "group": 3,
+          "name": "Nominal capacity (tons)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "105": "105",
+            "115": "115",
+            "125": "125",
+            "135": "135",
+            "015": "15",
+            "018": "18",
+            "020": "20",
+            "025": "25",
+            "030": "30",
+            "036": "36",
+            "040": "40",
+            "045": "45",
+            "050": "50",
+            "060": "60",
+            "070": "70",
+            "075": "75",
+            "080": "80",
+            "090": "90"
+          },
+          "unit": "tons",
+          "notes": "Size list transcribed from the RoofPak RPS/RFS/RCS/RDT catalog; RAH sizes are airflow-based and not tons."
+        },
+        {
+          "group": 4,
+          "name": "Design vintage",
+          "attribute": "revision",
+          "map": {
+            "A": "Vintage A",
+            "B": "Vintage B",
+            "C": "Vintage C",
+            "D": "Vintage D"
+          }
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "microtech-ii",
+        "microtech-iii"
+      ],
+      "examples": [
+        {
+          "model": "RPS030D",
+          "expect": {
+            "unit_type": "Heating with mechanical cooling (packaged DX)",
+            "tonnage": "30",
+            "revision": "Vintage D"
+          }
+        },
+        {
+          "model": "RDT045C",
+          "expect": {
+            "unit_type": "Draw-through cooling (RDT)",
+            "tonnage": "45",
+            "revision": "Vintage C"
+          }
+        }
+      ],
+      "notes": [
+        "Refrigerant depends on vintage: pre-2010 RoofPak units are R-22 (some R-407C); vintage D and later R-410A - confirm on the plate. Default above is for current production only.",
+        "Heat medium is a letter in the option string (A = natural gas, E = electric, S = steam, W = hot water, Y = none) per the RoofPak catalog, but its position was not confirmed so it is not decoded.",
+        "Control: MicroTech (original, 1990s), MicroTech II (c. 2001-2010, OM 137), MicroTech III (c. 2010+). Identify by the controller keypad: MicroTech II has a 4x20 LCD with key cluster; MicroTech III has the push-and-roll navigation wheel.",
+        "Examples are constructed from the catalog size/vintage lists (RPS 030 vintage D; RDT 045 vintage C), not from dated nameplate photos."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "McQuay RoofPak Applied Rooftop RPS/RDT/RFS/RCS Catalog (surplusgroup.com mirror McQuay-RPS-RDT-RFS-RCS-Catalog-2017-01.pdf) - nomenclature and size list",
+        "McQuay RoofPak Applied Rooftop Systems installation manual IM 806 (RPS/RFS/RCS 018-100)",
+        "McQuay RPL RPS/RFS/RCS Vintage C and RPS/RDT/RFS/RCS 045-079 Vintage D replacement parts lists"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "goodman-amana-split-condensing-gsc-gsx-gsz",
+      "family": "Goodman / Amana split-system condensing units and heat pumps (GSC/GSX/GSH/GSZ, SSX/SSZ, ASX/ASZ) 1.5-10 tons, 13-18 SEER nomenclature (c. 2006-2019)",
+      "productType": "split_condensing_unit",
+      "eraStart": 2006,
+      "eraEnd": 2021,
+      "regex": "^([GSA])S([CXHZ])(\\d{2})(\\d{3})(\\d)([A-Z]{0,2})$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Brand / feature set",
+          "attribute": "series",
+          "map": {
+            "G": "Goodman (standard feature set)",
+            "S": "Goodman high feature set (SSX/SSZ)",
+            "A": "Amana (ASX/ASZ)"
+          },
+          "notes": "G and S per the GSX13 nomenclature page; A (Amana) by the same convention - medium."
+        },
+        {
+          "group": 2,
+          "name": "Unit type / refrigerant",
+          "attribute": "unit_type",
+          "map": {
+            "C": "Condensing unit, R-22",
+            "X": "Condensing unit, R-410A",
+            "H": "Heat pump, R-22",
+            "Z": "Heat pump, R-410A"
+          }
+        },
+        {
+          "group": 3,
+          "name": "Efficiency (SEER)",
+          "attribute": "efficiency",
+          "map": {
+            "13": "13 SEER",
+            "14": "14 SEER",
+            "16": "16 SEER",
+            "18": "18 SEER"
+          }
+        },
+        {
+          "group": 4,
+          "name": "Nominal capacity (kBTU/h)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "tons",
+          "notes": "018=1.5, 024=2, 030=2.5, 036=3, 042=3.5, 048=4, 060=5, 090=7.5, 120=10 tons (GSX13 nomenclature)."
+        },
+        {
+          "group": 5,
+          "name": "Electrical",
+          "attribute": "voltage",
+          "map": {
+            "1": "208/230-1-60",
+            "2": "220/240-1-50",
+            "3": "208/230-3-60",
+            "4": "460-3-60",
+            "5": "380/415-3-50"
+          }
+        },
+        {
+          "group": 6,
+          "name": "Major / minor revision",
+          "attribute": "revision",
+          "notes": "A = initial release; blank on many plates."
+        }
+      ],
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "GSC130903",
+          "expect": {
+            "series": "Goodman (standard feature set)",
+            "unit_type": "Condensing unit, R-22",
+            "efficiency": "13 SEER",
+            "tonnage": "7.5",
+            "voltage": "208/230-3-60"
+          }
+        },
+        {
+          "model": "GSX130483",
+          "expect": {
+            "unit_type": "Condensing unit, R-410A",
+            "efficiency": "13 SEER",
+            "tonnage": "4",
+            "voltage": "208/230-3-60"
+          }
+        },
+        {
+          "model": "GSX140361",
+          "expect": {
+            "unit_type": "Condensing unit, R-410A",
+            "efficiency": "14 SEER",
+            "tonnage": "3",
+            "voltage": "208/230-1-60"
+          }
+        }
+      ],
+      "notes": [
+        "Refrigerant is encoded in the unit-type letter (C/H = R-22, X/Z = R-410A); no family default is set.",
+        "Three-phase commercial condensers: GSC13 7.5 and 10 ton (GSC130903 / GSC131203, 208/230-3) and GSX13 3-5 ton 3-phase (GSX130363/0483/0603). 2019+ SEER2-era nomenclature (GSXN4, GSXH5, GSZB4 ...) is different and not decoded here.",
+        "Nameplate: model is the 9-11 character string; the serial is the 10-digit YYMM number."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Goodman GSX13 product specifications / user manual - nomenclature page (manualslib 1151559 p.2)",
+        "Goodman SS-GSC13 product specifications (4/06, 11/08, 4/12)",
+        "Goodman SS-GSX13 product specifications (8/13)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "daikin-vrv-outdoor-rxyq-reyq",
+      "family": "Daikin VRV outdoor units (RXYQ heat pump, REYQ heat recovery, RXTQ VRV-S, RWEYQ water-cooled) 6-30+ tons",
+      "productType": "vrf_outdoor",
+      "eraStart": 2005,
+      "eraEnd": 2027,
+      "regex": "^R([XEW])([YT])Q(\\d{2,3})([A-Z])([A-Z])([TY])([A-Z0-9]*)$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "System type",
+          "attribute": "unit_type",
+          "map": {
+            "X": "VRV heat pump (RXYQ / RXTQ)",
+            "E": "VRV heat recovery (REYQ)",
+            "W": "VRV-W water-cooled (RWEYQ)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Series letter",
+          "attribute": "series",
+          "map": {
+            "Y": "VRV multi (standard series)",
+            "T": "VRV-S / compact series (RXTQ)"
+          },
+          "notes": "Low confidence mapping."
+        },
+        {
+          "group": 3,
+          "name": "Nominal capacity (kBTU/h)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "unit": "tons",
+          "notes": "72=6, 96=8, 120=10, 144=12, 168=14, 192=16, 240=20 tons per module; multi-module systems add modules."
+        },
+        {
+          "group": 4,
+          "name": "Generation",
+          "attribute": "revision",
+          "map": {
+            "P": "VRV III (P series)",
+            "T": "VRV IV (T series)",
+            "A": "VRV IV / A-series"
+          },
+          "notes": "Partial."
+        },
+        {
+          "group": 5,
+          "name": "Sub-series",
+          "attribute": "other"
+        },
+        {
+          "group": 6,
+          "name": "Voltage",
+          "attribute": "voltage",
+          "map": {
+            "T": "208/230-3-60",
+            "Y": "460-3-60"
+          }
+        },
+        {
+          "group": 7,
+          "name": "Suffix",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": [
+        "daikin-vrv-self-diagnosis"
+      ],
+      "examples": [
+        {
+          "model": "RXYQ72TATJU",
+          "expect": {
+            "unit_type": "VRV heat pump (RXYQ / RXTQ)",
+            "tonnage": "6",
+            "voltage": "208/230-3-60"
+          }
+        },
+        {
+          "model": "REYQ96TAYDU",
+          "expect": {
+            "unit_type": "VRV heat recovery (REYQ)",
+            "tonnage": "8",
+            "voltage": "460-3-60"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence: the model breakdown is from field familiarity with VRV IV nameplates (RXYQ72TATJU, REYQ96TAYDU), not from a Daikin nomenclature sheet. It is included mainly so the VRV self-diagnosis codes are linked to the model. Verify capacity and voltage on the plate.",
+        "VRV outdoor plates also carry a Japanese-style letter+digit serial (see daikin-vrv-ductless-letter-prefix)."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Daikin AC VRV IV product literature (daikinac.com) - model names as listed",
+        "Field nameplate familiarity (memory) - unverified"
+      ],
+      "lastVerified": "2026-09-26"
+    }
+  ],
+  "controls": [
+    {
+      "id": "microtech-iii",
+      "name": "Daikin Applied MicroTech III unit controller (Rebel DPS/DPH, Maverick II MPS, RoofPak RPS/RDT/RAH 2010+, self-contained)",
+      "description": "Microprocessor unit controller with a 4-line keypad/display and push-and-roll navigation wheel; BACnet MS/TP, BACnet IP or LonWorks optional. Alarms are grouped as Faults (unit shut down, manual clear), Problems (function disabled, unit keeps running) and Warnings (informational). Active alarms display in priority order, highest first.",
+      "appliesTo": [
+        "daikin-rebel-dps-dph",
+        "daikin-maverick-mps-mph",
+        "mcquay-roofpak-rps-rdt-rfs-rcs-rah (vintage D+)"
+      ],
+      "faultCodes": [
+        {
+          "code": "Duct High Limit Fault",
+          "meaning": "Duct High Limit (supply duct high static) input opened - unit shut down (Fault class).",
+          "likelyCauses": [
+            "Closed or stuck fire/smoke dampers, closed VAV boxes at start-up",
+            "Supply-fan VFD/ static-pressure control overshoot",
+            "Duct high-limit switch (DHL) set point too low or switch failed",
+            "Dirty filters combined with high fan speed"
+          ],
+          "checks": [
+            "Read the DHL switch setting (typically a few in. w.c.) and duct static at the switch tap",
+            "Verify VAV boxes/dampers open before fan start; check the SAF VFD ramp and duct static set point",
+            "Ohm the DHL switch and its wiring to the controller digital input"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin Applied ED 15112 MicroTech III Rooftop and Self-Contained Protocol Document - alarm point 'Duct High Limit Fault'; OM 920 Alarms section",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Freeze Fault",
+          "meaning": "Freeze protection (freezestat) input tripped - unit shut down (Fault class).",
+          "likelyCauses": [
+            "Low entering air temperature across a hot-water/steam coil with the valve closed or no flow",
+            "Freezestat capillary sensing a cold spot; loose capillary",
+            "Economizer/outside-air damper failed open in cold weather",
+            "Freezestat set too high"
+          ],
+          "checks": [
+            "Measure air temperature at the coil face and hot-water supply temperature; confirm valve stroke and pump/flow",
+            "Check the OA damper actuator drives closed on unit shutdown",
+            "Verify freezestat setting and continuity to the controller input"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin Applied ED 15112 MicroTech III Rooftop and Self-Contained Protocol Document - alarm point 'Freeze Fault'; OM 920 Alarms section",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Emergency Stop Fault",
+          "meaning": "Emergency stop input opened (field terminals) - unit shut down until the input is restored and the alarm cleared.",
+          "likelyCauses": [
+            "Field emergency-stop / fire-alarm relay contact open or missing jumper",
+            "Broken field wiring to the E-stop terminals",
+            "Smoke detector/fire alarm interlock tripped"
+          ],
+          "checks": [
+            "Check for 24 V across the emergency-stop terminals on the field terminal strip; jumper temporarily to confirm the controller input",
+            "Trace the field interlock (fire alarm / smoke detector / shunt-trip)"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin Applied OM 920 MicroTech III Unit Controller Alarms (as cited in the HVAC-Talk thread 'Daikin DPS Microtech 3 emergency stop Fault')",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "High Pressure Circuit 1 Problem",
+          "meaning": "High pressure switch on refrigerant circuit 1 opened - circuit 1 compressor(s) disabled (Problem class); the rest of the unit keeps running. Same alarm exists for circuits 2, 3 and 4.",
+          "likelyCauses": [
+            "Dirty or blocked condenser coil; condenser fan(s) not running or wrong rotation",
+            "Overcharge or non-condensables",
+            "Failed condenser fan motor / EC fan or fan VFD",
+            "HP switch failed or wiring open"
+          ],
+          "checks": [
+            "Compare discharge pressure to the HP switch trip point on the unit data plate; check condenser fan operation and rotation",
+            "Inspect condenser coil, clean if needed; check subcooling for overcharge",
+            "Ohm the HP switch and wiring to the expansion module input"
+          ],
+          "severity": "warning",
+          "source": "Daikin Applied ED 15112 MicroTech III Rooftop and Self-Contained Protocol Document - alarm points 'High Pressure Circuit 1..4 Problem'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Discharge Sensor Fail",
+          "meaning": "Discharge (supply) air temperature sensor reading out of range / open or shorted.",
+          "likelyCauses": [
+            "DAT sensor open or shorted (10k thermistor)",
+            "Sensor wiring damaged or unplugged at the expansion module",
+            "Sensor located in the discharge plenum has been removed during service"
+          ],
+          "checks": [
+            "Ohm the DAT sensor and compare with the thermistor curve in OM 920 (10k at 77 F); inspect wiring",
+            "Confirm the sensor is plugged into the correct analog input on the main control board / expansion module"
+          ],
+          "severity": "shutdown",
+          "notes": "Because discharge temperature is the control variable for cooling and heating, MicroTech III treats a DAT sensor failure as a Fault (unit shut down) on rooftop units.",
+          "source": "Daikin Applied ED 15112 MicroTech III Rooftop and Self-Contained Protocol Document - alarm point 'Discharge Sensor Fail'",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "diagnosticTips": [
+        "Keypad/display: 4-line LCD on the main control board (MCB) in the control compartment. Navigate with the push-and-roll wheel: rotate to move the cursor, press to select/enter. Home screen -> Alarm Lists -> Active Alarms shows current alarms in priority order; Alarm Log shows history with time stamps.",
+        "Clearing: Faults require a manual clear - Alarm Lists -> Active Alarms -> 'Clear Alarms' set to Clear (or via the BAS Clear Alarm point) after the cause is corrected. Problems clear automatically when the condition returns to normal on most points; Warnings clear when the condition ends.",
+        "Service/test: use Unit State / Unit Status screens (Commissioning -> Unit Setup / Manual Control on later software) to manually command fans, compressors and dampers; cooling and heating enable/disable are under Commissioning.",
+        "Full alarm table (Faults / Problems / Warnings with descriptions and reset behaviour) is in OM 920 'Alarms' and the model-specific OM (Rebel OM 1141 / Maverick II OM 1294 quick start); the BAS point names are in ED 15112 (protocol information).",
+        "Software level is shown under About This Unit; note it when calling Daikin Applied technical support."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Daikin Applied OM 920 - MicroTech III Unit Controller for Commercial Rooftop, Applied Rooftop and Self-Contained systems - Operations Manual",
+          "docId": "OM 920",
+          "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/mediaprd/MicroTech%20III%20for%20AHU%20Manual%20Daikin%20OM%20920.pdf/"
+        },
+        {
+          "title": "Daikin Applied ED 15112 - MicroTech III Rooftop and Self-Contained Protocol Information (BACnet/LON point list incl. alarm points)",
+          "docId": "ED 15112",
+          "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/media/MicroTech%20III%20AAH%20Protocol%20Information%20-%20ED%2015112.PDF/"
+        },
+        {
+          "title": "Daikin Applied OM 1294 - Maverick II Quick Start and Operations Manual",
+          "docId": "OM 1294"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Daikin Applied OM 920 MicroTech III Unit Controller operations manual (alarm classes, priority display)",
+        "Daikin Applied ED 15112 MicroTech III protocol document (alarm point names)",
+        "HVAC-Talk thread 'Daikin DPS Microtech 3 emergency stop Fault' (corroboration only)"
+      ]
+    },
+    {
+      "id": "microtech-ii",
+      "name": "McQuay MicroTech II applied rooftop unit controller (RPS, RFS, RCS, RPR, RFR, RDT, RDS, RAR, RAH c. 2001-2010)",
+      "description": "Predecessor of MicroTech III with a 4x20 LCD keypad/display; alarms divided into Faults (highest priority - unit shut down), Problems (medium) and Warnings (lowest). Documented in OM 137 (April 2001).",
+      "appliesTo": [
+        "mcquay-roofpak-rps-rdt-rfs-rcs-rah (vintages A-C)"
+      ],
+      "faultCodes": [
+        {
+          "code": "Space Sensor Fault",
+          "meaning": "Space temperature sensor failed while the controller depends on it - the unit is shut down until the alarm is manually cleared.",
+          "likelyCauses": [
+            "Space sensor open/shorted or unplugged",
+            "Control Temperature Source set to Space while no sensor is installed",
+            "Field wiring damaged"
+          ],
+          "checks": [
+            "Ohm the space sensor (10k thermistor) and wiring at the controller analog input",
+            "Check Control Temp Source setting; change to Return if no space sensor is used, then clear the alarm"
+          ],
+          "severity": "shutdown",
+          "source": "McQuay OM 137 MicroTech II Applied Rooftop Unit Controller Operation Manual - Alarm Control / Faults (manualslib 1326625 p.91)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Return Sensor Fault",
+          "meaning": "Return air temperature sensor failed - the unit is shut down until the alarm is manually cleared.",
+          "likelyCauses": [
+            "Return air sensor open/shorted",
+            "Wiring or connector fault at the controller analog input"
+          ],
+          "checks": [
+            "Ohm the RAT sensor and compare to the thermistor table; check the plug at the controller",
+            "Clear the alarm after repair (Faults do not auto-clear)"
+          ],
+          "severity": "shutdown",
+          "source": "McQuay OM 137 MicroTech II Applied Rooftop Unit Controller Operation Manual - Fault Alarms (manualslib 1341639 p.111)",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "diagnosticTips": [
+        "Keypad/display is a 4x20 LCD with arrow/enter keys on the controller in the main control panel; the Alarm menu lists current alarms and the alarm log.",
+        "Faults must be cleared manually from the keypad Alarm menu (or via the network Clear Alarm point) after the cause is fixed; Problems and Warnings clear automatically when the condition ends.",
+        "Full alarm list (Faults, Problems, Warnings) with descriptions is in OM 137 'Alarm Control' section (pages ~91-111); protocol point names are in the MicroTech II Applied Rooftop Unit Controller Protocol Information document.",
+        "MicroTech II hardware is obsolete; Daikin Applied offers MicroTech III retrofit controllers for RoofPak units."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "McQuay OM 137 - MicroTech II Applied Rooftop Unit Controller Operation Manual (April 2001)",
+          "docId": "OM 137",
+          "url": "https://www.manualslib.com/manual/1326625/Mcquay-Microtech-Ii.html"
+        },
+        {
+          "title": "McQuay IM 483 - MicroTech Applied Rooftop Unit Controller Installation & Maintenance",
+          "docId": "IM 483",
+          "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/media/Im483-6.pdf/"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "McQuay OM 137 MicroTech II Applied Rooftop Unit Controller Operation Manual (alarm classes; Space Sensor and Return Sensor faults)",
+        "MicroTech II Applied Rooftop Unit Controller Protocol Information (kipdf mirror)"
+      ]
+    },
+    {
+      "id": "goodman-integrated-ignition-control",
+      "name": "Goodman / Amana / Daikin (Goodman-built) integrated ignition control - single-LED flash codes (CPG/DCG/GPG packaged gas units and matching furnaces)",
+      "description": "Integrated hot-surface ignition control (Goodman part families PCBBF1xx / PCBBF13x, White-Rodgers 50-series OEM boards) with a single red diagnostic LED; the flash count identifies the fault. The exact table is printed on the unit's control-compartment door label - always read that label for the specific board.",
+      "appliesTo": [
+        "goodman-cpg-daikin-dcg-commercial-packaged",
+        "goodman-gpg-gpc-gph-packaged-legacy",
+        "goodman-gpgm-packaged-seer2"
+      ],
+      "faultCodes": [
+        {
+          "code": "LED off (no flash)",
+          "meaning": "Internal control fault in the integrated ignition control - hard lockout; or no power to the control.",
+          "likelyCauses": [
+            "Failed integrated control board",
+            "No 24 VAC to the control (transformer, fuse, door switch)",
+            "Loose low-voltage plug"
+          ],
+          "checks": [
+            "Verify 24 VAC at the control's R-C terminals and line voltage at L1-N",
+            "Cycle power for more than 5 seconds; if the LED stays off with power present, replace the control"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "1 flash",
+          "meaning": "External lockout - retries or recycles exceeded (failed ignition attempts or flame dropouts). The control resets automatically after one hour, or reset by removing the thermostat call or interrupting power for more than five seconds.",
+          "likelyCauses": [
+            "Low gas pressure or gas valve not opening",
+            "Dirty/cracked hot surface ignitor or poor flame sensor signal",
+            "Flame rectification problem (dirty flame rod, poor burner ground)",
+            "Burner/crossover problems causing flame dropouts"
+          ],
+          "checks": [
+            "Watch the ignition sequence: inducer -> pressure switch -> HSI glow -> gas valve 24 V -> flame",
+            "Measure manifold pressure (typ. 3.5 in. w.c. NG) and 24 V at the gas valve during trial for ignition",
+            "Measure flame current (microamps DC) and clean the flame sensor; check ignitor resistance"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "2 flashes",
+          "meaning": "Pressure switch stuck open - pressure switch did not close with the induced draft blower running.",
+          "likelyCauses": [
+            "Faulty pressure switch or wiring",
+            "Disconnected, cracked or plugged pressure-switch hose",
+            "Blocked or restricted flue / vent, or condensate in the hose",
+            "Faulty or weak induced draft blower"
+          ],
+          "checks": [
+            "Confirm the inducer runs; measure inducer negative pressure at the switch tap with a manometer against the switch rating",
+            "Inspect the hose and flue outlet; check switch contacts close (0 V across the switch) with the inducer running"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "3 flashes",
+          "meaning": "Pressure switch stuck closed - the pressure switch is closed before the induced draft blower is energized.",
+          "likelyCauses": [
+            "Faulty (welded) pressure switch",
+            "Faulty wiring shorting the switch input"
+          ],
+          "checks": [
+            "With the unit idle, check for continuity across the pressure switch; it should be open",
+            "Inspect the switch wiring for a short to 24 V"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "4 flashes",
+          "meaning": "Open thermal protection device - the primary limit (or auxiliary limit / rollout circuit) is open.",
+          "likelyCauses": [
+            "Dirty filter or excessive duct static (insufficient airflow)",
+            "Indoor blower not running or wrong speed; belt slipping on belt-drive units",
+            "Faulty limit switch",
+            "Open rollout switch (manual reset) on boards where rollout is in the limit string"
+          ],
+          "checks": [
+            "Measure external static and temperature rise against the data plate; check filters, blower speed/belt",
+            "Check continuity across each limit and rollout switch; reset any manual-reset rollout only after finding the cause"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "5 flashes",
+          "meaning": "Flame detected with the gas valve de-energized (flame sensed when it should not be). Resets by removing power, or automatically after one hour.",
+          "likelyCauses": [
+            "Gas valve leaking through / stuck open",
+            "Flame sensor circuit shorted or moisture on the control",
+            "Residual flame from a slow-closing valve"
+          ],
+          "checks": [
+            "Confirm 0 V at the gas valve while flame is present; if flame persists with no valve voltage, replace the gas valve",
+            "Check the flame sensor wiring for shorts to ground"
+          ],
+          "severity": "lockout",
+          "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "8 flashes",
+          "meaning": "Igniter relay fault / shorted hot surface igniter (some boards omitted this code from the door label - see Goodman Service Bulletin SF-024 'Missing Identification of Eight (8) Flash Fault Code').",
+          "likelyCauses": [
+            "Shorted or grounded hot surface igniter",
+            "Failed igniter relay on the integrated control"
+          ],
+          "checks": [
+            "Disconnect the igniter and measure its resistance (typically 40-90 ohms for silicon nitride/carbide types per the unit label) and check for a short to ground",
+            "If the igniter is good, replace the control"
+          ],
+          "severity": "lockout",
+          "source": "Goodman Service Bulletin SF-024 - Missing Identification of Eight (8) Flash Fault Code (mobile.goodmanmfg.com Tech Services); corroborated by third-party flash-code guides",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "LED on steady",
+          "meaning": "Normal operation, no fault stored (most Goodman integrated controls).",
+          "checks": [
+            "If the unit does not run with a steady LED, check the thermostat call and 24 V at the control terminals"
+          ]
+        },
+        {
+          "pattern": "6 flashes",
+          "meaning": "Model-dependent: reversed 115 VAC line polarity / poor ground on some controls, open rollout switch on others - read the door label for this board.",
+          "checks": [
+            "Verify L1/N polarity and a solid ground at the control",
+            "Check rollout switch continuity"
+          ]
+        }
+      ],
+      "diagnosticTips": [
+        "The diagnostic LED is on the integrated control board in the gas-heat control compartment; view it through the window in the blower/control door on packaged units.",
+        "Lockouts (1 and 5 flashes) auto-reset after one hour; clear immediately by removing the thermostat call for a few seconds or by interrupting power for more than 5 seconds.",
+        "The control retries ignition (typically 3 trials) before a 1-flash lockout; flame dropouts during a cycle count as recycles.",
+        "Flash-code tables differ between board generations (single-stage vs two-stage, 40-flash/blink-pattern boards on newer furnaces). This table is the single-LED table from the CPG packaged-unit installation instructions; the 6 and 7 flash meanings vary and were not confirmed for packaged units, so they are not listed as codes.",
+        "Three-phase CPG/DCG 7.5-12.5 ton units also carry a phase monitor with its own LED; a unit that is dead with a normal ignition-control LED may be locked out by the phase monitor (check incoming phase rotation and voltage balance)."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Goodman CPG Series Installation Instructions (package gas units) - Diagnostic LED / troubleshooting chart",
+          "url": "https://www.manualslib.com/manual/61600/Goodman-Cpg-Series.html"
+        },
+        {
+          "title": "Goodman Service Bulletin SF-024 - Missing Identification of Eight (8) Flash Fault Code",
+          "docId": "SF-024",
+          "url": "https://mobile.goodmanmfg.com/mobileapp/stellent/Toolkit/TechServices/SB/goodman/SF-Furnace/SF-024+Missing+Identification+of+Eight+(8)+Flash+Fault+Code.pdf"
+        },
+        {
+          "title": "Goodman GPG14 Service Instructions RS6300012r4 (July 2017)",
+          "docId": "RS6300012",
+          "url": "https://hvacdirect.com/media/hvac/pdf/GPG14-Service.pdf"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Goodman CPG Series installation instructions - diagnostic LED chart (manualslib 61600)",
+        "Goodman Service Bulletin SF-024 (8-flash code)",
+        "Third-party Goodman flash-code guides (furnaceking.ca, pickcomfort.com, northnjhvac.com) - corroboration only"
+      ]
+    },
+    {
+      "id": "daikin-vrv-self-diagnosis",
+      "name": "Daikin VRV / ductless malfunction self-diagnosis codes (remote controller / outdoor PCB display)",
+      "description": "Two-character malfunction codes shown on the wired remote controller (or read from the outdoor unit PCB 7-segment display / Service Checker). Codes are common across VRV III/IV and ductless splits; the first character indicates the area (A/C = indoor, E/F/H/J/L/P = outdoor, U = system). Only the subset confirmed in this session is listed.",
+      "appliesTo": [
+        "daikin-vrv-outdoor-rxyq-reyq",
+        "Daikin VRV indoor units (FXxx)",
+        "Daikin ductless splits"
+      ],
+      "faultCodes": [
+        {
+          "code": "E3",
+          "meaning": "Actuation of high pressure switch (HPS) - discharge pressure too high.",
+          "likelyCauses": [
+            "Dirty outdoor coil, short-circuited condenser air or blocked airflow",
+            "Outdoor fan not running",
+            "Stop valve closed / refrigerant overcharge / non-condensables",
+            "Faulty HPS or high-pressure sensor"
+          ],
+          "checks": [
+            "Compare the high-pressure sensor reading (outdoor PCB / Service Checker) with gauges; check outdoor fan operation and coil condition",
+            "Confirm all stop valves are open; check subcooling for overcharge",
+            "Check HPS continuity and connector"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin SM-TS3 'Simple Self-Diagnosis by Malfunction Code' chart (Daikin After Sales Service); coolautomation.com Daikin error code list (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "E4",
+          "meaning": "Actuation of low pressure sensor (LPS) - suction pressure too low.",
+          "likelyCauses": [
+            "Refrigerant shortage / leak",
+            "Clogged refrigerant piping, closed stop valve or blocked filter",
+            "Indoor fan / filter airflow problem in cooling",
+            "Faulty low-pressure sensor"
+          ],
+          "checks": [
+            "Read suction pressure and compare with the LP sensor value; check superheat",
+            "Leak-check; verify stop valves open and EEVs operating",
+            "Check indoor airflow and filters"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin SM-TS3 self-diagnosis chart; coolautomation.com list (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "E5",
+          "meaning": "Compressor motor overheat / overload (OL activation) - inverter compressor lock or overload.",
+          "likelyCauses": [
+            "Refrigerant shortage or clogged piping causing high discharge temperature",
+            "Compressor overload/lock, failed windings",
+            "Faulty OL thermistor or connector"
+          ],
+          "checks": [
+            "Check discharge pipe temperature and superheat; check charge",
+            "Megohm the compressor windings and check winding balance",
+            "Inspect the OL connector and thermistor resistance"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin SM-TS3 self-diagnosis chart; coolautomation.com list (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "U0",
+          "meaning": "Refrigerant shortage / suction pipe temperature abnormal (low refrigerant detected).",
+          "likelyCauses": [
+            "Refrigerant leak or short charge",
+            "Clogged piping, closed stop valve",
+            "Electronic expansion valve stuck / not opening",
+            "Suction thermistor or pressure sensor fault"
+          ],
+          "checks": [
+            "Check superheat and suction pressure; leak-check the system",
+            "Verify EEV coil resistance and operation (audible/thermal check on start)",
+            "Compare thermistor readings with actual pipe temperatures"
+          ],
+          "severity": "warning",
+          "source": "Daikin SM-TS3 self-diagnosis chart; coolautomation.com list (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "U1",
+          "meaning": "Reverse phase / open phase - three-phase power supply phase sequence reversed.",
+          "likelyCauses": [
+            "Incoming power L1/L2/L3 connected in reverse rotation",
+            "One phase missing"
+          ],
+          "checks": [
+            "Check phase rotation at the outdoor unit power terminals with a phase-rotation meter; swap two incoming phases if reversed",
+            "Verify all three phase voltages present and balanced"
+          ],
+          "severity": "shutdown",
+          "source": "coolautomation.com Daikin error code list; acerrorcode.com Daikin fault code list (two secondary sources agree)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "U2",
+          "meaning": "Power supply insufficient / open phase or voltage imbalance; instantaneous power failure; DC voltage of fan motor too low.",
+          "likelyCauses": [
+            "Open phase or voltage imbalance in the 3-phase supply",
+            "Momentary power interruption / low line voltage",
+            "Faulty outdoor PCB, DC fan motor or capacitor"
+          ],
+          "checks": [
+            "Measure all three phase-to-phase voltages under load; imbalance > 2% or a dropped phase triggers the code",
+            "Check for loose lugs / breaker contacts; inspect the outdoor PCB DC voltage per the service manual"
+          ],
+          "severity": "shutdown",
+          "source": "Daikin SM-TS3 self-diagnosis chart; coolautomation.com list (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "U4",
+          "meaning": "Transmission (communication) error between indoor and outdoor units, or between outdoor and BS units.",
+          "likelyCauses": [
+            "Wrong or broken F1/F2 communication wiring; polarity or shielding faults",
+            "Indoor or outdoor unit powered down (indoor unit off at the breaker)",
+            "Indoor/outdoor PCB failure",
+            "Address setting not completed after wiring changes"
+          ],
+          "checks": [
+            "Confirm every indoor unit has power; check F1/F2 continuity and that the wiring is daisy-chained with no loops",
+            "Measure DC voltage on F1/F2 at the outdoor unit; re-run the wiring/address auto-setting (per service manual) after repairs"
+          ],
+          "severity": "shutdown",
+          "notes": "Most common Daikin VRV code in the field per multiple sources.",
+          "source": "Daikin SM-TS3 self-diagnosis chart; coolautomation.com list; airnexus.io field guide (corroboration)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "L5",
+          "meaning": "Inverter compressor instantaneous overcurrent (DC output) - sudden current spike / short in the compressor circuit.",
+          "likelyCauses": [
+            "Compressor motor winding short or ground fault",
+            "Mechanical compressor problem (lock/seizure)",
+            "Inverter PCB / power module failure"
+          ],
+          "checks": [
+            "Disconnect the compressor and megohm each winding to ground; check winding-to-winding resistance balance",
+            "Check the inverter PCB output with the compressor disconnected per the service manual",
+            "Check for liquid floodback / oil issues"
+          ],
+          "severity": "shutdown",
+          "source": "coolautomation.com Daikin error code list; airnexus.io Daikin VRV fault codes field guide (two secondary sources agree)",
+          "evidence": "multi_secondary"
+        },
+        {
+          "code": "J6",
+          "meaning": "Outdoor heat exchanger thermistor abnormal (open/short or disconnected).",
+          "likelyCauses": [
+            "Faulty outdoor coil thermistor",
+            "Connector loose or cable disconnected at the outdoor PCB"
+          ],
+          "checks": [
+            "Ohm the thermistor and compare with the Daikin thermistor table (20k-type at 25 C per service manual); check the connector"
+          ],
+          "severity": "warning",
+          "source": "coolautomation.com Daikin error code list; acerrorcode.com Daikin fault code list (two secondary sources agree)",
+          "evidence": "multi_secondary"
+        }
+      ],
+      "diagnosticTips": [
+        "Reading codes: the wired remote (BRC1E/BRC1H) shows the code in the display when the unit faults; press and hold the On/Off button ~5 s to display the last malfunction code (BRC1E: hold Cancel/'Menu' per model). Outdoor unit: the outdoor PCB 7-segment LEDs display the code; use Daikin Service Checker (D-Checker) for live data.",
+        "Clearing: correct the cause and cycle power at the outdoor unit breaker, or reset from the remote controller (turn the unit off/on); some codes (U4, UA) require the outdoor unit wiring/address auto-setting to be re-run after wiring changes.",
+        "Other frequently seen codes (A1, A3, A6, C4, C5, C9, E1, E7, E9, F3, H9, J3, J5, L4, L8, L9, P4, U5, U8, UA, UF, UH) are documented on daikin.com/products/ac/services/error_codes and in the Daikin SM-TS3 chart - they were not verified in this session and are intentionally not transcribed here.",
+        "Marked VRV: these codes apply to Daikin Industries VRV and ductless products, not to Goodman-built Daikin-branded unitary equipment."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Daikin After Sales Service Division SM-TS3 - Simple Self-Diagnosis by Malfunction Code",
+          "docId": "SM-TS3",
+          "url": "https://my.daikin.eu/content/dam/DASW/supportavdelningen/Felkoder_SM-TS3errorcode_chart.pdf"
+        },
+        {
+          "title": "Daikin Global - Error Codes (After Sales Service)",
+          "url": "https://www.daikin.com/products/ac/services/error_codes"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Daikin SM-TS3 Simple Self-Diagnosis by Malfunction Code chart",
+        "coolautomation.com - Daikin Error Codes (Malfunction Self-Diagnosis)",
+        "acerrorcode.com - Daikin AC error codes list (split, VRV IV, VRV III)",
+        "airnexus.io - Daikin VRV fault codes field guide"
+      ]
+    }
+  ],
+  "electrical": [
+    {
+      "familyRegex": "goodman-cpg-daikin-dcg-commercial-packaged|goodman-gpg-gpc-gph-packaged-legacy|goodman-gpgm-packaged-seer2",
+      "familyLabel": "Goodman CPG/CPC/CPH, Daikin DCG/DCC/DCH and GPG/GPC/GPH packaged units",
+      "controlVoltage": "24 VAC from the unit control transformer (TRAN), fused on the low-voltage circuit; 208/230 V units have a primary tap that must be moved from 240 to 208 V",
+      "components": [
+        {
+          "designator": "CC",
+          "name": "Compressor contactor",
+          "notes": "Also printed C or CONT on some diagrams"
+        },
+        {
+          "designator": "CAP",
+          "name": "Run capacitor (compressor / fan)",
+          "notes": "Dual capacitor on single-phase units"
+        },
+        {
+          "designator": "CCH",
+          "name": "Crankcase heater"
+        },
+        {
+          "designator": "HPS",
+          "name": "High pressure switch",
+          "notes": "Auto-reset; in series with the compressor contactor coil or the control input"
+        },
+        {
+          "designator": "LPS",
+          "name": "Low pressure switch",
+          "notes": "Auto-reset"
+        },
+        {
+          "designator": "IBM",
+          "name": "Indoor blower motor",
+          "notes": "Direct-drive PSC/ECM on 3-6 t, belt-drive on 7.5 t and up"
+        },
+        {
+          "designator": "IBR",
+          "name": "Indoor blower relay"
+        },
+        {
+          "designator": "OFM",
+          "name": "Outdoor fan motor"
+        },
+        {
+          "designator": "IDM",
+          "name": "Induced draft motor (draft inducer)"
+        },
+        {
+          "designator": "PS",
+          "name": "Pressure switch (draft proving)"
+        },
+        {
+          "designator": "LS",
+          "name": "Limit switch (primary / auxiliary)"
+        },
+        {
+          "designator": "RS",
+          "name": "Rollout switch (manual reset)"
+        },
+        {
+          "designator": "GV",
+          "name": "Gas valve"
+        },
+        {
+          "designator": "IGN",
+          "name": "Hot surface ignitor"
+        },
+        {
+          "designator": "FS",
+          "name": "Flame sensor"
+        },
+        {
+          "designator": "ICM",
+          "name": "Integrated ignition control module (control board with diagnostic LED)"
+        },
+        {
+          "designator": "TRAN",
+          "name": "Control transformer"
+        },
+        {
+          "designator": "TB",
+          "name": "Low-voltage terminal block"
+        },
+        {
+          "designator": "PM",
+          "name": "Phase monitor",
+          "notes": "Three-phase scroll units - prevents reverse rotation; LED indicates fault"
+        },
+        {
+          "designator": "DFC",
+          "name": "Defrost control board (heat pump models)"
+        },
+        {
+          "designator": "RVS",
+          "name": "Reversing valve solenoid (heat pump models)"
+        },
+        {
+          "designator": "EHK",
+          "name": "Electric heat kit (field-installed on CPC/CPH/GPC/GPH)"
+        }
+      ],
+      "safetyDevices": [
+        "High pressure switch (HPS)",
+        "Low pressure switch (LPS)",
+        "Primary and auxiliary limit switches (LS)",
+        "Rollout switch (RS, manual reset)",
+        "Draft pressure switch (PS)",
+        "Compressor internal overload",
+        "Phase monitor on 3-phase units",
+        "Low-voltage fuse on the control board"
+      ],
+      "terminalLabels": {
+        "R": "24 VAC hot to thermostat",
+        "C": "24 VAC common",
+        "Y / Y1": "First-stage cooling (compressor contactor)",
+        "Y2": "Second-stage cooling (two-compressor 7.5-12.5 t units)",
+        "W / W1": "First-stage heat (gas valve / electric heat)",
+        "W2": "Second-stage heat (two-stage gas units)",
+        "G": "Indoor blower",
+        "O": "Reversing valve energized in cooling (heat pump)",
+        "L1/L2/L3": "Line voltage at the unit disconnect / terminal block"
+      },
+      "sequenceOfOperation": [
+        "Cooling: thermostat closes R-Y (and R-G); the integrated control or blower relay starts the indoor blower (ECM units after a short delay) and energizes the compressor contactor coil through HPS/LPS (and the phase monitor contact on 3-phase units); outdoor fan runs with the compressor. On two-compressor units Y2 brings on the second circuit.",
+        "Gas heating: thermostat closes R-W; the integrated control checks the pressure switch open, starts the induced draft motor, proves the pressure switch, warms the hot surface ignitor (~20-30 s), opens the gas valve for the trial for ignition, proves flame through the flame sensor, then starts the indoor blower after the heat-on delay. On loss of call the gas valve closes and the blower runs an off-delay (typically 90-180 s, board-selectable).",
+        "Heat pump heating: R-Y (with O de-energized) runs the compressor with the reversing valve in heat; the defrost control initiates time/temperature defrost, energizing O and turning off the outdoor fan; W2/electric heat kit staged as supplemental heat."
+      ],
+      "notes": [
+        "LOW confidence on designators: the abbreviations above are typical of Goodman/Daikin unitary wiring diagrams but were compiled from field memory, not transcribed from a specific IOM legend in this session - confirm against the legend printed on the unit's wiring diagram (inside the control-compartment door).",
+        "Three-phase CPG/DCG 7.5-12.5 t scroll units ship with a phase monitor; reverse rotation on a scroll shows as no pumping, noisy compressor and a phase-monitor fault LED.",
+        "208 V applications: move the transformer primary lead to the 208 V tap or low control voltage causes contactor chatter and ignition faults."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Goodman CPG Series installation instructions (sequence of operation, diagnostic LED) - manualslib 61600",
+        "Field memory of Goodman unitary wiring diagram legends (unverified)"
+      ]
+    },
+    {
+      "familyRegex": "daikin-rebel-dps-dph|daikin-maverick-mps-mph",
+      "familyLabel": "Daikin Applied Rebel DPS/DPH and Maverick II MPS rooftops (MicroTech III)",
+      "controlVoltage": "24 VAC from the control transformer to the MicroTech III main control board (MCB) and expansion modules; 115 VAC convenience/control circuit on larger Maverick units",
+      "components": [
+        {
+          "designator": "MCB",
+          "name": "MicroTech III main control board with keypad/display"
+        },
+        {
+          "designator": "EM",
+          "name": "Expansion module(s) (EM-A, EM-B ...) for additional I/O"
+        },
+        {
+          "designator": "VFD / SAF VFD",
+          "name": "Supply air fan variable-frequency drive"
+        },
+        {
+          "designator": "INV",
+          "name": "Inverter compressor drive (Rebel lead circuit variable-speed scroll)"
+        },
+        {
+          "designator": "EEV",
+          "name": "Electronic expansion valve (Rebel)"
+        },
+        {
+          "designator": "HP1/HP2",
+          "name": "High pressure switch, circuit 1/2"
+        },
+        {
+          "designator": "LP1/LP2",
+          "name": "Low pressure switch / transducer, circuit 1/2"
+        },
+        {
+          "designator": "DHL",
+          "name": "Duct high limit switch"
+        },
+        {
+          "designator": "FRZ",
+          "name": "Freezestat (hot-water/steam coil units)"
+        },
+        {
+          "designator": "SD",
+          "name": "Smoke detector (supply/return)"
+        },
+        {
+          "designator": "DAT / RAT / OAT / MAT",
+          "name": "Discharge, return, outdoor and mixed air temperature sensors (10k thermistors)"
+        },
+        {
+          "designator": "DSP",
+          "name": "Duct static pressure transducer"
+        },
+        {
+          "designator": "ECON / OAD",
+          "name": "Economizer outside-air damper actuator"
+        },
+        {
+          "designator": "IGC / FC",
+          "name": "Gas furnace ignition (flame safeguard) control"
+        },
+        {
+          "designator": "TB",
+          "name": "Field terminal block (BAS / field interlocks)"
+        }
+      ],
+      "safetyDevices": [
+        "High and low pressure switches per circuit",
+        "Duct high limit (DHL)",
+        "Freezestat (FRZ) on hydronic-heat units",
+        "Smoke detectors (optional, wired to the emergency-stop / smoke input)",
+        "Emergency stop field input",
+        "Gas furnace high limit and rollout, flame safeguard lockout",
+        "Compressor motor protection / inverter overcurrent protection"
+      ],
+      "terminalLabels": {
+        "Emergency stop": "Field input; jumper installed from the factory - opening it causes 'Emergency Stop Fault'",
+        "Smoke / fire": "Field smoke-detector or fire-alarm interlock input",
+        "Occupancy / external start": "Field digital input used for occupied/unoccupied or external time clock",
+        "BACnet MS/TP / LON": "Network terminals on the communication module (+/-/shield)",
+        "Space sensor": "Optional 10k space temperature sensor with set point adjust"
+      },
+      "sequenceOfOperation": [
+        "Cooling (Rebel): controller enables the supply fan (VFD ramps to duct static or CFM set point), then modulates the inverter compressor and EEV to hold the discharge air temperature set point; additional fixed-speed compressors stage on larger sizes; EC condenser fans modulate on head pressure. Economizer is used first when outdoor air is suitable.",
+        "Heating: gas furnace stages (or modulating burner on Rebel) are controlled to the discharge air heating set point after the supply fan is proven; electric heat stages via contactors; hot-water/steam valve modulated with freeze protection active.",
+        "Alarm handling: Faults stop the unit and require a manual clear; Problems disable the affected function (e.g. a circuit on high pressure) while the unit keeps running."
+      ],
+      "notes": [
+        "LOW confidence on designators: compiled from familiarity with Daikin Applied wiring diagrams, not transcribed from the IM wiring legend in this session - confirm on the unit diagram (Daikin Applied IM 1125 Rebel / IM 1058 Maverick II).",
+        "Rebel inverter compressor and EC fans are sensitive to line voltage quality; check phase balance before condemning drives."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Daikin Applied OM 920 MicroTech III operations manual (alarm classes)",
+        "Field memory of Rebel/Maverick wiring diagrams (unverified)"
+      ]
+    }
+  ],
+  "commonIssues": [
+    {
+      "symptom": "Packaged gas unit locks out with 2 flashes (pressure switch open) in wet or cold weather",
+      "likelyCauses": [
+        "Condensate or ice in the pressure-switch hose or inducer housing",
+        "Flue outlet / vent hood blocked (debris, nests) or restricted by snow",
+        "Weak induced draft motor bearings"
+      ],
+      "checks": [
+        "Pull the pressure-switch hose and check for water; measure inducer draft with a manometer against the switch rating printed on the switch",
+        "Inspect flue outlet and heat exchanger for blockage",
+        "Check inducer amps and bearing noise"
+      ],
+      "appliesTo": "goodman-cpg-daikin-dcg-commercial-packaged|goodman-gpg-gpc-gph-packaged-legacy",
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Goodman CPG installation instructions diagnostic chart (2-flash causes: hose, blocked flue, inducer)"
+      ]
+    },
+    {
+      "symptom": "Goodman/Amana gas unit shows 8 flashes that the door label does not list",
+      "likelyCauses": [
+        "Shorted hot surface ignitor / igniter relay fault - code omitted from early door labels"
+      ],
+      "checks": [
+        "Measure igniter resistance and check for a short to ground; replace the igniter, then the control if the code persists"
+      ],
+      "appliesTo": "goodman-cpg-daikin-dcg-commercial-packaged|goodman-gpg-gpc-gph-packaged-legacy",
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Goodman Service Bulletin SF-024 - Missing Identification of Eight (8) Flash Fault Code"
+      ]
+    },
+    {
+      "symptom": "Three-phase CPG/DCG/GSC unit will not start compressor; contactor pulls in briefly or not at all",
+      "likelyCauses": [
+        "Phase monitor tripped on reverse rotation or lost/unbalanced phase after utility work",
+        "Loose lug / single-phasing at the disconnect",
+        "HPS/LPS open in the contactor coil circuit"
+      ],
+      "checks": [
+        "Read the phase-monitor LED; measure all three phase-to-phase voltages and rotation at the unit",
+        "Check 24 V through HPS and LPS to the contactor coil"
+      ],
+      "appliesTo": "goodman-cpg-daikin-dcg-commercial-packaged|goodman-amana-split-condensing-gsc-gsx-gsz",
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Field pattern (memory) - phase monitor standard on 3-phase scroll units; unverified in this session"
+      ]
+    },
+    {
+      "symptom": "Water in the unit / overflow from the drain pan on GPG/GPC/DCG packaged units",
+      "likelyCauses": [
+        "Drain trap missing or improperly trapped (negative-pressure pan needs a trap)",
+        "Condensate drain line plugged with algae",
+        "Unit not level / pan drain not at the low point",
+        "Frozen evaporator from low airflow or low charge"
+      ],
+      "checks": [
+        "Confirm a trap is installed with the depth the IOM requires and the drain is primed",
+        "Clear and flush the drain; check pan pitch",
+        "Check filters, blower speed and evaporator superheat"
+      ],
+      "appliesTo": "goodman-cpg-daikin-dcg-commercial-packaged|goodman-gpg-gpc-gph-packaged-legacy|goodman-gpgm-packaged-seer2",
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Field pattern (memory); Goodman packaged-unit IOM drain-trap instructions - unverified in this session"
+      ]
+    },
+    {
+      "symptom": "Rebel (DPS/DPH) short-cycles or trips circuit 1 with High Pressure Circuit 1 Problem in hot weather",
+      "likelyCauses": [
+        "Dirty micro-channel condenser coil",
+        "EC condenser fan not modulating (fan control signal or fan motor fault)",
+        "Overcharge after service (Rebel charge is critical - use the IM weigh-in and subcooling method)"
+      ],
+      "checks": [
+        "Inspect and clean the condenser; verify each EC fan responds to the controller command (check fan status in MicroTech III)",
+        "Compare discharge pressure with the head-pressure set point; check subcooling against the IM"
+      ],
+      "appliesTo": "daikin-rebel-dps-dph",
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Field pattern (memory); MicroTech III alarm 'High Pressure Circuit N Problem' (ED 15112) - unverified in this session"
+      ]
+    },
+    {
+      "symptom": "Rebel/Maverick unit dead on the network or shows 'Emergency Stop Fault' after a fire-alarm test",
+      "likelyCauses": [
+        "Fire alarm / smoke detector interlock contact left open",
+        "Factory jumper removed from the emergency-stop terminals during install",
+        "Fault not manually cleared after the interlock restored"
+      ],
+      "checks": [
+        "Check the emergency-stop field terminals for 24 V / continuity",
+        "Clear the fault at the keypad (Alarm Lists -> Active Alarms -> Clear) after restoring the interlock"
+      ],
+      "appliesTo": "daikin-rebel-dps-dph|daikin-maverick-mps-mph",
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "HVAC-Talk thread 'Daikin DPS Microtech 3 emergency stop Fault' (secondary); OM 920 alarm clearing"
+      ]
+    },
+    {
+      "symptom": "Legacy McQuay RoofPak (MicroTech II) shuts down on sensor fault; controller parts unavailable",
+      "likelyCauses": [
+        "Return or space temperature sensor open/shorted (Space Sensor Fault / Return Sensor Fault shut the unit down)",
+        "Obsolete MicroTech II controller or keypad failure"
+      ],
+      "checks": [
+        "Ohm the RAT/space sensors and check the control-temperature-source setting",
+        "For controller failures, quote a Daikin Applied MicroTech III retrofit kit"
+      ],
+      "appliesTo": "mcquay-roofpak-rps-rdt-rfs-rcs-rah",
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "McQuay OM 137 MicroTech II - Space Sensor / Return Sensor faults shut the unit down until manually cleared"
+      ]
+    },
+    {
+      "symptom": "VRV system reports U4 after an indoor unit was replaced or a tenant breaker was turned off",
+      "likelyCauses": [
+        "Indoor unit without power (communication fails when any indoor unit is off)",
+        "F1/F2 wiring miswired, reversed at one unit, or shield grounded at both ends",
+        "Address/wiring auto-setting not re-run after adding or replacing indoor units"
+      ],
+      "checks": [
+        "Confirm every indoor unit has power; check F1/F2 continuity and topology",
+        "Re-run the outdoor-unit wiring/address auto-setting per the service manual; check the outdoor PCB LEDs"
+      ],
+      "appliesTo": "daikin-vrv-outdoor-rxyq-reyq",
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "coolautomation.com Daikin error codes (U4 causes)",
+        "airnexus.io Daikin VRV fault codes field guide (U4 most common)"
+      ]
+    }
+  ],
+  "support": {
+    "phone": "1-800-432-1342",
+    "url": "https://www.daikinapplied.com",
+    "literatureUrl": "https://www.daikinapplied.com/resources/literature",
+    "literatureSearchHint": "Daikin Applied (Rebel/Maverick/RoofPak/MicroTech): search the model prefix plus document type - e.g. 'IM 1058 Maverick II', 'OM 920 MicroTech III', 'Rebel DPS IM' - on daikinapplied.com (Literature) or the tahoeweb.daikinapplied.com document API; catalogs are 'CAT 256' (Rebel), 'CAT 257' (DC light commercial). Goodman/Amana/Daikin light commercial (CPG/DCG/GPG/GSC): search '<model prefix> specification sheet' or 'installation instructions' on goodmanmfg.com (Products -> Specifications), daikincomfort.com (Product Documents -> Light Commercial) or apps.goodmanmfg.com/brochures; service manuals are 'RS63000xx' for packaged units. Daikin VRV: daikinac.com (Commercial -> VRV -> Documentation) or daikincity.com.",
+    "notes": "Phone above is Daikin Applied headquarters / commercial support (toll-free 1-800-432-1342, direct 763-553-5330, Minneapolis). Daikin Comfort Technologies (Goodman/Amana/Daikin-branded unitary): consumer line 1-877-254-4729 (not a dealer technical line - dealers use their distributor or the Goodman/Amana Partner Link tech services); Daikin Comfort representative line (866) 588-6454; Daikin ductless/VRV support 1-855-324-5461. Confirm current numbers on the manufacturer sites - they were taken from search summaries, not from a manufacturer contact page transcribed in full."
+  },
+  "notes": [
+    "Brand map: Daikin Applied (Minneapolis) = former McQuay International (acquired by Daikin 2006, McQuay name dropped 2013) - Rebel, Maverick, RoofPak, MicroTech controls. Daikin Comfort Technologies (Houston/Waller TX) = Goodman + Amana + Daikin-branded unitary (DCG/DCC/DCH, DBG/DBC/DBH, DX/DZ splits, Daikin Fit) using Goodman nomenclature and the 10-digit YYMM serial. Daikin Industries VRV/ductless (RXYQ/REYQ, FTX...) use Japanese-style letter+digit serials and the two-character self-diagnosis codes.",
+    "Research limits for this pack: the shared web-search budget ran out part-way through research, so several items rely on memory and are marked low: McQuay plant-code meanings, Daikin VRV serial year chart, GPGM3 SEER2 nomenclature, VRV model nomenclature, wiring-diagram designators. Fault codes were limited to those confirmed against a manufacturer document or two agreeing secondary lists.",
+    "Not covered (unresolved): Amana pre-1997 (Raytheon) serial styles; Goodman pre-1995 serials; Daikin Applied condensing units / air handlers (DAC/DAH, McQuay ACX) nomenclature; Goodman/Amana air handler (ARUF/CAUF/AWUF) nomenclature; Goodman 2019+ SEER2 split nomenclature (GSXN4/GSZB4); Daikin light-commercial unit control boards on 2019+ DCG 7.5-25 t units; Goodman heat-pump defrost board codes."
+  ],
+  "sources": [
+    "PickHVAC – Goodman and Amana HVAC age serial number decoding pages",
+    "Building Intelligence Center (building-center.org) – Goodman, Amana, McQuay and Daikin HVAC age pages; Goodman model number nomenclature",
+    "Waypoint Property Inspection – Goodman AC age; hvacdecoder.com Goodman serial decoder",
+    "Goodman Product Specifications SS-CPG90-120, SS-CPG36-60 (7/08), SS-GPG14M-ARG (4/18), SS-GPC14H (8/20), SS-GSC13, SS-GSX13 and the GSX13 nomenclature page",
+    "Goodman CPG Series installation instructions (manualslib 61600); Goodman Service Bulletin SF-024; Goodman GPG14 service instructions RS6300012r4",
+    "Daikin light commercial: Catalog 257-2, SS-DCC3 (6/14), DCG0600903DXXX product overview",
+    "Daikin Applied Catalog 256-1/256-17 Rebel; Rebel DPS 003-028 brochure; Rebel DPS installation and maintenance manual",
+    "Daikin Applied IM 1058 and OM 1294 Maverick II; McQuay Catalog 251-1 Maverick I; RPL MPS vintage A/E/F/G parts lists",
+    "McQuay RoofPak RPS/RDT/RFS/RCS catalog and IM 806; RPL RoofPak vintage C/D parts lists",
+    "Daikin Applied OM 920 MicroTech III operations manual; ED 15112 MicroTech III protocol information; OM 137 MicroTech II operation manual; IM 483",
+    "Daikin SM-TS3 Simple Self-Diagnosis by Malfunction Code; daikin.com error codes page; coolautomation.com, acerrorcode.com and airnexus.io Daikin code lists (corroboration)",
+    "Daikin Applied contact page / BBB profile (1-800-432-1342, 763-553-5330); daikincomfort.com contact page ((866) 588-6454); Goodman/Amana consumer line 1-877-254-4729"
+  ],
+  "confidence": "medium",
+  "lastReviewed": "2026-09-26"
+}

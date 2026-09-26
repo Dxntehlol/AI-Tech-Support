@@ -1,0 +1,1101 @@
+{
+  "pack": "lennox",
+  "platformId": "core",
+  "name": "Lennox CORE Control System (M4 unit controller) and CORE Lite",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Lennox CORE Control System (Unit Controller) Application Guide",
+      "docId": "485115-02",
+      "url": "https://www.lennox.com/dA/a799315746/485115-02b.pdf"
+    },
+    {
+      "title": "Lennox CORE Control System (Unit Controller) Application Guide, 4/2022 revision",
+      "docId": "485115d",
+      "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/485115d.pdf"
+    },
+    {
+      "title": "Lennox CORE Unit Controller Setup Guide (Table 11 alarm and event codes)",
+      "docId": "508111-01",
+      "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/508111-01b.pdf"
+    },
+    {
+      "title": "Lennox CORE Unit Controller Setup Manual (same document, text-indexed copy)",
+      "docId": "manualslib 2162579",
+      "url": "https://www.manualslib.com/manual/2162579/Lennox-Core-Unit-Controller.html"
+    },
+    {
+      "title": "Lennox CORE Control System Information Guide",
+      "docId": "508111-03",
+      "url": "https://www.lennox.com/dA/24a8dd34f6/508111-03.pdf"
+    },
+    {
+      "title": "Lennox CORE Lite Control System (Unit Controller) Application Guide",
+      "docId": "508676-01",
+      "url": "https://www.lennox.com/dA/938bc0aefe/508676-01d.pdf"
+    },
+    {
+      "title": "Lennox CORE Control System (Unit Controller, Low GWP) Application Guide",
+      "docId": "508685-01",
+      "url": "https://www.lennox.com/dA/a685dd6f45/508685-01.pdf"
+    },
+    {
+      "title": "Lennox Prodigy 2.0 (M3) Application Guide - M3 Unit Controller Alarm and Event Codes (same numbering; corroboration only)",
+      "docId": "506457 / manualslib 1251298 p.147-156",
+      "url": "https://www.manualslib.com/manual/1251298/Lennox-Prodigy2-0.html?page=147"
+    },
+    {
+      "title": "Lennox Prodigy M2 Unit Controller guide - alarm code table (corroboration only)",
+      "docId": "506215-01",
+      "url": "https://literature.neuco.com/IS-59W47.pdf"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "1",
+      "meaning": "ERRATIC POWER (single phase units) - power loss for two cycles; unit power may be dirty or of low quality. Check power connections.",
+      "likelyCauses": [
+        "Loose or corroded line/control power connections",
+        "Utility voltage sags, generator or poor power quality"
+      ],
+      "checks": [
+        "Check and tighten power connections at the disconnect, contactor and controller (manual)",
+        "Measure supply voltage under load and compare to nameplate range (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4",
+      "meaning": "SMOKE - A173 (smoke detector) input is sensed as closed. Automatically clears once the input is detected open. Event action: check for source of smoke. (* service relay closes)",
+      "likelyCauses": [
+        "Smoke detector A173 tripped (smoke in supply/return air)",
+        "Dirty or failed smoke detector head",
+        "Wiring/jumper problem on the smoke input"
+      ],
+      "checks": [
+        "Check for source of smoke (manual)",
+        "Inspect and clean/test the duct smoke detector; verify sensitivity and reset it (field practice)",
+        "Verify wiring and jumper on the A173 input at the controller (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5",
+      "meaning": "BLOWER - unit off because the air flow switch (S52, normally closed) was detected open after a 16-second delay from blower start. All compressors are de-energized, gas valves closed, electric heat turned off, economizer damper closed and blower stopped. (* service relay closes)",
+      "likelyCauses": [
+        "Blower not running: contactor, VFD, motor, belt, overload",
+        "Air flow proving switch S52 tubing, adjustment or failure",
+        "Blocked filters/dampers causing insufficient airflow"
+      ],
+      "checks": [
+        "Verify blower actually runs on a demand (belt, motor, VFD, contactor) (field practice)",
+        "Check S52 airflow switch tubing, setpoint and contacts (field practice)",
+        "Check filters and damper positions (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "12",
+      "meaning": "HIGH PRESS S4 OPEN COMP1 - compressor 1 off because high-pressure switch S4 opened. Event action: check charge, fans and coil. The controller clears the high-pressure alarm when the switch is detected closed; the compressor is not restarted until the switch is closed and the Minimum Off Delay has expired.",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil",
+        "Outdoor (condenser) fan not running: motor, capacitor, contactor or fan relay",
+        "Overcharge or non-condensables in the system",
+        "Failed, weak or miswired high-pressure switch"
+      ],
+      "checks": [
+        "Compare head pressure with outdoor ambient (condenser split) and check subcooling (field practice)",
+        "Verify condenser fan operation and amps (field practice)",
+        "Inspect and clean the condenser coil (manual: check charge, fans, coil)",
+        "Check switch continuity and trip point; verify wiring to the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual); high-pressure switch operation text from 485115 'Unit Component Operation'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "13",
+      "meaning": "Strike3 High Press S4 Open Comp - compressor 1 locked out after three high-pressure switch (S4) trips. Event action: check charge, fans and coil; use the Service menu to clear lockouts. (* service relay closes)",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil",
+        "Outdoor (condenser) fan not running: motor, capacitor, contactor or fan relay",
+        "Overcharge or non-condensables in the system",
+        "Failed, weak or miswired high-pressure switch"
+      ],
+      "checks": [
+        "Compare head pressure with outdoor ambient (condenser split) and check subcooling (field practice)",
+        "Verify condenser fan operation and amps (field practice)",
+        "Inspect and clean the condenser coil (manual: check charge, fans, coil)",
+        "Check switch continuity and trip point; verify wiring to the controller (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "14",
+      "meaning": "HIGH PRESS S7 OPEN COMP2 - compressor 2 off because high-pressure switch S7 opened. Event action: check charge, fans and coil.",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil",
+        "Outdoor (condenser) fan not running: motor, capacitor, contactor or fan relay",
+        "Overcharge or non-condensables in the system",
+        "Failed, weak or miswired high-pressure switch"
+      ],
+      "checks": [
+        "Compare head pressure with outdoor ambient (condenser split) and check subcooling (field practice)",
+        "Verify condenser fan operation and amps (field practice)",
+        "Inspect and clean the condenser coil (manual: check charge, fans, coil)",
+        "Check switch continuity and trip point; verify wiring to the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "15",
+      "meaning": "STRIKE 3 on Comp 2 High Press S7 - compressor 2 lockout after three S7 trips. Event action: check charge, fans and coil; use the Service menu to clear lockouts. (* service relay closes)",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil",
+        "Outdoor (condenser) fan not running: motor, capacitor, contactor or fan relay",
+        "Overcharge or non-condensables in the system",
+        "Failed, weak or miswired high-pressure switch"
+      ],
+      "checks": [
+        "Compare head pressure with outdoor ambient (condenser split) and check subcooling (field practice)",
+        "Verify condenser fan operation and amps (field practice)",
+        "Inspect and clean the condenser coil (manual: check charge, fans, coil)",
+        "Check switch continuity and trip point; verify wiring to the controller (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "22",
+      "meaning": "COMP 1 LOW PRESS S87 - compressor 1 off: de-energized because low-pressure switch S87 opened (after the low-pressure ignore period). Event action: check charge, filters, airflow and coil.",
+      "likelyCauses": [
+        "Low refrigerant charge or leak",
+        "Dirty filters, iced evaporator or restricted airflow",
+        "Restricted metering device / liquid line",
+        "Failed or miswired low-pressure switch"
+      ],
+      "checks": [
+        "Check charge - superheat and suction pressure vs. evaporator load (manual: check charge, filters, airflow, coil)",
+        "Inspect filters, blower operation and evaporator coil for ice or dirt",
+        "Leak-check if charge is low (field practice)",
+        "Verify low-pressure switch continuity and the low-pressure ignore/shunt timer settings (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual); low-pressure switch text ('alarm 22 (S87) or 24 (S88) is issued') from the Lennox M-series application guide low-pressure section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "23",
+      "meaning": "STRIKE 3 ON COMP 1 S87 - compressor 1 lockout after three low-pressure switch (S87) trips within the same demand. Event action: check charge, filter, airflow and coil; use the Service menu to clear lockouts. (* service relay closes)",
+      "likelyCauses": [
+        "Low refrigerant charge or leak",
+        "Dirty filters, iced evaporator or restricted airflow",
+        "Restricted metering device / liquid line",
+        "Failed or miswired low-pressure switch"
+      ],
+      "checks": [
+        "Check charge - superheat and suction pressure vs. evaporator load (manual: check charge, filters, airflow, coil)",
+        "Inspect filters, blower operation and evaporator coil for ice or dirt",
+        "Leak-check if charge is low (field practice)",
+        "Verify low-pressure switch continuity and the low-pressure ignore/shunt timer settings (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "24",
+      "meaning": "COMP 2 LOW PRESS S88 - compressor 2 de-energized because low-pressure switch S88 opened. Event action (by analogy with alarm 22): check charge, filters, airflow and coil.",
+      "likelyCauses": [
+        "Low refrigerant charge or leak",
+        "Dirty filters, iced evaporator or restricted airflow",
+        "Restricted metering device / liquid line",
+        "Failed or miswired low-pressure switch"
+      ],
+      "checks": [
+        "Check charge - superheat and suction pressure vs. evaporator load (manual: check charge, filters, airflow, coil)",
+        "Inspect filters, blower operation and evaporator coil for ice or dirt",
+        "Leak-check if charge is low (field practice)",
+        "Verify low-pressure switch continuity and the low-pressure ignore/shunt timer settings (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox M-series application guide low-pressure switch section: 'When a compressor is de-energized due to an open low pressure switch, alarm 22 (S87 switch) or 24 (S88 switch) is issued' (Prodigy 2.0 506457 p.17; same text used for CORE)",
+      "evidence": "multi_secondary",
+      "notes": "Display text assumed parallel to alarm 22; strike-3 lockout for comp 2 is expected at alarm 25 (not confirmed)."
+    },
+    {
+      "code": "42",
+      "meaning": "BLOWER MOTOR OVERLOAD - alarm set when the blower overload relay switch S42 is detected open; automatically clears once S42 is detected closed. Event action: check external motor overloads.",
+      "likelyCauses": [
+        "Blower motor overload relay S42 tripped (high amps, single-phasing, bad bearings, belt too tight)",
+        "Overload relay set too low or failed",
+        "Wiring problem on the S42 input"
+      ],
+      "checks": [
+        "Check the external motor overload (S42) setting and reset it (manual)",
+        "Measure blower motor amps on all three phases against FLA (field practice)",
+        "Check belt tension, bearings and motor voltage balance (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "43",
+      "meaning": "STRIKE3 UNIT SHUTDOWN S42 OR S135 - a motor overload (blower S42 or S135) has occurred multiple times; unit shut down. Event action: check external motor overloads. (* service relay closes)",
+      "likelyCauses": [
+        "Repeated blower/fan motor overload trips (mechanical load, low voltage, phase imbalance)",
+        "Failing motor or overload relay"
+      ],
+      "checks": [
+        "Check external motor overloads S42/S135 and their trip settings (manual)",
+        "Measure motor amps and voltage balance; check bearings and belts (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "73",
+      "meaning": "NETWORK SENSOR - the network (zone temperature) sensor measurement is out of range; the controller ignores the zone temperature sensor readings and sets the alarm.",
+      "likelyCauses": [
+        "Zone/network sensor open, shorted or disconnected",
+        "Wrong sensor type or configuration",
+        "Wiring fault on the sensor bus"
+      ],
+      "checks": [
+        "Check the zone sensor and its wiring (manual)",
+        "Verify the sensor is configured for the installed type and the reading is within range (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "82",
+      "meaning": "CONTROLLER RESET - the controller has reset. The reason for the reset will be indicated if known.",
+      "likelyCauses": [
+        "Power interruption or brown-out",
+        "Firmware update or manual reset",
+        "Internal controller fault"
+      ],
+      "checks": [
+        "Check the reset reason shown with the alarm (manual)",
+        "Check control power and connections; review other alarms logged at the same time (field practice)"
+      ],
+      "severity": "info",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "83",
+      "meaning": "INCORRECT SETTINGS - problem with system configuration (model number, Configuration ID 1 and ID 2). If the model number requires a daughter card and it is not detected, this alarm is set. Can only be cleared by resetting or power-cycling the controller. (* service relay closes)",
+      "likelyCauses": [
+        "Model number / Configuration ID 1 or ID 2 entered incorrectly after a board replacement",
+        "Required daughter (add-on) board missing or not communicating"
+      ],
+      "checks": [
+        "Verify model number and Configuration ID 1/ID 2 against the unit nameplate and configuration label (manual)",
+        "Verify the required add-on board is installed and seated (manual)",
+        "Reset or power-cycle the controller to clear (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "118",
+      "meaning": "NO DISPLAY - the display is not connected or communication with it is lost.",
+      "likelyCauses": [
+        "Display cable unplugged or damaged",
+        "Display board failure",
+        "Controller communication port problem"
+      ],
+      "checks": [
+        "Check the display cable/connector at the controller and display (field practice)",
+        "Power-cycle and confirm the display re-establishes communication (field practice)"
+      ],
+      "severity": "info",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 / CORE Application Guide 485115, Table 11 'CORE Control System Alarm and Event Codes' (seen via search excerpt of the CORE setup manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "136",
+      "meaning": "Advanced Airflow Outside Air Damper / ECON Mechanical Fault - when the damper control voltage is changed and the actuator feedback voltage (P262 DPOS) does not reach the control voltage +/-0.15 V (+/-2 %) within the predefined time, the alarm is triggered (stuck damper / actuator feedback mismatch).",
+      "likelyCauses": [
+        "Economizer damper mechanically stuck, linkage binding or ice",
+        "Actuator failure or loss of 24 V",
+        "Feedback (DPOS) wire broken or miswired at P262"
+      ],
+      "checks": [
+        "Command the damper from the Service/test menu and watch travel and feedback voltage (2-10 V = 0-100 %) (manual)",
+        "Inspect damper blades, linkage and actuator coupling (field practice)",
+        "Check wiring of VOT (control) and DPOS (feedback) at P262 (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Control System Information Guide 508111-03 / Application Guide 485115, damper diagnostics section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "ADD ON BOARD PROBLEM",
+      "meaning": "ADD ON BOARD PROBLEM - logged when the CORE Unit Controller is not able to communicate with any attached add-on boards (C3 and GP3). The controller retries communication once every 5 seconds; the alarm automatically clears once communication is restored. (Alarm numbers 79/80 in the M-series table.)",
+      "likelyCauses": [
+        "Add-on (expansion) board unplugged, loose ribbon/expansion connector",
+        "Add-on board without power or failed",
+        "Wrong configuration calling for a board that is not installed"
+      ],
+      "checks": [
+        "Check the expansion connector and seating of the C3/GP3 add-on board (manual)",
+        "Verify board power LED and communication after re-seating; power-cycle if needed (field practice)",
+        "Confirm the configuration ID matches the installed boards (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 Table 11 (manualslib page 41 excerpt)",
+      "evidence": "manufacturer_doc",
+      "notes": "Alarm number not captured in the CORE excerpt; the Prodigy M2/M3 tables list 79 'ADD-ON BOARD PROBLEM, RESET TO CLEAR' and 80 'ADD-ON BOARD PROBLEM'."
+    },
+    {
+      "code": "OAC ERROR",
+      "meaning": "OAC ERROR - the outdoor-air CFM sensor (A24) input signal is continuously above 25 % of the sensor measuring range for more than five minutes with the blower stopped. The controller disables Outdoor Air CFM control; the alarm automatically clears when the sensor reading is below 10 % of the measuring range for one minute. Event action: check sensor and wiring.",
+      "likelyCauses": [
+        "A24 outdoor-air CFM (airflow measurement) sensor drifted, dirty or failed",
+        "Sensor tubing/wiring problem",
+        "Air leaking past the damper with the blower off"
+      ],
+      "checks": [
+        "Check the A24 sensor and its wiring (manual)",
+        "Verify the sensor reads near zero with the blower off and dampers closed (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 Table 11 (manualslib pages 41-42 excerpt)",
+      "evidence": "manufacturer_doc",
+      "notes": "Alarm number not captured in the excerpt."
+    },
+    {
+      "code": "NO 24VAC RELAY POWER A61 (HP1) TB34-1",
+      "meaning": "No 24 VAC relay power on the A61 (HP1) board, TB34-1 input - the third and fourth compressors are off. Automatically clears once 24 VAC is present; the controller resumes operation once the ERROR TIME OFF DELAY is completed.",
+      "likelyCauses": [
+        "Blown fuse or open circuit feeding TB34-1 on the A61 board",
+        "Safety device in the 24 V relay-power circuit open",
+        "Loose connector on the A61 board"
+      ],
+      "checks": [
+        "Measure 24 VAC at TB34-1 on the A61 (HP1) board (manual)",
+        "Trace the 24 V feed to TB34-1 for open fuses, switches or connectors (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Unit Controller Setup Guide 508111-01 Table 11 (manualslib page 40 excerpt)",
+      "evidence": "manufacturer_doc",
+      "notes": "Alarm number not captured in the excerpt."
+    },
+    {
+      "code": "DISCHARGE AIR TEMP SENSOR RT6",
+      "meaning": "Discharge air temperature sensor RT6 measurement out of specified range (including open/short detection); the alarm activates and automatically clears once an in-range condition is detected. Event action: check sensor and wiring. (Alarm 77 in the M-series table.)",
+      "likelyCauses": [
+        "RT6 thermistor open or shorted",
+        "Wiring/connector fault",
+        "Sensor mislocated or damaged"
+      ],
+      "checks": [
+        "Check sensor and wiring (manual)",
+        "Measure sensor resistance against the thermistor table and inspect the connector at the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Application Guide 485115 sensor alarm text (search excerpt); number 77 from the Prodigy M2/M3 table",
+      "evidence": "manufacturer_doc",
+      "notes": "Number 77 not confirmed in a CORE document."
+    },
+    {
+      "code": "OUTDOOR AIR TEMP SENSOR RT17",
+      "meaning": "Outdoor air temperature sensor RT17 measurement out of specified range (including open/short detection); the alarm activates and automatically clears once an in-range condition is detected. Event action: check sensor and wiring.",
+      "likelyCauses": [
+        "RT17 thermistor open or shorted",
+        "Wiring/connector fault, sensor pulled from its bracket"
+      ],
+      "checks": [
+        "Check sensor and wiring (manual)",
+        "Measure sensor resistance against the thermistor table and inspect the connector at the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox CORE Application Guide 485115 sensor alarm text (search excerpt)",
+      "evidence": "manufacturer_doc",
+      "notes": "Alarm number not captured in the excerpt."
+    },
+    {
+      "code": "38",
+      "meaning": "COMP 4 FRZSTAT OPEN S95 - COMP OFF: compressor 4 de-energized because freezestat S95 opened.",
+      "likelyCauses": [
+        "Low airflow across the evaporator (dirty filters, blower or belt problem, closed dampers)",
+        "Low refrigerant charge",
+        "Low return air temperature / economizer bringing in cold air",
+        "Failed or mislocated freezestat"
+      ],
+      "checks": [
+        "Check filters, blower, belts and static pressure (field practice)",
+        "Check charge and superheat (field practice)",
+        "Verify the freezestat opens at 29 F +/-3 and closes at 58 F +/-4 on the coil (manual spec)",
+        "Check economizer minimum position and mixed-air temperature in cold weather (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy M2 Unit Controller guide 506215-01, alarm code table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "39",
+      "meaning": "STRIKE 3 COMP 4 FRZSTAT OPEN S95 - COMP LOCKOUT: compressor 4 locked out after three freezestat trips.",
+      "likelyCauses": [
+        "Low airflow across the evaporator (dirty filters, blower or belt problem, closed dampers)",
+        "Low refrigerant charge",
+        "Low return air temperature / economizer bringing in cold air",
+        "Failed or mislocated freezestat"
+      ],
+      "checks": [
+        "Check filters, blower, belts and static pressure (field practice)",
+        "Check charge and superheat (field practice)",
+        "Verify the freezestat opens at 29 F +/-3 and closes at 58 F +/-4 on the coil (manual spec)",
+        "Check economizer minimum position and mixed-air temperature in cold weather (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy M2 Unit Controller guide 506215-01, alarm code table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "40",
+      "meaning": "Return Air Over Heat Limit ('Heat Above Setpoint') - check space conditions or sensor.",
+      "likelyCauses": [
+        "Return air temperature above the configured heating limit",
+        "Return air sensor RT16 reading high"
+      ],
+      "checks": [
+        "Check space conditions and the return-air sensor (manual)",
+        "Verify heating setpoints/limits in the controller parameters (field practice)"
+      ],
+      "severity": "info",
+      "source": "Lennox M-series (Prodigy/CORE) alarm table via search excerpt - source document not positively identified",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "41",
+      "meaning": "Return Air Under Cool Limit ('Cool Below Setpoint') - check space conditions or sensor.",
+      "likelyCauses": [
+        "Return air temperature below the configured cooling limit",
+        "Return air sensor RT16 reading low"
+      ],
+      "checks": [
+        "Check space conditions and the return-air sensor (manual)",
+        "Verify cooling setpoints/limits in the controller parameters (field practice)"
+      ],
+      "severity": "info",
+      "source": "Lennox M-series (Prodigy/CORE) alarm table via search excerpt - source document not positively identified",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "44",
+      "meaning": "GAS VALVE ON NO DEMAND GV1 - UNIT OFF: gas valve GV1 is sensed energized with no heat demand.",
+      "likelyCauses": [
+        "Welded/shorted heat relay or ignition control output",
+        "Miswired gas valve feed",
+        "Faulty gas-valve sense input"
+      ],
+      "checks": [
+        "Verify 24 V at GV1 with no heat demand; find the stuck relay or wiring fault (field practice)",
+        "Shut off gas and power until corrected (safety)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox Prodigy M2 Unit Controller guide 506215-01, alarm code table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "57",
+      "meaning": "STRIKE 3 HEAT 1 CAI SWITCH S18 - heat section 1 locked out after three combustion-air inducer proof switch (S18) failures. Event action: check combustion air motor and proof switch.",
+      "likelyCauses": [
+        "Combustion-air inducer motor not running or slow",
+        "Blocked flue/vent, pressure-switch hose or port",
+        "Failed S18 pressure switch"
+      ],
+      "checks": [
+        "Check combustion air motor and proof switch S18 (manual)",
+        "Check inducer amps, vent/flue for blockage and pressure-switch tubing (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "58",
+      "meaning": "HEAT 1 NO PROOF GAS VALVE GV1 - heat section 1 ignition control did not prove flame / gas valve GV1. Event action: check ignition control, flame proof, GV1, gas supply.",
+      "likelyCauses": [
+        "No gas supply or low gas pressure",
+        "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
+        "Gas valve not opening (coil, wiring)",
+        "Combustion-air inducer or proof switch problem"
+      ],
+      "checks": [
+        "Verify inlet and manifold gas pressure (field practice)",
+        "Check ignition control status LED, flame-sense microamps and igniter (manual: check ignition control, flame proof, GV, gas supply)",
+        "Check 24 V to the gas valve on a call for heat (field practice)",
+        "Clear the strike-3 lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "59",
+      "meaning": "STRIKE 3 NO PROOF GAS VALVE GV1 - heat section 1 locked out after three no-proof failures. Event action: check ignition control, flame proof, GV1, gas supply.",
+      "likelyCauses": [
+        "No gas supply or low gas pressure",
+        "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
+        "Gas valve not opening (coil, wiring)",
+        "Combustion-air inducer or proof switch problem"
+      ],
+      "checks": [
+        "Verify inlet and manifold gas pressure (field practice)",
+        "Check ignition control status LED, flame-sense microamps and igniter (manual: check ignition control, flame proof, GV, gas supply)",
+        "Check 24 V to the gas valve on a call for heat (field practice)",
+        "Clear the strike-3 lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "60",
+      "meaning": "PRIMARY HEAT 2 LIMIT OPEN S99 - heat section 2 primary limit S99 opened. Event action: check air flow, limit and wiring.",
+      "likelyCauses": [
+        "Low airflow: dirty filters, blower/belt problem, closed dampers, wrong blower speed",
+        "Overfired burners / high manifold pressure",
+        "Failed or miswired limit switch"
+      ],
+      "checks": [
+        "Check air flow, limit and wiring (manual)",
+        "Measure temperature rise against the nameplate range (field practice)",
+        "Check manifold pressure and blower speed/VFD setting (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "61",
+      "meaning": "STRIKE 3 PRIMARY HEAT 2 LIMIT OPEN S99 - heat section 2 locked out after three primary-limit trips. Event action: check air flow, limit and wiring.",
+      "likelyCauses": [
+        "Low airflow: dirty filters, blower/belt problem, closed dampers, wrong blower speed",
+        "Overfired burners / high manifold pressure",
+        "Failed or miswired limit switch"
+      ],
+      "checks": [
+        "Check air flow, limit and wiring (manual)",
+        "Measure temperature rise against the nameplate range (field practice)",
+        "Check manifold pressure and blower speed/VFD setting (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "62",
+      "meaning": "HEAT 2 LIMIT OPEN - heat section 2 (secondary) limit opened.",
+      "likelyCauses": [
+        "Low airflow: dirty filters, blower/belt problem, closed dampers, wrong blower speed",
+        "Overfired burners / high manifold pressure",
+        "Failed or miswired limit switch"
+      ],
+      "checks": [
+        "Check air flow, limit and wiring (manual)",
+        "Measure temperature rise against the nameplate range (field practice)",
+        "Check manifold pressure and blower speed/VFD setting (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "63",
+      "meaning": "STRIKE 3 HEAT 2 LIMIT OPEN - heat section 2 locked out after three limit trips.",
+      "likelyCauses": [
+        "Low airflow: dirty filters, blower/belt problem, closed dampers, wrong blower speed",
+        "Overfired burners / high manifold pressure",
+        "Failed or miswired limit switch"
+      ],
+      "checks": [
+        "Check air flow, limit and wiring (manual)",
+        "Measure temperature rise against the nameplate range (field practice)",
+        "Check manifold pressure and blower speed/VFD setting (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "64",
+      "meaning": "HEAT 2 ROLLOUT OPEN - heat section 2 flame rollout switch (S69) opened; ignition control stops ignition and closes the gas valve.",
+      "likelyCauses": [
+        "Blocked heat exchanger or flue",
+        "Lack of combustion air",
+        "Cracked heat exchanger",
+        "Failed rollout switch"
+      ],
+      "checks": [
+        "Inspect heat exchanger, flue and burner compartment for blockage or damage before resetting (field practice)",
+        "Reset the manual rollout switch only after finding the cause (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "65",
+      "meaning": "STRIKE 3 HEAT 2 ROLLOUT OPEN - heat section 2 locked out after three rollout trips.",
+      "likelyCauses": [
+        "Blocked heat exchanger or flue",
+        "Lack of combustion air",
+        "Cracked heat exchanger"
+      ],
+      "checks": [
+        "Inspect heat exchanger, flue and combustion air path; correct before clearing (field practice)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "66",
+      "meaning": "HEAT 2 CAI SWITCH S45 - heat section 2 combustion-air inducer proof switch S45 did not prove.",
+      "likelyCauses": [
+        "Combustion-air inducer motor not running",
+        "Blocked vent or pressure-switch tubing",
+        "Failed S45 switch"
+      ],
+      "checks": [
+        "Check combustion air motor and proof switch S45 (manual)",
+        "Check inducer operation, vent and switch tubing (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "67",
+      "meaning": "STRIKE 3 HEAT 2 CAI SWITCH S45 - heat section 2 locked out after three combustion-air proof failures.",
+      "likelyCauses": [
+        "Combustion-air inducer motor not running",
+        "Blocked vent or pressure-switch tubing",
+        "Failed S45 switch"
+      ],
+      "checks": [
+        "Check combustion air motor and proof switch S45 (manual)",
+        "Clear the lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "68",
+      "meaning": "HEAT 2 NO PROOF GAS VALVE GV2 - heat section 2 ignition control did not prove flame / gas valve GV2.",
+      "likelyCauses": [
+        "No gas supply or low gas pressure",
+        "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
+        "Gas valve not opening (coil, wiring)",
+        "Combustion-air inducer or proof switch problem"
+      ],
+      "checks": [
+        "Verify inlet and manifold gas pressure (field practice)",
+        "Check ignition control status LED, flame-sense microamps and igniter (manual: check ignition control, flame proof, GV, gas supply)",
+        "Check 24 V to the gas valve on a call for heat (field practice)",
+        "Clear the strike-3 lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "69",
+      "meaning": "STRIKE 3 NO PROOF GAS VALVE GV2 - heat section 2 locked out after three no-proof failures.",
+      "likelyCauses": [
+        "No gas supply or low gas pressure",
+        "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
+        "Gas valve not opening (coil, wiring)",
+        "Combustion-air inducer or proof switch problem"
+      ],
+      "checks": [
+        "Verify inlet and manifold gas pressure (field practice)",
+        "Check ignition control status LED, flame-sense microamps and igniter (manual: check ignition control, flame proof, GV, gas supply)",
+        "Check 24 V to the gas valve on a call for heat (field practice)",
+        "Clear the strike-3 lockout from the Service menu after repair (manual)"
+      ],
+      "severity": "lockout",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "76",
+      "meaning": "CHECK 2 AMP FUSE HUMIDITY SENSOR A91 - humidity sensor A91 fault. Event action: check sensor and wiring.",
+      "likelyCauses": [
+        "Blown 2 A fuse feeding the humidity sensor",
+        "Humidity sensor A91 open/shorted or unpowered",
+        "Wiring fault"
+      ],
+      "checks": [
+        "Check the 2 A fuse, sensor and wiring (manual)",
+        "Verify sensor supply voltage and output signal (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "78",
+      "meaning": "RETURN AIR TEMP SENSOR RT16 - return air temperature sensor out of range (open/short). Event action: check sensor and wiring.",
+      "likelyCauses": [
+        "RT16 thermistor open or shorted",
+        "Wiring/connector fault"
+      ],
+      "checks": [
+        "Check sensor and wiring (manual)",
+        "Measure sensor resistance against the thermistor table and inspect the connector at the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "81",
+      "meaning": "REHEAT SETUP ERROR - check reheat (Humiditrol) settings.",
+      "likelyCauses": [
+        "Reheat/Humiditrol option configured but hardware or settings inconsistent"
+      ],
+      "checks": [
+        "Check reheat settings in the controller configuration (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "85",
+      "meaning": "INCORRECT HUMIDITROL SETTINGS - check Humiditrol settings.",
+      "likelyCauses": [
+        "Humiditrol dehumidification parameters inconsistent with installed equipment"
+      ],
+      "checks": [
+        "Check Humiditrol settings in the controller configuration (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document; alarm 85 'INCORRECT HUMIDITROL' also cited in the CORE setup-manual excerpt",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "86",
+      "meaning": "CONFLICTING TSTAT INPUT - simultaneous heat and cool thermostat inputs. Event action: check thermostat inputs for simultaneous heat and cool, and wiring.",
+      "likelyCauses": [
+        "Y and W energized together from the thermostat or BAS",
+        "Miswired thermostat/interface",
+        "Failed thermostat relay"
+      ],
+      "checks": [
+        "Check thermostat inputs and wiring for simultaneous heat and cool demands (manual)",
+        "Verify the thermostat/BAS output logic (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "88",
+      "meaning": "CONTROLLER PROBLEM - internal controller problem; reset to clear.",
+      "likelyCauses": [
+        "Internal controller fault",
+        "Electrical noise or power-quality event"
+      ],
+      "checks": [
+        "Reset the controller to clear (manual)",
+        "If it recurs, check control power/grounding and replace the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "90",
+      "meaning": "CONTROLLER PROBLEM - internal controller problem; reset to clear.",
+      "likelyCauses": [
+        "Internal controller fault"
+      ],
+      "checks": [
+        "Reset the controller to clear (manual)",
+        "If it recurs, replace the controller (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "91",
+      "meaning": "OUTDOOR ENTH SENSOR A7 - outdoor air enthalpy sensor A7 fault. Event action: check economizer DIP switch and enthalpy dial settings, sensor and wiring.",
+      "likelyCauses": [
+        "A7 enthalpy sensor open/shorted or unpowered",
+        "Economizer configured for enthalpy but sensor not installed",
+        "Wiring fault"
+      ],
+      "checks": [
+        "Check economizer configuration/DIP settings, the A7 sensor and wiring (manual)",
+        "Measure the sensor 4-20 mA / voltage output (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "92",
+      "meaning": "INDOOR ENTH SENSOR A62 - indoor (return air) enthalpy sensor A62 fault. Event action: check economizer DIP switch and enthalpy dial settings, sensor and wiring.",
+      "likelyCauses": [
+        "A62 enthalpy sensor open/shorted or unpowered",
+        "Economizer configured for differential enthalpy but A62 not installed",
+        "Wiring fault"
+      ],
+      "checks": [
+        "Check economizer configuration, the A62 sensor and wiring (manual)",
+        "Measure the sensor output (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "93",
+      "meaning": "BACKUP MODE - controller running in backup mode; check communication loss with the network sensor.",
+      "likelyCauses": [
+        "Loss of communication with the network/zone sensor or BAS",
+        "Network wiring or termination fault"
+      ],
+      "checks": [
+        "Check comm loss with the network sensor (manual)",
+        "Inspect network wiring, polarity and termination (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "94",
+      "meaning": "BAD ZONE SENSOR SETPOINT - zone sensor setpoint invalid. Event action: check setpoint and EMS programming.",
+      "likelyCauses": [
+        "Setpoint outside allowed range from the zone sensor or BAS",
+        "EMS/BAS writing an invalid value"
+      ],
+      "checks": [
+        "Check the setpoint and EMS programming (manual)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "107",
+      "meaning": "SUPPLY STATIC PRESSURE SENSOR ERROR - supply duct static pressure sensor out of range.",
+      "likelyCauses": [
+        "Static pressure transducer failed, unpowered or tubing disconnected",
+        "Wiring fault"
+      ],
+      "checks": [
+        "Check the transducer power, output and tubing to the duct (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "108",
+      "meaning": "HIGH SUPPLY STATIC / DUCT PRESSURE - supply duct static pressure above the high limit.",
+      "likelyCauses": [
+        "Closed VAV boxes/dampers or fire dampers",
+        "VFD/blower running too fast, wrong static setpoint",
+        "Sensor tubing problem"
+      ],
+      "checks": [
+        "Check duct static setpoint and the high-static limit, VAV box operation and dampers (field practice)",
+        "Verify the static sensor reading against a manometer (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "128",
+      "meaning": "24VAC POWER LOSS - loss of 24 VAC control power.",
+      "likelyCauses": [
+        "Blown control fuse or transformer",
+        "Safety device or disconnect open in the 24 V circuit"
+      ],
+      "checks": [
+        "Check the control transformer output and fuses (field practice)",
+        "Trace the 24 V circuit for open safeties or loose connections (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "129",
+      "meaning": "VFD SHUTDOWN - VFD FAULT DETECTED: supply-fan variable frequency drive reports a fault.",
+      "likelyCauses": [
+        "VFD fault (overcurrent, overvoltage, overtemperature, motor overload)",
+        "Motor or wiring problem",
+        "Loss of VFD power or control signal"
+      ],
+      "checks": [
+        "Read the fault code on the VFD keypad and follow the drive manual (field practice)",
+        "Check motor amps, wiring and drive cooling (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "130",
+      "meaning": "VFD BYPASS ENGAGED - VFD bypass mode is engaged; blower may or may not be on. Disengage at the MSAV menu.",
+      "likelyCauses": [
+        "Bypass selected in the MSAV/VFD menu or bypass switch engaged"
+      ],
+      "checks": [
+        "Disengage bypass at the MSAV menu once the VFD is repaired (manual)"
+      ],
+      "severity": "info",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "132",
+      "meaning": "VFD BYPASS NOT CONFIGURED - VFD bypass mode has not been selected; unit operates as if bypass is not installed.",
+      "likelyCauses": [
+        "Bypass hardware installed but not enabled in configuration"
+      ],
+      "checks": [
+        "Enable VFD bypass in the configuration/MSAV menu if bypass is installed (manual)"
+      ],
+      "severity": "info",
+      "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+      "evidence": "single_secondary"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "7-segment: Eror",
+      "meaning": "Status code 6 - Off on alarm.",
+      "checks": [
+        "Read the active alarm list on the display or CORE Service App and look up the alarm number"
+      ]
+    },
+    {
+      "pattern": "7-segment: d300",
+      "meaning": "Status code 7 - Delay, up to 5 minutes (compressor minimum off / anti-short-cycle delay).",
+      "checks": [
+        "Wait for the delay to expire; if it recurs constantly, check for short cycling (field practice)"
+      ]
+    },
+    {
+      "pattern": "7-segment: d020",
+      "meaning": "Status code 8 - Delay, up to 20 seconds.",
+      "checks": [
+        "Normal timing delay"
+      ]
+    },
+    {
+      "pattern": "7-segment: Prht",
+      "meaning": "Status code 10 - Morning warm-up.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: Strt",
+      "meaning": "Status code 11 - Start up.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: FdhU",
+      "meaning": "Status code 12 - Fresh air (outdoor air) reheat.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: dC12",
+      "meaning": "Status code 14 - Defrost, compressors 1 and 2 (heat pump).",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: dC1",
+      "meaning": "Status code 16 - Defrost, compressor 1.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: dC2",
+      "meaning": "Status code 17 - Defrost, compressor 2.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: MXht",
+      "meaning": "Status code 19 - MAX heating.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: hXXX",
+      "meaning": "Status code 20 - Heating (XXX = stage/percent).",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: PrCL",
+      "meaning": "Status code 21 - Pre-cool.",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: CXXX",
+      "meaning": "Status code 26 - Cooling (XXX = stage/percent).",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: bXXS",
+      "meaning": "Status code 27 - Blower on, OAS (outdoor air / occupied ventilation).",
+      "checks": []
+    },
+    {
+      "pattern": "7-segment: bXX",
+      "meaning": "Status code 28 - Blower on.",
+      "checks": []
+    }
+  ],
+  "diagnosticTips": [
+    "Local interface: the M4 CORE board has a four-character seven-segment LED that shows status codes (see ledPatterns) and active alarm numbers; full alarm text, time of occurrence and troubleshooting text are shown in the CORE Service App (Bluetooth mobile app, 'Alarms' section) and on the optional display. Alarm history and logs can also be pulled through the USB port.",
+    "Alarm numbers, display messages and event actions (cause + solution) are Table 11 'CORE Control System Alarm and Event Codes' in the CORE Unit Controller Setup Guide 508111-01 (page 37 onward) and section 26.3 of the Application Guide 485115; the CORE Lite equivalent is section 19.3 of guide 508676-01.",
+    "Alarms marked * in Table 11 close the service relay contacts (DO1). The contacts stay closed until the controller resets, or the alarm condition clears and the alarm status is read via an explicit S-BUS command.",
+    "Compressor strike-3 lockouts (high pressure, low pressure, freezestat) are cleared from the Service menu after correcting the fault. Alarm 83 INCORRECT SETTINGS clears only by resetting or power-cycling the controller.",
+    "High-pressure alarms clear when the switch is detected closed; the compressor will not restart until the switch is closed and the Minimum Off Delay has expired. Low-pressure switches are shunted/ignored for 120 s (default, 0-600 s) after a demand; three trips within a demand lock the stage out.",
+    "Freezestats S49/S50/S53/S95 (compressors 1-4) are auto-reset: open at 29 F +/-3 on a fall, close at 58 F +/-4 on a rise; three openings lock the compressor out.",
+    "Air-flow proving switch S52 must close within 16 s of blower start or alarm 5 shuts the unit down; dirty-filter switch S27 only logs an alarm and can drive the service relay.",
+    "Phase/voltage detection: alarms 122-125 are auto-resetting and operation is restored five minutes after proper voltage returns; alarms 121 and 126 require removing power and correcting the problem before service is restored.",
+    "Economizer damper diagnostics use the actuator feedback voltage at P262 (DPOS, 2-10 V = 0-100 %); a feedback mismatch of more than +/-0.15 V after the allowed travel time raises alarm 136.",
+    "The LennoxPros Error Code Lookup tool (LennoxPros.com) covers CORE/M4 alarm numbers with troubleshooting steps."
+  ],
+  "notes": [
+    "Coverage is partial: only codes seen in a search excerpt are listed. Codes with evidence 'manufacturer_doc' were seen in a CORE (M4) document excerpt; codes with 'single_secondary'/'multi_secondary' were seen only in the Lennox Prodigy M2/M3 alarm tables, which share the same alarm numbering that CORE Table 11 inherits (spot-checked identical for 1, 4, 5, 13-15, 22-23, 42-43, 82-83, 85). Verify those against Table 11 before relying on them.",
+    "Several CORE alarms were captured by message but not by number (ADD ON BOARD PROBLEM, OAC ERROR, No 24VAC relay power A61/TB34-1, RT6/RT17 sensor alarms); they are entered with the display text as the code.",
+    "Expected but unconfirmed numbering by pattern: 16/17 HIGH PRESS S28 COMP3 and strike-3; 18/19 HIGH PRESS S96 COMP4 and strike-3 (the message 'HIGH PRESS S96 OPEN COMP4' was seen in a CORE excerpt without its number); 25 STRIKE 3 comp 2 S87/S88; 26-29 low press S97/S98 comps 3-4; 30-37 freezestat S49/S50/S53 comps 1-3; 45-56 heat section 1 limit S10/S21, rollout S47 and CAI S18 alarms; 121-126 phase/voltage alarms.",
+    "CORE Lite (508676-01) uses the same alarm numbering as CORE for the functions it supports; the Low-GWP (R-454B) CORE guide 508685-01 adds refrigerant-detection (RDS) alarms not captured here."
+  ]
+}

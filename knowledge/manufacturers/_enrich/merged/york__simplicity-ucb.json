@@ -1,0 +1,13 @@
+{
+  "pack": "york",
+  "platformId": "simplicity-ucb",
+  "name": "York / JCI Simplicity, Simplicity SE, Simplicity Elite and Simplicity LITE unit control boards (UCB)",
+  "coverage": "partial",
+  "sourceDocs": [],
+  "faultCodes": [],
+  "ledPatterns": [],
+  "diagnosticTips": [],
+  "notes": [
+    "Enrichment pass (2026-09-26) added no codes: no manufacturer document or corroborating source could be retrieved during the pass, and the verification protocol forbids transcribing codes from memory. The flash-code list here remains limited to the four states cited from ZE036 IOM 5188235-YIM-B-1016 p.66 and one secondary thread; for any other flash count, or for Simplicity SE / Elite alarm and history codes (SE-MOBILE app or display), read the flash-code / alarm table printed on the unit's control-box label or in the unit IOM (e.g. 5188244-YIM, 826081-XIM) before acting."
+  ]
+}
