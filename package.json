@@ -1,0 +1,27 @@
+{
+  "name": "hvac-field-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Commercial HVAC troubleshooting assistant: refrigeration-cycle diagnostics, model/serial decoding, electrical procedures, and per-unit job memory, powered by Claude.",
+  "type": "module",
+  "engines": { "node": ">=22.18.0" },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node --disable-warning=ExperimentalWarning dist/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\"",
+    "gen:refrigerants": "python3 scripts/gen_refrigerants.py"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "dompurify": "^3.2.6",
+    "express": "^5.1.0",
+    "marked": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.9.0"
+  }
+}
