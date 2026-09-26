@@ -6,7 +6,7 @@ import { loadKnowledge } from "../knowledge/loader.ts";
 import { openDatabase } from "../db/index.ts";
 import { createRepos, type Repos } from "../db/repos.ts";
 import type { KnowledgeBase } from "../types.ts";
-import { compactJson, describeToolCall, executeTool, toolDefinitions, toolNames, TOOL_RESULT_MAX_CHARS, type ToolContext } from "./tools.ts";
+import { compactJson, describeToolCall, executeTool, STRICT_UNSUPPORTED_KEYWORDS, toolDefinitions, toolNames, TOOL_RESULT_MAX_CHARS, type ToolContext } from "./tools.ts";
 
 const NOW = new Date("2026-09-26T12:00:00Z");
 const CARRIER_MODEL = "48TCDA04A2A5-0A0A0";
@@ -81,6 +81,30 @@ describe("toolDefinitions", () => {
     assert.ok(dxProps.suction_psig, "snake_case measurement present");
     assert.ok(dxProps.compressor_amps_l2, "compressorAmpsL2 → compressor_amps_l2");
     assert.ok(dxProps.economizer_position!.enum!.includes(null), "nullable enum includes null");
+  });
+
+  test("strict schemas carry no unsupported keywords; numeric ranges live in the description and are still enforced", async () => {
+    const forbidden = new Set<string>(STRICT_UNSUPPORTED_KEYWORDS);
+    const walk = (node: unknown, path: string): void => {
+      if (Array.isArray(node)) {
+        node.forEach((n, i) => walk(n, `${path}[${i}]`));
+        return;
+      }
+      if (!node || typeof node !== "object") return;
+      for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+        assert.ok(!forbidden.has(k), `${path}.${k} is not allowed in a strict schema`);
+        walk(v, `${path}.${k}`);
+      }
+    };
+    for (const d of toolDefinitions()) walk(d.input_schema, d.name);
+    const pt = toolDefinitions().find((d) => d.name === "refrigerant_pt")!;
+    const psig = (pt.input_schema as { properties: Record<string, { description: string }> }).properties.psig!;
+    assert.match(psig.description, /Must be between -30 and 1500\./);
+    // the range is still enforced client-side
+    const { ctx } = fresh();
+    const r = await executeTool("refrigerant_pt", { refrigerant: "R-410A", psig: 5000 }, ctx);
+    assert.equal(r.isError, true);
+    assert.match(r.content, /psig must be <= 1500/);
   });
 
   test("definitions are fresh objects each call (loop may add cache_control)", () => {
@@ -574,6 +598,20 @@ describe("compactJson", () => {
     const text = compactJson({ summary: "s", blob: "y".repeat(50_000) });
     assert.ok(text.length <= TOOL_RESULT_MAX_CHARS);
     assert.equal((JSON.parse(text) as { summary: string }).summary, "s");
+  });
+
+  test("last-resort preview stays under the limit even when the preview is full of quotes and backslashes", () => {
+    // No arrays and no long strings: stages 1–2 cannot shrink it, so the preview fallback runs. Every
+    // key/value carries quotes and a backslash that JSON.stringify must escape inside the preview string.
+    const flat: Record<string, string> = { summary: "s" };
+    for (let i = 0; i < 3000; i++) flat[`k"${i}`] = `"v\\${i}"`;
+    const text = compactJson(flat);
+    assert.ok(text.length <= TOOL_RESULT_MAX_CHARS, `length ${text.length}`);
+    const parsed = JSON.parse(text) as { summary: string; truncated: string; preview: string };
+    assert.equal(parsed.summary, "s");
+    assert.match(parsed.truncated, /preview only/);
+    // maximal fit: one more raw character would add at most 2 serialized characters
+    assert.ok(text.length >= TOOL_RESULT_MAX_CHARS - 2, `preview uses the whole budget (${text.length})`);
   });
 
   test("undefined values are dropped and small values are untouched", () => {

@@ -70,6 +70,21 @@ function opt(type: PropType, description: string, extra: Partial<Prop> = {}): Pr
   return { type, description, required: false, ...extra };
 }
 
+/**
+ * Human-readable range for a numeric prop, appended to its description. Strict tool schemas do not
+ * support `minimum`/`maximum` (nor `multipleOf`, `minLength`, `maxLength`), so the range travels in
+ * the description and is enforced by validateInput.
+ */
+function rangeSentence(prop: Prop): string | undefined {
+  if (prop.min !== undefined && prop.max !== undefined) return `Must be between ${prop.min} and ${prop.max}.`;
+  if (prop.min !== undefined) return `Must be >= ${prop.min}.`;
+  if (prop.max !== undefined) return `Must be <= ${prop.max}.`;
+  return undefined;
+}
+
+/** JSON-schema keywords the API rejects in strict schemas; never emitted (see rangeSentence). */
+export const STRICT_UNSUPPORTED_KEYWORDS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format"] as const;
+
 function jsonSchemaFor(prop: Prop): Record<string, unknown> {
   const nullable = !prop.required;
   const withNull = (t: string): string | string[] => (nullable ? [t, "null"] : t);
@@ -81,11 +96,12 @@ function jsonSchemaFor(prop: Prop): Record<string, unknown> {
       if (prop.enum) out.enum = nullable ? [...prop.enum, null] : [...prop.enum];
       break;
     case "number":
-    case "integer":
+    case "integer": {
       out.type = withNull(prop.type);
-      if (prop.min !== undefined) out.minimum = prop.min;
-      if (prop.max !== undefined) out.maximum = prop.max;
+      const range = rangeSentence(prop);
+      if (range) out.description = `${prop.description.trimEnd()} ${range}`;
       break;
+    }
     case "boolean":
       out.type = withNull("boolean");
       break;
@@ -653,11 +669,20 @@ export function compactJson(value: unknown, limit = TOOL_RESULT_MAX_CHARS): stri
     }
   }
   if (text.length > limit) {
-    // Last resort: keep the summary and a hard-cut preview so the JSON stays valid.
+    // Last resort: keep the summary and a hard-cut preview so the JSON stays valid. The preview is
+    // a JSON string embedded in JSON, so every quote/backslash in it costs an extra escape character:
+    // size it on the serialized length, not on the raw slice.
     const summary = typeof root.summary === "string" ? clip(root.summary, 400) : undefined;
-    const overhead = JSON.stringify({ summary, truncated: "Result too large; preview only.", preview: "" }).length + 64;
-    const preview = text.slice(0, Math.max(0, limit - overhead));
-    return JSON.stringify({ summary, truncated: "Result too large; preview only.", preview });
+    const wrap = (n: number): string => JSON.stringify({ summary, truncated: "Result too large; preview only.", preview: text.slice(0, n) });
+    // Serialized length grows monotonically with the preview length: binary-search the largest fit.
+    let lo = 0;
+    let hi = Math.min(text.length, Math.max(0, limit - wrap(0).length));
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      if (wrap(mid).length <= limit) lo = mid;
+      else hi = mid - 1;
+    }
+    return wrap(lo);
   }
   return text;
 }

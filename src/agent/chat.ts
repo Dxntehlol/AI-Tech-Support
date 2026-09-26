@@ -28,6 +28,12 @@ export const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 export const MAX_PAUSE_CONTINUATIONS = 3;
 export const SLOW_TOOL_NOTICE_MS = 5000;
 export const MAX_TOKENS = 16000;
+/**
+ * Tools that query the job-memory database (FTS over messages/findings/units). They run synchronously,
+ * so on a large database they block the event loop and the SLOW_TOOL_NOTICE_MS timer can never fire
+ * while they run; the notice for them is emitted up front instead (DESIGN.md item 9).
+ */
+export const SLOW_TOOL_NAMES: ReadonlySet<string> = new Set(["search_history", "find_unit", "get_unit_history"]);
 
 // ---------------------------------------------------------------------------
 // Process-wide state
@@ -454,14 +460,21 @@ async function runTurnInner(
         send({ type: "error", code: "refusal", message: explanation ? `The model declined: ${explanation}` : "The model declined to answer this request." });
         return;
       }
-      case "max_tokens":
       case "model_context_window_exceeded": {
-        if (toolUses.length) {
-          send({ type: "error", code: "max_tokens", message: "The response hit the output limit in the middle of a tool call — ask again with a narrower question." });
+        // Context-window conditions map to context_full (DESIGN.md item 5), whether or not a partial
+        // tool_use block is present; the remedy is a new conversation, not a narrower question.
+        if (toolUses.length || assistantText.trim() === "") {
+          send({ type: "error", code: "context_full", message: "This conversation no longer fits in the model's context window — start a new conversation on this unit." });
           return;
         }
-        if (final.stop_reason === "model_context_window_exceeded" && assistantText.trim() === "") {
-          send({ type: "error", code: "context_full", message: "This conversation no longer fits in the model's context window — start a new conversation on this unit." });
+        persistAssistant();
+        send({ type: "notice", text: "Response was cut off" });
+        send(doneEvent());
+        return;
+      }
+      case "max_tokens": {
+        if (toolUses.length) {
+          send({ type: "error", code: "max_tokens", message: "The response hit the output limit in the middle of a tool call — ask again with a narrower question." });
           return;
         }
         persistAssistant();
@@ -554,6 +567,10 @@ async function runTools(
       now: (deps.now ?? (() => new Date()))(),
     };
     const started = Date.now();
+    // Synchronous tools block the event loop, so a timer cannot fire while they run: tools known to
+    // hit the database get their notice before they start. The timer still covers any tool that
+    // genuinely awaits (it fires only if the tool yields for SLOW_TOOL_NOTICE_MS).
+    if (SLOW_TOOL_NAMES.has(block.name)) send({ type: "notice", text: `Working on ${label}…` });
     const slowTimer = setTimeout(() => send({ type: "notice", text: `Still working on ${label}…` }), SLOW_TOOL_NOTICE_MS);
     slowTimer.unref?.();
     let outcome: ToolOutcome;

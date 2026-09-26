@@ -549,6 +549,54 @@ test("max_tokens with text only → persisted + notice 'Response was cut off' + 
   assert.equal(terminal(events)[0]!.type, "done");
 });
 
+test("model_context_window_exceeded with a tool_use block → error context_full (not max_tokens), no assistant row, no tools run", async () => {
+  const h = harness([{ text: "partial", toolCalls: [{ name: "refrigerant_pt", input: { refrigerant: "R-410A" } }], stop_reason: "model_context_window_exceeded" }]);
+  const events = await h.run("x");
+  const term = terminal(events);
+  assert.equal(term.length, 1);
+  const err = term[0] as Extract<ChatEvent, { type: "error" }>;
+  assert.equal(err.code, "context_full");
+  assert.match(err.message, /start a new conversation/);
+  assert.equal(h.rows().length, 1, "user row only");
+  assert.ok(!events.some((e) => e.type === "tool_start"));
+});
+
+test("model_context_window_exceeded with no content → context_full; with text only → persisted + cut-off notice", async () => {
+  const empty = harness([{ stop_reason: "model_context_window_exceeded" }]);
+  const e1 = await empty.run("x");
+  assert.equal((terminal(e1)[0] as Extract<ChatEvent, { type: "error" }>).code, "context_full");
+  assert.equal(empty.rows().length, 1);
+
+  const partial = harness([{ text: "an answer that ran out of room", stop_reason: "model_context_window_exceeded" }]);
+  const e2 = await partial.run("x");
+  assert.equal(partial.rows().length, 2);
+  assert.ok(e2.some((e) => e.type === "notice" && e.text === "Response was cut off"));
+  assert.equal(terminal(e2)[0]!.type, "done");
+});
+
+// ---------------------------------------------------------------------------
+// (11b) slow-tool notice
+// ---------------------------------------------------------------------------
+
+test("database-backed tools emit a notice between tool_start and tool_end; in-memory tools do not", async () => {
+  const h = harness(
+    [{ toolCalls: [{ name: "find_unit", input: { query: "RTU-7 Pharmacy" } }, { name: "refrigerant_pt", input: { refrigerant: "R-410A", psig: 118 } }] }, { text: "done" }],
+    { withUnit: true },
+  );
+  const events = await h.run("x");
+  const t = types(events);
+  const starts = t.map((x, i) => (x === "tool_start" ? i : -1)).filter((i) => i >= 0);
+  const ends = t.map((x, i) => (x === "tool_end" ? i : -1)).filter((i) => i >= 0);
+  assert.equal(starts.length, 2);
+  assert.equal(ends.length, 2);
+  const inFirst = events.slice(starts[0]! + 1, ends[0]!).filter((e): e is Extract<ChatEvent, { type: "notice" }> => e.type === "notice");
+  assert.equal(inFirst.length, 1, "find_unit gets one notice while it runs");
+  assert.match(inFirst[0]!.text, /^Working on Find unit/);
+  const inSecond = events.slice(starts[1]! + 1, ends[1]!).filter((e) => e.type === "notice");
+  assert.equal(inSecond.length, 0, "refrigerant_pt gets no notice");
+  assert.equal(terminal(events)[0]!.type, "done");
+});
+
 // ---------------------------------------------------------------------------
 // (12) stopTurn
 // ---------------------------------------------------------------------------
