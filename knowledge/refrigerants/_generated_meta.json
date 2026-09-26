@@ -405,7 +405,7 @@
   "file": "R-438A.json",
   "type": "zeotrope",
   "criticalTempF": 183.9,
-  "glideF": 13.5,
+  "glideF": 13.4,
   "points": 221,
   "coolprop": "mass-fraction mixture",
   "composition": [
@@ -419,7 +419,7 @@
    },
    {
     "component": "R134a",
-    "massPercent": 41.0
+    "massPercent": 44.2
    },
    {
     "component": "R600",

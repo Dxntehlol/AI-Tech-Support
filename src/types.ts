@@ -354,6 +354,7 @@ export interface PtLookupResult {
   safetyClass?: string;
   elevationFt?: number; // when given, psig is treated as a field gauge reading at this elevation
   inHgVacuum?: number; // for sub-atmospheric pressures
+  approximate?: boolean; // table built with approximate mixing rules: not for charge decisions
   psig?: number;
   bubbleTempF?: number; // sat liquid temp at psig
   dewTempF?: number; // sat vapor temp at psig

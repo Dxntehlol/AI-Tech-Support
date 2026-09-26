@@ -531,7 +531,7 @@ function calcWindingCheck(req: Extract<ElectricalCalcRequest, { kind: "winding_c
     }
   }
   values.pass = pass;
-  interp.push("Also check every terminal to the shell/ground with a megohmmeter (500 VDC): > 100 MΩ good, 20–100 MΩ investigate, < 20 MΩ suspect, < 1 MΩ condemn. Never megger under vacuum or with a VFD connected.");
+  interp.push("Also check every terminal to the shell/ground with a megohmmeter (500 VDC): > 100 MΩ good, 20–100 MΩ investigate, < 20 MΩ suspect, < 1 MΩ condemn (general field guidance; confirm the manufacturer's minimum). Never megger under vacuum or with a VFD connected.");
   return result("winding_check", values, interp, v.warnings);
 }
 
@@ -557,10 +557,10 @@ function calcMegohm(req: Extract<ElectricalCalcRequest, { kind: "megohm" }>): El
     interp.push(`${m} MΩ to ground: < 1 MΩ — condemn. The winding is grounded (or nearly); do not attempt to run it. If a compressor has burned out, treat the system as contaminated (acid test, suction filter-drier, flush).`);
   }
   if (req.testVolts !== undefined && isNum(req.testVolts)) {
-    if (req.testVolts > 500) v.warnings.push(`Test voltage ${req.testVolts} V exceeds the 500 VDC customary for hermetic compressors (Copeland AE bulletins); higher voltages can damage insulation.`);
+    if (req.testVolts > 500) v.warnings.push(`Test voltage ${req.testVolts} V exceeds the 500 VDC customary for hermetic compressors (general field practice; follow the compressor manufacturer's bulletin); higher voltages can damage insulation.`);
     else if (req.testVolts < 250) interp.push("Test voltages below 250 VDC understate problems; compressors are normally tested at 500 VDC.");
   }
-  interp.push("Guidelines from Copeland/Emerson AE bulletins and NEMA/EASA practice; readings are pressure-, temperature- and refrigerant-sensitive (they drop with refrigerant dissolved in the oil and rise as the compressor warms). Readings well below 100 MΩ on a compressor holding refrigerant are not by themselves a failure — compare to previous readings and to the other terminals.");
+  interp.push("Bands are general field guidance (IEEE 43-style insulation-resistance practice, as taught in HVAC/R training), not a specific Copeland limit — Copeland AE bulletins advise comparing against the compressor's own history and the manufacturer's minimum; readings are pressure-, temperature- and refrigerant-sensitive (they drop with refrigerant dissolved in the oil and rise as the compressor warms). Readings well below 100 MΩ on a compressor holding refrigerant are not by themselves a failure — compare to previous readings and to the other terminals.");
   interp.push("Never megger a compressor under vacuum (the motor can arc over to the shell through the thin gas) and never with a VFD or any electronic control connected to the output — disconnect and isolate the motor leads first. Discharge windings after the test.");
   return result("megohm", { megohms: m, band, condemn: band === 3 ? 1 : 0 }, interp, v.warnings);
 }

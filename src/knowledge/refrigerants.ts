@@ -134,6 +134,15 @@ export function satPressuresAtTemp(table: RefrigerantTable, tempF: number): { bu
   return { bubblePsig: round1(bubblePsig), dewPsig: round1(dewPsig) };
 }
 
+/** Blends whose CoolProp table needed approximate binary mixing rules (R-438A, R-401A, R-408A). */
+export function isApproximateTable(meta: RefrigerantMeta | undefined): boolean {
+  return meta?.tableSource === "coolprop_mixture_approx";
+}
+
+export function approximateTableNote(id: string): string {
+  return `APPROXIMATE TABLE: the ${id} pressure-temperature data was built with approximate mixing rules and can be several psi (a few °F) off the manufacturer's chart. Do not make superheat/subcooling or charge decisions from these numbers — use the refrigerant manufacturer's PT chart (e.g. Chemours/Honeywell/Arkema) for ${id}.`;
+}
+
 function round1(x: number): number {
   return Math.round(x * 10) / 10;
 }
@@ -176,11 +185,13 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
   const elevationFt = query.elevationFt !== undefined && Number.isFinite(query.elevationFt) && query.elevationFt > 0 ? query.elevationFt : undefined;
   const glide = meta?.glideF;
   const zeotrope = (meta?.type ?? "pure") === "zeotrope" && (glide ?? 0) >= 0.5;
+  if (isApproximateTable(meta)) notes.unshift(approximateTableNote(id));
   if (zeotrope) {
     notes.push(`${id} is a zeotropic blend with about ${glide} °F glide: use DEW point for superheat, BUBBLE point for subcooling. Charge as liquid.`);
   }
   notes.push(elevationNote(elevationFt));
   const result: PtLookupResult = { refrigerant: id, notes };
+  if (isApproximateTable(meta)) result.approximate = true;
   if (elevationFt !== undefined) result.elevationFt = elevationFt;
   if (meta && meta.safetyClass && meta.safetyClass !== "unknown") {
     result.safetyClass = meta.safetyClass;
@@ -252,6 +263,7 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
 
 export interface ShScResult {
   refrigerant: string;
+  approximate?: boolean; // table built with approximate mixing rules: not for charge decisions
   safetyClass?: string;
   patmPsia?: number;
   evapSatF?: number;
@@ -271,6 +283,10 @@ export function superheatSubcooling(
   const id = meta?.id ?? canonicalRefrigerantId(m.refrigerant);
   const notes: string[] = [];
   const out: ShScResult = { refrigerant: id, notes };
+  if (isApproximateTable(meta)) {
+    out.approximate = true;
+    notes.push(approximateTableNote(id));
+  }
   if (!table) {
     notes.push(`No PT data for "${m.refrigerant}".`);
     return out;
