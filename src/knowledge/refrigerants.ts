@@ -164,7 +164,7 @@ function pressureRangeText(table: RefrigerantTable): string {
 /** Elevation note: quantitative above 1,000 ft, generic otherwise. */
 function elevationNote(elevationFt: number | undefined): string {
   if (elevationFt === undefined || !Number.isFinite(elevationFt) || elevationFt <= 0) {
-    return "Pressures are gauge at sea level (psig). Pass elevationFt for a field-gauge correction (roughly 0.5 psi per 1,000 ft).";
+    return "Pressures are gauge at sea level (psig). Enter the site elevation for a field-gauge correction (roughly 0.5 psi per 1,000 ft).";
   }
   const patm = patmPsia(elevationFt);
   const shift = round1(SEA_LEVEL_PATM_PSIA - patm);
