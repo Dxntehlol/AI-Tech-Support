@@ -1213,24 +1213,25 @@
   {
    "id": "coresense-diagnostics-ac-scroll",
    "name": "Copeland CoreSense Diagnostics module for air-conditioning scroll compressors (3-phase ZP/ZR with motor thermistor, e.g. ZP K5/K6 7.5-15 t)",
-   "description": "Module mounted in the compressor terminal box; two-colour LED (green = warning, red = alert/trip) flashes a count. Red codes result in a trip and, if enabled, a lockout. Reset via power cycle / control-circuit interruption per Copeland KB 2070.",
+   "description": "Module mounted in the compressor terminal box; two-colour LED (green = warning, red = alert/trip) flashes a count. Red codes result in a trip and, if enabled, a lockout. Reset via power cycle / control-circuit interruption per Copeland KB 2070. Existing pack codes 'Green 1/3' and 'Red 1/2/3/4/6' are kept with the same code strings and meanings; this sidecar attributes them additionally to AE8-1408 R3 / AE8-1384, which is where the green-warning / red-alert scheme with motor and scroll thermistors is documented. KB 1818's title says 'CoreSense Diagnostics module', so the existing entry's naming is left as-is; verifiers should confirm KB 1818's body matches this scheme. AE8-1379 module codes are labelled '(AE 1379 module)' because the flash count collides with the 3-phase scheme (e.g. red 6 = Missing Phase on AE8-1408/1384 but Open Start Circuit on AE8-1379). Comfort Alert codes are labelled 'Comfort Alert code N'; code 6/7 differ between the residential single-phase modules (open start / open run circuit) and the commercial 3-phase module (missing phase / reverse phase) - both meanings are given in the same entry. AE8-1385 (UltraTech two-stage) uses the same yellow/red code set as AE8-1379 except that Over-Current Protection is Code 10 instead of Code 9; its full table was not transcribed. Discus: only the LED colour states and the protection descriptions from AE8-1368 were seen; the numbered flash-code tables (AE8-1367 R6/R8 Tables 3-5 for CoreSense Protection, AE8-1368 'Modu",
    "appliesTo": [
     "copeland-scroll"
    ],
    "faultCodes": [
     {
      "code": "Green 1 flash",
-     "meaning": "Warning: Loss of Communication",
+     "meaning": "Warning: Loss of Communication - the module has not communicated with the master controller for longer than 5 minutes; the warning clears once communication is re-established",
      "likelyCauses": [
-      "Communication wiring between module and system controller open or miswired",
-      "Controller not present (stand-alone use)"
+      "Modbus/RS-485 wiring to the unit controller open, reversed polarity or unterminated",
+      "Master controller powered down or not polling this module",
+      "Stand-alone installation with no master controller (warning is informational)"
      ],
      "checks": [
-      "Verify RS-485/communication wiring polarity and continuity",
-      "If no network is used, warning is informational"
+      "Confirm whether the unit uses the Modbus link at all; if not, ignore (no trip, no lockout)",
+      "Check the communication wiring polarity/continuity and the controller's Modbus address/baud settings (source: KB 1769)"
      ],
      "severity": "info",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1769 'Green Flash Code 1 on CoreSense Module' (references AE8-1384) + Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
@@ -1238,7 +1239,7 @@
      "meaning": "Warning: Short Cycling",
      "likelyCauses": [
       "Thermostat/controller cycling the compressor on and off rapidly",
-      "Pressure-switch cycling (LPS/HPS)",
+      "Pressure-switch (LPS/HPS) cycling",
       "Low charge causing LPS trips"
      ],
      "checks": [
@@ -1246,26 +1247,26 @@
       "Check pressure switch operation and system charge"
      ],
      "severity": "warning",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "Red 1 flash",
      "meaning": "Alert: Motor High Temperature",
      "likelyCauses": [
-      "Motor overheating from low suction gas flow (low charge, restriction, low airflow on evaporator)",
+      "Motor overheating from low suction gas flow (low charge, restriction, low evaporator airflow)",
       "High superheat / return-gas temperature",
       "Low voltage or unbalanced 3-phase voltage",
       "Failed contactor contact / single-phasing"
      ],
      "checks": [
-      "Measure suction superheat at the compressor (expect ~10-20 F at design)",
+      "Measure suction superheat at the compressor",
       "Measure line-to-line voltage under load and phase imbalance (< 2 %)",
       "Compare running amps per phase to nameplate RLA",
       "Check condenser fan and head pressure"
      ],
      "severity": "lockout",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
@@ -1281,28 +1282,29 @@
       "Inspect thermistor plug and wiring for damage"
      ],
      "severity": "lockout",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "Red 3 flashes",
-     "meaning": "Alert: Short Cycling lockout",
+     "meaning": "Alert: Short Cycling lockout - the module flashes the red Alert LED three times indicating the compressor is locked out due to short cycling; a Code 3 Alert opens the M2-M1 contacts",
      "likelyCauses": [
       "Repeated short cycles beyond the module's threshold",
       "Pressure-switch cycling, controller demand chatter"
      ],
      "checks": [
-      "Same as Green 3; module locks out after repeated short cycles - find the cycling cause before resetting"
+      "Same as Green 3; find the cycling cause before resetting",
+      "Reset by cycling module power (or Modbus reset command) after the cause is corrected"
      ],
      "severity": "lockout",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1768 'CoreSense Red Flash Code 3' + Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "Red 4 flashes",
      "meaning": "Alert: Scroll High Temperature lockout",
      "likelyCauses": [
-      "High discharge temperature: low charge, high compression ratio (dirty condenser, high head pressure), loss of condenser fan, running with an open TXV bulb / high superheat",
+      "High discharge temperature: low charge, high compression ratio (dirty condenser, high head pressure), loss of condenser fan, high superheat",
       "Low suction pressure operation"
      ],
      "checks": [
@@ -1311,7 +1313,7 @@
       "Verify charge and superheat"
      ],
      "severity": "lockout",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
      "evidence": "manufacturer_doc"
     },
     {
@@ -1326,7 +1328,599 @@
       "Inspect fuses, disconnect and contactor contacts"
      ],
      "severity": "shutdown",
-     "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Green 4 flashes",
+     "meaning": "Warning: Open/Shorted Scroll Thermistor",
+     "likelyCauses": [
+      "Discharge/scroll thermistor leads open or shorted at the module or Fusite",
+      "Failed scroll (discharge) thermistor",
+      "Wrong module for the compressor model"
+     ],
+     "checks": [
+      "Ohm the scroll thermistor circuit at the module terminals and compare with the resistance table in AE8-1408/AE8-1384 for the module version",
+      "Inspect the thermistor plug and wiring for chafing/moisture",
+      "Warning only - the compressor keeps running, but scroll high-temperature protection (Red 4) is lost until repaired"
+     ],
+     "severity": "warning",
+     "source": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' - LED flash code table (Warning codes / Alert codes) / Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 4 - green Warning LED four times)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 5 flashes",
+     "meaning": "Alert: Locked Rotor - when four consecutive Code 5 events are recorded, the module will lockout the compressor and flash red five times",
+     "likelyCauses": [
+      "Compressor mechanically seized or starting against unequalized pressure",
+      "Single-phasing / phase problem at start (bulletin troubleshooting: check the contactor and the module phasing wires A-B-C)",
+      "Low voltage at the compressor terminals during start"
+     ],
+     "checks": [
+      "Measure all three line voltages at the contactor load side during a start attempt",
+      "Verify the module current/phasing leads A-B-C are routed through the correct compressor leads (field practice: a swapped sensing lead mimics a locked rotor)",
+      "Check LRA draw versus nameplate; allow pressure equalisation before restart"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 5 Locked Rotor; lockout after four consecutive events)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 7 flashes",
+     "meaning": "Alert: Reverse Phase - the module flashes the red Alert LED seven times indicating a reverse phase in two of the three leads to the compressor; a Code 7 Alert opens the M2-M1 contacts and the module locks out after one Code 7 Alert; a power cycle or Modbus reset command is required to clear the lockout",
+     "likelyCauses": [
+      "Two line leads swapped at the disconnect, contactor or compressor terminals (new install, contactor/compressor replacement, utility work)",
+      "Scroll compressors are direction-sensitive - running reversed makes noise, does not pump, and overheats"
+     ],
+     "checks": [
+      "Verify phase sequence at the contactor load side with a phase-rotation meter; swap two line leads upstream of the module sensing point",
+      "Never swap leads between module and compressor if the module senses phase on its own inputs - correct rotation at the line side (field practice)",
+      "Reset: cycle power to the module after correcting rotation"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' - LED flash code table (Warning codes / Alert codes) (Code 7 Reverse Phase, lockout after 1 Alert)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 8 flashes",
+     "meaning": "Reserved For Future Use (not assigned on the 13-40 ton CoreSense Communications module)",
+     "likelyCauses": [
+      "Not a defined fault on this module - if a red 8 is seen, confirm which module/bulletin the unit actually has (on the single-phase AE8-1379 module and Comfort Alert, code 8 = Welded Contactor)"
+     ],
+     "checks": [
+      "Read the module part number and match it to the bulletin (KB 1819 / AE8-1408 / AE8-1384)"
+     ],
+     "severity": "info",
+     "source": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' - LED flash code table (Warning codes / Alert codes) (Code 8 Reserved For Future Use) / Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 8 Future Use, N/A)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 9 flashes",
+     "meaning": "Alert: Module Low Voltage - the module flashes the red Alert LED nine times indicating low module voltage on the T2-T1 terminals for more than 5 seconds; a Code 9 Alert opens the M2-M1 contacts; it resets after 5 minutes once voltage returns to the normal range",
+     "likelyCauses": [
+      "Undersized or overloaded control transformer (low VA)",
+      "Blown fuse in the transformer secondary, loose T1/T2 wiring",
+      "Wrong module part number for the supply voltage"
+     ],
+     "checks": [
+      "Verify the module part number matches the control voltage (KB 1765)",
+      "Check the transformer VA rating against connected load and measure T1-T2 under load",
+      "Check for a blown fuse in the transformer secondary"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 1765 'CoreSense Red Flash Code 9 for 20 to 40 Ton Copeland Scroll Air Conditioning' + Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 9 Module Low Voltage)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 1 flash (AE 1379 module)",
+     "meaning": "Code 1 - Long Run Time: the module flashes yellow one time when the compressor operates for longer than 18 continuous hours; alert only, the module will not lockout the compressor for this condition",
+     "likelyCauses": [
+      "Low refrigerant charge",
+      "Evaporator/condenser airflow restriction (dirty filter/coil, blower or condenser fan problem)",
+      "Undersized or heavily loaded system / extreme heat load",
+      "Thermostat calling continuously or miswired"
+     ],
+     "checks": [
+      "Measure superheat/subcooling against the unit charging chart",
+      "Check filters, coils, blower and condenser fan",
+      "Confirm the thermostat demand actually drops out"
+     ],
+     "severity": "info",
+     "source": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 2 flashes (AE 1379 module)",
+     "meaning": "Code 2 - Compressor (Pressure) Trip: the module flashes yellow two times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting longer than 7 minutes",
+     "likelyCauses": [
+      "High-pressure switch trip: dirty condenser, condenser fan failure, overcharge, non-condensables",
+      "Low-pressure switch trip: low charge, restriction, low airflow",
+      "Compressor internal overload opening on a hot compressor"
+     ],
+     "checks": [
+      "Check condenser fan operation first; compare head pressure with outdoor ambient",
+      "Read suction pressure / superheat for a low-charge or restriction trip",
+      "Check HPS/LPS settings and wiring"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 2 flashes (AE 1379 module)",
+     "meaning": "Lock code 2 - Pressure trip lockout: when four consecutive or ten total Code 2 events are recorded, the module will lockout the compressor and flash red two times",
+     "likelyCauses": [
+      "Repeated pressure-switch or overload trips (see Yellow 2)"
+     ],
+     "checks": [
+      "Correct the pressure/overload cause, then reset by cycling module power (disconnect the C terminal / 24 V) per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2082 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 3 flashes (AE 1379 module)",
+     "meaning": "Code 3 - Pressure Switch Cycling (short cycling): the module flashes yellow three times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting between 35 seconds and 7 minutes",
+     "likelyCauses": [
+      "Low-pressure switch cycling on low charge or a restriction",
+      "High-pressure switch cycling (condenser fan intermittent, dirty coil)",
+      "Thermostat chatter or loose Y wiring"
+     ],
+     "checks": [
+      "Watch suction/head pressure through a cycle to see which switch opens",
+      "Verify the Y demand is steady (24 V at the module)",
+      "Check charge, airflow and condenser fan"
+     ],
+     "severity": "warning",
+     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 3 flashes (AE 1379 module)",
+     "meaning": "Lock code 3 - Short-cycling lockout: when four consecutive or ten total Code 3 events are recorded, the module will lockout the compressor and flash red three times",
+     "likelyCauses": [
+      "Repeated pressure-switch cycling (see Yellow 3)"
+     ],
+     "checks": [
+      "Find and fix the cycling cause before resetting; reset by cycling module power per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 4 flashes (AE 1379 module)",
+     "meaning": "Code 4 - Locked Rotor Trip: the module flashes yellow four times when the compressor trips within 12 seconds of operation and does not reset and start within 35 seconds",
+     "likelyCauses": [
+      "Compressor mechanically seized or starting against unequalized pressure",
+      "Failed run capacitor / start components (single-phase)",
+      "Low voltage at the compressor terminals during start",
+      "Miswired module current sensor (false locked rotor)"
+     ],
+     "checks": [
+      "Measure voltage at the compressor terminals during a start attempt",
+      "Test the run capacitor (uF) and start relay/capacitor if fitted",
+      "Confirm LRA draw followed by immediate overload trip; allow pressure equalisation time",
+      "Verify the compressor common lead passes through the module current sensor"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 4 flashes (AE 1379 module)",
+     "meaning": "Lock code 4 - Locked rotor lockout: when ten consecutive Code 4 events are recorded, the module will lockout the compressor and flash red four times",
+     "likelyCauses": [
+      "Repeated locked-rotor starts (see Yellow 4)"
+     ],
+     "checks": [
+      "Do not keep resetting - each attempt heats the windings; diagnose start components/voltage, then reset per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 5 flashes (AE 1379 module)",
+     "meaning": "Code 5 - Compressor (Moderate Run) Trip: the module flashes yellow five times when the compressor has operated between 15 minutes and 18 hours, followed by a compressor trip lasting longer than 7 minutes",
+     "likelyCauses": [
+      "Internal overload opening after a long run (hot compressor: low charge / high superheat, high head pressure, low voltage)",
+      "Pressure switch opening after a long run",
+      "Open contactor/fuse or wiring to the compressor while Y is still present"
+     ],
+     "checks": [
+      "Check for 24 V at Y with no compressor current during the trip",
+      "Measure discharge temperature, superheat and head pressure before the trip recurs",
+      "Ohm C-S-R windings after the compressor cools; inspect contactor and wiring"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 5 flashes (AE 1379 module)",
+     "meaning": "Lock code 5 - Moderate-run trip lockout: when four consecutive Code 5 events occur, the module locks out and flashes red five times",
+     "likelyCauses": [
+      "Repeated overload/pressure trips after long runs (see Yellow 5)"
+     ],
+     "checks": [
+      "Correct the cause, then reset per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 1817 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 6 flashes (AE 1379 module)",
+     "meaning": "Code 6 - Open Start Circuit: the module will lockout the compressor and flash red six times if it detects a demand signal on the Y terminal and current in the R (run) winding of the compressor, but no current in the S (start) winding for 2 seconds",
+     "likelyCauses": [
+      "Open start winding",
+      "Failed start capacitor / start relay, open start-circuit wiring or terminal",
+      "Module S-lead current sensor not installed around the start lead"
+     ],
+     "checks": [
+      "Ohm C-S and compare with C-R (start winding resistance is normally higher than run)",
+      "Check the start capacitor and potential relay if fitted",
+      "Verify module current-sensing lead routing before condemning the compressor (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 7 flashes (AE 1379 module)",
+     "meaning": "Code 7 - Open Run Circuit: the module has detected Y or Y1 and current in the S winding of the compressor and no current in the R winding for 2 seconds",
+     "likelyCauses": [
+      "Open run winding",
+      "Failed run capacitor or open run-circuit wiring/terminal",
+      "Module R-lead current sensor not around the run lead"
+     ],
+     "checks": [
+      "Ohm C-R",
+      "Test the run capacitor (uF) and its wiring",
+      "Verify module current-sensing lead routing"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 7, as summarised in Copeland KB series 2072-2086)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 8 flashes (AE 1379 module)",
+     "meaning": "Code 8 - Welded Contactor: the module has detected line currents in the R and S windings while Y or Y1 is at 0 VAC for 15 seconds",
+     "likelyCauses": [
+      "Contactor contacts welded closed - compressor runs with no thermostat demand",
+      "Contactor miswired / bypassed so the compressor is fed without Y"
+     ],
+     "checks": [
+      "Confirm compressor current with Y de-energised",
+      "Replace the contactor; check for the cause of welding (low voltage coil, high inrush, pitted contacts)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 8, as summarised in Copeland KB series 2072-2086)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 9 flashes (AE 1379 module)",
+     "meaning": "Code 9 - Module Low Voltage supply: the module flashes yellow nine times if the module supply voltage drops below 17 VAC for 2 seconds",
+     "likelyCauses": [
+      "Undersized/overloaded 24 V transformer",
+      "Low line voltage, loose common/R wiring to the module",
+      "Excess load on the control circuit (accessory relays, long thermostat runs)"
+     ],
+     "checks": [
+      "Measure 24 V at the module under load with the contactor pulled in",
+      "Check transformer VA rating and secondary fuse/breaker",
+      "Check line voltage at the transformer primary"
+     ],
+     "severity": "warning",
+     "source": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 9 flashes, yellow off (AE 1379 module)",
+     "meaning": "Code 9 - Over-Current Protection: when the current at the PROT terminal is greater than 2 A for 40 ms the module flashes a Code 9; the red LED flashes 9 times with the yellow LED remaining off - the module is mis-wired or the contactor coil is shorted to ground (Code 9 is not printed on the module label)",
+     "likelyCauses": [
+      "PROT output miswired (e.g. PROT tied to common or to the wrong contactor coil terminal)",
+      "Contactor coil shorted to ground / failed coil"
+     ],
+     "checks": [
+      "Ohm the contactor coil to ground and coil resistance",
+      "Re-check the module wiring against the diagram in AE8-1379 (PROT in series with the contactor coil)",
+      "On the UltraTech (AE8-1385) two-stage module the same fault is Code 10"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 9 Over-Current Protection); same function is Code 10 in AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red solid (TRIP) (AE 1379 module)",
+     "meaning": "TRIP: the module detects the presence of a demand signal from the thermostat, however no current to the compressor is detected by the module - typically the compressor protector is open, or supply power to the compressor is missing",
+     "likelyCauses": [
+      "Internal overload open (hot compressor)",
+      "Open contactor, blown fuse, tripped breaker or open wiring to the compressor",
+      "Open winding"
+     ],
+     "checks": [
+      "Check line voltage at the contactor load side with Y present",
+      "Let the compressor cool and ohm C-S-R",
+      "Inspect the contactor coil and contacts"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Module LED description: red TRIP LED)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 1",
+     "meaning": "Long Run Time - Compressor is running extremely long run cycles",
+     "likelyCauses": [
+      "Low refrigerant charge",
+      "Evaporator/condenser airflow restriction",
+      "Undersized or heavily loaded system",
+      "Thermostat calling continuously"
+     ],
+     "checks": [
+      "Measure superheat/subcooling against the charging chart",
+      "Check filters, coils, blower and condenser fan",
+      "On commercial modules with a solenoid output: if Code 1 or 9 appears while running, the module de-energises the unloader solenoid and the compressor continues at part load"
+     ],
+     "severity": "info",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 2",
+     "meaning": "System Pressure Trip - Discharge or suction pressure out of limits or compressor overloaded",
+     "likelyCauses": [
+      "HPS trip: dirty condenser, fan failure, overcharge, non-condensables",
+      "LPS trip: low charge, restriction, low airflow",
+      "Internal overload opening"
+     ],
+     "checks": [
+      "Read head and suction pressure at the trip",
+      "Check HPS/LPS settings and condenser fan",
+      "Commercial 3-phase module: lockout = yes"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 3",
+     "meaning": "Short Cycling - Compressor is running only briefly",
+     "likelyCauses": [
+      "Pressure switch cycling",
+      "Thermostat chatter or loose Y wiring",
+      "Low charge"
+     ],
+     "checks": [
+      "Verify steady Y demand",
+      "Check LPS/HPS cycling and charge",
+      "Commercial 3-phase module: lockout = yes"
+     ],
+     "severity": "warning",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 4",
+     "meaning": "Locked Rotor",
+     "likelyCauses": [
+      "Compressor seized or starting against unequalized pressure",
+      "Failed run/start capacitor or relay",
+      "Low voltage at the compressor terminals"
+     ],
+     "checks": [
+      "Measure start voltage at the compressor terminals",
+      "Test capacitors (uF)",
+      "Confirm LRA then immediate overload trip; allow equalisation",
+      "Commercial 3-phase module: lockout = yes"
+     ],
+     "severity": "lockout",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 5",
+     "meaning": "Open Circuit",
+     "likelyCauses": [
+      "Internal overload open (hot compressor)",
+      "Open contactor, fuse or wiring to the compressor",
+      "Open winding"
+     ],
+     "checks": [
+      "24 V at Y with no compressor current",
+      "Ohm C-S-R after cool-down",
+      "Inspect contactor and wiring",
+      "Commercial 3-phase module: lockout = no"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 6",
+     "meaning": "Open Start Circuit - Current only in run circuit (single-phase modules). On the commercial 3-phase Comfort Alert module code 6 = Missing Phase (lockout = yes)",
+     "likelyCauses": [
+      "Single-phase: open start winding, failed start capacitor/relay, open start wiring",
+      "3-phase: open phase upstream (fuse, contactor pole, loose lug)"
+     ],
+     "checks": [
+      "Single-phase: ohm C-S vs C-R; test start components",
+      "3-phase: measure all three line-to-line voltages at the contactor load side"
+     ],
+     "severity": "lockout",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107) / Copeland 'Comfort Alert diagnostics for commercial applications' brochure (943-0033-00) and User's Manual 2005ECT-191 R6 (543-0038-01/-02, 543-0071-00) - diagnostic code / lockout table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 7",
+     "meaning": "Open Run Circuit - Current only in start circuit (single-phase modules). On the commercial 3-phase Comfort Alert module code 7 = Reverse Phase (lockout = yes)",
+     "likelyCauses": [
+      "Single-phase: open run winding, failed run capacitor, open run wiring",
+      "3-phase: two line leads swapped"
+     ],
+     "checks": [
+      "Single-phase: ohm C-R; test run capacitor",
+      "3-phase: check phase rotation with a phase-sequence meter and swap two line leads at the line side"
+     ],
+     "severity": "lockout",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107) / Copeland 'Comfort Alert diagnostics for commercial applications' brochure (943-0033-00) and User's Manual 2005ECT-191 R6 (543-0038-01/-02, 543-0071-00) - diagnostic code / lockout table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 8",
+     "meaning": "Welded Contactor - Compressor always runs",
+     "likelyCauses": [
+      "Contactor contacts welded closed",
+      "Contactor miswired or bypassed"
+     ],
+     "checks": [
+      "Compressor current with Y de-energised",
+      "Replace the contactor",
+      "Commercial 3-phase module: lockout = no"
+     ],
+     "severity": "warning",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert code 9",
+     "meaning": "Low Voltage - Control circuit < 17 VAC",
+     "likelyCauses": [
+      "Undersized/overloaded 24 V transformer",
+      "Low line voltage, loose control wiring"
+     ],
+     "checks": [
+      "Measure 24 V at the module with the contactor energised",
+      "Check transformer VA and line voltage",
+      "If TRIP and ALERT LEDs flash at the same time, control-circuit voltage is too low for the module to operate"
+     ],
+     "severity": "warning",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert TRIP LED (red)",
+     "meaning": "TRIP: there is a demand signal from the thermostat but no current to the compressor is detected by Comfort Alert - typically the compressor protector is open, or supply power to the compressor is missing",
+     "likelyCauses": [
+      "Internal overload open",
+      "Open contactor/fuse/breaker or wiring",
+      "Open winding"
+     ],
+     "checks": [
+      "Check line voltage at the contactor load side with Y present",
+      "Ohm C-S-R after cool-down"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107) - LED description",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Comfort Alert TRIP and ALERT LEDs flashing together",
+     "meaning": "Control circuit voltage is too low for operation",
+     "likelyCauses": [
+      "24 V control voltage below the module's operating minimum"
+     ],
+     "checks": [
+      "Measure control voltage at the module; check the transformer and line voltage"
+     ],
+     "severity": "warning",
+     "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107) - LED description",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus LED flashing green",
+     "meaning": "Alert (warning) condition on the CoreSense Diagnostics v2.11 module - the compressor keeps running",
+     "likelyCauses": [
+      "Oil-pressure warning (differential below 7-9 psid / 0.48-0.62 bar for 4 s, before the 120 s lockout)",
+      "Other warning-level condition shown as text on the LCD"
+     ],
+     "checks": [
+      "Read the LCD alarm text and the last-ten alarm history (alarm 1 = most recent)",
+      "Check oil level, oil pressure differential and suction-line oil return"
+     ],
+     "severity": "warning",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus LED steady red",
+     "meaning": "Control module has failed (steady red = module failure, not a compressor fault code)",
+     "likelyCauses": [
+      "Failed CoreSense Diagnostics v2.11 module or its power supply",
+      "See Copeland KB 2411 'Solid Red LED on CoreSense Diagnostics V2.11' and KB 4655 'FAILSAFE mode' before replacing"
+     ],
+     "checks": [
+      "Check module supply voltage and wiring",
+      "Follow KB 2411 / KB 4655 (FAILSAFE mode reset) before condemning the module"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description + Copeland KB 2411 / KB 4655",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus low oil pressure lockout",
+     "meaning": "Low oil pressure lockout: once the oil pressure differential falls below 0.48-0.62 bar (7-9 psid) for 2 minutes (120 s) the module shuts the compressor off and a 'low oil pressure lockout' is reported; a warning is issued after 4 seconds below the threshold",
+     "likelyCauses": [
+      "Low oil level / oil not returning (suction-line sizing, traps, long off-cycles)",
+      "Refrigerant flooding/dilution of the oil",
+      "Oil pump or oil-pressure sensor problem"
+     ],
+     "checks": [
+      "Check crankcase oil level and oil-pressure differential",
+      "Check suction superheat and oil return; look for floodback",
+      "Manual reset required at the compressor (KB 4658 'Reset a lockout on CoreSense Diagnostics V2.11' / reset button under the module)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description - Insufficient oil pressure protection",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus high discharge temperature trip",
+     "meaning": "Discharge temperature protection: an NTC sensor in the cylinder head (factory-installed) shuts the compressor off if discharge temperature exceeds 154 C (310 F) until it cools to an acceptable level",
+     "likelyCauses": [
+      "High compression ratio: dirty condenser, condenser fan failure, high head pressure",
+      "High superheat / low suction pressure, low charge",
+      "Defective sensor or wiring"
+     ],
+     "checks": [
+      "Measure discharge line temperature and head pressure",
+      "Check superheat, charge and condenser airflow",
+      "Ohm the NTC head sensor if the trip does not match measured temperature"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description - High discharge temperature protection",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus locked rotor lockout",
+     "meaning": "Locked rotor detection with trip and lockout alarms: 10 consecutive trip alarms result in a lockout alarm requiring manual reset",
+     "likelyCauses": [
+      "Mechanically seized compressor or start against unequalized pressure",
+      "Phase loss / low voltage at start"
+     ],
+     "checks": [
+      "Measure line voltages during start, check phase presence",
+      "Check LRA and equalisation; manual reset after the cause is fixed"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description - Locked rotor protection",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discus phase loss trip",
+     "meaning": "Phase loss protection: if any phase voltage is less than 84 % of the maximum for 1 second the module trips; trip time is 5 minutes with automatic reset",
+     "likelyCauses": [
+      "Open phase upstream (fuse, contactor pole, loose lug)",
+      "Severe voltage imbalance"
+     ],
+     "checks": [
+      "Measure all three line-to-line voltages at the contactor load side",
+      "Inspect fuses, disconnect and contactor"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland AE8-1368 R2/R3 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED status description - Phase loss protection",
      "evidence": "manufacturer_doc"
     }
    ],
@@ -1342,12 +1936,93 @@
     {
      "pattern": "Red flashing N times, pause, repeat",
      "meaning": "Alert code N - the compressor has tripped and may be locked out"
+    },
+    {
+     "pattern": "3-phase CoreSense Communications module (AE8-1408 13-15 t / AE8-1384 20-40 t): solid green",
+     "meaning": "Power on, no fault"
+    },
+    {
+     "pattern": "3-phase module: green flashing N times, pause, repeat",
+     "meaning": "Warning code N - no trip, no lockout (1 loss of communication, 3 short cycling, 4 open/shorted scroll thermistor)",
+     "checks": [
+      "Count flashes between pauses"
+     ]
+    },
+    {
+     "pattern": "3-phase module: red flashing N times, pause, repeat",
+     "meaning": "Alert code N - compressor tripped via the M1-M2 contacts and possibly locked out",
+     "checks": [
+      "Codes 1, 2, 3, 4, 5, 7 lock out; 6 and 9 auto-reset when the condition clears; 8 reserved"
+     ]
+    },
+    {
+     "pattern": "3-phase module: red flash N times, pause, solid red, pause, repeat",
+     "meaning": "Lockout condition (AE8-1408 R3: 'a lockout condition produces a red flash, followed by a pause, a solid red, a second pause, and then repeated')",
+     "checks": [
+      "Correct the cause, then cycle module power or send the Modbus reset command"
+     ]
+    },
+    {
+     "pattern": "AE8-1379 single-phase/light-commercial module (571-0066-00 AC / 571-0067-00 HP): solid yellow",
+     "meaning": "Module powered and compressor/system running normally"
+    },
+    {
+     "pattern": "AE8-1379 module: yellow ALERT LED flashes N times, pause, repeat",
+     "meaning": "ALERT code N - abnormal system condition (1 long run, 2 pressure trip, 3 pressure-switch cycling, 4 locked rotor trip, 5 moderate-run trip, 9 low module voltage)",
+     "checks": [
+      "Count consecutive flashes; the code repeats until cleared"
+     ]
+    },
+    {
+     "pattern": "AE8-1379 module: solid red",
+     "meaning": "TRIP - thermostat demand present but no compressor current detected (protector open or no supply power)"
+    },
+    {
+     "pattern": "AE8-1379 module: red TRIP/LOCK LED flashes N times, pause, repeat",
+     "meaning": "LOCK code N - compressor lockout active (2, 3, 4, 5 after repeated alerts; 6 open start circuit; 7 open run circuit; 8 welded contactor; 9 with yellow off = over-current on PROT)",
+     "checks": [
+      "Reset by cycling module power (disconnect the C terminal) per KB 2070 after the cause is fixed"
+     ]
+    },
+    {
+     "pattern": "Comfort Alert module: green POWER LED on",
+     "meaning": "Module has power; supply voltage present at the module terminals"
+    },
+    {
+     "pattern": "Comfort Alert module: red TRIP LED on",
+     "meaning": "Demand signal from the thermostat but no current to the compressor detected (protector open or missing supply power)"
+    },
+    {
+     "pattern": "Comfort Alert module: yellow ALERT LED flashes N times, pause, repeat",
+     "meaning": "ALERT flash code N (see 'Comfort Alert code N'); on power-up the last ALERT code before shutdown is displayed for one minute",
+     "checks": [
+      "Reset by removing 24 VAC from the module (cycle power)"
+     ]
+    },
+    {
+     "pattern": "Comfort Alert module: TRIP and ALERT flashing at the same time",
+     "meaning": "Control circuit voltage too low for operation"
+    },
+    {
+     "pattern": "Discus CoreSense Diagnostics v2.11: steady green / flashing green / flashing orange (yellow) / flashing red / steady red",
+     "meaning": "Normal, no fault / alert (warning) / compressor tripped, auto-reset / lockout (manual reset) / control module failed",
+     "checks": [
+      "Read the fault text on the 2-line LCD; last ten alarms are stored, alarm 1 = most recent"
+     ]
     }
    ],
    "diagnosticTips": [
     "Count the flashes between pauses to read the code; codes repeat until cleared.",
     "Reset: remove and restore power to the module/control circuit (Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'). Fix the cause first; a locked-out compressor is protecting itself.",
-    "Codes 5, 7, 8 and 9 exist on this platform (locked rotor, reverse phase, welded contactor, low voltage on comparable Copeland modules) but were not confirmed from the manual in this review - read them from AE 1379 R2 / KB 1818 before acting."
+    "Codes 5, 7, 8 and 9 exist on this platform (locked rotor, reverse phase, welded contactor, low voltage on comparable Copeland modules) but were not confirmed from the manual in this review - read them from AE 1379 R2 / KB 1818 before acting.",
+    "Identify the module first (KB 1819 / KB 1816): 571-0066-00 (service 971-0066-00) is the two-wire AC module and 571-0067-00 (971-0067-00) the three-wire heat-pump module covered by AE8-1379 (yellow ALERT / red TRIP-LOCK LEDs, current-sensing on R and S leads, installed in the unit electrical panel near the contactor). The 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) CoreSense Communications modules mount in the compressor terminal box, sense motor and scroll thermistors plus 3-phase supply, and use a green WARNING / red ALERT scheme with M1-M2 pilot-duty contacts and Modbus. Comfort Alert (543-/943-0032, -0033, -0038) is the older current-sensing module with green POWER, red TRIP and yellow ALERT LEDs. The same flash count means different things on each - always read the code against the right table.",
+    "Reading a code: count the consecutive flashes between pauses; the code repeats until cleared. On AE8-1408/1384 modules a lockout is shown as red flashes, pause, solid red, pause, repeat.",
+    "Reset (AE8-1379 module, KB 2070): cycle power to the module by disengaging the COMMON (C) terminal. This clears the present ALERT or TRIP/LOCK and allows normal operation but does not clear the seven-day operating history stored in the module. Fix the cause first - a locked-out compressor is protecting itself.",
+    "Reset (13-40 ton CoreSense Communications): cycle module power (T1-T2) or send the Modbus reset command; alerts 6 (missing phase) and 9 (module low voltage) clear automatically once the condition is normal (code 9 after 5 minutes).",
+    "Reset (Comfort Alert): remove 24 VAC from the module. On every power-up the module displays the last ALERT code for one minute - use this to read a code the customer saw earlier.",
+    "Reset (Discus CoreSense Diagnostics v2.11): reset button below the control module, or per KB 4658; a FAILSAFE-mode module is reset per KB 4655. Lockouts require a manual reset at the compressor.",
+    "Current-sensing modules (AE8-1379, Comfort Alert) infer faults from compressor current versus Y demand: a common/run/start lead that does not pass through the module's sensor gives false open-circuit, locked-rotor or welded-contactor codes - verify the sensing-lead routing (KB 1809 installation guidelines) before condemning a compressor.",
+    "Module history: AE8-1379 and AE8-1385 modules store a seven-day operating history that can be downloaded with the CoreSense PC Communication Software (see the AE bulletin 'Module History Download' section)."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -1362,12 +2037,150 @@
     {
      "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'",
      "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
+    },
+    {
+     "title": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "docId": "KB 1818",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1818"
+    },
+    {
+     "title": "Copeland AE8-1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' (Feb 2015)",
+     "docId": "AE8-1379 R2",
+     "url": "https://www.copeland.com/documents/ae-1379-r2-coresense-diagnostics-for-copeland-scroll-air-conditioning-compressors-en-5623056.pdf"
+    },
+    {
+     "title": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' (Aug 2024)",
+     "docId": "AE8-1408 R3",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=aeb&PDF=AE8-1408_R3.pdf"
+    },
+    {
+     "title": "Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors'",
+     "docId": "AE8-1384",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1384"
+    },
+    {
+     "title": "Copeland AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
+     "docId": "AE8-1385",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1385"
+    },
+    {
+     "title": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2086",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2086"
+    },
+    {
+     "title": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2082",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2082"
+    },
+    {
+     "title": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2078",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2078"
+    },
+    {
+     "title": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2079",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2079"
+    },
+    {
+     "title": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2072",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2072"
+    },
+    {
+     "title": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2075",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2075"
+    },
+    {
+     "title": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection'",
+     "docId": "KB 1817",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1817"
+    },
+    {
+     "title": "Copeland KB 1819 'Part Numbers for CoreSense Diagnostics Modules used in Air-conditioning Scroll Compressors'",
+     "docId": "KB 1819",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1819"
+    },
+    {
+     "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or TRIP/LOCKOUT'",
+     "docId": "KB 2070",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
+    },
+    {
+     "title": "Copeland KB 1769 'Green Flash Code 1 on CoreSense Module'",
+     "docId": "KB 1769",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1769"
+    },
+    {
+     "title": "Copeland KB 1768 'CoreSense Red Flash Code 3'",
+     "docId": "KB 1768",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1768"
+    },
+    {
+     "title": "Copeland KB 1765 'CoreSense Red Flash Code 9 for 20 to 40 Ton Copeland Scroll Air Conditioning'",
+     "docId": "KB 1765",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1765"
+    },
+    {
+     "title": "Copeland/Emerson Comfort Alert Diagnostics User's Manual (543-0032-00 / 943-0032-00; also 543-0033-00, 543-0038-00)",
+     "docId": "Comfort Alert User's Manual",
+     "url": "https://pimmedia.winsupplyinc.com/pim/INTA/112017/INTERNATIONAL-COMFORT-PRODUCTS_1177402_ICP001177402_INTA.pdf"
+    },
+    {
+     "title": "Copeland 'Comfort Alert for Commercial Applications' User's Manual 2005ECT-191 R6 (543-0038-01/-02, 543-0071-00, 943-0038-01/-02)",
+     "docId": "2005ECT-191 R6",
+     "url": "https://media.copeland.com/43e676a7-68e7-4255-af1c-b16b00f91f73/2005ECT-191%20R6%20User%20Manual%20Comfort%20Alert%20for%20Commercial%20Applications.pdf"
+    },
+    {
+     "title": "Copeland 'Comfort Alert diagnostics for commercial applications' brochure (943-0033-00)",
+     "docId": "Comfort Alert commercial brochure",
+     "url": "http://s3.supplyhouse.com/product_files/Copeland-943-0033-00-Brochure.pdf"
+    },
+    {
+     "title": "Copeland AE8-1368 R2 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors'",
+     "docId": "AE8-1368 R2",
+     "url": "https://www.copeland.com/documents/ae-bulletin-ae8-1368-r2-coresense-diagnostics-v2-11-for-copeland-discus-compressors-en-us-5245888.pdf"
+    },
+    {
+     "title": "Copeland AE8-1367 R6/R8 'CoreSense Protection for Copeland Discus Compressors' (Tables 3-5 LED flash codes - not transcribed)",
+     "docId": "AE8-1367",
+     "url": "https://www.copeland.com/documents/ae-bulletin-coresense-protection-for-discus-compressors-ae8-1367-r6-aug-2018-en-us-5245870.pdf"
+    },
+    {
+     "title": "Copeland KB 4658 'Reset a lockout on CoreSense Diagnostics V2.11'",
+     "docId": "KB 4658",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/4658"
     }
    ],
    "confidence": "medium",
    "sources": [
     "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
-    "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'"
+    "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/1818",
+    "https://www.copeland.com/documents/ae-1379-r2-coresense-diagnostics-for-copeland-scroll-air-conditioning-compressors-en-5623056.pdf",
+    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=aeb&PDF=AE8-1408_R3.pdf",
+    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1384",
+    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1385",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/2086",
+    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2082",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/2078",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/2079",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/2072",
+    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2075",
+    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1817",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/1819",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/2070",
+    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1769",
+    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1768",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/1765",
+    "https://pimmedia.winsupplyinc.com/pim/INTA/112017/INTERNATIONAL-COMFORT-PRODUCTS_1177402_ICP001177402_INTA.pdf",
+    "https://media.copeland.com/43e676a7-68e7-4255-af1c-b16b00f91f73/2005ECT-191%20R6%20User%20Manual%20Comfort%20Alert%20for%20Commercial%20Applications.pdf",
+    "http://s3.supplyhouse.com/product_files/Copeland-943-0033-00-Brochure.pdf",
+    "https://www.copeland.com/documents/ae-bulletin-ae8-1368-r2-coresense-diagnostics-v2-11-for-copeland-discus-compressors-en-us-5245888.pdf",
+    "https://www.copeland.com/documents/ae-bulletin-coresense-protection-for-discus-compressors-ae8-1367-r6-aug-2018-en-us-5245870.pdf",
+    "https://copeland.custhelp.com/app/answers/detail/a_id/4658"
    ]
   },
   {

@@ -1,0 +1,1666 @@
+{
+  "pack": "others",
+  "platformId": "mitsubishi-mnet-city-multi",
+  "name": "Mitsubishi Electric City Multi (VRF, M-NET 4-digit check codes) and P-Series / Mr. Slim A-control 2-character check codes",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Mitsubishi Electric City Multi error code list (CityMultiErrorCode.pdf / CityMultiErrorCode_V3.pdf, mitsubishielectric.com.sg) - columns Outdoor unit / Indoor unit / Remote controller / FAULT CODE / Description",
+      "docId": "CityMultiErrorCode",
+      "url": "https://www.mitsubishielectric.com.sg/getmedia/1e62eab7-7520-4a01-8f94-a9f0bebd0f7d/CityMultiErrorCode.pdf"
+    },
+    {
+      "title": "Mitsubishi Electric PURY-HP72 (Y-series R2) Service Handbook - Error Code and Preliminary Error Code Lists (p.186), Error Code Definitions and Solutions [0403] (p.190), [2502] (p.197-198), [4220/4225] (p.208), [4250/4255] (p.218), [5101-5104] (p.221), [5104-5111] (p.222), [5301] (p.227-230), [6600/6601] (p.235), [6607 Lc] (p.240), [6831] (p.246), [6834] (p.249), [7100] (p.250), LED status indicators (p.336) as reproduced on ManualsLib",
+      "docId": "PURY-HP72-SH",
+      "url": "https://www.manualslib.com/manual/834354/Mitsubishi-Electric-Pury-Hp72.html?page=186"
+    },
+    {
+      "title": "Mitsubishi Electric PURY-P200YLM-A(1) Service Handbook - Error Code and Preliminary Error Code Lists (p.232), [4115]/[4116] (p.252), [5103-5112] (p.266), [6600/6601] (p.276), [6831] (p.287)",
+      "docId": "PURY-P200YLM-SH",
+      "url": "https://www.manualslib.com/manual/1008129/Mitsubishi-Electric-Pury-P200ylm-A-1.html?page=232"
+    },
+    {
+      "title": "Mitsubishi Electric PUHY-P200 Service Handbook - Error Code [0403] (p.178), [1301] (p.181), [1302 during operation] (p.182), [7100] (p.235)",
+      "docId": "PUHY-P200-SH",
+      "url": "https://www.manualslib.com/manual/1075312/Mitsubishi-Electric-Puhy-P200.html?page=178"
+    },
+    {
+      "title": "Mitsubishi Electric PUHY-HP72 / PUHY-P250YNW-A Service Handbooks - Error Codes [5102,5103,5104,5105,5106,5107,5115] (outdoor thermistor attribution)",
+      "docId": "PUHY-HP72-SH",
+      "url": "https://www.manualslib.com/manual/1713719/Mitsubishi-Electric-Puhy-Hp72.html?page=160"
+    },
+    {
+      "title": "Mitsubishi City Multi PEFY-P72NMHSU-E Technical & Service Manual - Transmission line bus busy error (p.38), Error code 6834 MA controller signal reception error (start bit detection error) (p.51)",
+      "docId": "PEFY-P72NMHSU-TSM",
+      "url": "https://www.manualslib.com/manual/770884/Mitsubishi-City-Multi-Pefy-P72nmhsu-E.html?page=38"
+    },
+    {
+      "title": "Mitsubishi Electric City Multi PUHY-P500YSHM-A Service Handbook - Troubleshooting using the outdoor unit LED error display (p.194)",
+      "docId": "PUHY-P500YSHM-SH",
+      "url": "https://www.manualslib.com/manual/1803889/Mitsubishi-Electric-City-Multi-Puhy-P500yshm-A.html?page=194"
+    },
+    {
+      "title": "Mitsubishi Electric PAR-21MAA MA Remote Controller Technical Manual - Error code list: A-control error codes (E), (F/P) (p.48) and (U) (p.49); Self check / error history reset (installation manual p.8)",
+      "docId": "PAR-21MAA-TM",
+      "url": "https://www.manualslib.com/manual/1903713/Mitsubishi-Electric-Par-21maa.html?page=48"
+    },
+    {
+      "title": "Mitsubishi Electric Mr. Slim error code list (MrSlimerrorCode.pdf, mitsubishielectric.com.sg) - A-control error codes with outdoor LED1/LED2 indication",
+      "docId": "MrSlimerrorCode",
+      "url": "https://www.mitsubishielectric.com.sg/getmedia/1a8fe41a-9b17-49f2-a8b5-3e4842aa99ba/MrSlimerrorCode.pdf"
+    },
+    {
+      "title": "Mitsubishi Electric PUZ-A18NHA4 Service Manual - Display function of inspection for outdoor unit (LED1 green / LED2 red blinking patterns) (p.74-75)",
+      "docId": "PUZ-A18NHA4-SM",
+      "url": "https://www.manualslib.com/manual/782707/Mitsubishi-Electric-Puz-A18nha4.html?page=74"
+    },
+    {
+      "title": "Mitsubishi Electric 'Mr. Slim' P-Series Commercial Models Troubleshooting Tips (July 7, 2005) - self-diagnosis via CHECK button, check code storage, SW4 test run",
+      "docId": "MrSlim-P-Troubleshooting-Tips-2005",
+      "url": "http://docs.eao.hawaii.edu/JCMT/c/006_Air_Conditioning_Equipment/08.1/MrSlim_P-SERIES_Troubleshooting_TIPS.pdf"
+    },
+    {
+      "title": "Mr.Slim A-control error code list (arma.org.au reproduction of the Mitsubishi table)",
+      "docId": "arma-mrslim-list",
+      "url": "https://www.arma.org.au/wp-content/uploads/2017/02/Mitsubishi-Error-Codes.pdf"
+    },
+    {
+      "title": "Logicool City Multi Codes.pdf ('Checking code / Meaning, detecting method / Cause' table reproduced from the City Multi service handbook)",
+      "docId": "logicool-citymulti-codes",
+      "url": "https://www.logicool-ac.com/wp-content/themes/logicool/pdf/dimensions/mitsubishi/City%20Multi%20Codes.pdf"
+    },
+    {
+      "title": "Mitsubishi City Multi Error Code List (logs.baileyharris.com / mcsprogram.org mirror) - corroboration only",
+      "docId": "baileyharris-list",
+      "url": "https://logs.baileyharris.com/Download_PDFS/u4861E/245269/Mitsubishi%20City%20Multi%20Error%20Code%20List.pdf"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "0403",
+      "meaning": "Serial communication error (between the outdoor control board and the INV board / fan board)",
+      "likelyCauses": [
+        "Loose or unplugged board-to-board connectors (control board CN4A/CN4B, fan board CN80)",
+        "INV board or fan board failure",
+        "Control board failure",
+        "Noise on the internal serial link"
+      ],
+      "checks": [
+        "Per handbook: check control board (CN4A, CN4B) and fan board (CN80) connections; if the problem recurs replace the INV board or fan board",
+        "Cycle power at the outdoor unit and watch for the code to return (field practice)",
+        "Read the error detail code on the outdoor LED display to identify which board dropped the link"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Code Definitions and Solutions: Codes [0-999], Error Code [0403] (p.190); PUHY-P200 Service Handbook [0403] (p.178)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "0900",
+      "meaning": "Test run (unit in test run / trial operation mode; on Lossnay: test operation dipswitch set ON)",
+      "likelyCauses": [
+        "Lossnay main board test dipswitch SW2-1 left ON",
+        "Test run started and not ended"
+      ],
+      "checks": [
+        "Check the position of dipswitch SW2-1 on the Lossnay main control board; set OFF when test is not required",
+        "Not a fault: end the test run from the controller or dipswitch and the indication clears"
+      ],
+      "severity": "info",
+      "source": "CityMultiErrorCode.pdf (0900 'Test run', attribute LC); Lossnay handbook / arlingtonairconditioningheating decoder (Lossnay test dipswitch SW2-1)",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "1102",
+      "meaning": "Discharge temperature fault (abnormal discharge temperature, TH4)",
+      "likelyCauses": [
+        "Refrigerant shortage / leak",
+        "Indoor or outdoor LEV not opening (stuck, coil or connector fault)",
+        "Refrigerant service valve not fully open",
+        "Restricted strainer or liquid line",
+        "Discharge thermistor TH4 reading high (drift, poor contact with pipe)"
+      ],
+      "checks": [
+        "Per handbook: check refrigerant charge; check operating conditions and operation status of indoor/outdoor units; check indoor/outdoor LEV (see 1202 preliminary code) and confirm the refrigerant service valve is fully open",
+        "Compare TH4 on the maintenance monitor with a clamp thermistor on the discharge line (field practice)",
+        "Discharge superheat and system subcooling versus the service handbook charge tables"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (1102 'Discharge temperature fault'); PURY-HP72 Service Handbook Error Code Lists (p.186); Logicool City Multi Codes.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "1301",
+      "meaning": "Low pressure fault (low pressure detected before starting; e.g. low pressure reads 0.098 MPa or less when starting the compressor from stop mode for the first time)",
+      "likelyCauses": [
+        "Refrigerant shortage / leak",
+        "Closed service valve on the low side",
+        "Low-pressure sensor 63LS fault or disconnected",
+        "Thermistor (TH2/TH3/TH4) fault causing incorrect control",
+        "Indoor airflow problems in heating (dirty filter, blocked heat exchanger)"
+      ],
+      "checks": [
+        "Per handbook: inspect thermistors TH2, TH3, TH4, refrigerant charge, indoor fan, heat exchanger and filters",
+        "Compare the 63LS reading on the maintenance monitor with a gauge on the low-side port",
+        "Confirm all service valves are fully open (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-P200 Service Handbook, Error Code [1301] (p.181); PUHY-HP72 Service Handbook [1301] (p.130); CityMultiErrorCode.pdf (1301 'Low pressure fault')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "1302",
+      "meaning": "High pressure fault (abnormal high pressure; 63H high-pressure switch operated or 63HS above the limit; on the second stop of the outdoor unit for high pressure the outdoor unit makes an error stop and 1302 is displayed)",
+      "likelyCauses": [
+        "Outdoor fan not running / fan inverter fault (cooling)",
+        "Dirty or blocked outdoor coil, short-circuited discharge air",
+        "Indoor airflow restriction in heating (filters, closed dampers)",
+        "Closed service valve",
+        "Refrigerant overcharge or non-condensables",
+        "63HS high-pressure sensor or 63H switch / wiring fault"
+      ],
+      "checks": [
+        "Per handbook: check the fan on the outdoor unit; check the high-pressure sensor 63HS and the 63H switch connector",
+        "Actual head pressure at the gauge versus the 63HS value on the maintenance monitor",
+        "Verify all service valves fully open and the outdoor coil clean (field practice)",
+        "Reset by cycling power at the outdoor unit after the cause is corrected"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-P200 Service Handbook, Error Code [1302] (During operation) (p.182); CityMultiErrorCode.pdf (1302 'High pressure fault - check the fan on the outdoor unit')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "1500",
+      "meaning": "Refrigerant overcharge (detected from excessive subcooling / discharge superheat)",
+      "likelyCauses": [
+        "System overcharged (wrong additional-charge calculation for piping length)",
+        "LEV1 / LEV2 (outdoor subcool LEV) malfunction",
+        "Thermistor fault giving a false low discharge superheat"
+      ],
+      "checks": [
+        "Per handbook: check refrigerant charge; check LEV1/LEV2",
+        "Recalculate the additional charge from the as-built piping lengths and weigh out refrigerant if over (field practice)",
+        "Compare TH4 discharge temperature and 63HS on the maintenance monitor"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (1500 'Refrigerant overcharge - check refrigerant charge, check LEV1/LEV2'); PURY-P72 Service Handbook Error Code Lists (p.204)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "1501",
+      "meaning": "Refrigerant shortage / suction pressure fault (high compressor shell temperature or low suction pressure caused by insufficient refrigerant)",
+      "likelyCauses": [
+        "Refrigerant leak / undercharge",
+        "Insufficient indoor units running (low index) with long piping",
+        "Closed or partly closed service valve",
+        "LEV stuck closed on the circuit"
+      ],
+      "checks": [
+        "Per secondary list: check for shortage of gas; check for insufficient indoor index running",
+        "Leak search and weigh-in charge to the nameplate plus additional-charge calculation (field practice)",
+        "Compare TH15 shell-bottom / TH4 discharge temperature and 63LS suction pressure on the maintenance monitor"
+      ],
+      "severity": "shutdown",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 1501 'High compressor shell temp - check for shortage of gas, insufficient indoor index running'); PURY-P72 Service Handbook Error Code Lists (p.204) lists 1501 next to 1500 (preliminary suction pressure fault); becoolrefrigeration.co.uk list",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "2500",
+      "meaning": "Drain sensor submergence (water detected at the drain sensor; leakage or drain pump problem on an indoor unit)",
+      "likelyCauses": [
+        "Blocked condensate drain or drain pan",
+        "Failed drain pump or pump not powered",
+        "Drain sensor / float switch wiring",
+        "Water leaking from the humidifier or pan onto the sensor"
+      ],
+      "checks": [
+        "Per source: drain sensor is submerged or the drain pump has failed - check the pump, pan and drain line",
+        "Pour water into the pan and confirm the pump runs and the line drains (field practice)",
+        "Check drain sensor resistance and connector"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (2500 'Drain sensor submergence'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "2502",
+      "meaning": "Drain pump fault (models with a drain sensor or a float switch: the indoor unit detected that water is not leaving the pan / float switch operated)",
+      "likelyCauses": [
+        "Drain pump failed or its connector loose",
+        "Blocked drain line or trap, pan overflow",
+        "Float switch stuck or wiring open",
+        "Drain sensor fault (models with drain sensor)"
+      ],
+      "checks": [
+        "Per handbook [2502]: check drain pump operation and the drain sensor / float switch wiring and connector",
+        "Confirm 230 V (or board output) at the pump connector when the fault is active (field practice)",
+        "Clear the drain line, clean the pan, test with water"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Code [2502] (Models with a drain sensor) (p.197) and (Models with a float switch) (p.198); CityMultiErrorCode.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "2503",
+      "meaning": "Drain sensor (Thd) fault (drain sensor thermistor open/short or disconnected)",
+      "likelyCauses": [
+        "Drain sensor disconnected from the indoor board",
+        "Drain sensor thermistor open/short",
+        "Indoor control board input fault"
+      ],
+      "checks": [
+        "Check the drain sensor connector on the indoor board and the sensor resistance versus the thermistor table",
+        "Replace the drain sensor if open/short; if normal, suspect the indoor board (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (2503 'Drain sensor (Thd) fault'); CMB-WP1016V-GA1 Service Handbook Error Code Lists (p.120)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "2600",
+      "meaning": "Water leakage (water leak from humidifier)",
+      "likelyCauses": [
+        "Humidifier water supply / overflow",
+        "Leak sensor wet"
+      ],
+      "checks": [
+        "Inspect the humidifier feed, float valve and overflow; dry and reset"
+      ],
+      "severity": "warning",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 2600 'water leak from humidifier'); CityMultiErrorCode.pdf (2600 'Water leakage')",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4100",
+      "meaning": "Compressor overcurrent protection (overcurrent break / compressor current interruption)",
+      "likelyCauses": [
+        "Closed stop valve",
+        "Low power supply voltage",
+        "Loose, disconnected or reversed compressor wiring",
+        "Locked or failing compressor",
+        "Defective outdoor power / inverter board"
+      ],
+      "checks": [
+        "Per source: check inverter or compressor; check power supply, stop valves and compressor wiring",
+        "Compressor winding resistance and megohm to ground with power off (field practice)",
+        "Supply voltage under load on all phases"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (4100 'Compressor overcurrent protection'); Mitsubishi City Multi Error Code List (baileyharris mirror: 'Compressor over current protection on Mr Slim with M-net interface - check inverter or compressor'); MrSlimerrorCode.pdf (4100 <UF> compressor current interruption, locked compressor)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4102",
+      "meaning": "Open phase (loss of phase in the power supply)",
+      "likelyCauses": [
+        "One supply leg lost (blown fuse, loose lug)",
+        "Noise filter / power board fault",
+        "Wiring error at the terminal block"
+      ],
+      "checks": [
+        "Per source: check the power supply and noise filter for loss of phase; check wiring and fuses",
+        "Measure all three phase-to-phase voltages at TB1 under load (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 4102 'open phase fault'); CityMultiErrorCode.pdf",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4103",
+      "meaning": "Reverse phase / open phase detection (abnormal phase sequence of the three-phase supply)",
+      "likelyCauses": [
+        "Two power legs swapped at the outdoor unit terminal block",
+        "Lost phase / blown fuse on one leg",
+        "Voltage imbalance or utility problem"
+      ],
+      "checks": [
+        "Phase rotation at L1/L2/L3 with a rotation meter; swap two legs at the outdoor terminal block only (field practice)",
+        "Voltage on all three phases at the terminal block, imbalance under 2%"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (4103 'Reverse phase / open phase'); PURY-HP72 Service Handbook Error Code Lists (p.186)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4108",
+      "meaning": "Overcurrent protection (DOL / non-inverter compressor or fan motor overcurrent relay 51C operated)",
+      "likelyCauses": [
+        "Power supply voltage low or phase loss",
+        "Contactor contact failure",
+        "Compressor mechanically tight or shorted winding",
+        "Overload relay setting / fault"
+      ],
+      "checks": [
+        "Per source: check power supply, contactor and compressor",
+        "Running amps per phase versus nameplate RLA; winding resistance balance (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 4108 'Overcurrent protection on DOL compressor - check power supply, contactor and compressor'); CityMultiErrorCode.pdf (4108 'Overcurrent protection')",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4115",
+      "meaning": "Power supply signal sync error (power synchronization / input circuit (board) failure - electrical system cannot operate because of the power supply)",
+      "likelyCauses": [
+        "Unstable supply frequency or voltage",
+        "Noise on the power line",
+        "Input circuit on the outdoor control board failed"
+      ],
+      "checks": [
+        "Per handbook [4115]: check the power supply voltage/frequency; if normal, replace the control board (input circuit failure)",
+        "Check ground and shielding of power and transmission wiring (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-P200YLM-A(1) Service Handbook, Error Code [4115] (p.252); CityMultiErrorCode.pdf (4115 'Power supply signal sync error')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4116",
+      "meaning": "Fan speed abnormality / motor abnormality (RPM error on an indoor unit or Lossnay fan motor)",
+      "likelyCauses": [
+        "Fan motor failure (indoor unit or Lossnay)",
+        "Fan board / indoor board fault",
+        "Fan obstructed or bearing seized"
+      ],
+      "checks": [
+        "Per source: check the fan motor and the board (indoor unit or Lossnay unit)",
+        "Spin the fan by hand for drag; check motor connector and the fan tach/feedback wiring (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-P200YLM-A(1) Service Handbook, Error Code [4116] (p.252); CityMultiErrorCode.pdf (4116 'RPM error / motor error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4200",
+      "meaning": "Inverter abnormality (VDC sensor / circuit failure on the inverter)",
+      "likelyCauses": [
+        "Inverter board failure",
+        "Bus voltage sensing circuit fault"
+      ],
+      "checks": [
+        "Read the inverter detail code on the outdoor LED display (SW1 setting per handbook)",
+        "Check DC bus voltage and the inverter board connectors; replace INV board if it recurs"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (4200 'Inverter abnormality'); errorcodeairconditioning.blogspot City Multi list",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4210",
+      "meaning": "Compressor overcurrent interruption (inverter overcurrent break) / failure in the 12 VDC power supply circuit on the power circuit board",
+      "likelyCauses": [
+        "Closed outdoor stop valve",
+        "Decreased power supply voltage",
+        "Loose or disconnected compressor wiring",
+        "Malfunction of indoor/outdoor fan",
+        "Compressor or inverter board failure"
+      ],
+      "checks": [
+        "Per source: check stop valves, supply voltage, compressor wiring and fan operation",
+        "Compressor winding resistance and megohm to ground; inverter output voltage balance (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "MrSlimerrorCode.pdf (4210 <UP> 'Compressor overcurrent interruption / failure in 12 VDC power supply circuit'); CityMultiErrorCode.pdf (4210 'Overcurrent break')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4220",
+      "meaning": "Abnormal bus voltage drop / bus voltage abnormality (e.g. detail code 108: Vdc 289 V or less detected during inverter operation)",
+      "likelyCauses": [
+        "Power supply voltage low or momentary interruption",
+        "Loose power wiring / weak contactor",
+        "Inverter board, noise filter or DC reactor fault",
+        "Failing smoothing capacitor"
+      ],
+      "checks": [
+        "Per handbook: check that the supply voltage (L1-L2, L2-L3, L1-L3) is not 342 V or less on any phase; check inverter board / noise filter / fan board / control board wiring; if the problem recurs replace the INV board",
+        "Read the detail code (108 etc.) from the outdoor LED display to identify the sub-fault (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [4220, 4225] Detail Code 108 (p.208); CityMultiErrorCode.pdf (4220 'Bus voltage abnormality')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4230",
+      "meaning": "Heatsink overheat protection (inverter radiating thermostat / heat-sink temperature abnormality)",
+      "likelyCauses": [
+        "Heat-sink cooling air passage blocked (dirt, debris)",
+        "Outdoor fan or fan inverter board not running",
+        "Heat-sink thermistor THHS fault",
+        "High ambient at the electrical box"
+      ],
+      "checks": [
+        "Per handbook: check the fan inverter board and outdoor unit fan; ensure the heat-sink cooling air passage is not blocked",
+        "Compare THHS on the maintenance monitor with the actual heat-sink temperature (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (4230 'Heatsink overheat protection'); PURY-HP72 Service Handbook Error Code Lists (p.186)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4240",
+      "meaning": "Overload protection (over-current protection: high current detected for more than 10 minutes)",
+      "likelyCauses": [
+        "Compressor running heavy (high head, overcharge, restriction)",
+        "Inverter current imbalance",
+        "Low supply voltage"
+      ],
+      "checks": [
+        "Per source: if high current is detected for more than 10 minutes, check inverter balance",
+        "Check operating pressures and airflow for the cause of high load (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 4240 'over current protection ... check inverter balance'); CityMultiErrorCode.pdf (4240 'Overload protection')",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4250",
+      "meaning": "IPM error / power module abnormality / overcurrent protection (the IPM on the inverter detected a short, ground fault, or instantaneous overcurrent; detail codes e.g. [101] IPM error, [102] ACCT overcurrent (H/W detection))",
+      "likelyCauses": [
+        "Shorted or grounded compressor motor winding",
+        "Inverter board (IPM) failure",
+        "Bad current sensor (ACCT)",
+        "Voltage imbalance from the building service",
+        "Compressor drawing high amps from mechanical wear"
+      ],
+      "checks": [
+        "Per handbook: read the detail code; check compressor winding resistance and insulation, the inverter output and the ACCT sensor; replace INV board if the inverter test fails",
+        "Measure phase-to-phase supply voltage balance (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [4250, 4255] Detail Code 104 (p.218); CityMultiErrorCode.pdf (4250 'IPM/bus voltage abnormality / power module abnormality'); mountainmechanicalny.com (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "4260",
+      "meaning": "Preliminary inverter heat sink overheat protection (heat-sink overheat protection at startup / fan control)",
+      "likelyCauses": [
+        "Heat-sink cooling passage blocked",
+        "Fan inverter board / outdoor fan fault",
+        "THHS thermistor fault"
+      ],
+      "checks": [
+        "Per handbook: check the fan inverter board, outdoor unit fan and the heat-sink cooling air passage",
+        "See 4230"
+      ],
+      "severity": "warning",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 4260 'preliminary inverter heat sink overheat protection'); CityMultiErrorCode.pdf",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "4300",
+      "meaning": "Serial communication error (communication lost between control board and inverter / panel)",
+      "likelyCauses": [
+        "Loose board-to-board connector",
+        "INV board or control board failure",
+        "Noise"
+      ],
+      "checks": [
+        "Check the connectors between the control board and the INV board; cycle power; replace the board named by the detail code if it recurs (field practice, from the 0403 procedure)"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (4300 'Serial communication error'); errorcodeairconditioning.blogspot City Multi list (4300 'Serial communication error / panel communication error')",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "5101",
+      "meaning": "Temperature sensor fault (thermistor open/short). Indoor unit source: intake (return-air) temperature TH21. Outdoor unit source varies by generation (discharge / suction thermistor) - read the attribute/address shown with the code",
+      "likelyCauses": [
+        "Thermistor disconnected from the board",
+        "Thermistor open or shorted / harness damage",
+        "Indoor or outdoor control board input fault"
+      ],
+      "checks": [
+        "Per handbook: if a short (high-temperature reading) or open (low-temperature reading) is detected, the unit stops and enters 3-minute anti-restart mode; if detected again after the restart the error stop occurs. Check the thermistor resistance (about 6.4 kOhm at 20 C, 4.3 kOhm at 30 C, 3.1 kOhm at 40 C for the standard element) and the connector contacts",
+        "Compare the sensor value on the maintenance monitor with a reference thermometer (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [5101, 5102, 5103, 5104] (p.221); CityMultiErrorCode.pdf (5101 'Temperature sensor fault - TH21 intake')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5102",
+      "meaning": "Temperature sensor fault (thermistor open/short). Indoor unit source: liquid pipe temperature TH22. Outdoor unit source (PUHY/PURY): HIC bypass circuit outlet temperature TH2",
+      "likelyCauses": [
+        "Thermistor disconnected, open or shorted",
+        "Harness or connector corrosion",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per handbook: check thermistor resistance against the table and connector contacts; replace the thermistor; if no fault is found the board may be faulty",
+        "Unit enters 3-minute anti-restart on first detection; error stop on the second"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [5101, 5102, 5103, 5104] (p.221); PUHY-HP72 Service Handbook [5102...5115] (p.160); CityMultiErrorCode.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5103",
+      "meaning": "Temperature sensor fault (thermistor open/short). Indoor unit source: gas pipe temperature TH23. Outdoor unit source (PUHY/PURY): pipe temperature at heat exchanger outlet TH3",
+      "likelyCauses": [
+        "Thermistor disconnected, open or shorted",
+        "Harness damage",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per handbook: check thermistor resistance against the table and the connector on the board; replace if open/short"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-P200YLM-A(1) Service Handbook, Error Codes [5103...5112] (p.266); CityMultiErrorCode.pdf (5103 'gas-side pipe temperature')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5104",
+      "meaning": "Temperature sensor fault (thermistor open/short). Outdoor unit source (PUHY/PURY HP/YLM generation): outdoor unit discharge temperature TH4; on older lists 5104 is shown as the outside-air temperature sensor - confirm with the attribute/address displayed",
+      "likelyCauses": [
+        "Discharge thermistor TH4 disconnected, open or shorted",
+        "Sensor out of its well / harness chafed on hot pipe",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per handbook: check TH4 resistance and connector; unit enters 3-minute anti-restart on first detection, error stop on recurrence",
+        "Verify the sensor is seated in its holder on the discharge line (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [5104, 5105, 5106, 5107, 5109, 5111] (p.222); PUHY-HP72 Service Handbook (p.160); CityMultiErrorCode.pdf (5104 'Outside temperature' on older units)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5105",
+      "meaning": "Temperature sensor fault - thermistor TH5 open/short (outdoor unit; e.g. accumulator inlet / pipe temperature depending on model)",
+      "likelyCauses": [
+        "TH5 thermistor disconnected, open or shorted",
+        "Harness damage",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per handbook: check TH5 resistance versus the thermistor table and its connector on the control board"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Codes [5104, 5105, 5106, 5107, 5109, 5111] (p.222); Mitsubishi City Multi Error Code List (baileyharris mirror: 5105-5110 'open/short circuit of TH5-TH10')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5106",
+      "meaning": "Temperature sensor fault - HIC circuit outlet temperature TH6 (thermistor open/short)",
+      "likelyCauses": [
+        "TH6 thermistor disconnected, open or shorted",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per source: check if the thermistor is disconnected from the board; check resistance versus the table"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-HP72 Service Handbook, Error Codes [5102...5115] (p.160); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5107",
+      "meaning": "Temperature sensor fault - outside (ambient) temperature TH7 (thermistor open/short)",
+      "likelyCauses": [
+        "TH7 thermistor disconnected, open or shorted",
+        "Harness damage at the coil guard",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per source: check if the thermistor is disconnected from the board; check resistance versus the table and compare with actual ambient"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-HP72 Service Handbook, Error Codes [5102...5115] (p.160); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5110",
+      "meaning": "Temperature sensor fault - heat-sink temperature THHS (inverter heat-sink thermistor open/short; backup operation possible)",
+      "likelyCauses": [
+        "THHS thermistor on the INV board open/short",
+        "INV board failure"
+      ],
+      "checks": [
+        "Per source: if the problem recurs when the unit is put into operation, replace the INV board",
+        "Read the inverter detail code on the outdoor LED display"
+      ],
+      "severity": "warning",
+      "source": "CityMultiErrorCode.pdf (5110 'Temperature sensor fault - heatsink THHS'); snowflakeaircon.sg 5110 page; Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5115",
+      "meaning": "Compressor shell bottom temperature sensor fault (TH15 thermistor open/short)",
+      "likelyCauses": [
+        "TH15 thermistor disconnected, open or shorted",
+        "Control board input fault"
+      ],
+      "checks": [
+        "Per handbook: check TH15 resistance versus the table and its connector"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-HP72 / PUHY-P250YNW-A Service Handbooks, Error Codes [5102,5103,5104,5105,5106,5107,5115] (p.160 / p.163)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5201",
+      "meaning": "Pressure sensor fault (high-pressure sensor 63HS open/short or reading out of range)",
+      "likelyCauses": [
+        "63HS disconnected or wiring damaged",
+        "63HS sensor failure",
+        "Control board input circuit fault"
+      ],
+      "checks": [
+        "Compare the 63HS value on the maintenance monitor with a gauge on the high-side port; check the sensor connector and output voltage per the handbook (field practice + handbook)",
+        "Swap in a known-good sensor if the reading is implausible"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (5201 'Pressure sensor fault'); Logicool City Multi Codes.pdf; PURY-HP72 Service Handbook Error Code Lists (p.186)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5301",
+      "meaning": "Current sensor / circuit fault (IAC / ACCT sensor or circuit failure; also raised for open-circuited IPM or loose connector wiring; backup operation, detail codes 116/117/120)",
+      "likelyCauses": [
+        "ACCT current sensor open or unplugged",
+        "IPM output open (inverter board)",
+        "Loose compressor wiring at the inverter",
+        "INV board circuit failure"
+      ],
+      "checks": [
+        "Per handbook: check the inverter error detail code, the resistance of the current sensor and the connections of the sensors",
+        "Confirm compressor wiring is tight at the INV board terminals (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PURY-HP72 Service Handbook, Error Code [5301] Detail Code 116/117 (p.227) and Detail Code 120 (p.230); CityMultiErrorCode.pdf (5301 'Current sensor fault'); Logicool City Multi Codes.pdf ('error of circuit, IAC sensor')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "5701",
+      "meaning": "Condensate pan float switch (float switch contact / connector abnormality)",
+      "likelyCauses": [
+        "Float switch connector disconnected",
+        "Float switch stuck or wiring open"
+      ],
+      "checks": [
+        "Check the float switch connector on the indoor board and switch continuity in both positions (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Mitsubishi City Multi Error Code List (baileyharris/mcsprogram mirror: 5701 'condensate pan float switch'); CityMultiErrorCode.pdf",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "6600",
+      "meaning": "Duplex address error (there are 2 units or more with the same address in their controller among outdoor unit, indoor unit, Fresh Master, Lossnay or remote controller)",
+      "likelyCauses": [
+        "Two or more units set to the same M-NET address",
+        "Noise interference on indoor/outdoor transmission connectors"
+      ],
+      "checks": [
+        "Per handbook: find the units with the duplicated address (the code shows the address/attribute), change the address switches and reset the units (power cycle)",
+        "Check shield grounding of the transmission line if addresses are correct (noise)"
+      ],
+      "severity": "warning",
+      "source": "PURY-HP72 Service Handbook, Error Code [6600] (p.235); PURY-P200YLM-A(1) Service Handbook [6600] (p.276); PUHY-EP250 Service Handbook [6600] (p.190)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6602",
+      "meaning": "Transmission processor hardware error (a transmitting data collision occurred because wiring work or a polarity change was performed while the power was ON on an indoor/outdoor unit, Fresh Master or Lossnay; or malfunction of the transmitting circuit; or noise on the transmission line)",
+      "likelyCauses": [
+        "Transmission wiring altered with power on",
+        "Transmission circuit failure on the unit's board (possibly Lossnay board)",
+        "Noise interference on the M-NET line"
+      ],
+      "checks": [
+        "Per source: check comms wiring; power down all units and restart; if it persists on one address suspect that unit's board (e.g. Lossnay board)",
+        "Verify shield is grounded at the outdoor unit only (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PURY-HP72 Service Handbook Error Code Lists (p.186) / [6602] definition as reproduced in search; Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6603",
+      "meaning": "Transmission bus BUSY error (transmission cannot be performed for 4-10 consecutive minutes due to collision of data transmission, or the command cannot be transmitted for 4-10 minutes in a row due to noise)",
+      "likelyCauses": [
+        "Short-cycle voltage such as noise mixed on the transmission line",
+        "Increase of transmission data caused by miswiring of TB3 (indoor/outdoor transmission) and TB7 (centralized control) on the outdoor unit",
+        "Too many devices / transmission booster missing"
+      ],
+      "checks": [
+        "Per handbook: check that TB3 on the OC and OS are properly connected and TB3/TB7 are not cross-wired; reset power to the outdoor unit",
+        "Measure M-NET DC voltage at TB3/TB7 and check shield grounding (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PEFY-P72NMHSU-E Technical & Service Manual, Transmission line bus busy error (p.38); CityMultiErrorCode.pdf (6603 'Transmission bus BUSY error')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6606",
+      "meaning": "Signal communication error with transmission processor (communication error between the device processor and the transmission processor on the same board)",
+      "likelyCauses": [
+        "Board fault on the unit named by the address",
+        "Noise / low M-NET voltage",
+        "Power supply to the M-NET line unstable"
+      ],
+      "checks": [
+        "Per source: check M-NET voltage",
+        "Power cycle the unit named by the code; if it recurs replace that unit's control board (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PEFY-P72NMHSU-E Technical & Service Manual, Communication error between device and transmission processors (p.38); CityMultiErrorCode.pdf (6606); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6607",
+      "meaning": "No ACK error (no acknowledgement returned from the addressed unit on the M-NET transmission line while the system is operating; error source address and attribute (OC/IC/BC/Lc/RC) are displayed with the code)",
+      "likelyCauses": [
+        "Transmission wiring (M1/M2) open, shorted or poor terminal on the unit named",
+        "Unit powered down or its address changed",
+        "Address setting duplicated or wrong",
+        "Transmission booster / M-NET power supply failed"
+      ],
+      "checks": [
+        "Per handbook [6607] (by error source address): check power and transmission wiring to the unit named; check its address switch; confirm the transmission booster is powered",
+        "M-NET DC bus voltage at TB3/TB7 (about 24-30 VDC) and continuity/polarity of the shielded 2-wire line (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PURY-HP72 Service Handbook, Error Code [6607] Error source address = Lossnay (Lc) (p.240) and adjoining [6607] pages; CityMultiErrorCode.pdf (6607 'No ACK error')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6608",
+      "meaning": "No response frame error (the addressed unit acknowledged but did not return a response frame within the time limit)",
+      "likelyCauses": [
+        "Noise on the transmission line",
+        "Transmission line voltage low / booster problem",
+        "Board fault on the unit named"
+      ],
+      "checks": [
+        "Check M-NET voltage and shield grounding; power cycle the affected unit; if repeated on one address suspect its board (field practice)"
+      ],
+      "severity": "warning",
+      "source": "CityMultiErrorCode.pdf (6608 'No response frame error'); PURY-HP72 Service Handbook Error Code Lists (p.186)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6831",
+      "meaning": "MA communication receive error (no receive signal) - communication between the MA remote controller and the indoor unit is not done properly",
+      "likelyCauses": [
+        "MA remote controller wiring (A/B) disconnected, shorted or poor contact",
+        "More remote controllers or indoor units in the group than allowed",
+        "Remote controller main/sub setting wrong",
+        "Noise on the remote controller line",
+        "Remote controller or indoor board failure"
+      ],
+      "checks": [
+        "Per handbook [6831]: check the remote controller wiring, the number of controllers/indoor units in the group (limits), the main/sub setting and the power supply to the remote controller (indoor LED2 shows MA line power)",
+        "Measure DC voltage on the A/B remote controller terminals (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PURY-HP72 Service Handbook, Error Code [6831] (p.246); PURY-P200YLM-A(1) Service Handbook [6831] (p.287); PUMY-P200YKM Technical & Service Manual 'MA communication receive error' (p.81)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6832",
+      "meaning": "MA communication send error (synchronous recovery error)",
+      "likelyCauses": [
+        "Remote controller wiring problem or noise",
+        "Two MA remote controllers both set as main",
+        "Remote controller / indoor board failure"
+      ],
+      "checks": [
+        "Same checks as 6831: wiring, group count, main/sub setting, noise"
+      ],
+      "severity": "warning",
+      "source": "CityMultiErrorCode.pdf (6832 'MA communication send error'); PURY-HP72 Service Handbook Error Code Lists (p.186); Mitsubishi City Multi Error Code List (baileyharris mirror: 'synchronous recovery error')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6833",
+      "meaning": "MA communication send error (H/W error)",
+      "likelyCauses": [
+        "Remote controller circuit failure",
+        "Indoor board MA transmission circuit failure",
+        "Short on the remote controller line"
+      ],
+      "checks": [
+        "Disconnect the remote controller and check the line for shorts; swap the remote controller; if persistent replace the indoor board (field practice)"
+      ],
+      "severity": "warning",
+      "source": "CityMultiErrorCode.pdf (6833 'MA communication send error (H/W error)'); PURY-HP72 Service Handbook Error Code Lists (p.186)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "6834",
+      "meaning": "MA communication receive error (start bit detection error) - MA controller signal reception error",
+      "likelyCauses": [
+        "Noise or poor connection on the MA remote controller line",
+        "Exceeded remote controller wiring length",
+        "Remote controller or indoor board failure"
+      ],
+      "checks": [
+        "Per handbook [6834]: check the remote controller wiring and connections, the wiring length and noise sources; check the main/sub setting",
+        "Reseat the A/B terminals at both ends (field practice)"
+      ],
+      "severity": "warning",
+      "source": "PEFY-P72NMHSU-E Technical & Service Manual, Error code 6834 MA controller signal reception error (start bit detection error) (p.51); PURY-HP72 Service Handbook [6834] (p.249)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7100",
+      "meaning": "Total capacity error (the total capacity of the connected indoor units exceeds the limit for the outdoor unit)",
+      "likelyCauses": [
+        "Too many / too large indoor units connected (over the allowed connection ratio)",
+        "Indoor unit capacity code (SW2) set wrong",
+        "Outdoor unit model/capacity setting wrong"
+      ],
+      "checks": [
+        "Per handbook [7100]: check the total capacity of the indoor units against the outdoor unit limit and the capacity code switch settings; correct and reset power",
+        "Secondary: PURY (R2) allows up to 150% of outdoor capacity, PUHY/PUMY up to 130%"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-P200 Service Handbook, Error Code Definitions and Solutions: Codes [7000-7999], Error Code [7100] (p.235); PURY-HP72 Service Handbook [7100] (p.250); CityMultiErrorCode.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7101",
+      "meaning": "Capacity code setting error (the model name/capacity code set by the switch differs from the unit connected)",
+      "likelyCauses": [
+        "SW2 capacity code on the indoor unit board set wrong",
+        "Outdoor unit model switch (e.g. SW5 on YHM units) set wrong"
+      ],
+      "checks": [
+        "Per source: check the model name (capacity code) of the indoor unit which has the error source address, set by SW2 on the indoor board; when it differs from the unit connected, turn off power and correct the capacity code"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-YMC Installation Manual, How to cope with test run abnormality (p.35); CityMultiErrorCode.pdf (7101 'Capacity code error')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7102",
+      "meaning": "Connecting unit number error (the number of units connected to the outdoor terminal block TB3 exceeds the limitation, or units are missing)",
+      "likelyCauses": [
+        "Too many indoor units / BC controllers on TB3",
+        "Loss of M-NET voltage so units are not counted",
+        "Wiring between OC and OS / BC incorrect"
+      ],
+      "checks": [
+        "Per source: check whether the number of units connected to the outdoor terminal block (TB3) for indoor/outdoor transmission lines does not exceed the limitation",
+        "Check M-NET voltage at TB3 (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PUHY-YMC Installation Manual, How to cope with test run abnormality (p.35); CityMultiErrorCode.pdf (7102 'Connecting unit number error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7105",
+      "meaning": "Address setting error (a unit's address is outside the allowed range for its type: OC 51-100, IC 1-50, BC 52-100, RC 101-150 etc.)",
+      "likelyCauses": [
+        "Address switches set outside the valid range",
+        "Indoor address higher than allowed, or outdoor address not set +50"
+      ],
+      "checks": [
+        "Per source: check the address setting on the unit named by the code and set it within the range for that unit type; power cycle"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7105 'Address setting error'); Mitsubishi City Multi Error Code List (baileyharris mirror); Logicool City Multi Codes.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7106",
+      "meaning": "Attribute setting error",
+      "likelyCauses": [
+        "Unit attribute (type) setting inconsistent with its address / group"
+      ],
+      "checks": [
+        "Check the unit's address and attribute settings against the system layout; correct and power cycle"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7106 'Attribute setting error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "7107",
+      "meaning": "Port setting error (BC controller port setting incorrect)",
+      "likelyCauses": [
+        "Indoor unit assigned to a BC port that does not match the piping/port setting",
+        "Port number switch set wrong"
+      ],
+      "checks": [
+        "Check BC controller port assignments (SW on the indoor unit or BC) against the piping; correct and power cycle"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7107 'Port setting error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "7110",
+      "meaning": "Connection information signal transmission/reception error",
+      "likelyCauses": [
+        "Transmission booster powered off (e.g. booster fed from a switched indoor unit circuit)",
+        "TB3 on OC and OS not properly connected",
+        "Outdoor model selection switch (SW5-7) set wrong"
+      ],
+      "checks": [
+        "Per source: confirm the transmission booster power is not cut off and the booster is on; confirm TB3 on OC and OS are properly connected; check the model selection switch (SW5-7) on the outdoor control board"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7110 'Connection information signal transmission/reception error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7111",
+      "meaning": "Remote controller sensor fault (the remote controller sensor is selected (SW1-1 ON) but no controller with a sensor is connected, or the remote controller is faulty)",
+      "likelyCauses": [
+        "Indoor SW1-1 set to remote controller sensor with no wired controller / a controller without a sensor",
+        "Faulty remote controller"
+      ],
+      "checks": [
+        "Per source: SW1-1 ON and no controllers fitted, or faulty remote controller - set SW1-1 OFF or connect a controller with a built-in sensor"
+      ],
+      "severity": "warning",
+      "source": "CityMultiErrorCode.pdf (7111 'Remote controller sensor fault'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7113",
+      "meaning": "Function setting error (unit function / model-type setting inconsistent; check connector CNTYP on the control board)",
+      "likelyCauses": [
+        "Model type connector CNTYP (e.g. CNTYP5) not connected or wrong",
+        "Function setting switches wrong for the unit"
+      ],
+      "checks": [
+        "Per source: check the connector CNTYP5 on the control board for proper connection; correct function settings and power cycle"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7113 'Function setting error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7117",
+      "meaning": "Model setting error (outdoor unit model setting / model connector inconsistent)",
+      "likelyCauses": [
+        "Model setting connector CNTYP on the control board disconnected or wrong",
+        "Replacement control board not set for the unit model"
+      ],
+      "checks": [
+        "Per source: check the connector CNTYP5 on the control board for proper connection; set the model switches per the handbook after a board replacement"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7117 'Model setting error'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "7130",
+      "meaning": "Incompatible unit combination (indoor unit(s) not compatible with the connected outdoor unit / refrigerant type)",
+      "likelyCauses": [
+        "Indoor unit model not compatible with this outdoor unit generation (e.g. R22 indoor on R410A outdoor)",
+        "Mixed unit types not allowed on the same system"
+      ],
+      "checks": [
+        "Check indoor unit models against the outdoor unit's compatibility list in the installation manual; replace or reconfigure the incompatible unit"
+      ],
+      "severity": "shutdown",
+      "source": "CityMultiErrorCode.pdf (7130 'Incompatible unit combination'); Mitsubishi City Multi Error Code List (baileyharris mirror)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P1",
+      "meaning": "Abnormality of room temperature thermistor (TH1) - inspected unit: indoor",
+      "likelyCauses": [
+        "TH1 intake thermistor open/short or disconnected",
+        "Indoor board input fault"
+      ],
+      "checks": [
+        "Check TH1 resistance versus the thermistor table and its connector on the indoor board; replace if open/short"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au); MrSlimerrorCode.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P2",
+      "meaning": "Abnormality of pipe temperature thermistor / liquid (TH2) - inspected unit: indoor",
+      "likelyCauses": [
+        "TH2 liquid pipe thermistor open/short or out of its holder",
+        "Indoor board input fault"
+      ],
+      "checks": [
+        "Check TH2 resistance and connector; confirm the sensor is clipped to the liquid pipe"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P4",
+      "meaning": "Abnormality of drain sensor (DS) - inspected unit: indoor",
+      "likelyCauses": [
+        "Drain sensor open/short or disconnected",
+        "Indoor board fault"
+      ],
+      "checks": [
+        "Per source: check the drain sensor resistance and connections"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au); acerrorcode.com (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P5",
+      "meaning": "Malfunction of drain-up machine (drain pump fault / high condensate level detected) - inspected unit: indoor",
+      "likelyCauses": [
+        "Drain pump failed or not powered",
+        "Blocked drain line, tray or trap",
+        "Drain sensor / float switch wet"
+      ],
+      "checks": [
+        "Per source: inspect for blockages in the drain, tray, or possible pump failure",
+        "Pour water into the pan and verify the pump runs and drains (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P6",
+      "meaning": "Freezing/overheating protection detect (indoor coil freeze protection in cooling or overheat protection in heating) - inspected unit: indoor",
+      "likelyCauses": [
+        "Low indoor airflow (dirty filter, fan fault, blocked coil)",
+        "Low refrigerant charge (freeze)",
+        "Restricted or overcharged system (overheat)",
+        "TH2/TH5 pipe thermistor misreading"
+      ],
+      "checks": [
+        "Check filter, indoor fan speed and coil; check pipe thermistor TH2/TH5 readings; check charge and superheat/subcooling (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P8",
+      "meaning": "Abnormality of pipe temperature (pipe temperature not changing as expected - problem with the outdoor/condensing unit, e.g. compressor not running, wrong 4-way valve position, miswired S1/S2/S3) - inspected unit: indoor",
+      "likelyCauses": [
+        "Outdoor unit not running (compressor / inverter fault, open stop valve issue)",
+        "4-way valve not switching / reversed",
+        "Refrigerant leak or pipes crossed between twin/triple units",
+        "TH2/TH5 pipe thermistor loose"
+      ],
+      "checks": [
+        "Per source: P8 indicates a problem with the condensing (outdoor) unit - check the outdoor unit for an error (LED1/LED2), compressor operation and 4-way valve",
+        "Confirm pipe temperature changes after start; check thermistor placement (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au); justanswer / choosesanford P8 guides (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P9",
+      "meaning": "Abnormality of pipe temperature thermistor / condenser-evaporator (TH5) - inspected unit: indoor",
+      "likelyCauses": [
+        "TH5 thermistor open/short or disconnected",
+        "Indoor board input fault"
+      ],
+      "checks": [
+        "Check TH5 resistance versus the table and its connector on the indoor board"
+      ],
+      "severity": "shutdown",
+      "source": "Mr.Slim A-control error code list (arma.org.au); MrSlimerrorCode.pdf; PAR-21MAA Technical Manual (F/P) (p.48)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E0",
+      "meaning": "Remote controller transmission error (signal receiving error) - inspected unit: remote controller",
+      "likelyCauses": [
+        "Remote controller wiring (A/B) open, shorted or poor contact",
+        "Low voltage on the remote controller line",
+        "Two controllers both set as main, or wrong master/slave setting in grouped systems",
+        "Noise"
+      ],
+      "checks": [
+        "Per source: verify wiring, voltage and connections; if multiple systems are connected check the master/slave settings"
+      ],
+      "severity": "warning",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E1",
+      "meaning": "Remote controller control board error (remote controller fault) - inspected unit: remote controller",
+      "likelyCauses": [
+        "Remote controller board failure",
+        "Wrong addressing in a grouped system / twin system wired to a non-master indoor unit"
+      ],
+      "checks": [
+        "Per source: if grouped, check addressing; if twinned, check the controller is wired to the master indoor unit only",
+        "Replace the remote controller if the fault persists"
+      ],
+      "severity": "warning",
+      "source": "Mr.Slim A-control error code list (arma.org.au) / Mitsubishi Mr Slim Error Codes (scribd) - E1 'Remote controller control board error'; becoolrefrigeration.co.uk",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "E2",
+      "meaning": "Remote controller control board error (remote controller fault) - inspected unit: remote controller",
+      "likelyCauses": [
+        "Remote controller board failure",
+        "Grouping / twin wiring or addressing error"
+      ],
+      "checks": [
+        "Per source: if grouped, check addressing; if twinned, check the controller is wired to the master indoor only",
+        "Replace the remote controller if the fault persists"
+      ],
+      "severity": "warning",
+      "source": "Mr.Slim A-control error code list (arma.org.au) / Mitsubishi Mr Slim Error Codes (scribd) - E2 'Remote controller control board error'; becoolrefrigeration.co.uk",
+      "evidence": "multi_secondary"
+    },
+    {
+      "code": "E3",
+      "meaning": "Remote controller transmission error (transmitting error) - inspected unit: remote controller",
+      "likelyCauses": [
+        "Remote controller line noise or collision (two main controllers)",
+        "Wiring fault on the A/B line",
+        "Remote controller board fault"
+      ],
+      "checks": [
+        "Check the A/B wiring, the main/sub setting of each controller and for noise sources; swap the controller if it persists"
+      ],
+      "severity": "warning",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E4",
+      "meaning": "Remote controller transmission error (signal receiving error) - inspected unit: indoor",
+      "likelyCauses": [
+        "Remote controller wiring open or poor contact at the indoor board",
+        "Indoor board remote controller circuit fault",
+        "Noise"
+      ],
+      "checks": [
+        "Check the remote controller wiring at the indoor unit terminal block and connector; check DC voltage on the line; swap controller / indoor board"
+      ],
+      "severity": "warning",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E5",
+      "meaning": "Remote controller transmission error (transmitting error) - inspected unit: indoor",
+      "likelyCauses": [
+        "Indoor board transmission circuit fault",
+        "Noise or collision on the remote controller line"
+      ],
+      "checks": [
+        "Check the remote controller line for shorts/noise; power cycle; replace the indoor board if persistent"
+      ],
+      "severity": "warning",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E6",
+      "meaning": "Indoor/outdoor unit transmission error (signal receiving error) - inspected unit: indoor",
+      "likelyCauses": [
+        "S1/S2/S3 wiring between indoor and outdoor open, miswired or wrong polarity",
+        "Outdoor unit not powered / outdoor board fault",
+        "Noise or unshielded interconnect cable",
+        "Indoor board receive circuit fault"
+      ],
+      "checks": [
+        "Per source: check the S1/S2/S3 wiring between units, verify cable polarity and proper shielding of communication lines",
+        "Measure voltage S2-S3 (DC, varies) and S1-S2 (line voltage) at the indoor terminal block (field practice)",
+        "Check the outdoor unit LED1/LED2 for a corresponding outdoor-side code"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); MrSlimerrorCode.pdf (E6/E7 examples: connector problems, miswiring, communication errors); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E7",
+      "meaning": "Indoor/outdoor unit transmission error (transmitting error) - inspected unit: indoor",
+      "likelyCauses": [
+        "Indoor board transmit circuit fault",
+        "S1/S2/S3 wiring fault or noise",
+        "Outdoor board fault"
+      ],
+      "checks": [
+        "Check S1/S2/S3 wiring, polarity and shielding; power cycle both units; replace the indoor board if E7 persists with good wiring"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); MrSlimerrorCode.pdf; Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E8",
+      "meaning": "Indoor/outdoor unit transmission error (signal receiving error) - inspected unit: outdoor",
+      "likelyCauses": [
+        "S1/S2/S3 wiring fault or noise",
+        "Indoor unit not sending (indoor board fault)",
+        "Outdoor board receive circuit fault"
+      ],
+      "checks": [
+        "Check S1/S2/S3 wiring and polarity; check the indoor board; replace the outdoor board if persistent"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E9",
+      "meaning": "Indoor/outdoor unit transmission error (transmitting error) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Outdoor board transmit circuit fault",
+        "S1/S2/S3 wiring fault or noise"
+      ],
+      "checks": [
+        "Check S1/S2/S3 wiring and polarity; power cycle; replace the outdoor board if persistent"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (E) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F1",
+      "meaning": "Reverse phase detection (three-phase outdoor unit)",
+      "likelyCauses": [
+        "Two supply legs swapped at the outdoor unit",
+        "Phase loss"
+      ],
+      "checks": [
+        "Check phase rotation and all three phase voltages at the outdoor terminal block; swap two legs at the outdoor unit if reversed"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F2",
+      "meaning": "L3 open phase detection",
+      "likelyCauses": [
+        "L3 supply leg lost (fuse, loose lug, breaker pole)"
+      ],
+      "checks": [
+        "Measure L3 to L1/L2 at the outdoor terminal block; check fuses and connections upstream"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F3",
+      "meaning": "63L connector open (low-pressure switch 63L circuit open at the outdoor board)",
+      "likelyCauses": [
+        "63L low-pressure switch connector unplugged",
+        "Low-pressure switch open (low charge) or wiring broken"
+      ],
+      "checks": [
+        "Check the 63L connector and switch continuity on the outdoor board; check low-side pressure if the switch is open"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F4",
+      "meaning": "49C connector open (compressor internal thermostat / overload 49C circuit open at the outdoor board)",
+      "likelyCauses": [
+        "49C connector unplugged",
+        "Compressor internal overload open (hot compressor) or wiring broken"
+      ],
+      "checks": [
+        "Check the 49C connector on the outdoor board; let the compressor cool and re-check continuity; investigate the cause of overheating (charge, airflow)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F7",
+      "meaning": "Reverse phase detection circuit (p.c. board) fault",
+      "likelyCauses": [
+        "Outdoor control board phase detection circuit failure"
+      ],
+      "checks": [
+        "Confirm supply phases are correct; if F7 persists with a good supply, replace the outdoor control board"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F8",
+      "meaning": "Input circuit fault (outdoor control board input circuit failure)",
+      "likelyCauses": [
+        "Outdoor control board input circuit failure",
+        "Power supply abnormality"
+      ],
+      "checks": [
+        "Check supply voltage and the board's input connectors; replace the outdoor control board if it recurs"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F9",
+      "meaning": "Connector 2 or more open (two or more of the protection-device connectors such as 63L / 49C open at the outdoor board)",
+      "likelyCauses": [
+        "Multiple protection connectors unplugged (e.g. after board replacement)",
+        "Wiring harness damaged"
+      ],
+      "checks": [
+        "Check all protection device connectors (63L, 49C, 63H) on the outdoor board are plugged in and the devices show continuity"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (F/P) (p.48); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U1",
+      "meaning": "Abnormal high pressure (high pressure switch 63H worked) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Outdoor fan not running (cooling) / indoor airflow restriction (heating)",
+        "Dirty outdoor coil",
+        "Closed stop valve",
+        "Overcharge or non-condensables",
+        "63H switch or wiring fault"
+      ],
+      "checks": [
+        "Check the head pressure at the fault, the outdoor fan, coil condition and stop valves; check the 63H switch and connector (field practice)",
+        "Read the outdoor LED1/LED2 pattern for confirmation"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au); MrSlimerrorCode.pdf",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U2",
+      "meaning": "Inner thermostat (49C) operation / abnormal high discharging temperature (discharge thermistor TH4 or shell thermistor TH32 above limit) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Low refrigerant charge",
+        "LEV not opening / restriction",
+        "Closed stop valve",
+        "Discharge thermistor TH4 fault",
+        "Compressor overheating from high load"
+      ],
+      "checks": [
+        "Check charge and superheat, stop valves and LEV; check TH4/TH32 resistance and placement; let the compressor cool and check 49C continuity (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au); PUHZ-SHW230YKA2 Service Manual LED table (p.42)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U3",
+      "meaning": "Discharge thermistor short/open (TH4) - inspected unit: outdoor",
+      "likelyCauses": [
+        "TH4 thermistor disconnected, open or shorted",
+        "Outdoor board input fault"
+      ],
+      "checks": [
+        "Check TH4 resistance versus the table and its connector on the outdoor board"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U4",
+      "meaning": "Outdoor thermistor short/open (TH3 pipe, TH6 2-phase pipe, TH7 ambient or TH8 heat-sink thermistor) - inspected unit: outdoor",
+      "likelyCauses": [
+        "One of the outdoor thermistors disconnected, open or shorted",
+        "Harness damage",
+        "Outdoor board input fault"
+      ],
+      "checks": [
+        "Identify which thermistor from the outdoor LED1/LED2 pattern or the A-control service tool; check its resistance and connector"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U5",
+      "meaning": "Abnormal temperature of heat sink (inverter heat-sink overheat) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Heat-sink cooling path blocked / outdoor fan not running",
+        "Heat-sink thermistor TH8 fault",
+        "High ambient at the control box"
+      ],
+      "checks": [
+        "Check the outdoor fan and the heat-sink fins for dirt; check the heat-sink thermistor resistance"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U6",
+      "meaning": "Compressor overcurrent interruption / abnormality of power module - inspected unit: outdoor",
+      "likelyCauses": [
+        "Compressor winding shorted or grounded",
+        "Power module (IPM) failure",
+        "Closed stop valve / low voltage",
+        "Loose compressor wiring"
+      ],
+      "checks": [
+        "Compressor winding resistance and insulation; inverter output balance; supply voltage under load; stop valves (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U7",
+      "meaning": "Abnormality of super heat due to low discharge temperature - inspected unit: outdoor",
+      "likelyCauses": [
+        "Refrigerant overcharge / liquid flood-back",
+        "LEV stuck open",
+        "Discharge thermistor TH4 reading low"
+      ],
+      "checks": [
+        "Check discharge superheat, charge and LEV operation; check TH4 resistance and placement"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U8",
+      "meaning": "Outdoor unit fan protection stop (outdoor fan motor abnormality) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Outdoor fan motor failure or seized",
+        "Fan blade obstruction",
+        "Fan motor connector / board fault"
+      ],
+      "checks": [
+        "Spin the fan by hand; check the fan motor connector and windings; check the outdoor board fan output"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U9",
+      "meaning": "Abnormality such as overvoltage or voltage shortage and abnormal synchronous signal to main circuit (power supply abnormality) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Supply voltage too high / too low or unstable",
+        "Open phase / loose supply connection",
+        "Noise filter, reactor or power board fault",
+        "Failing smoothing capacitor"
+      ],
+      "checks": [
+        "Measure supply voltage at the outdoor terminal block at rest and under load; check all supply connections; check the DC bus voltage per the service manual"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UF",
+      "meaning": "Compressor over current (start-up locked) cut off - compressor current interruption (locked compressor) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Closed stop valve",
+        "Decrease of power supply voltage",
+        "Looseness, disconnection or reverse of compressor wiring connection",
+        "Incorrect DIP-SW setting for model selection",
+        "Defective compressor or outdoor power circuit board"
+      ],
+      "checks": [
+        "Per source: check stop valves, supply voltage, compressor wiring (order and tightness), model-selection DIP switches, compressor and power board",
+        "Compressor winding resistance and insulation (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "MrSlimerrorCode.pdf (4100 <UF> 'compressor current interruption (locked compressor)' with causes); PAR-21MAA Technical Manual, A-control error codes (U) (p.49)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UP",
+      "meaning": "Compressor overcurrent interruption - inspected unit: outdoor",
+      "likelyCauses": [
+        "Closed outdoor stop valve",
+        "Decreased power supply voltage",
+        "Looseness or disconnection of compressor wiring",
+        "Malfunction of indoor/outdoor fan",
+        "Failure in the 12 VDC power supply circuit on the power circuit board"
+      ],
+      "checks": [
+        "Per source: check stop valves, supply voltage, compressor wiring, and indoor/outdoor fan operation",
+        "Running amps versus rating; inverter output balance (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "MrSlimerrorCode.pdf (4210 <UP> 'Compressor overcurrent interruption / failure in 12 VDC power supply circuit'); PAR-21MAA Technical Manual, A-control error codes (U) (p.49)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UH",
+      "meaning": "Current sensor error - inspected unit: outdoor",
+      "likelyCauses": [
+        "Current sensor (ACCT) fault on the power board",
+        "Compressor wiring not passing through the sensor / disconnected",
+        "Power board failure"
+      ],
+      "checks": [
+        "Check compressor wiring at the power board and the current sensor; replace the power board if the sensor circuit is faulty"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UE",
+      "meaning": "High pressure error (ball valve / stop valve closed) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Liquid or gas stop valve left closed",
+        "Restricted liquid line"
+      ],
+      "checks": [
+        "Confirm both stop valves are fully open; check for a restriction on the high side"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UL",
+      "meaning": "Abnormal low pressure (low pressure switch 63L operated / low suction pressure) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Refrigerant leak / undercharge",
+        "Closed stop valve",
+        "Low indoor airflow in cooling",
+        "63L switch or wiring fault"
+      ],
+      "checks": [
+        "Check suction pressure at the fault, stop valves, indoor airflow and charge; check the 63L switch and connector"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Ud",
+      "meaning": "Over heat protection (compressor / discharge overheat protection operated) - inspected unit: outdoor",
+      "likelyCauses": [
+        "Low refrigerant charge",
+        "Restriction / LEV fault",
+        "High condensing load (dirty coil, fan fault)"
+      ],
+      "checks": [
+        "Check charge, superheat, coil condition and fan operation; check TH4 discharge thermistor"
+      ],
+      "severity": "shutdown",
+      "source": "PAR-21MAA Technical Manual, A-control error codes (U) (p.49); Mr.Slim A-control error code list (arma.org.au)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "P-series (A-control) outdoor controller board: LED1 (green) and LED2 (red) blinking counts indicate the type of abnormality; detailed codes require the optional A-Control Service Tool PAC-SK52ST on connector CNM",
+      "meaning": "The blinking patterns of both LED1 and LED2 indicate the abnormality type; the same fault is shown as a U/E/F/P check code on the wired remote controller. Read the count of blinks on each LED and look it up in the 'Display function of inspection for outdoor unit' table for that outdoor model",
+      "checks": [
+        "Read the LED1/LED2 pattern with the outdoor unit powered and the fault active; cross-check the check code on the remote controller (CHECK mode)",
+        "Consult the outdoor unit service manual table for the model (patterns differ slightly by generation)"
+      ]
+    },
+    {
+      "pattern": "P-series outdoor: LED1 3 blinks + LED2 1 blink",
+      "meaning": "Abnormality of shell thermistor (TH32) / discharging temperature (TH4), or abnormal high pressure (high-pressure switch 63H worked) - corresponds to remote controller codes U2 / U1",
+      "checks": [
+        "Check TH4/TH32 resistance and placement; check head pressure, outdoor fan, coil and stop valves; check 63H switch and connector"
+      ]
+    },
+    {
+      "pattern": "P-series outdoor: LED1 1 blink + LED2 2 blinks",
+      "meaning": "Open connector(s) on the outdoor board (protection device connector 63L/49C open) - corresponds to remote controller codes F3 / F4 / F9",
+      "checks": [
+        "Check the 63L, 49C and 63H connectors and device continuity on the outdoor controller board"
+      ]
+    },
+    {
+      "pattern": "P-series outdoor (pump-down / refrigerant collection): LED1 off, LED2 lit",
+      "meaning": "Refrigerant collecting operation completed normally",
+      "checks": [
+        "Close the liquid stop valve first, run pump-down per the service manual, then close the gas valve when LED2 lights"
+      ]
+    },
+    {
+      "pattern": "P-series outdoor (pump-down / refrigerant collection): LED1 lit, LED2 off and the outdoor unit stopped",
+      "meaning": "Refrigerant collection was not properly performed",
+      "checks": [
+        "Repeat the refrigerant collection procedure; check that the stop valves and SW settings match the service manual sequence"
+      ]
+    },
+    {
+      "pattern": "City Multi outdoor control board: 7-segment / LED error display lit with all SW1 dip switches OFF",
+      "meaning": "The current check code (and error source address/attribute) is shown on the outdoor unit LED service display; other SW1 settings select maintenance-monitor items (pressures, thermistors, LEV opening, error history)",
+      "checks": [
+        "Set all SW1 switches OFF to read the check code; use the 'LED monitor display' table in the service handbook to set SW1 for detail codes, sensor values and history",
+        "If the LED error display is lit with all control-board connectors except CNDE disconnected, the fault is on the board itself; if it appears when a connector is reconnected, the fault is in that wiring/component"
+      ]
+    },
+    {
+      "pattern": "City Multi indoor unit board: LED1 lit / LED2 lit",
+      "meaning": "LED1 indicates the indoor unit main power is on; LED2 indicates the MA remote controller line is powered",
+      "checks": [
+        "LED1 off: check indoor unit power supply and fuse; LED2 off with an MA controller connected: check the A/B remote controller line for a short and the indoor board (relates to 6831-6834 faults)"
+      ]
+    }
+  ],
+  "diagnosticTips": [
+    "Where codes appear: City Multi 4-digit check codes display on the wired remote controller (PAR-2x/3x MA controllers, ME controllers) together with the address and attribute of the unit that raised the fault (OC = outdoor, OS = sub outdoor, IC = indoor, BC = BC controller, Lc = Lossnay, RC = remote controller), on the outdoor unit control board 7-segment LED service display, and on centralized controllers (AE-200/EW-50, AG-150). P-series (A-control) 2-character codes (P/E/F/U) display on the wired remote controller; the outdoor board shows the same fault as LED1 (green) / LED2 (red) blink counts.",
+    "Self check on the PAR-21MAA / MA remote controllers: press the CHECK button twice in succession to start self-diagnosis; 'CHECK MODE' appears, then after about 10 seconds the unit address and check code alternate at one-second intervals. Each unit stores the latest check code, so it can be recalled even after it was cancelled from the remote. Press CHECK twice within three seconds to exit self check, or press ON/OFF (which also stops the indoor units).",
+    "Error history: the self-check results display shows the error history for each unit; the installation manual's 'Error history reset' procedure clears it (when the reset fails, the error contents are displayed again). On City Multi outdoor units, error history with detection time is also saved in service memory and read via the SW1 LED monitor settings in the service handbook.",
+    "Outdoor unit maintenance monitor (City Multi): the control board has DIP switch SW1-1 to 1-8; setting SW1 per the 'LED monitor display' table shows pressures (63HS/63LS), thermistor values, LEV openings, compressor frequency, relay outputs and error history on the 7-segment display. Inverter detail codes (e.g. for 4220/4250/5301) are read with specific SW1 combinations given in the handbook (for example SW1 dips 1,2,5,6,8 ON on some generations).",
+    "Test run: on P-series outdoor units the test run can be started and finished with DIP switch SW4 on the outdoor control board; on City Multi, test run is started from the remote controller (TEST RUN button / menu) after the addresses are set and the system has been powered 12 hours for crankcase heat. Check code 0900 means a unit (Lossnay) is in test mode, not a fault.",
+    "Clearing faults: most check codes clear when the cause is removed and the system is restarted from the remote controller (OFF then ON). Repeated hard faults that lock the outdoor unit (e.g. 1302 high pressure on the second occurrence, inverter faults 42xx) require a power cycle at the outdoor unit after repair. Thermistor faults (51xx) put the unit in 3-minute anti-restart on first detection and error stop on the second.",
+    "Communication faults: for 66xx codes measure the M-NET DC voltage at TB3 (indoor/outdoor) and TB7 (centralized control) on the outdoor unit and confirm the transmission booster is powered; never wire or change polarity on the transmission line with power on (causes 6602). For 683x codes check the MA remote controller A/B line, the number of controllers/indoor units in the group and the main/sub setting; indoor board LED2 shows whether the MA line is powered.",
+    "Mr. Slim P-series with an M-NET interface reports A-control faults as City Multi 4-digit codes (for example U1 -> 1302, U2 -> 1102, UF -> 4100, UP -> 4210, P5 -> 2502, E6 -> 6607-type communication codes); the MrSlimerrorCode.pdf table lists both forms side by side."
+  ],
+  "notes": [
+    "Extends the existing others.json entry (5 codes: 1102, 1302, 4103, 4115, 6607) with the remaining common City Multi 4-digit codes and the P-series/Mr. Slim A-control 2-character codes. Existing meanings were kept consistent; 6607 wording now includes the address/attribute display.",
+    "Coverage is partial: the full City Multi service handbook check code list also contains preliminary codes (12xx, 14xx, 15xx sub-codes), 1000-series sub-variants, 2000-series water-side codes for water-cooled (PQHY/PQRY) and PWFY units, 3121/3152 (out-of-range outdoor/water temperature), 4102/4106/4109/4114/4121/4124, 4225/4226/4255/4256, 5108/5109/5111/5112/5120/5305, 6201/6202/6500/6601/6604/6605/6820-6824, 6840-6846, 7108/7109/7112/7116, plus inverter detail codes (101-137), which were not all seen in a source and are omitted.",
+    "Thermistor attribution for 5101-5107 differs between indoor and outdoor units and between outdoor unit generations (older lists show 5104 as outside temperature; PUHY/PURY HP/YLM handbooks show 5104 = TH4 discharge, 5107 = TH7 outside). Always read the attribute/address shown with the code and use the thermistor table for that unit.",
+    "Codes 1501, 2600, 4102, 4108, 4200, 4240, 4260, 4300, 5701, 7106, 7107, E1 and E2 were only seen in secondary reproductions of the Mitsubishi tables (baileyharris/mcsprogram mirror, errorcodeairconditioning.blogspot, becoolrefrigeration, arma.org.au) and are marked multi_secondary.",
+    "P-series LED1/LED2 blink tables vary by outdoor model (PUZ/PUY/PUHZ generations); only patterns that were seen quoted from a service manual are listed. Use the 'Display function of inspection for outdoor unit' page of the specific model's service manual for the full table.",
+    "Severity mapping: 'shutdown' = unit/system stops on the code; 'warning' = communication or sensor-backup faults where operation may continue or resume automatically; 'info' = status only (0900)."
+  ]
+}

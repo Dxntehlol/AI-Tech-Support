@@ -2994,63 +2994,676 @@
   {
    "id": "intellipak_ucm",
    "name": "Trane IntelliPak UCM module controls with Human Interface (legacy)",
-   "description": "Module-based control on IntelliPak I rooftops (20-130 t) before Symbio 800: RoofTop Module (RTM, 1U48), Heat module, compressor modules, VAV/exhaust modules and the unit-mounted Human Interface (HI, 1U65) LCD keypad that displays plain-text diagnostics and status. Diagnostics are text messages, not numeric codes. Full list: IntelliPak Programming, Troubleshooting manual and IOM RT-SVX36.",
+   "description": "Module-based control on IntelliPak I rooftops (20-130 t) before Symbio 800: RoofTop Module (RTM, 1U48), Heat module, compressor modules, VAV/exhaust modules and the unit-mounted Human Interface (HI, 1U65) LCD keypad that displays plain-text diagnostics and status. Diagnostics are text messages, not numeric codes. Full list: IntelliPak Programming, Troubleshooting manual and IOM RT-SVX36. Coverage is partial: the IntelliPak I/II UCM diagnostic list (RT-SVP07 / RT-SVX36 / RT-SVX30, up to 56 diagnostic points) also includes items not transcribed here because no source text was seen: GBAS communication failure, exhaust/return-fan static and IGV/VFD faults, CO2 sensor failure, waterside items on self-contained units, supply-air-temperature high/low limits and heat-module gas-specific diagnostics. Several diagnostic descriptions were read from the IntelliPak Signature Series (self-contained) Installation, Owner and Diagnostic Manual (ManualsLib 534679 pp.97-102) and the SCWG modular-series diagnostic pages; these units use the same RTM/HI UCM firmware family and identical diagnostic text, but rooftop-only items (Compressor Trip, fan proving, Emergency Stop, LPC lockout, Frostat) were taken from rooftop documents. The 'SCM / MCM Communication Failure' description is quoted from the help-center MCM article written for the same 1U49 MCM on CGAF-family units; the rooftop diagnostic text itself was only seen as an index entry. The Voyager UCP entries (codes prefixed 'Voyager UCP:') belo",
    "appliesTo": [
     "trane_intellipak_20_130t"
    ],
    "faultCodes": [
     {
      "code": "HI COMMUNICATIONS FAILURE - CHECK INTERPROCESSOR COMM LINK",
-     "meaning": "The unit-mounted Human Interface (HI, 1U65) is not communicating with the RoofTop Module (RTM, 1U48).",
+     "meaning": "The unit-mounted Human Interface (HI, 1U65) is not communicating with the RoofTop Module (RTM, 1U48 IntelliPak I / 1U1 IntelliPak II). Causes can include wiring errors such as shorted comm links, excessive noise on the comm link, a defective HI, defective modules other than the HI, or the RTM power supply shorted out. Electrical noise from VFDs or unit high-voltage wiring can cause communication problems; comm link wires should be separated from high-voltage power wiring as much as possible.",
      "likelyCauses": [
-      "Loose or damaged interprocessor communication (IPC) link wiring between HI and RTM",
-      "RTM not powered / failed",
-      "HI failed"
+      "Shorted, open or reversed interprocessor communication (IPC) link wiring",
+      "Noise coupled from VFD / power wiring routed with the comm link",
+      "A failed module (other than the HI) loading down the shared comm bus",
+      "RTM power supply shorted / RTM unpowered",
+      "Failed HI"
      ],
      "checks": [
-      "Check the IPC bus connections at the HI and RTM (polarity, shield, terminations)",
-      "Verify RTM power LED and module DIP/address settings",
-      "Cycle power and watch whether HI re-establishes communication"
+      "Check the IPC link at the HI and RTM (polarity, shield, terminations, separation from power wiring)",
+      "Verify RTM power and the RTM power LED; disconnect other modules one at a time from the comm link to find one that is loading the bus (manufacturer procedure)",
+      "Cycle power and watch whether the HI re-establishes communication"
      ],
      "severity": "warning",
-     "source": "Trane Commercial Help Center — IntelliPak (Legacy) HI Comm Loss (article 19893668115853)",
+     "source": "Trane Help Center - IntelliPak (Legacy) HI Comm Loss (19893668115853)",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "Heat Module Communication Failure",
-     "meaning": "The RTM has lost communication with the Heat Module.",
+     "meaning": "The RTM has lost communication with the heat module. An 'all heat off' request is sent to the heat operation function. If the unit has staged gas or electric heat, all heat module outputs are zeroed and de-energized. If the unit has hydronic heat or chilled water, the unit turns off the supply fan and closes the outside air damper upon the occurrence of a heat module comm failure.",
      "likelyCauses": [
-      "IPC wiring to the heat module",
-      "Heat module unpowered or failed"
+      "IPC comm link wiring to the heat module (1U50 IntelliPak I)",
+      "Heat module unpowered (fuse/transformer) or failed",
+      "Module DIP / address setting wrong after replacement"
      ],
      "checks": [
-      "Check IPC link and power at the heat module; check module address/DIP settings"
+      "Check 24 VAC power and the comm link at the heat module; check address settings",
+      "Automatic reset when communication is restored"
      ],
      "severity": "warning",
-     "source": "Trane IntelliPak I Programming, Troubleshooting manual (ManualsLib 865947) — diagnostics section",
-     "evidence": "single_secondary"
+     "source": "IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839 p.114); Trane IntelliPak I Programming manual (ManualsLib 865947) diagnostics",
+     "evidence": "manufacturer_doc"
     },
     {
      "code": "Heat Fail",
-     "meaning": "Displayed on the HI when the freezestat (4S12) closes its contacts because the temperature of the air entering the heating coils falls to 40 F (hydronic/steam heat units).",
+     "meaning": "Displayed on the HI when the freezestat (4S12) closes its contacts because the temperature of the air entering the heating coils falls to 40 F (hydronic/steam heat units): it signals the Heat Module (1U50) to turn off the supply fan and initiate a 'Heat Fail' diagnostic displayed on the Human Interface LCD screen; a manual reset is initiated. On gas heat units, if the ignition system does not detect a flame during operation or loses flame it locks out the heating system; a flame failure is reset by pressing the reset button on the front of the IC (ignition control) board case.",
      "likelyCauses": [
-      "Loss of hot water / steam to the heating coil",
-      "Control valve failed closed",
-      "Coil airflow with heat off at low outdoor temperature"
+      "Hydronic/steam: loss of hot water or steam to the coil, control valve failed closed, coil airflow with heat off at low outdoor temperature",
+      "Gas: ignition control lockout (no flame / flame loss), high temperature limit open, gas supply or pressure switch problem"
      ],
      "checks": [
-      "Check heating-medium supply and valve position",
-      "Verify freezestat 4S12 setting/contacts and reset after the coil warms"
+      "Hydronic: check heating-medium supply and valve position; verify freezestat 4S12 setting/contacts and reset after the coil warms",
+      "Gas: check the IC board LED/reset button, flame sensor, gas pressure and high limits, then reset the IC board and the HI diagnostic"
      ],
      "severity": "lockout",
-     "source": "Trane IntelliPak IOM (ManualsLib 687076) — freezestat / Heat Fail description",
+     "source": "RT-SVX36 IOM (ManualsLib 687076) freezestat 4S12 / Heat Fail and gas flame failure reset",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Compressor Trip Ckt #1 / Ckt #2 (also Ckt #3, #4 on 4-circuit units)",
+     "meaning": "A Compressor Trip occurs if the compressor proving input(s) on the SCM/MCM (1U49 IntelliPak I / 1U3 IntelliPak II) does not close within three seconds of the call for a compressor to start, or the input opens for 3 seconds during compressor operation. The input is connected to the normally open contacts of an auxiliary switch on the side of the lead compressor contactor on each circuit. This is a manual reset diagnostic. On units with later RTM/MCM versions (typically built or ordered after 02/2009) the circuit is allowed to retry after 15 minutes and goes to a Compressor Trip diagnostic on the 4th occurrence.",
+     "likelyCauses": [
+      "Any safety device in the contactor coil circuit open: high-pressure cutout (HPC), compressor winding temperature limit, Compressor Protection Module (CPM), or compressor circuit breaker - the contactor (or K42 on variable-speed-compressor units) cannot energize so the proving input never closes",
+      "Failed or misadjusted auxiliary switch on the lead compressor contactor, or wiring between the aux switch and the SCM/MCM",
+      "Low refrigerant charge causing the winding thermostat (motor overload) to open",
+      "On VSC / VFD units: failed K42 relay on the drive (help-center K42 article)",
+      "Failed SCM/MCM input"
+     ],
+     "checks": [
+      "At the HI read which circuit tripped; check the HPC, winding thermostat / CPM and compressor circuit breaker for that circuit before resetting (manufacturer procedure)",
+      "Verify wiring between the contactor auxiliary switch and the SCM/MCM proving input; with the contactor energized (Service Mode can force the circuit on) confirm the aux contacts close and the HI shows the input closed",
+      "If safeties are closed and the aux switch proves, check 24 VAC to the contactor coil and the contactor itself",
+      "Field practice: if the HPC tripped, check condenser fans/coil and charge before clearing; if the winding stat tripped, check charge, superheat and compressor amps",
+      "Reset at the HI (DIAGNOSTICS / reset active manual diagnostics, password protected) or by cycling power to the RTM"
+     ],
+     "severity": "lockout",
+     "source": "Trane Help Center - Legacy IntelliPak Compressor Trip Diagnostics (16077839043085); RT-SVX36 IOM (ManualsLib 687076) safety devices; Help Center K42 relay article (16077950185101)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Compressor Contactor Failure Ckt #",
+     "meaning": "This diagnostic occurs if the compressor proving input(s) on the SCM/MCM (1U49) does not open within three seconds of the call for the lead compressor on a circuit to stop, or the input is closed when all compressors on a circuit should be off. The unit controls assume that the compressor contactor has welded closed.",
+     "likelyCauses": [
+      "Welded / stuck compressor contactor",
+      "Auxiliary switch on the contactor stuck closed or miswired",
+      "SCM/MCM proving input failed"
+     ],
+     "checks": [
+      "With the circuit commanded off, confirm the contactor has dropped out and the compressor is not running; if it is, replace the contactor",
+      "Check the auxiliary switch contacts open with the contactor de-energized",
+      "Manufacturer test: if jumpering / opening the input makes the diagnostic appear and clear, the input/board is good; if not, replace the SCM/MCM (1U49)"
+     ],
+     "severity": "lockout",
+     "source": "Trane Help Center - Compressor Contactor Failure (34759305864205), SCM/MCM 1U49 proving input",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Cutout Ckt #1 / Ckt #2 (LPC lockout)",
+     "meaning": "The Ckt # LPC input is detected open as described in the compressor protection function; a 'Lockout Ckt #1, 2, 3 or 4' request is issued to the compressor staging control function. Protection function: when the LPC is opened for 1 continuous second the compressor for that circuit is turned off immediately and is not allowed to restart for a minimum of 3 minutes; if four consecutive open conditions occur during an active call for cooling the compressor is locked out, a diagnostic generated, and a manual reset required. The diagnostic can be reset by the Human Interface or Tracer Summit.",
+     "likelyCauses": [
+      "Low refrigerant charge / leak",
+      "Restricted liquid line, TXV or filter drier; low evaporator airflow (dirty filters, coil, fan problem)",
+      "Low ambient operation without head-pressure control",
+      "Failed LPC switch or open wiring to the SCM/MCM"
+     ],
+     "checks": [
+      "Check the 'Disabled by Low Pressure Cutout' status and LPC input state at the HI",
+      "Gauge the circuit: suction pressure at start-up and running, superheat/subcooling; look for a leak if charge is low (field practice)",
+      "Verify airflow: filters, evaporator coil, supply fan proving and VFD/IGV position",
+      "Check the LPC switch continuity and wiring; reset at the HI after correcting the cause"
+     ],
+     "severity": "lockout",
+     "source": "RT-SVX36 IOM (ManualsLib 687076) compressor protection / Low Pressure Control; IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839 p.114); IntelliPak I Programming manual (ManualsLib 865947 p.31 Disable Or Lockout Sources)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Supply Fan Failure",
+     "meaning": "The supply airflow input is detected OPEN for 40 continuous seconds during any period of time in which the supply fan binary output is ON (the differential switch of the supply airflow proving switch 3S68 detected open for 40 consecutive seconds during a request for fan operation). A manual reset diagnostic is initiated and the RTM shuts off all system functions.",
+     "likelyCauses": [
+      "Supply fan not running: VFD fault, K42 relay on the VFD failed (help-center article), fan contactor, belts, motor overload",
+      "Airflow proving switch 3S68 misadjusted, plugged tubing, or wiring open",
+      "Inlet guide vanes closed / VFD at minimum so the differential is below the switch setpoint"
+     ],
+     "checks": [
+      "Confirm the fan actually runs on a fan request (Service Mode); check VFD display/fault, K42, belts and overloads",
+      "Check the 3S68 differential switch tubing and setpoint; verify the input closes at the RTM when the fan is running",
+      "Reset at the HI or by cycling RTM power after correcting the cause"
+     ],
+     "severity": "shutdown",
+     "source": "RT-SVX36 IOM (ManualsLib 687076) supply airflow proving 3S68 / manual reset diagnostics; Help Center K42 relay article (16077950185101)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Exhaust Fan Failure",
+     "meaning": "The exhaust fan airflow proving switch (3S69) is a binary input used on units with an exhaust fan and signals the RTM when the exhaust fan is operating. If an open fan proving switch is detected the RTM shuts off all system functions; for an exhaust fan failure (3S69) a manual reset diagnostic is initiated.",
+     "likelyCauses": [
+      "Exhaust fan not running (contactor, VFD/K42, belts, overload)",
+      "3S69 proving switch misadjusted, tubing or wiring open",
+      "Exhaust dampers not opening so the switch never proves"
+     ],
+     "checks": [
+      "Force the exhaust fan on in Service Mode and verify rotation, belts and damper travel",
+      "Check the 3S69 switch setpoint/tubing and confirm the RTM input closes with the fan running",
+      "Reset at the HI after correction"
+     ],
+     "severity": "shutdown",
+     "source": "RT-SVX36 IOM (ManualsLib 687076) exhaust fan airflow proving 3S69 / manual reset diagnostics",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Emergency Stop (Emergency Stop Input open)",
+     "meaning": "An open circuit has occurred on the emergency stop input caused either by a high duct temp t-stat trip, or the opening of field-provided contacts/switch, etc.; the unit stops immediately. Emergency Stop is manual reset (requires reset at the Human Interface). High Duct Temp Thermostats (3S16, 3S17) provide a high limit shutdown if the supply air temperature reaches 240 F or the return air temperature reaches 135 F.",
+     "likelyCauses": [
+      "High duct temperature thermostat 3S16 (supply, 240 F) or 3S17 (return, 135 F) tripped - fire or overheating condition",
+      "Field fire-alarm / smoke contacts opened",
+      "Broken or removed field jumper / wiring on the emergency stop terminals"
+     ],
+     "checks": [
+      "Check the emergency stop input terminals for continuity; identify which device opened (duct stats vs field contacts)",
+      "If a duct stat tripped, inspect for a real overheating event (gas heat overfiring, low airflow) before resetting",
+      "Reset at the HI DIAGNOSTICS menu (manual reset)"
+     ],
+     "severity": "shutdown",
+     "source": "Trane IntelliPak SCWF 20 IOM (ManualsLib 1422639 p.103) Emergency Stop diagnostic; Help Center Equipment/External Auto Stop vs Emergency Stop (27517129655309); RT-SVX36 IOM (ManualsLib 687076) high duct temp thermostats",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "External Auto Stop / Equipment Stop (input open)",
+     "meaning": "External Stop and Emergency Stop inputs both cause the unit to stop immediately; External (Equipment) Auto Stop is Auto Reset - the diagnostic automatically resets when the External Auto/Stop input is re-closed and the unit returns to the current operating mode.",
+     "likelyCauses": [
+      "Fire alarm management system, time clock or BAS contact open on the external stop input",
+      "Missing factory jumper on unused external stop terminals"
+     ],
+     "checks": [
+      "Verify the field contact / jumper on the external stop terminals; the diagnostic clears itself when the input closes"
+     ],
+     "severity": "info",
+     "source": "Trane Help Center - Equipment / External Auto Stop versus Emergency Stop (IntelliPak 20-162) (27517129655309)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Dirty Filter",
+     "meaning": "If the RTM sees a closed dirty-filter pressure switch for 60 seconds it sets the alarm; if it sees the switch open for 60 seconds the alarm is cleared. It does not shut down the unit; it is a warning that the filters may need service (displayed as an alarm on the HI and can drive an alarm output).",
+     "likelyCauses": [
+      "Loaded filters",
+      "Filter switch set too low, tubing reversed or plugged",
+      "High-static VAV operation at full fan speed"
+     ],
+     "checks": [
+      "Change filters; verify the switch resets after 60 s with the fan running",
+      "Check switch setpoint against the filter bank pressure drop with clean filters"
+     ],
+     "severity": "info",
+     "source": "Trane Help Center IntelliPak (Legacy) section - Intellipak Dirty Filter Alarm Diagnostic",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SCM / MCM Communication Failure",
+     "meaning": "The RTM has lost communication with the compressor module (SCM single-circuit / MCM multi-circuit, 1U49 IntelliPak I / 1U3 IntelliPak II). The help-center description for the same module on IntelliPak-controlled units: the MCM (1U49) is not communicating with the master module; causes are (a) wiring error, (b) defective MCM, or (c) no control power to the MCM. All modules share a comm link using twisted wire; the J1 connector on each module is the connection point, all landing on a common terminal strip.",
+     "likelyCauses": [
+      "Comm link (J1) wiring open/shorted at the SCM/MCM",
+      "No 24 VAC control power to the SCM/MCM",
+      "Defective SCM/MCM"
+     ],
+     "checks": [
+      "Check control power at the SCM/MCM and the J1 comm connector; check the common comm terminal strip",
+      "If power and wiring are good and the module still does not communicate, replace the SCM/MCM",
+      "Compressors will not run without the compressor module communicating; auto reset when comm returns"
+     ],
+     "severity": "shutdown",
+     "source": "Trane IntelliPak I Programming manual (ManualsLib 865947) index - SCM and MCM Communication Failure; Trane Help Center - MCM Communications Failure (34791196533645) (description written for the CGAF/IntelliPak MCM 1U49)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "ECEM Communications Failure",
+     "meaning": "The RTM has lost communications with the ECEM (Exhaust/Comparative Enthalpy Module). If the unit has the Comparative Enthalpy option, an automatic reset occurs after communication has been restored.",
+     "likelyCauses": [
+      "Comm link wiring / power to the ECEM",
+      "Failed ECEM"
+     ],
+     "checks": [
+      "Check power and comm link at the ECEM; economizer falls back to dry-bulb changeover meanwhile"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839); IntelliPak Signature Series diagnostic manual (ManualsLib 534679 pp.97-102)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "VOM Communications Failure",
+     "meaning": "The RTM has lost communications with the VOM (Ventilation Override Module, 1U53 IntelliPak I / 1U8 IntelliPak II). Ventilation override actions will not be allowed, and the VO Output relay will be de-energized. An automatic reset occurs after communication has been restored.",
+     "likelyCauses": [
+      "Comm link wiring / power to the VOM",
+      "Failed VOM"
+     ],
+     "checks": [
+      "Check power and comm link at the VOM; auto reset when comm returns"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.102) VOM Communications Failure; IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839 p.118)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "VCM Communication Failure",
+     "meaning": "The RTM has lost communication with the VCM (Ventilation Control Module). All active commands and setpoints provided by the VCM are canceled and/or ignored; a fail-safe function in the VCM causes all of its outputs to de-energize and/or be set to zero.",
+     "likelyCauses": [
+      "Comm link wiring / power to the VCM",
+      "Failed VCM"
+     ],
+     "checks": [
+      "Check power and comm link at the VCM; Traq / DCV / preheat functions are lost until comm is restored (auto reset)"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.102) VCM Communication Failure; IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839 p.118)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "NSB Panel Comm Failure",
+     "meaning": "The RTM has lost communications with the Night Setback Panel (programmable zone sensor).",
+     "likelyCauses": [
+      "Programmable zone sensor (NSB panel) comm wiring open/shorted",
+      "NSB panel unpowered or failed"
+     ],
+     "checks": [
+      "Check the NSB panel comm wiring and power; auto reset when comm returns"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.99) NSB Panel Comm Failure",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RTM Data Storage Error",
+     "meaning": "An error occurred while the RTM was writing data to its internal non-volatile memory (EEPROM). An information-only diagnostic is displayed at the Human Interface. A manual reset may be made at the Human Interface, at Tracer Summit, or by cycling power to the RTM.",
+     "likelyCauses": [
+      "Power interruption during a setpoint/configuration write",
+      "Failing RTM EEPROM / RTM"
+     ],
+     "checks": [
+      "Reset; verify setpoints and configuration were retained. If it recurs, replace the RTM (field practice)"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.100) RTM Data Storage Error",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RTM Aux. Temp. Sensor Failure",
+     "meaning": "The RTM Auxiliary Temperature Sensor data is out of range. Sensor resistance should be between 830 ohms (200 F) and 345.7 kohms (-40 F) (Trane 10 kohm at 77 F thermistor).",
+     "likelyCauses": [
+      "Open or shorted sensor / wiring",
+      "Sensor not installed but the function that uses it is enabled"
+     ],
+     "checks": [
+      "Ohm the sensor at the RTM terminals and compare to the thermistor curve; check wiring; auto reset when in range"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.100) RTM Aux. Temp. Sensor Failure; thermistor range from SCWF IOM (ManualsLib 1422639 p.104)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RTM Zone Sensor Failure (RTM Zone Temp Sensor Failure)",
+     "meaning": "The RTM zone temperature sensor input is out of range (diagnostic listed on the same page as RTM Aux. Temp. Sensor Failure, whose text reads 'data is out of range'; the zone sensor is the standard Trane 10 kohm at 77 F thermistor and the diagnostic clears when the RTM again reads a valid sensor). 'RTM Zone Temp Sensor Failure' is one of the diagnostics assignable to the RTM/MCM alarm outputs.",
+     "likelyCauses": [
+      "Open/shorted zone sensor wiring, sensor removed or wrong sensor type",
+      "Zone sensor source selected at the HI does not match the installed sensor"
+     ],
+     "checks": [
+      "Ohm the zone sensor at the RTM (about 10 kohm at 77 F); check wiring; verify the zone temperature source setting",
+      "Unit falls back per setup (supply-air control units continue; zone-control units lose zone temp) - auto reset when the input returns to range"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.100) RTM Zone Sensor Failure; IntelliPak I Programming manual (ManualsLib 865947 p.75) MCM alarm assignment values",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Supply Air Temp Sensor Failure",
+     "meaning": "Supply air temperature sensor input failed / out of range. Listed as a diagnostic assignable to the RTM and MCM alarm outputs ('Supply Air Temp Sensor Failure') in the IntelliPak I programming manual.",
+     "likelyCauses": [
+      "Open/shorted supply air sensor or wiring (sensor in the supply fan discharge)",
+      "Sensor unplugged at the RTM"
+     ],
+     "checks": [
+      "Ohm the sensor (10 kohm at 77 F thermistor) and check wiring to the RTM; view the SA temp on the HI Status menu",
+      "Supply-air-temperature control (VAV units) cannot operate correctly without it; auto reset when in range"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947 p.75) Assignment Submenu - MCM Alarms possible values",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Return Air Temp Sensor Failure",
+     "meaning": "The return air temperature sensor reading is outside the acceptable range (diagnostic listed on p.99 of the Signature Series diagnostic manual).",
+     "likelyCauses": [
+      "Open/shorted return air sensor or wiring",
+      "Sensor not installed (option-dependent)"
+     ],
+     "checks": [
+      "Ohm the sensor and wiring; auto reset when in range"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.99) Return Air Temp Sensor Failure",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "O/A Temp. Sensor Failure",
+     "meaning": "There is not a valid signal on the outdoor air temperature input (outdoor air temperature sensor data out of range).",
+     "likelyCauses": [
+      "Open/shorted OA sensor or wiring; sensor damaged by weather",
+      "Wrong sensor type"
+     ],
+     "checks": [
+      "Check the OA temperature reading at the HI; ohm the sensor and wiring; substitute a resistor at the module to prove the input",
+      "Economizer and low-ambient functions that depend on OA temp are affected; auto reset when in range"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.99) O/A Temp. Sensor Failure; Trane Help Center CGM OA Temperature Sensor Failure (23499896877453) description of the same input",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "O/A Humidity Sensor Failure",
+     "meaning": "The outdoor air humidity sensor input is out of range. If this sensor fails it will not lock out the unit; it is only used for economizer (comparative/reference enthalpy) control.",
+     "likelyCauses": [
+      "Failed OA humidity sensor (located behind the outdoor air intakes) or its wiring",
+      "Sensor not installed but comparative enthalpy configured"
+     ],
+     "checks": [
+      "Check the sensor output and wiring; economizer runs on dry-bulb changeover until repaired"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.99) O/A Humidity Sensor Failure; HVAC-Talk 'Help with Intellipak' (99790) field description",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Space Static Press Setpt Failure",
+     "meaning": "The active space static pressure setpoint is out of range - the unit is reading a signal that is out of range for the space static pressure setpoint (input < 0.03 IWC or input > 0.20 IWC). If the space pressure setpoint source is GBAS but this setpoint has not been assigned to any of the 4 analog inputs on the GBAS, this message will occur. The default space pressure setpoint becomes the active space pressure setpoint; an automatic reset occurs after the designated setpoint source sends a signal within range for 10 continuous seconds, or after a different setpoint source is user-defined.",
+     "likelyCauses": [
+      "GBAS analog input not assigned / BAS sending an out-of-range value",
+      "Setpoint entered outside 0.03-0.20 IWC"
+     ],
+     "checks": [
+      "Check the setpoint value and its source at the HI SETPOINTS/SETUP menus; assign the GBAS input or change the source"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.100) Space Static Press Setpt Failure",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Space Pressure Sensor Failure (Statitrac)",
+     "meaning": "The space static pressure sensor is used on units with 100% exhaust with Statitrac. The diagnostic occurs when the voltage output from the transducer is outside the range for normal building pressures (-0.67 IWC to 0.67 IWC): during normal operation if the voltage dips below 0.04 VDC or rises above 0.75 VDC the diagnostic is generated. It can also be generated if the calibration solenoid is not functioning properly.",
+     "likelyCauses": [
+      "Space pressure tubing plugged, kinked, disconnected or reference tube open to wind",
+      "Calibration solenoid failed",
+      "Transducer failed or wiring open"
+     ],
+     "checks": [
+      "Measure the transducer output at the module; confirm it moves with pressure and returns to the zero value when the calibration solenoid energizes",
+      "Check tubing to the space and the outdoor reference; do not confuse the space and supply-duct transducers (mounted side by side)"
+     ],
+     "severity": "warning",
+     "source": "Trane Help Center - Intellipak w/ Symbio 800 - Space Pressure Reading Faults (19743333794317) transducer description (same Statitrac transducer); IntelliPak (Legacy) section lists 'Space Pressure Sensor Failure'",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Supply Air Pressure Sensor Failure",
+     "meaning": "Diagnostic listed in the IntelliPak (Legacy) help-center section: the supply duct static pressure transducer signal is not valid. Manufacturer transducer test: if the voltage does not change when the pressure changes, the transducer is bad; a valid zero-pressure reading is 0.25 +/- 0.06 VDC and the valid operating range is 0.25 to 1.75 VDC.",
+     "likelyCauses": [
+      "Supply duct pressure tubing disconnected/plugged (usually an air leak, mispiping or plugged tube)",
+      "Transducer failed or wiring open",
+      "Tubing landed on the wrong transducer (supply and space transducers are side by side)"
+     ],
+     "checks": [
+      "Read the transducer output at the RTM; verify ~0.25 VDC with tubes disconnected and a rising voltage with duct pressure (manometer in parallel)",
+      "Check tubing routing to the duct tap; VAV units cannot control fan speed / IGV without it"
+     ],
+     "severity": "warning",
+     "source": "Trane Help Center IntelliPak (Legacy) section - Supply Air Pressure Sensor Failure; Help Center Flow sensor failure / pressure transducer troubleshooting (16077694845069)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Velocity Sensor Failure (Traq / VCM velocity pressure)",
+     "meaning": "The velocity pressure input signal is out of range - the unit is reading a signal that is out of range for the velocity pressure transducer input on the VCM. Check field/unit wiring between the sensor and the VCM.",
+     "likelyCauses": [
+      "Air leak, mispiping or plugged tube between the Traq flow ring and the transducer (most common)",
+      "Calibration solenoid bad",
+      "Transducer or VCM defective (rare)"
+     ],
+     "checks": [
+      "Manufacturer test: connect a manometer in parallel to the transducer (high to high, low to low); expect 0.05-1.75 IWC depending on OA flow and 0 IWC when the calibration solenoid is energized; zero-flow voltage 0.25 +/- 0.06 VDC, operating range 0.25-1.75 VDC",
+      "If the voltage does not track pressure, replace the transducer"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak SCWG diagnostic troubleshooting (manualsdir 213839 p.118) Velocity Sensor Failure; Trane Help Center IntelliPak (Legacy) Traq flow sensor / Velocity Sensor Failures (16077962622477)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Evap Temp Sensor Failure Ckt # (coil frost sensor)",
+     "meaning": "The evaporator temperature sensor (ckt #1, 2, 3 or 4) is out of range. Sensor resistance should be between 830 ohms (200 F) and 345.7 kohms (-40 F). The coil frost protection function for that refrigeration circuit only is disabled. An automatic reset occurs after the evaporator temp input returns to its allowable range for 10 seconds.",
+     "likelyCauses": [
+      "Open/shorted coil thermistor or wiring to the SCM/MCM",
+      "Sensor pulled out of the coil well"
+     ],
+     "checks": [
+      "Ohm the sensor at the compressor module; check wiring; the circuit keeps running but without Frostat coil-frost protection until repaired"
+     ],
+     "severity": "warning",
+     "source": "Trane IntelliPak SCWF 20 IOM (ManualsLib 1422639 p.104) evaporator temperature sensor diagnostic; RT-SVX36 IOM (ManualsLib 687076) Frostat coil frost protection",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Disabled By Ckt # Evap Low Limit (coil frost cutout)",
+     "meaning": "Status shown under Disable Or Lockout Sources: 'Disabled By Ckt - Evap Low Limit: entering evaporator temp is excessively low' (Coil Frost Cutout Temperature setpoint, default 30 F, shuts off the circuit's compressors to prevent freezing); 'Disabled By Evap Temp Sensor Fail' is shown when the sensor itself has failed.",
+     "likelyCauses": [
+      "Low airflow across the evaporator (filters, fan speed, closed VAV boxes)",
+      "Low refrigerant charge",
+      "Low supply air setpoint at low load"
+     ],
+     "checks": [
+      "Check airflow and charge; review the coil frost cutout setpoint at the HI; the circuit re-enables automatically when the coil warms"
+     ],
+     "severity": "info",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947 p.31 Disable Or Lockout Sources; p.57 Coil Frost Cutout Temperature)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Supply Air Static Pressure Limit - auto reset (SA Static Press Limit)",
+     "meaning": "VAV units: the supply air static pressure exceeded the supply air pressure high limit setpoint (field example 4.0 IWC); the unit shuts down and this auto-reset diagnostic restarts it. 'Auto Reset SA Static Pres Limit' is an assignable alarm value.",
+     "likelyCauses": [
+      "VAV boxes closed (coming out of night setback / morning warm-up) with the fan at full speed",
+      "Static setpoint or high limit set too low / too close; IGV or VFD control loop mis-tuned",
+      "Plugged or disconnected duct pressure tubing giving a false high reading",
+      "Fire/smoke damper closed"
+     ],
+     "checks": [
+      "Compare the HI duct static reading with a manometer at the duct tap; check tubing",
+      "Verify VAV boxes open on a fan start and the VFD/IGV minimum settings; review the high limit and static setpoints"
+     ],
+     "severity": "warning",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947 p.119) supply air static pressure limit diagnostic; RTM alarm assignment values (p.74); HVAC-Talk 'Trane Intellipak Question' (545632) field example of the 4.0 IWC high limit",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Supply Air Static Pressure Limit - manual reset",
+     "meaning": "The auto reset supply air static pressure limit diagnostic has occurred for the third time while the unit is operating in occupied mode; a 'supply air pressure shutdown' signal is sent to the unit functions and a manual reset is required anytime after the diagnostic is set.",
+     "likelyCauses": [
+      "Same causes as the auto-reset limit, recurring three times in occupied mode"
+     ],
+     "checks": [
+      "Correct the cause of the repeated high-static trips, then reset at the HI (password protected) or by cycling RTM power"
+     ],
+     "severity": "lockout",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947 p.119) supply air static pressure limit diagnostic",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Occupied Zone Cool Setpoint Failure",
+     "meaning": "The cooling setpoint input is out of range (Occupied Zone Cool SETPOINT Failure).",
+     "likelyCauses": [
+      "Zone sensor cooling setpoint slider/thumbwheel open or shorted",
+      "Setpoint source set to a sensor/GBAS input that is not installed"
+     ],
+     "checks": [
+      "Check the setpoint source at the HI SETUP menu; ohm the zone sensor setpoint potentiometer; the unit uses the default/HI setpoint until the input returns to range (auto reset)"
+     ],
+     "severity": "info",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947) diagnostics - Unoccupied/Occupied Zone Cool Setpoint Failure",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Occupied Zone Heat Setpoint Failure",
+     "meaning": "The heating setpoint input is out of range for the Active Occupied Zone Heating setpoint.",
+     "likelyCauses": [
+      "Zone sensor heating setpoint slider/thumbwheel open or shorted",
+      "Setpoint source not installed / not assigned"
+     ],
+     "checks": [
+      "Check the setpoint source at the HI; ohm the zone sensor setpoint potentiometer; auto reset when in range"
+     ],
+     "severity": "info",
+     "source": "IntelliPak I Programming manual (ManualsLib 865947) diagnostics - zone heating setpoint failure",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Unoccupied Zone Cool Setpoint Failure",
+     "meaning": "The Unoccupied Zone Cooling Setpoint Input Is Out Of Range.",
+     "likelyCauses": [
+      "Unoccupied setpoint source (NSB panel / GBAS) not installed or not assigned",
+      "Out-of-range value from the BAS"
+     ],
+     "checks": [
+      "Check the unoccupied setpoint source at the HI; a constant automatic-reset 'Unocc Cool Setpoint Fail' usually means the source is set to a sensor or BAS input that is not present (field reports)"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.102) Unoccupied Zone Cool Setpoint Failure; HVAC-Talk field report (481332)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Unoccupied Zone Heat Setpoint Failure",
+     "meaning": "The heating setpoint input is out of range for the Active Unoccupied Zone Heating setpoint.",
+     "likelyCauses": [
+      "Unoccupied setpoint source (NSB panel / GBAS) not installed or not assigned"
+     ],
+     "checks": [
+      "Check the unoccupied heating setpoint source at the HI; auto reset when in range"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.102) Unoccupied Zone Heat Setpoint Failure; IntelliPak I Programming manual (ManualsLib 865947)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Supply Air Temp Cool Setpoint Failure",
+     "meaning": "The supply air temperature cooling setpoint input is out of range (listed as 'Supply Air Temp Cool Setpoint Fail' in the diagnostic troubleshooting list).",
+     "likelyCauses": [
+      "Setpoint source (GBAS analog input / BAS) not assigned or out of range"
+     ],
+     "checks": [
+      "Check the SA cooling setpoint source and value at the HI; the default setpoint is used until the input is valid"
+     ],
+     "severity": "info",
+     "source": "IntelliPak Signature Series diagnostic manual (ManualsLib 534679 p.101) Supply Air Temp Cool Setpoint Fail",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Voyager UCP: COOL LED flashing (Cooling Failure)",
+     "meaning": "The COOL LED on the zone sensor blinks on and off to indicate a cooling failure. Causes: the cooling and heating setpoint (slide pot) on the zone sensor has failed; the zone temperature thermistor ZTEMP on the ZTS has failed; CC1 or CC2 24 VAC control circuits are open (or open when a call for compressor occurs); or LPC1 has opened within the 3-minute minimum on-time during 4 consecutive compressor starts. If the Compressor Disable circuit or CC1/CC2 circuits create a lockout during heating mode, a COOL FAIL (pulsing) indication occurs, not HEAT FAIL.",
+     "likelyCauses": [
+      "Compressor safety circuit (HPC, winding stat, circuit breaker) open in CC1/CC2",
+      "LPC1 opening repeatedly (low charge, low airflow)",
+      "Failed zone sensor setpoint slider or thermistor"
+     ],
+     "checks": [
+      "Check 24 VAC on the CC1/CC2 circuits and the compressor safeties; check LPC1 and charge",
+      "Test the zone sensor (thermistor ~10 kohm at 77 F, setpoint pot) per the UCP service manual",
+      "Reset: cooling failures and ignition lockouts are reset in an identical manner - switch the zone sensor mode to OFF and back (or cycle 24 V control power / reset via ICS)"
+     ],
+     "severity": "lockout",
+     "source": "Parts Town Trane Rooftop Troubleshooting Guide (Voyager) - cooling failure causes; Trane Voyager Microcontrols PUB 22-7706-05 (hvacrassets) ZSM LED table; Trane Voyager CV manual (ManualsLib 534805 p.106) Resetting Cooling And Ignition Lockouts; Voyager UCP Service & Diagnostic Manual RT-SVD006A-EN",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "Voyager UCP: HEAT LED flashing (Heating Failure)",
+     "meaning": "The HEAT LED on the zone sensor blinks on and off to indicate a heating failure (gas units: ignition module lockout / limit trip; further diagnostics are available by examining the Ignition Module LED). On electric heat units a tripped heat limit switch produces no diagnostic - the HEAT indication stays ON.",
+     "likelyCauses": [
+      "Ignition module lockout after failed ignition trials (flame sense, gas valve, igniter, gas pressure)",
+      "High temperature limit (TCO) or rollout switch open",
+      "Blocked flue / combustion blower pressure switch open"
+     ],
+     "checks": [
+      "Read the ignition module LED for the lockout indication; check TCO/rollout, pressure switch, flame sensor and gas pressure",
+      "Reset the ignition lockout exactly as a cooling failure: zone sensor mode to OFF and back, or cycle 24 V control power"
+     ],
+     "severity": "lockout",
+     "source": "Trane Voyager Microcontrols PUB 22-7706-05 (hvacrassets) ZSM LED table; Trane Voyager CV manual (ManualsLib 534805 p.106) Resetting Cooling And Ignition Lockouts; Trane Help Center List of Light Commercial LED Codes (360060172532) electric heat limit note",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "Voyager UCP: SERVICE LED on steady (Clogged filter)",
+     "meaning": "The ZSM Service LED is used to indicate a clogged filter, an active smoke detector, or a fan failure trip. The dirty filter switch lights the Service LED on the zone sensor and allows continued unit operation. Measured at the LTB: Clogged Filter = approximately 32 VDC steady.",
+     "likelyCauses": [
+      "Loaded filters",
+      "Filter switch setpoint too low or tubing reversed"
+     ],
+     "checks": [
+      "Change filters; verify the dirty-filter switch opens with clean filters and the fan running"
+     ],
+     "severity": "info",
+     "source": "Trane Voyager Commercial I&O manual (ManualsLib 825268 p.132) Zone Temperature Sensor (ZSM) Service Indicator; Voyager UCP Service & Diagnostic Manual RT-SVD006A-EN LTB voltage table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Voyager UCP: SERVICE LED flashing (Fan failure / condensate overflow)",
+     "meaning": "The fan failure switch disables all unit functions and flashes the Service LED on the zone sensor; if the 'Fan Failure' switch opens for at least 40 seconds during fan operation the unit stops. The LED remains flashing until the unit is reset. Training literature also lists a Condensate Overflow Switch (COF) trip as a Service LED flashing cause. Measured at the LTB: Fan Failure = alternates between 32 VDC and 0.75 VDC.",
+     "likelyCauses": [
+      "Supply fan not running (belt, motor, contactor, overload)",
+      "Fan proving switch misadjusted / tubing",
+      "Condensate overflow switch tripped (where fitted)"
+     ],
+     "checks": [
+      "Verify the fan runs and the proving switch closes; check belts and motor",
+      "Reset: zone sensor mode to OFF and back, or cycle 24 V control power"
+     ],
+     "severity": "shutdown",
+     "source": "Trane Voyager Commercial I&O manual (ManualsLib 825268 p.132) ZSM Service Indicator; Trane Voyager Microcontrols PUB 22-7706-05 (hvacrassets); Voyager UCP Service & Diagnostic Manual RT-SVD006A-EN LTB voltage table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Voyager UCP: COOL and SERVICE LEDs flashing simultaneously (VAV supply air pressure sensor failure)",
+     "meaning": "A UCP software update added a diagnostic for a failed supply air pressure sensor on VAV units; the diagnostic flashes COOL and SERVICE simultaneously.",
+     "likelyCauses": [
+      "Supply duct pressure transducer failed, tubing disconnected/plugged, or wiring open"
+     ],
+     "checks": [
+      "Check the transducer output and duct tubing; applies only to Voyager VAV (UCP) units with the updated software"
+     ],
+     "severity": "warning",
+     "source": "Trane Voyager Microcontrols 'The Voyage Continues' PUB 22-7706-06 update notes (hvac.amickracing Voyager Micro sections)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Voyager UCP: SYSTEM LED flashing",
+     "meaning": "System LED flashing indicates the unit is in Test mode (the SYSTEM LED is steady when the unit is on/enabled).",
+     "likelyCauses": [],
+     "checks": [
+      "Remove the short from the TEST terminals; the UCP exits test mode after about one hour in any step"
+     ],
+     "severity": "info",
+     "source": "Trane Voyager Microcontrols PUB 22-7706-05 (hvacrassets) ZSM LED table; Trane Voyager Commercial I&O manual (ManualsLib 825268 p.72) Test Modes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Voyager UCP: Ignition module green LED - two fast flashes (ignition lockout)",
+     "meaning": "A green LED on the ignition module gives the status of the ignition system when the module is powered. If the burner fails to ignite, the ignition module attempts two more ignition cycles before locking out, and the green LED indicates a lockout with two fast flashes.",
+     "likelyCauses": [
+      "No spark / failed igniter",
+      "No gas or low gas pressure, gas valve not opening",
+      "Flame sensor dirty or misplaced, poor ground"
+     ],
+     "checks": [
+      "Watch a trial for ignition: spark, gas valve voltage, flame; clean the flame sensor and check gas pressure",
+      "Reset the lockout via the zone sensor OFF/back or by cycling 24 V power"
+     ],
+     "severity": "lockout",
+     "source": "Voyager UCP Service & Diagnostic Manual RT-SVD006A-EN (search excerpt via support.trane.com 360060620431); Trane Help Center List of Light Commercial LED Codes (360060172532)",
      "evidence": "single_secondary"
     }
    ],
    "diagnosticTips": [
     "Diagnostics and mode status are read on the unit-mounted Human Interface LCD (Diagnostics menu) or a remote HI panel; alarm relays can be configured for BAS.",
     "Common IPC (interprocessor communication) faults are usually wiring/termination problems at the modules; check the link before replacing modules.",
-    "Full diagnostic text list and troubleshooting trees: IntelliPak I Programming, Troubleshooting manual and IOM RT-SVX36M-EN (Trane eLibrary)."
+    "Full diagnostic text list and troubleshooting trees: IntelliPak I Programming, Troubleshooting manual and IOM RT-SVX36M-EN (Trane eLibrary).",
+    "IntelliPak diagnostics are plain-text messages on the unit-mounted Human Interface (HI, 1U65: 2 line x 40 character LCD with a 16-key keypad) or a Remote HI panel; there are no numeric codes. Main menu keys: STATUS, SETPOINTS, SETUP, CONFIGURATION, DIAGNOSTICS, SERVICE MODE (plus CUSTOM). Press DIAGNOSTICS to see the active diagnostics list and step through them with the NEXT/PREVIOUS keys; the Status menu shows 'Disable or Lockout Sources' for each function (e.g. Disabled By Low Pressure Cutout, Disabled By Ckt - Evap Low Limit).",
+    "Reset: manual-reset (PMR) diagnostics are cleared from the HI DIAGNOSTICS menu or by cycling power to the RTM. On the 'Diagnostic Reset Is Password Protected' screen enter the password with the + / - keys and press ENTER; the HI shows 'Resetting Active Manual Diagnostics Sending Reset Request' then 'Updating Unit Data, Please wait'. Diagnostics can also be reset from Tracer Summit. Automatic-reset diagnostics clear themselves when the input returns to range (typically for 10-15 continuous seconds).",
+    "SERVICE MODE (local HI only, not available on the Remote HI) lets you force the supply fan, exhaust, economizer, individual compressor circuits and heat stages to test them and to reproduce a lockout (e.g. turn on the circuit that tripped while watching the proving input).",
+    "Module designators: IntelliPak I - RTM 1U48, SCM/MCM 1U49, Heat 1U50, VOM 1U53, HI 1U65; IntelliPak II - RTM 1U1, SCM/MCM 1U3, VOM 1U8. All modules share one twisted-pair interprocessor comm link landed on a common terminal strip; most 'Communication Failure' diagnostics are wiring, module power or VFD noise problems - keep the comm link away from power wiring.",
+    "Gas heat: flame failure locks out at the ignition control (IC) board and is reset with the button on the front of the IC board case, then reset the HI diagnostic. High duct temperature thermostats 3S16 (240 F supply) / 3S17 (135 F return) open the Emergency Stop input.",
+    "Voyager UCP (pre-2003, 3-25 t): the red UCP LED is visible through the peep hole in the lower-left corner of the control box cover. Zone sensor LEDs (SYSTEM/HEAT/COOL/SERVICE) report failures; a spare ZSM with alligator jumpers on terminals 6-10 can be clipped to LTB terminals 6-10 to read status where no LED sensor is installed (Clogged filter ~32 VDC, Fan failure alternating 32/0.75 VDC). Cooling failures and ignition lockouts are reset in the identical manner: zone sensor mode to OFF and back on, or cycle 24 V control power. TEST mode: short TEST terminals on the LTB 2-3 s; each further short steps the mode; the UCP exits after 1 hour in a step."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -3065,13 +3678,212 @@
     {
      "title": "Trane IntelliPak IOM RT-SVX36M-EN (2015)",
      "docId": "RT-SVX36M-EN"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Legacy IntelliPak Compressor Trip Diagnostics",
+     "docId": "support.trane.com article 16077839043085",
+     "url": "https://support.trane.com/hc/en-us/articles/16077839043085-Legacy-IntelliPak-Compressor-Trip-Diagnostics"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Compressor Contactor Failure (SCM/MCM 1U49 proving input)",
+     "docId": "support.trane.com article 34759305864205",
+     "url": "https://support.trane.com/hc/en-us/articles/34759305864205-Compressor-Contactor-Failure"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - IntelliPak (Legacy) HI Comm Loss",
+     "docId": "support.trane.com article 19893668115853",
+     "url": "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - MCM Communications Failure",
+     "docId": "support.trane.com article 34791196533645",
+     "url": "https://support.trane.com/hc/en-us/articles/34791196533645-MCM-Communications-Failure"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Equipment / External Auto Stop versus Emergency Stop (IntelliPak 20-162)",
+     "docId": "support.trane.com article 27517129655309",
+     "url": "https://support.trane.com/hc/en-us/articles/27517129655309-Equipment-External-Auto-Stop-versus-Emergency-Stop-IntelliPak-20-162"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - IntelliPak (Legacy) - How to troubleshoot a Traq flow sensor or Velocity Sensor Failures",
+     "docId": "support.trane.com article 16077962622477",
+     "url": "https://support.trane.com/hc/en-us/articles/16077962622477-IntelliPak-Legacy-How-to-troubleshoot-a-Traq-flow-sensor-or-Velocity-Sensor-Failures"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Flow sensor failure. Pressure transducer troubleshooting",
+     "docId": "support.trane.com article 16077694845069",
+     "url": "https://support.trane.com/hc/en-us/articles/16077694845069-Flow-sensor-failure-Pressure-transducer-troubleshooting"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Voyager III and IntelliPak (Legacy) - Supply / Exhaust Fan Failures or Compressor Trip diagnostics - K42 relay on VFD has failed",
+     "docId": "support.trane.com article 16077950185101",
+     "url": "https://support.trane.com/hc/en-us/articles/16077950185101-Voyager-III-and-IntelliPak-Legacy-Supply-Exhaust-Fan-Failures-or-Compressor-Trip-diagnostics-K42-relay-on-VFD-has-failed"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - IntelliPak (Legacy) section index (Dirty Filter Alarm Diagnostic, Supply Air Pressure Sensor Failure, Space Pressure Sensor Failure articles)",
+     "docId": "support.trane.com section 16061964681869",
+     "url": "https://support.trane.com/hc/en-us/sections/16061964681869-IntelliPak-Legacy"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Intellipak (Legacy) Control Programming/Troubleshooting Guide (attaches RT-SVP07)",
+     "docId": "support.trane.com article 27479361450253",
+     "url": "https://support.trane.com/hc/en-us/articles/27479361450253-Intellipak-Legacy-Control-Programming-Troubleshooting-Guide"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Intellipak w/ Symbio 800 - Space Pressure Reading Faults (Statitrac transducer range; same transducer as legacy)",
+     "docId": "support.trane.com article 19743333794317",
+     "url": "https://support.trane.com/hc/en-us/articles/19743333794317-Intellipak-w-Symbio-800-Space-Pressure-Reading-Faults"
+    },
+    {
+     "title": "Trane IntelliPak Rooftop Programming & Troubleshooting Guide RT-SVP07D-EN (2014) / RT-SVP07E-EN",
+     "docId": "RT-SVP07D-EN",
+     "url": "https://www.trane.com/content/dam/Trane/Commercial/ap/philippines/Products-Systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVP07D-EN_07222014.pdf"
+    },
+    {
+     "title": "Trane IntelliPak I Programming, Troubleshooting Manual (ManualsLib 865947) - Password Protected Screens p.23, Disable Or Lockout Sources p.31, RTM/MCM Alarm assignment submenus pp.74-75, Service Mode Menu p.108, Diagnostics pp.119-141",
+     "docId": "ManualsLib 865947 (RT-SVP07)",
+     "url": "https://www.manualslib.com/manual/865947/Trane-Intellipak-I.html"
+    },
+    {
+     "title": "Trane IntelliPak Installation Operation & Maintenance RT-SVX36 (ManualsLib 687076) - safety devices, fan proving 3S68/3S69, LPC/HPC lockout, freezestat 4S12, high duct temp t-stats 3S16/3S17, IC board reset",
+     "docId": "RT-SVX36 (ManualsLib 687076)",
+     "url": "https://www.manualslib.com/manual/687076/Trane-Intellipak.html"
+    },
+    {
+     "title": "Trane IntelliPak IOM RT-SVX36M-EN (2015) PDF",
+     "docId": "RT-SVX36M-EN",
+     "url": "https://www.trane.com/content/dam/Trane/Commercial/ap/philippines/Products-Systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVX36M-EN_02012015.pdf"
+    },
+    {
+     "title": "Trane IntelliPak Signature Series Installation, Owner, and Diagnostic Manual (ManualsLib 534679) - Diagnostic troubleshooting pp.97-102 (same UCM/HI diagnostic list, self-contained variant)",
+     "docId": "ManualsLib 534679",
+     "url": "https://www.manualslib.com/manual/534679/Trane-Intellipak-Signature-Series.html?page=99"
+    },
+    {
+     "title": "Trane IntelliPak SCWF 20 Installation, Operation and Maintenance (ManualsLib 1422639) - Diagnostics: Emergency Stop, compressor proving, evaporator temp sensor pp.103-104",
+     "docId": "ManualsLib 1422639",
+     "url": "https://www.manualslib.com/manual/1422639/Trane-Intellipak-Scwf-20.html?page=103"
+    },
+    {
+     "title": "Trane IntelliPak SCWG/SCRG/SIWG Self-Contained Modular Series manual - Diagnostic troubleshooting pp.113-118 (manualsdir 213839)",
+     "docId": "manualsdir 213839",
+     "url": "https://www.manualsdir.com/manuals/213839/trane-intellipak-scwg-020-scwg-025-scwg-030-scwg-035-swg-020-swg-025-swg-030-swg-035-scrg-020-scrg-025-scrg-032-srg-020-siwg-020-siwg-025-siwg-030-siwg-035-sirg-020-sirg-025-sirg-032-intellipak-self-contained-modu.html?page=114"
+    },
+    {
+     "title": "Trane IntelliPak II 90-162 Ton IOM (RT-SVX30 family) - module designators 1U1 RTM, 1U3 SCM/MCM, 1U8 VOM",
+     "docId": "RT-SVX30",
+     "url": "https://cdnsm5-ss10.sharpschool.com/UserFiles/Servers/Server_54431/File/Departments/Maintenance/References/Units/IntelliPak%20II%2090-162%20Ton%20IOM.pdf"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - Voyager Microcontrols (UCP) Service & Diagnostic Manual RT-SVD006A-EN (3-25 ton UCP)",
+     "docId": "RT-SVD006A-EN (support.trane.com article 360060620431 / 360034129012)",
+     "url": "https://support.trane.com/hc/en-us/articles/360060620431-Voyager-Microcontrols-UCP-Service-Diagnostic-Manual"
+    },
+    {
+     "title": "Trane Voyager Commercial Installation & Operation Manual (ManualsLib 825268) - Test Modes p.72; Zone Temperature Sensor (ZSM) Service Indicator p.132",
+     "docId": "ManualsLib 825268",
+     "url": "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=132"
+    },
+    {
+     "title": "Trane Voyager CV Installation and Maintenance Manual (ManualsLib 534805) - Resetting Cooling And Ignition Lockouts; ZSM Service Indicator p.106",
+     "docId": "ManualsLib 534805",
+     "url": "https://www.manualslib.com/manual/534805/Trane-Voyager-Cv.html?page=106"
+    },
+    {
+     "title": "Trane Voyager Microcontrols 'The Voyage Continues' training PUB 22-7706-05 (hvacrassets mirror) and 22-7706-06 sections 2/5/6 (hvac.amickracing mirror) - ZSM LED diagnostics, updates",
+     "docId": "PUB 22-7706-05 / 22-7706-06",
+     "url": "https://hvacrassets.net/handouts2/VoyagerMicrocontrols.pdf"
+    },
+    {
+     "title": "Parts Town - Trane Rooftop Unit Troubleshooting Guide: Voyager & Precedent Heating, Cooling & Noise Faults (zone sensor LED failure causes)",
+     "url": "https://www.partstown.com/cm/resource-center/guides/gd2/trane-rooftop-troubleshooting-error-codes"
+    },
+    {
+     "title": "Trane Commercial HVAC Help Center - List of Light Commercial LED Codes (IGN module LED behaviour)",
+     "docId": "support.trane.com article 360060172532",
+     "url": "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes"
     }
    ],
    "confidence": "medium",
    "sources": [
     "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss",
     "https://www.manualslib.com/manual/865947/Trane-Intellipak-I.html",
-    "https://www.manualslib.com/manual/687076/Trane-Intellipak.html"
+    "https://www.manualslib.com/manual/687076/Trane-Intellipak.html",
+    "https://support.trane.com/hc/en-us/articles/16077839043085-Legacy-IntelliPak-Compressor-Trip-Diagnostics",
+    "https://support.trane.com/hc/en-us/articles/34759305864205-Compressor-Contactor-Failure",
+    "https://support.trane.com/hc/en-us/articles/34791196533645-MCM-Communications-Failure",
+    "https://support.trane.com/hc/en-us/articles/27517129655309-Equipment-External-Auto-Stop-versus-Emergency-Stop-IntelliPak-20-162",
+    "https://support.trane.com/hc/en-us/articles/16077962622477-IntelliPak-Legacy-How-to-troubleshoot-a-Traq-flow-sensor-or-Velocity-Sensor-Failures",
+    "https://support.trane.com/hc/en-us/articles/16077694845069-Flow-sensor-failure-Pressure-transducer-troubleshooting",
+    "https://support.trane.com/hc/en-us/articles/16077950185101-Voyager-III-and-IntelliPak-Legacy-Supply-Exhaust-Fan-Failures-or-Compressor-Trip-diagnostics-K42-relay-on-VFD-has-failed",
+    "https://support.trane.com/hc/en-us/sections/16061964681869-IntelliPak-Legacy",
+    "https://support.trane.com/hc/en-us/articles/27479361450253-Intellipak-Legacy-Control-Programming-Troubleshooting-Guide",
+    "https://support.trane.com/hc/en-us/articles/19743333794317-Intellipak-w-Symbio-800-Space-Pressure-Reading-Faults",
+    "https://www.trane.com/content/dam/Trane/Commercial/ap/philippines/Products-Systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVP07D-EN_07222014.pdf",
+    "https://www.trane.com/content/dam/Trane/Commercial/ap/philippines/Products-Systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVX36M-EN_02012015.pdf",
+    "https://www.manualslib.com/manual/534679/Trane-Intellipak-Signature-Series.html?page=99",
+    "https://www.manualslib.com/manual/1422639/Trane-Intellipak-Scwf-20.html?page=103",
+    "https://www.manualsdir.com/manuals/213839/trane-intellipak-scwg-020-scwg-025-scwg-030-scwg-035-swg-020-swg-025-swg-030-swg-035-scrg-020-scrg-025-scrg-032-srg-020-siwg-020-siwg-025-siwg-030-siwg-035-sirg-020-sirg-025-sirg-032-intellipak-self-contained-modu.html?page=114",
+    "https://cdnsm5-ss10.sharpschool.com/UserFiles/Servers/Server_54431/File/Departments/Maintenance/References/Units/IntelliPak%20II%2090-162%20Ton%20IOM.pdf",
+    "https://support.trane.com/hc/en-us/articles/360060620431-Voyager-Microcontrols-UCP-Service-Diagnostic-Manual",
+    "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=132",
+    "https://www.manualslib.com/manual/534805/Trane-Voyager-Cv.html?page=106",
+    "https://hvacrassets.net/handouts2/VoyagerMicrocontrols.pdf",
+    "https://www.partstown.com/cm/resource-center/guides/gd2/trane-rooftop-troubleshooting-error-codes",
+    "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "IntelliPak module power LED off (RTM/SCM/MCM/Heat/VCM/VOM)",
+     "meaning": "Module unpowered - check the 24 VAC fuse/transformer feeding that module; the HI will show a communication failure for it",
+     "checks": [
+      "Check module power and the shared J1 comm link before replacing the module"
+     ]
+    },
+    {
+     "pattern": "Voyager UCP red LED on steady (peep hole, lower-left of control box cover)",
+     "meaning": "UCP functioning with power applied"
+    },
+    {
+     "pattern": "Voyager UCP red LED blinking continuously",
+     "meaning": "Unit in TEST mode"
+    },
+    {
+     "pattern": "Voyager UCP red LED off",
+     "meaning": "No 24 VAC to the UCP or UCP failed"
+    },
+    {
+     "pattern": "Voyager zone sensor SYSTEM LED on / flashing",
+     "meaning": "On = system on; flashing = test mode"
+    },
+    {
+     "pattern": "Voyager zone sensor HEAT LED on / flashing",
+     "meaning": "On = heating; flashing = heating failure (ignition lockout / limit; electric heat limit trips show HEAT steady on with no diagnostic)"
+    },
+    {
+     "pattern": "Voyager zone sensor COOL LED on / flashing",
+     "meaning": "On = cooling; flashing = cooling failure (CC1/CC2 open, LPC1 4 trips, zone sensor setpoint/thermistor failure)"
+    },
+    {
+     "pattern": "Voyager zone sensor SERVICE LED on steady",
+     "meaning": "Clogged filter (unit keeps running); LTB reads about 32 VDC"
+    },
+    {
+     "pattern": "Voyager zone sensor SERVICE LED flashing",
+     "meaning": "Fan failure (unit stops; also smoke detector / condensate overflow trip); LTB alternates 32 VDC and 0.75 VDC"
+    },
+    {
+     "pattern": "Voyager zone sensor COOL + SERVICE flashing together",
+     "meaning": "VAV supply air pressure sensor failure (updated UCP software)"
+    },
+    {
+     "pattern": "Voyager ignition module green LED steady",
+     "meaning": "Ignition module powered, no lockout"
+    },
+    {
+     "pattern": "Voyager ignition module green LED two fast flashes",
+     "meaning": "Ignition lockout after three failed trials"
+    }
    ]
   },
   {

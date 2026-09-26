@@ -2625,7 +2625,7 @@
   {
    "id": "igc",
    "name": "Carrier Integrated Gas Controller (IGC) — LED flash codes",
-   "description": "Gas-heat ignition/safety board on 48-series rooftops (48TC/HC/LC/FC/GC/KC/JC, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ, Bryant 580J/581J, ICP RGH/RGS). One status LED: steady ON = normal, OFF = no power or hardware failure, N flashes = fault. Codes are displayed until the fault clears or power is cycled.",
+   "description": "Gas-heat ignition/safety board on 48-series rooftops (48TC/HC/LC/FC/GC/KC/JC, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ, Bryant 580J/581J, ICP RGH/RGS). One status LED: steady ON = normal, OFF = no power or hardware failure, N flashes = fault. Codes are displayed until the fault clears or power is cycled. Scope: this sidecar replaces the 11 IGC codes in the base pack (5 of which were flagged 'from memory') with the same 11 codes now sourced from the Carrier 48TC/48HC/Bryant 580J 'IGC Board LED Alarm Codes' tables and the legacy 48HJ/48TF/48EJ/48TJ 'LED Error Code Service Analysis' tables. The IGC table is identical across Carrier 48TC/HC/LC/FC/GC/KC/JC, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ/GS/GX, Bryant 580J/581J and ICP RGH/RGS, so coverage is 'complete' for the IGC (codes OFF, ON, 1–9). Honeywell W7220 JADE (Carrier EconoMi$er X) alarm strings are transcribed from the Honeywell 63-2700 / 62-0331 installation instructions, which Carrier reproduces in the EconoMi$er X IIK-CRECOMZR instructions and 48TC/50TC IOMs. Early-firmware modules show ACT UNDER V / ACT OVER V / ACT STALLED and SYS ALARM; later firmware (63-2700-11) consolidates the actuator faults into ACT ERROR and adds OA SENS T ERR, FREEZE ALARM, SHUTDOWN ACTIVE, DMP CAL RUNNING and DA SENS ALM. Both sets are included so the assistant matches whatever the LCD shows. Fault-code 'checks' marked 'Manual:' are from the source; 'Field practice:' items are sound technician practice added by the builder. The W7",
    "appliesTo": [
     "48TC",
     "48HC",
@@ -2649,175 +2649,420 @@
    "faultCodes": [
     {
      "code": "LED OFF",
-     "meaning": "Hardware failure (no power to IGC, or the board has failed).",
+     "meaning": "Loss of power to the IGC / hardware failure (LED off).",
      "likelyCauses": [
-      "No 24 VAC at IGC (TRAN, fuse/CB, door switch)",
+      "Blown 5-amp fuse on the IGC board",
+      "No power to the unit or open 24 V circuit (transformer, unit fuse/CB, door/service switch, loose plug)",
       "Failed IGC board"
      ],
      "checks": [
-      "Measure 24 VAC at the IGC power terminals; if present with LED off, replace IGC",
-      "Check the 24 V control fuse / circuit breaker and transformer secondary"
+      "Manual: check the 5 amp fuse on the IGC, power to the unit, and the 24 V circuit",
+      "Field practice: with 24 VAC confirmed at the IGC input and the fuse good, the board is dead — replace the IGC"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table) — 'Hardware failure (LED OFF)'",
-     "evidence": "single_secondary"
+     "source": "Carrier 48TC Service Manual Table 19 / 48HC Table 21 'IGC Board LED Alarm Codes' — 'Loss of power to the IGC ... check 5 amp fuse on IGC, power to unit, and 24V circuit'; tsihvac igc_codes.pdf 'Hardware Failure (LED OFF)'",
+     "evidence": "manufacturer_doc"
     },
     {
      "code": "LED ON (steady)",
      "meaning": "Normal operation.",
      "severity": "info",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "1 flash",
-     "meaning": "Indoor fan on/off delay modified — the IGC has shortened the fan on/off delay after a limit-switch trip or heating fault.",
-     "likelyCauses": [
-      "Prior limit-switch trip (low airflow: dirty filters, slipping belt, closed dampers, wrong fan speed)",
-      "Excessive supply-air temperature rise"
-     ],
-     "checks": [
-      "Check filters, belt and blower; measure temperature rise against nameplate range",
-      "Clear by cycling power after fixing airflow"
-     ],
-     "severity": "warning",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "inferred",
-     "notes": "From memory of the IGC table; verify against the IOM."
+     "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — 'Normal Operation' (LED on); 48EJ IOM p.60",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [],
+     "checks": []
     },
     {
      "code": "2 flashes",
-     "meaning": "Limit switch fault — high-temperature limit switch is open.",
+     "meaning": "Limit switch fault — the high temperature limit switch is open.",
      "likelyCauses": [
-      "Low airflow (dirty filter, loose belt, blower/motor fault, wrong drive/speed)",
-      "Supply-air temperature rise above nameplate range",
-      "Failed limit switch"
+      "Low airflow: dirty filters, slipping/broken belt, blower or motor fault, wrong fan speed or drive setting, closed dampers/registers",
+      "Supply-air temperature rise above the nameplate range (over-fired, high manifold pressure)",
+      "Failed or weak limit switch"
      ],
      "checks": [
-      "Check indoor (evaporator) fan motor operation and belt",
-      "Measure supply-air temperature rise; it must be within the range on the unit nameplate",
-      "Ohm the limit switch cold: should be closed"
+      "Manual: check the operation of the indoor fan motor; ensure the supply-air temperature rise is in accordance with the range on the unit nameplate",
+      "Manual (action taken by control): gas valve and igniter off, indoor fan and inducer on; automatic reset when the limit closes",
+      "Field practice: ohm the limit switch cold (should be closed); check manifold pressure and firing rate; verify the economizer is not stuck open feeding cold air that masks a plugged coil"
      ],
      "severity": "warning",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table) — 'Limit switch fault (2 flashes)'",
+     "source": "Carrier 48TC Service Manual Table 19 / 48HC Table 21 'IGC Board LED Alarm Codes' — '2 flashes: Limit Switch Fault — High temperature limit switch is open'; 48HJD IOM p.39 'LED Error Code Service Analysis'; tsihvac igc_codes.pdf",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "3 flashes",
-     "meaning": "Flame sense fault — the IGC sensed flame that should not be present.",
+     "meaning": "Flame sense fault — the IGC sensed a flame when it should not be present (flame sensed in a non-heating state).",
      "likelyCauses": [
-      "Gas valve leaking through / stuck open",
-      "Flame sensor shorted or wiring grounded",
-      "Burner afterburn from dirty burners"
+      "Gas valve leaking through / not closing fully",
+      "Flame sensor or its lead shorted to ground / mis-terminated flame sense and ignition wires",
+      "Burner afterburn from dirty or misaligned burners",
+      "Ignitor and flame-sensor electrode spacing or gap out of specification"
      ],
      "checks": [
-      "With W de-energized, verify no flame and no gas flow at the manifold",
-      "Inspect flame sensor lead for grounds; measure flame current",
-      "Check gas valve closes fully (manifold pressure drops to 0 on call end)"
+      "Manual: check ignitor and flame sensor electrode spacing, gaps, etc.; ensure flame sense and ignition wires are properly terminated; verify the unit is obtaining proper gas",
+      "Field practice: with W de-energized confirm no flame at the burners and 0 in. w.c. manifold pressure (valve closed); inspect the flame-sensor lead for chafing/grounds",
+      "Reset: automatic once flame is no longer sensed; otherwise cycle 24 V power"
      ],
      "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table) — 'Flame sense fault (3 flashes)'",
+     "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '3 flashes: Flame Sense Fault — IGC sensed a flame when it should not be present'; 48HJD IOM p.39; tsihvac igc_codes.pdf 'Flame sense fault (3 flashes)'",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "4 flashes",
-     "meaning": "Four consecutive limit switch faults — lockout.",
-     "likelyCauses": [
-      "Persistent low airflow or over-firing",
-      "Blocked heat exchanger / flue"
-     ],
-     "checks": [
-      "Same as 2 flashes; verify manifold pressure and firing rate",
-      "Reset by cycling 24 V power to the IGC (or thermostat call) after correcting airflow"
-     ],
-     "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "inferred",
-     "notes": "From memory of the IGC table; verify against the IOM."
-    },
-    {
-     "code": "5 flashes",
-     "meaning": "Ignition lockout — unit failed to prove flame (typically after 4 ignition attempts / 15 tries on some versions).",
-     "likelyCauses": [
-      "No gas / low gas pressure",
-      "Igniter not sparking or spark gap wrong",
-      "Flame sensor dirty or misplaced",
-      "Gas valve not opening (no 24 V, failed valve)",
-      "Poor burner/flame carryover"
-     ],
-     "checks": [
-      "Verify inlet and manifold gas pressure during trial",
-      "Check spark at igniter; check 24 V at gas valve during trial",
-      "Clean flame sensor; measure flame current (microamps) per IOM",
-      "Reset by cycling the thermostat call or 24 V power"
-     ],
-     "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "inferred",
-     "notes": "From memory of the IGC table; verify against the IOM."
-    },
-    {
-     "code": "6 flashes",
-     "meaning": "Induced-draft motor fault — IDM/pressure switch did not prove or lost proving during a cycle.",
-     "likelyCauses": [
-      "Inducer not running (motor, capacitor, wiring)",
-      "Pressure switch tubing plugged or switch stuck",
-      "Blocked flue / vent, high wind conditions"
-     ],
-     "checks": [
-      "Confirm IDM runs on call for heat; check pressure switch closes with inducer running",
-      "Inspect pressure switch hose and inducer wheel",
-      "Check flue hood and vent for blockage"
-     ],
-     "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "inferred",
-     "notes": "From memory of the IGC table; verify against the IOM."
-    },
-    {
      "code": "7 flashes",
-     "meaning": "Rollout switch lockout — the rollout switch has opened.",
+     "meaning": "Rollout switch fault — the rollout switch has opened. The rollout switch will automatically reset, but the IGC continues to lock out the unit; reset at the unit disconnect.",
      "likelyCauses": [
-      "Flame rollout from blocked heat exchanger or flue",
-      "Delayed ignition (low gas pressure, dirty burners, cross-over problems)",
-      "Failed rollout switch"
+      "Flame rollout from a blocked or cracked heat exchanger, blocked flue, or inducer wheel loose on the motor shaft",
+      "Delayed ignition (low gas pressure, dirty burners, poor carryover) or gas valve malfunction",
+      "Failed rollout switch or loose wiring in the rollout circuit"
      ],
      "checks": [
-      "Inspect heat exchanger and flue for blockage; check for delayed ignition",
-      "Rollout switch is manual reset — reset only after finding the cause",
-      "Check burner alignment and manifold pressure"
+      "Manual: check gas valve operation; ensure the induced-draft blower wheel is properly secured to the motor shaft",
+      "Field practice: inspect the heat exchanger and burner compartment for rollout scorching; verify inducer draws and flue is clear; watch ignition for delayed light-off",
+      "Reset: cycle unit power at the disconnect after correcting the cause (some vintages use a manual-reset rollout switch — reset at the switch)"
      ],
      "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table) — 'Rollout switch fault (7 flashes)'",
+     "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '7 flashes: Rollout Switch Fault — Rollout switch has opened'; 48HJD IOM p.39; tsihvac igc_codes.pdf 'Rollout Switch Fault (LED 7 flashes) ... rollout switch will automatically reset but IGC will continue to lock out unit ... reset at unit disconnect'",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "8 flashes",
-     "meaning": "Internal control fault — the microprocessor has sensed an error in its software or hardware.",
+     "meaning": "Internal control fault — the IGC has sensed an internal hardware or software error (microprocessor error).",
      "likelyCauses": [
       "Failed IGC board",
-      "Electrical noise / poor 24 V supply"
+      "Electrical noise or poor 24 V supply / grounding causing a microprocessor fault"
      ],
      "checks": [
-      "Cycle 24 V power; if the code returns, replace the IGC"
+      "Manual: if the error code is not cleared by resetting unit power, replace the IGC",
+      "Field practice: before replacing, verify 24 VAC supply is stable (not below ~20 V under load) and the board ground is good"
      ],
      "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table) — 'Internal control fault (8 flashes)'",
+     "source": "Carrier 48TC Service Manual Table 19 / 48HC Table 21 'IGC Board LED Alarm Codes' — '8 flashes: Internal Control Fault — IGC has sensed internal hardware or software error'; 48HJD IOM p.39; tsihvac igc_codes.pdf",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "1 flash",
+     "meaning": "Indoor (evaporator) fan on/off delay modified.",
+     "likelyCauses": [
+      "The IGC shortened the fan on/off delay because a limit switch opened or a heating fault occurred during the previous cycle (low airflow, high temperature rise)",
+      "Informational: the control has altered the fan timing to protect the heat exchanger"
+     ],
+     "checks": [
+      "Field practice: treat as an airflow warning — check filters, belt tension/condition, blower rotation and supply-air temperature rise against the nameplate range",
+      "Look for a companion 2- or 4-flash code (codes display in numerical sequence with a 3-second pause between them)",
+      "Clears on its own once normal heating cycles resume, or on 24 V power reset"
+     ],
+     "severity": "warning",
+     "source": "Carrier 48TC Service Manual Table 19 / Bryant 580J Table 14 'IGC Board LED Alarm Codes' — '1 flash: Evaporator Fan On/Off Delay Modified'; 48EJ IOM p.60 '1 FLASH: Fan ON/OFF Delay Modified'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "4 flashes",
+     "meaning": "Four consecutive limit switch faults.",
+     "likelyCauses": [
+      "Persistent low airflow (filters, belt, blower, wrong speed) or over-firing that reopened the limit four cycles in a row",
+      "Blocked heat exchanger or flue / return-air restriction",
+      "Limit switch failing early"
+     ],
+     "checks": [
+      "Same checks as 2 flashes: indoor fan operation, supply-air temperature rise within nameplate range, manifold pressure",
+      "Field practice: measure external static and blower amps; confirm the correct fan speed/pulley setting for the heat input",
+      "Reset: cycle 24 V power to the IGC (or the thermostat call) after correcting the airflow problem"
+     ],
+     "severity": "lockout",
+     "source": "Carrier 48TC Service Manual Table 19 / Bryant 580J Table 14 'IGC Board LED Alarm Codes' — '4 flashes: 4 Consecutive Limit Switch Faults'; 48EJ IOM p.60 '4 FLASHES: 4 Consecutive Limit Switch Faults'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "5 flashes",
+     "meaning": "Ignition lockout fault — the unit unsuccessfully attempted ignition for 15 minutes.",
+     "likelyCauses": [
+      "No gas or low inlet/manifold gas pressure (valve off, regulator, meter)",
+      "Ignitor not sparking / wrong electrode gap; flame sensor dirty, cracked or misplaced; ignition and flame-sense wires mis-terminated",
+      "Gas valve not opening (no 24 V at valve during trial, failed valve)",
+      "Poor flame carryover between burners; inducer/pressure switch dropping out during trial"
+     ],
+     "checks": [
+      "Manual: check ignitor and flame sensor electrode spacing, gaps, etc.; ensure flame sense and ignition wires are properly terminated; verify the unit is obtaining the proper amount of gas",
+      "Field practice: watch a trial for ignition — spark present? 24 V at the gas valve? manifold pressure rises? — then measure flame current with a microammeter after cleaning the sensor",
+      "Reset: cycle 24 V power to the IGC or interrupt the thermostat call (manual reset)"
+     ],
+     "severity": "lockout",
+     "source": "Carrier 48HC Controls/Troubleshooting Table 21 'IGC Board LED Alarm Codes' — '5 flashes: Ignition Lockout — Unit unsuccessfully attempted ignition for 15 minutes'; 48TC Table 19; tsihvac igc_codes.pdf 'Ignition Lockout (LED 5 flashes)'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "6 flashes",
+     "meaning": "Induced-draft motor fault — the IGC did not sense the inducer (IDM) running at proper speed.",
+     "likelyCauses": [
+      "Inducer motor not running (no voltage, failed motor or capacitor, seized wheel)",
+      "Speed (Hall-effect) sensor inside the IDM failed, or its 3-wire plug loose/miswired at IGC terminal J2",
+      "Inducer wheel loose on the shaft or motor running slow"
+     ],
+     "checks": [
+      "Manual: check for proper voltage to the IDM; if the motor is operating, check the speed sensor plug / IGC terminal J2 connection — PIN 1 white, PIN 2 red, PIN 3 black",
+      "Hall-effect test (tsihvac reproduction of the Carrier table): plug unplugged from the IGC, power on — pin 3 (−) to pin 1 (+) reads 7.5–10 VDC, pin 3 to pin 2 reads 21–24 VDC; plug connected, slowly rotate the inducer — pin 1 reads <1 VDC on half a turn and 6.5–9 VDC on the other half",
+      "Field practice: a replacement inducer motor must include the Hall-effect sensor; replacing only the motor without the sensor leaves the 6-flash code"
+     ],
+     "severity": "lockout",
+     "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '6 flashes: Induced Draft Motor Fault'; 48HJD IOM p.39 'LED Error Code Service Analysis'; tsihvac igc_codes.pdf 'Induced-Draft Motor Fault (LED 6 flashes)' incl. speed-sensor test",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "9 flashes",
-     "meaning": "Temporary software lockout — the IGC has locked out for 1 hour after repeated faults; resets automatically or on power cycle.",
+     "meaning": "Temporary software lockout — electrical interference is disrupting the IGC software; 1-hour auto reset or power reset.",
      "likelyCauses": [
-      "Repeated ignition/limit faults within a short period"
+      "Electrical interference / noise (ignition and flame-sense leads run tightly parallel, arcing contactor, VFD or ungrounded conduit nearby)",
+      "Repeated faults within a short period driving the software lockout"
      ],
      "checks": [
-      "Address the underlying fault (see the prior code); cycle power to clear"
+      "Manual: temporary software lockout — 1 hour auto reset or power reset",
+      "Field practice: separate the spark lead from the flame-sense and low-voltage wiring; check board ground and the 24 V supply; look for the underlying fault code that preceded the lockout"
      ],
      "severity": "lockout",
-     "source": "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
-     "evidence": "inferred",
-     "notes": "From memory of the IGC table; verify against the IOM."
+     "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '9 flashes: Temporary Software Lockout — 1 hour auto reset or power reset — Electrical interference is disrupting the IGC software'; hvac-talk 'Carrier Codes' thread reproduction",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "MAT SENS ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): mixed air sensor has failed or become disconnected.",
+     "likelyCauses": [
+      "MAT sensor (20K NTC) open, shorted or unplugged at the MAT / MAT T1 terminals",
+      "Sensor lead damaged; sensor fell out of the mixed-air stream"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: ohm the sensor (20K at 77 °F) at the module terminals; compare the STATUS menu MA TEMP reading to a reference thermometer"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'MAT SENS ERR: Indicates that the mixed air sensor has failed or become disconnected. Check wiring and replace sensor if alarm persists.'",
+     "evidence": "manufacturer_doc",
+     "notes": "Displayed on the W7220 LCD ALARMS (#) menu; the economizer then runs with damper at minimum position and mechanical cooling only."
+    },
+    {
+     "code": "CO2 SENS ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): CO2 sensor has failed, gone out of range, or become disconnected.",
+     "likelyCauses": [
+      "CO2 (IAQ) sensor unpowered, miswired at IAQ 2-10 / IAQ COM / IAQ 24V, or output out of the 2–10 V range",
+      "Sensor failed or needs calibration"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: measure the IAQ 2-10 V signal at the module; confirm 24 VAC to the sensor; if DCV is not used, set DCV to NONE in SETUP so the alarm does not occur"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'CO2 SENS ERR: Indicates that the CO2 sensor has failed, gone out of range, or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "OA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
+     "likelyCauses": [
+      "C7400A enthalpy sensor (or C7250A temperature sensor) on the S-BUS unplugged, wired backwards is not an issue (polarity-insensitive) but open/shorted S-BUS lead is",
+      "Sensor failed; more than the supported number of Sylk devices on the bus"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: verify the S-BUS pair is intact and the sensor is set to OA (jumper/DIP per sensor instructions); check the STATUS menu for the OA sensor readings"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "OA SYLK H ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
+     "likelyCauses": [
+      "C7400A enthalpy sensor humidity element failed or sensor disconnected from the S-BUS"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: compare OA HUM in the STATUS menu with a sling psychrometer; replace the sensor if far off or missing"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
+     "likelyCauses": [
+      "Return-air C7400A sensor disconnected from the S-BUS or failed",
+      "Sensor addressed as OA instead of RA (two sensors with the same address)"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: only fitted on differential-enthalpy configurations — verify S-BUS wiring and the RA address setting on the sensor"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RA SYLK H ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
+     "likelyCauses": [
+      "Return-air C7400A humidity element failed or sensor disconnected"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): discharge air (Sylk-bus) sensor has failed or become disconnected.",
+     "likelyCauses": [
+      "C7250A discharge-air sensor unplugged from the S-BUS or failed"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: the DA sensor is optional — if not installed, make sure the module is not configured to expect one"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'DA SYLK T ERR: Indicates that the discharge air sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "OA SENS T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): outdoor air temperature sensor (20K wired OAT input) has failed or become disconnected — 'SENS T' is shown instead of 'SYLK T' when a 20K OA temperature sensor is used.",
+     "likelyCauses": [
+      "20K OAT sensor open/shorted or unplugged at the OAT / OAT T1 terminals",
+      "Sensor lead damaged by the condenser fan or weather"
+     ],
+     "checks": [
+      "Manual (by analogy with the other sensor rows): check wiring and replace the sensor if the alarm persists",
+      "Field practice: ohm the sensor at the module (20K at 77 °F) and compare OA TEMP in the STATUS menu to ambient"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' menu list ('OA SENS T ERR'; 'When using 20k OA temperature sensors, SENS T will appear on the screen')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT ERROR",
+     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): the actuator has failed or become disconnected.",
+     "likelyCauses": [
+      "Damper actuator stalled (damper jammed, linkage bound, ice or debris)",
+      "Actuator supply voltage out of range (below 21.6 V or above 26.4 V) at ACT 24V / ACT COM",
+      "Actuator unplugged from ACT 2-10 / S-BUS, or actuator failed"
+     ],
+     "checks": [
+      "Manual: check for stall, over voltage, under voltage and actuator count; replace the actuator if the damper is movable and the supply voltage is between 21.6 V and 26.4 V",
+      "Field practice: run CHECKOUT > DAMPER OPEN / DAMPER CLOSE and watch the damper travel; free a bound damper before condemning the actuator"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'ACT ERROR: Indicates that the actuator has failed or become disconnected. Check for stall, over voltage, under voltage and actuator count. Replace the actuator if damper is movable and supply voltage is between 21.6 V and 26.4 V.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT UNDER V",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is below the expected range.",
+     "likelyCauses": [
+      "Low 24 VAC supply to the actuator (undersized/overloaded transformer, long thin wiring, poor connection at ACT 24V / ACT COM)"
+     ],
+     "checks": [
+      "Field practice: measure 24 VAC at the actuator power terminals under load; must be within 21.6–26.4 V (per the ACT ERROR row); correct the supply or connections"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT UNDER V: Indicates voltage received by the actuator is below the expected range.' (manualsdir 131876 p.19)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT OVER V",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is above the expected range.",
+     "likelyCauses": [
+      "High control-transformer secondary (wrong primary tap for line voltage), or actuator miswired"
+     ],
+     "checks": [
+      "Field practice: measure actuator supply; if above 26.4 V check the transformer primary tap and line voltage"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT OVER V: Indicates voltage received by the actuator is above the expected range.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT STALLED",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): the actuator stopped before achieving its commanded position.",
+     "likelyCauses": [
+      "Damper blades or linkage binding, ice/debris in the hood, actuator clutch slipping",
+      "Actuator stroke or rotation direction set wrong"
+     ],
+     "checks": [
+      "Field practice: disengage the actuator clutch and move the damper by hand through full travel; run CHECKOUT DAMPER OPEN/CLOSE and confirm the damper reaches both ends"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT STALLED: Indicates the actuator stopped before achieving its commanded position.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "FREEZE ALARM",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor temperature is below the LOW TEMP LOCKOUT setting or the mixed air temperature is below the Lo setpoint; the alarm clears when conditions return to the normal range.",
+     "likelyCauses": [
+      "Genuinely cold outdoor air with the damper open (freeze protection is doing its job)",
+      "MAT sensor reading low (misplaced in a cold stream) or LOW TEMP LOCKOUT / MAT LO SET configured too high"
+     ],
+     "checks": [
+      "Manual: alarm self-clears when temperatures return to normal range",
+      "Field practice: confirm the damper drives closed on the freeze alarm; verify MAT sensor placement and the SETUP values MAT LO SET / LOW T LOCK"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'FREEZE ALARM: Indicates that the outdoor temperature is below the LOW Temp Lockout setting or the mixed air temperature is below the Lo Setpoint. The alarm will clear when conditions return to normal range.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SHUTDOWN ACTIVE",
+     "meaning": "EconoMi$er X (W7220 JADE): AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX2 IN terminal.",
+     "likelyCauses": [
+      "Smoke detector / fire alarm or BAS shutdown input is energizing AUX2 IN (intended)",
+      "AUX2 IN mis-programmed as SHUTDOWN while wired for another function (e.g. occupancy or HEAT input)"
+     ],
+     "checks": [
+      "Field practice: confirm what is feeding 24 V to AUX2 IN; if the input is meant to be occupancy/heat, change AUX2 IN in the SETUP menu"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'SHUTDOWN ACTIVE: Indicates that AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX 2IN terminal.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DMP CAL RUNNING",
+     "meaning": "EconoMi$er X (W7220 JADE): DCV Auto enable has been programmed and the JADE is completing a calibration on the dampers.",
+     "likelyCauses": [
+      "Normal — automatic damper calibration in progress after power-up or a configuration change"
+     ],
+     "checks": [
+      "Field practice: wait for the calibration to finish before judging damper position or running CHECKOUT"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DMP CAL RUNNING: Displays if DCV Auto enable has been programmed and the Jade is completing a calibration on the dampers.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DA SENS ALM",
+     "meaning": "EconoMi$er X (W7220 JADE): the discharge air temperature is out of the range set in the ADVANCED SETUP menu.",
+     "likelyCauses": [
+      "Discharge air too cold/hot relative to the DA LO/HI alarm limits (mechanical cooling or heat problem, or damper stuck open in cold weather)",
+      "DA sensor reading wrong or alarm limits set too tight"
+     ],
+     "checks": [
+      "Field practice: compare DA TEMP in STATUS with a duct thermometer; review ADVANCED SETUP discharge-air alarm limits; check the unit's cooling/heating operation"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DA SENS ALM: Indicates that the discharge air temperature is out of the range set in the ADVANCED SETUP Menu.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SYS ALARM",
+     "meaning": "EconoMi$er X (W7220 JADE): when AUX1-O is set to SYS and any alarm exists (e.g. failed sensors), the AUX1-O terminal has 24 VAC out (system alarm output).",
+     "likelyCauses": [
+      "Any other active JADE alarm — this is the summary output, not a fault by itself"
+     ],
+     "checks": [
+      "Field practice: open the ALARMS (#) menu and clear the underlying alarm(s); AUX1-O drops out when no alarms remain"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'SYS ALARM: When AUX1-O is set to SYS and there is any alarm (e.g., failed sensors), the AUX1-O terminal has 24 Vac out.' (manualsdir 131876 p.19)",
+     "evidence": "manufacturer_doc"
     }
    ],
    "ledPatterns": [
@@ -2836,6 +3081,64 @@
     {
      "pattern": "LED flashing N times, pause, repeat",
      "meaning": "Fault code N (see faultCodes)"
+    },
+    {
+     "pattern": "IGC LED steady on",
+     "meaning": "Normal operation (IGC powered, no stored fault).",
+     "checks": []
+    },
+    {
+     "pattern": "IGC LED off",
+     "meaning": "Loss of power to the IGC / hardware failure.",
+     "checks": [
+      "5 A fuse on the IGC board",
+      "Power to the unit and the 24 V circuit (transformer, unit fuse/CB, door switch)",
+      "Replace IGC if 24 V is present and fuse is good"
+     ]
+    },
+    {
+     "pattern": "IGC LED flashes N times, 3-second pause, repeats",
+     "meaning": "Fault code N (1–9) per the IGC table. If more than one error exists, all applicable codes are displayed in numerical sequence, each separated by the 3-second pause.",
+     "checks": [
+      "Count flashes between pauses; watch a full cycle to catch multiple codes",
+      "Codes are held until the fault clears or 24 V power is cycled"
+     ]
+    },
+    {
+     "pattern": "EconoMi$er IV (Honeywell W7212 logic module) — Free Cool LED on",
+     "meaning": "Outdoor air is suitable for free cooling (enthalpy/dry-bulb changeover satisfied); the damper modulates on a cooling call.",
+     "checks": [
+      "Checkout (Honeywell 63-2596 / Carrier IIK-CRECOMZR52): with the 620-ohm checkout resistor across SO and + and the enthalpy pot at A, the Free Cool LED turns on and the actuator drives to about 45° open (DCV Max at mid position); turning the pot to D (fully CW) or removing the resistor turns the LED off and drives the actuator fully closed"
+     ]
+    },
+    {
+     "pattern": "EconoMi$er IV (W7212) — DCV LED on",
+     "meaning": "The module is in demand-controlled ventilation (CO2) mode and is overriding the minimum position.",
+     "checks": [
+      "Verify the CO2 sensor 2-10 V signal and the DCV Set/DCV Max pot settings"
+     ]
+    },
+    {
+     "pattern": "EconoMi$er IV (W7212) — Exh LED on",
+     "meaning": "The exhaust-fan contact (EXH1/EXH2) is closed — damper position has exceeded the Exhaust Fan Set Point.",
+     "checks": [
+      "Adjust the Exh Fan Set pot if the power exhaust runs too early/late"
+     ]
+    },
+    {
+     "pattern": "EconoMi$er IV (W7212) — no LEDs lit",
+     "meaning": "No 24 VAC to the module (TR/TR1) or the module has failed; the W7212 has no fault-code display — diagnosis is by LED state plus the checkout table.",
+     "checks": [
+      "24 VAC between TR and TR1",
+      "Thermostat/unit signals at Y1, G, O and the 2-10 V actuator output"
+     ]
+    },
+    {
+     "pattern": "EconoMi$er X (W7220 JADE) LCD shows 'ALARMS (#)' with a count",
+     "meaning": "Number of active alarms; alarms display only when active. On power-up the module waits 60 minutes before checking for alarms so configured sensors/actuator can come online.",
+     "checks": [
+      "Scroll into the ALARMS menu to read each alarm string (see faultCodes)"
+     ]
     }
    ],
    "diagnosticTips": [
@@ -2843,9 +3146,20 @@
     "Codes 2, 3, 7 and 8 were confirmed against Carrier IOM pages this session; codes 1, 4, 5, 6 and 9 are from memory of the same table — verify in the unit's IOM 'IGC Board LED Alarms' before acting on them.",
     "To clear a lockout: remove the call for heat (W) for a few seconds or cycle 24 V control power; rollout switches (7 flashes) are manual reset at the switch.",
     "The IGC controls the indoor fan in heating: fan starts ~45 s after the burners light and runs ~45 s after W drops out; a modified delay shows as 1 flash.",
-    "Heat-exchanger limit trips on rooftops are almost always airflow: check filters, belt tension, blower rotation and the supply-air temperature rise against the nameplate range before condemning parts."
+    "Heat-exchanger limit trips on rooftops are almost always airflow: check filters, belt tension, blower rotation and the supply-air temperature rise against the nameplate range before condemning parts.",
+    "IGC location: the Integrated Gas Controller is in the gas-section (burner) control compartment of 48-series rooftops; its single status LED is on the board. Read it with the panel open (bypass the door/service switch for service only).",
+    "IGC code display: the LED flashes the code number with a 3-second pause between codes; if more than one error exists, all applicable codes are shown in numerical sequence. Codes stay displayed until the fault clears or 24 V power is cycled.",
+    "IGC reset: most codes auto-reset when the input clears; ignition lockout (5), rollout (7) and internal fault (8) require cycling 24 V control power / unit power at the disconnect; temporary software lockout (9) auto-resets after 1 hour or on power reset.",
+    "IGC fan control: in heating the IGC runs the indoor fan; if a limit or heating fault modifies the fan on/off delay, code 1 flashes. Repeated limit trips on rooftops are almost always airflow (filters, belt, blower speed, closed dampers) — verify temperature rise against the nameplate before condemning parts.",
+    "Inducer (6 flashes): the IGC proves the inducer with a Hall-effect speed sensor inside the IDM, wired to IGC plug J2 (pin 1 white, pin 2 red, pin 3 black). Replacement inducers must include the sensor.",
+    "EconoMi$er X (W7220 JADE) interface: 2-line 16-character LCD with a 4-button keypad (Menu Up, Menu Down, Enter, Exit) mounted in the economizer/control box. Menus: STATUS, SETUP, ADVANCED SETUP, CHECKOUT, ALARMS(#). Alarms show only while active.",
+    "EconoMi$er X clearing an alarm: navigate to the alarm in ALARMS, press Enter — 'ERASE?' displays — press Enter again; 'ALARM ERASED' confirms; press Menu Up/Exit to return. If the condition still exists the alarm re-displays within 5 seconds.",
+    "EconoMi$er X power-up: the JADE waits 60 minutes after power-up before checking for alarms; a sensor that loses communication after being detected shows a device-fail error, and after 60 minutes the module drops to operation mode with the missing device alarmed.",
+    "EconoMi$er X checkout: CHECKOUT menu tests DAMPER MINIMUM (drives to configured minimum), DAMPER OPEN (fully open; exhaust-fan contacts energize during this test) and DAMPER CLOSE (fully closed) — use them to prove actuator/damper travel when ACT ERROR / ACT STALLED is shown. The controller must see Y1-G / occupancy inputs per the SETUP for normal economizing.",
+    "EconoMi$er IV (W7212 logic module) has no display and no alarm codes: diagnose with the three LEDs (Free Cool, DCV, Exh), the potentiometer settings and the Honeywell checkout table (620-ohm resistor across SO and +, enthalpy pot A vs D, DCV Max mid) — see ledPatterns.",
+    "EconoMi$er 2 is the simpler DCV-capable economizer without a logic-module display; it also has no fault codes — verify by 24 V inputs, actuator 2-10 V and damper travel."
    ],
-   "coverage": "partial",
+   "coverage": "complete",
    "sourceDocs": [
     {
      "title": "Carrier 48HJD005-007 Installation, Start-Up and Service Instructions — LED Error Code Service Analysis",
@@ -2862,11 +3176,101 @@
     {
      "title": "TSI HVAC — IGC codes (SYMPTOM / CAUSE / REMEDY table)",
      "url": "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
+    },
+    {
+     "title": "Carrier WeatherMaker 48TC Series Service and Maintenance Instructions — Table 19 'IGC Board LED Alarm Codes' (LED Flash Code / Description / Action Taken by Control / Reset Method / Probable Cause)",
+     "docId": "ManualsLib 2935994 p.45",
+     "url": "https://www.manualslib.com/manual/2935994/Carrier-Weathermaker-48tc-Series.html"
+    },
+    {
+     "title": "Carrier 48TC*04 Series Service and Maintenance Instructions — Table 25 'IGC Board LED Alarm Codes'",
+     "docId": "ManualsLib 2443103 p.61",
+     "url": "https://www.manualslib.com/manual/2443103/Carrier-48tc-04-Series.html"
+    },
+    {
+     "title": "Carrier 48HC 04-28 Controls, Start-Up, Operation and Troubleshooting — Table 21 'IGC Board LED Alarm Codes'",
+     "docId": "48/50HC-05T (ManualsLib 1653595)",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/08/48_50HC-05T.pdf"
+    },
+    {
+     "title": "Bryant 580J*04-12 Service and Maintenance Instructions — Table 14 'IGC Board LED Alarm Codes'",
+     "docId": "ManualsLib 22265",
+     "url": "https://www.manualslib.com/manual/22265/Bryant-580j-04-12.html"
+    },
+    {
+     "title": "Carrier 48HJD005-007 Installation, Start-Up and Service Instructions — 'LED Error Code Service Analysis'",
+     "docId": "ManualsLib 25388 p.39",
+     "url": "https://www.manualslib.com/manual/25388/Carrier-48hjd005-007.html?page=39"
+    },
+    {
+     "title": "Carrier 48TFD008-014 Installation and Service Instructions — 'LED Error Code Service Analysis'",
+     "docId": "ManualsLib 25511 p.42",
+     "url": "https://www.manualslib.com/manual/25511/Carrier-Carrier-48tfd008-014.html?page=42"
+    },
+    {
+     "title": "Carrier 48EJ Installation and Service Instructions — 'Alarm Codes for the IGC Control Board' / 'IGC Control Board LED Alarms'",
+     "docId": "ManualsLib 25597 p.60",
+     "url": "https://www.manualslib.com/manual/25597/Carrier-Single-Package-Rooftop-Units-Electric-Cooling-Gas-Heating-48ej.html?page=60"
+    },
+    {
+     "title": "Carrier 48TJD/48TJE Installation, Start-Up and Service Instructions — 'LED Error Code Service Analysis'",
+     "docId": "ManualsLib 25401 p.45; ManualsLib 1545454 p.34",
+     "url": "https://www.manualslib.com/manual/25401/Carrier-48tjd.html?page=45"
+    },
+    {
+     "title": "TSI HVAC — 'LED Error Code Service Analysis' (SYMPTOM / CAUSE / REMEDY reproduction of the Carrier IGC table, incl. Hall-effect speed-sensor test)",
+     "docId": "igc_codes.pdf",
+     "url": "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
+    },
+    {
+     "title": "Honeywell JADE Economizer Module (Model W7220) Installation Instructions — 'Troubleshooting / Alarms' table and menu structure",
+     "docId": "63-2700-11 (and earlier 62-0331-15)",
+     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf"
+    },
+    {
+     "title": "Honeywell JADE W7220 Installation Instructions and Operators Manual (ManualsLib mirror) — 'Alarms' (p.24) and menu tables",
+     "docId": "ManualsLib 1405190 p.24",
+     "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
+    },
+    {
+     "title": "Honeywell W7220 (early firmware) — 'Troubleshooting, Alarms' page (ACT UNDER V / ACT OVER V / ACT STALLED / SYS ALARM rows)",
+     "docId": "manualsdir 131876 p.19",
+     "url": "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19"
+    },
+    {
+     "title": "Carrier EconoMi$er X (W7220) Factory-Installed Option Low Leak Economizer — Installation Instructions (Carrier version of the JADE alarm/menu tables)",
+     "docId": "IIK-CRECOMZR67-03 / CRECOMZR076-080 (ManualsLib 2855215)",
+     "url": "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
+    },
+    {
+     "title": "Honeywell W7212 / W7213 / W7214 Economizer Logic Modules — Product Data 63-2596 (LED description and 'Checkout' table used for Carrier EconoMi$er IV)",
+     "docId": "63-2596-09",
+     "url": "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf"
+    },
+    {
+     "title": "Carrier EconoMi$er IV field accessory Installation Instructions (W7212 checkout / Free Cool LED)",
+     "docId": "IIK-CRECOMZR52-02",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
     }
    ],
    "confidence": "medium",
    "sources": [
-    "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)"
+    "Carrier 48TC / 48HJ / 48TF / 48EJ Installation and Service Instructions — 'IGC Board LED Alarms' / 'LED Error Code Service Analysis' table (e.g. 48HJD005-007 IOM p.39; 48TFD008-014 IOM p.42; 48EJ IOM p.60); tsihvac.com igc_codes.pdf (same table)",
+    "https://www.manualslib.com/manual/2935994/Carrier-Weathermaker-48tc-Series.html",
+    "https://www.manualslib.com/manual/2443103/Carrier-48tc-04-Series.html",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/08/48_50HC-05T.pdf",
+    "https://www.manualslib.com/manual/22265/Bryant-580j-04-12.html",
+    "https://www.manualslib.com/manual/25388/Carrier-48hjd005-007.html?page=39",
+    "https://www.manualslib.com/manual/25511/Carrier-Carrier-48tfd008-014.html?page=42",
+    "https://www.manualslib.com/manual/25597/Carrier-Single-Package-Rooftop-Units-Electric-Cooling-Gas-Heating-48ej.html?page=60",
+    "https://www.manualslib.com/manual/25401/Carrier-48tjd.html?page=45",
+    "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf",
+    "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24",
+    "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19",
+    "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf",
+    "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
    ]
   },
   {
