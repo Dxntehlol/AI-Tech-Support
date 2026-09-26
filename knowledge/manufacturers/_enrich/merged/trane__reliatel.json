@@ -1,0 +1,1114 @@
+{
+  "pack": "trane",
+  "platformId": "reliatel",
+  "name": "Trane ReliaTel (RTRM refrigeration module with RTOM options, RTEM economizer, RTAM air-handling/VAV, RTDM dehumidification, RTVM ventilation, RTCI/TCI communication modules)",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Trane Commercial Help Center — List of Light Commercial LED Codes",
+      "docId": "support.trane.com article 360060172532",
+      "url": "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes"
+    },
+    {
+      "title": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM?",
+      "docId": "article 360038608131",
+      "url": "https://support.trane.com/hc/en-us/articles/360038608131-What-can-cause-a-2-flash-code-on-the-RTRM"
+    },
+    {
+      "title": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code?",
+      "docId": "article 360037491092",
+      "url": "https://support.trane.com/hc/en-us/articles/360037491092-How-do-I-retrieve-fail-codes-from-the-RTRM-when-I-have-a-2-flash-fault-code"
+    },
+    {
+      "title": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module)",
+      "docId": "article 360037863611",
+      "url": "https://support.trane.com/hc/en-us/articles/360037863611--LCU-Economizer-LED-Codes-RTEM-Module"
+    },
+    {
+      "title": "Trane Commercial Help Center — What are the Economizer fault codes?",
+      "docId": "article 360060609671",
+      "url": "https://support.trane.com/hc/en-us/articles/360060609671-What-are-the-Economizer-fault-codes"
+    },
+    {
+      "title": "Trane Commercial Help Center — How do I tell the difference between a RTEM Actuator Fault and a RTEM Communications Failure?",
+      "docId": "article 360044155732",
+      "url": "https://support.trane.com/hc/en-us/articles/360044155732-How-do-I-tell-the-difference-between-a-RTEM-Actuator-Fault-and-a-RTEM-Communications-Failure"
+    },
+    {
+      "title": "Trane Commercial Help Center — Why am I getting an 8 flash code on my economizer?",
+      "docId": "article 360037863911",
+      "url": "https://support.trane.com/hc/en-us/articles/360037863911-Why-am-I-getting-an-8-flash-code-on-my-economizer"
+    },
+    {
+      "title": "Trane Commercial Help Center — How do I use Test Mode on a unit with ReliaTel Controls?",
+      "docId": "article 360037863991",
+      "url": "https://support.trane.com/hc/en-us/articles/360037863991-How-do-I-use-Test-Mode-on-a-unit-with-ReliaTel-Controls"
+    },
+    {
+      "title": "Trane Commercial Help Center — How do I use the Auto-Cycle Test Mode?",
+      "docId": "article 360060176192",
+      "url": "https://support.trane.com/hc/en-us/articles/360060176192-How-do-I-use-the-Auto-Cycle-Test-Mode"
+    },
+    {
+      "title": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units?",
+      "docId": "article 360038604571",
+      "url": "https://support.trane.com/hc/en-us/articles/360038604571-What-are-the-gas-heat-fault-codes-for-Precedent-units"
+    },
+    {
+      "title": "Trane Commercial Help Center — Precedent Electromechanical Ignition Board Info and Troubleshooting Tips",
+      "docId": "article 360043948432",
+      "url": "https://support.trane.com/hc/en-us/articles/360043948432-Precedent-Electromechanical-Ignition-Board-Info-and-Troubleshooting-Tips"
+    },
+    {
+      "title": "Trane Commercial Help Center — What are the gas heat fault codes for Reliatel controlled Voyager II units?",
+      "docId": "article 360038605131",
+      "url": "https://support.trane.com/hc/en-us/articles/360038605131-What-are-the-gas-heat-fault-codes-for-Reliatel-controlled-Voyager-II-units"
+    },
+    {
+      "title": "Trane Commercial Help Center — Voyager 2 Modulating Heat Board (CFMB) LED Flash Codes (Old Fasco vs New ICM)",
+      "docId": "article 4423637197325",
+      "url": "https://support.trane.com/hc/en-us/articles/4423637197325-Voyager-2-Modulating-Heat-Board-CFMB-LED-Flash-Codes-Old-Fasco-vs-New-ICM"
+    },
+    {
+      "title": "Trane Commercial Help Center — Heat Fail Diagnostic",
+      "docId": "article 16077695921037",
+      "url": "https://support.trane.com/hc/en-us/articles/16077695921037-Heat-Fail-Diagnostic"
+    },
+    {
+      "title": "Trane Commercial Help Center — Compressor Proving on ReliaTel Controlled Units",
+      "docId": "article 42150055236109",
+      "url": "https://support.trane.com/hc/en-us/articles/42150055236109-Compressor-Proving-on-ReliaTel-Controlled-Units"
+    },
+    {
+      "title": "Trane Commercial Help Center — Low and High Pressure Control",
+      "docId": "article 12778525483277",
+      "url": "https://support.trane.com/hc/en-us/articles/12778525483277-Low-and-High-Pressure-Control"
+    },
+    {
+      "title": "Trane Commercial Help Center — Troubleshooting BAYSENS119 Programmable Zone Sensor",
+      "docId": "article 5123788263437",
+      "url": "https://support.trane.com/hc/en-us/articles/5123788263437-Troubleshooting-BAYSENS119-Programmable-Zone-Sensor"
+    },
+    {
+      "title": "Trane Voyager Commercial IOM — LPC/HPC sequence of operation (ReliaTel), ZSM service indicator and test",
+      "docId": "ManualsLib 825268 pp.117, 132",
+      "url": "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=117"
+    },
+    {
+      "title": "Trane ReliaTel Microprocessor Controls Diagnostic Manual",
+      "docId": "RT-SVD03G-EN (Nov 2010), ManualsLib 2574710",
+      "url": "https://www.manualslib.com/manual/2574710/Trane-Reliatel.html"
+    },
+    {
+      "title": "Trane ReliaTel Options Module installation guide",
+      "docId": "ACC-SVN05Q-EN",
+      "url": "https://elibrary.tranetechnologies.com/public/trane-history/Literature/Installation/ACC-SVN05Q-EN_04242020"
+    },
+    {
+      "title": "Trane TC*150-301 IOM — Clogged filter switch; fan failure switch",
+      "docId": "ManualsLib 959359 p.51",
+      "url": "https://www.manualslib.com/manual/959359/Trane-Tc-150-301.html?page=51"
+    },
+    {
+      "title": "Star Supply reproduction — Ignition Troubleshooting Codes, ReliaTel-Electromechanical",
+      "docId": "star-supply.com PDF (secondary)",
+      "url": "https://www.star-supply.com/content/Ignition%20Troubleshooting%20Codes.%20Reliatel-Electromechanical.pdf"
+    },
+    {
+      "title": "Parts Town — Trane Rooftop Unit Troubleshooting Guide (secondary)",
+      "docId": "partstown.com guide",
+      "url": "https://www.partstown.com/cm/resource-center/guides/gd2/trane-rooftop-troubleshooting-error-codes"
+    },
+    {
+      "title": "HVAC-Talk — Trane zone sensor (BAYSENS119 E1/E2, secondary)",
+      "docId": "thread 1053121",
+      "url": "https://hvac-talk.com/vbb/threads/1053121-Trane-zone-sensor"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "RTRM LED2 steady ON",
+      "meaning": "Normal operation: RTRM powered, no active diagnostic (System output RTRM-J6-9 ON = 'System is powered up. This output should be on whenever the green RTRM System LED is on'). On older-version boards the LED may flicker as part of normal function.",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTRM LED2 OFF",
+      "meaning": "'If 0 VDC is seen, the RTRM does not have power, the output wiring is shorted, or there is an internal failure.'",
+      "likelyCauses": [
+        "No 24 VAC to the RTRM (transformer secondary fuse, primary tap, loose power plug)",
+        "Shorted low-voltage output wiring pulling the supply down",
+        "Failed RTRM"
+      ],
+      "checks": [
+        "Measure 24 VAC at the RTRM power input; check the transformer secondary fuse and primary tap (field practice)",
+        "Measure DC between RTRM J6-6 and J6-9: approximately 32 VDC expected; if no voltage is present with 24 VAC supplied, replace the RTRM (source)",
+        "Disconnect low-voltage/zone-sensor wiring to rule out a short (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTRM LED2 1 blink",
+      "meaning": "'Emergency stop open when attempting test mode' (one Green System LED2 blink). Per the Voyager IOM the Emergency Stop input at LTB 5 & 6 (RTRM 3J1-12): if this input is open the indoor fan, heat and cooling will not run in TEST MODE and there is no other diagnostic output for this function.",
+      "likelyCauses": [
+        "Field emergency-stop / fire-alarm contact open",
+        "Factory jumper between LTB 5 and 6 removed and no device connected",
+        "Broken wire to the E-stop input"
+      ],
+      "checks": [
+        "Verify continuity between LTB 5 and 6 (jumper or closed field contact)",
+        "Check any fire/smoke or BAS shutdown relay wired into the E-stop loop (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532) (as reproduced by greenflowsolution.com 'RTRM LED2 1 Blink'); Trane Voyager Commercial IOM emergency-stop description",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTRM LED2 2 flashes every 2 seconds",
+      "meaning": "'Two Green System LED2 flashes every two seconds indicates one or more diagnostics present. The diagnostic can include fan, sensor, compressor lockout, defrost, gas heat, smoke detector, Frostat, communication, static-pressure, or discharge-air-sensor issues depending on the unit configuration.' The help-center list of possible causes includes: supply fan fail; zone temperature sensor input failure on CV units; programmable ZSM communication failure; manual compressor lockout (one or both circuits); static pressure transducer output failure (VAV only); Frostat active; smoke detector active; RTOM communication failure; RTVM communication failure (22 causes in the full article).",
+      "likelyCauses": [
+        "Supply fan fail (fan proving switch)",
+        "Zone temperature sensor input failure on CV units",
+        "Programmable ZSM communication failure",
+        "Manual compressor lockout, one or both circuits (HPC/LPC/CC circuit trips)",
+        "Gas heat failure (see ignition module LED)",
+        "Smoke detector active / Frostat active",
+        "RTOM or RTVM communication failure",
+        "VAV: static pressure transducer or discharge air sensor failure, high duct static trip"
+      ],
+      "checks": [
+        "Read the specific fail code: take the four DC voltage measurements on RTRM J6 (J6-7 Heat, J6-8 Cool, J6-9 System, J6-10 Service; pulsing = fail) or read the zone sensor LEDs / ZSM display / Tracer (source)",
+        "Then follow the matching HEAT FAIL, COOL FAIL, SERVICE or simultaneous-code entry in this table"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTRM LED2 pulsing on/off",
+      "meaning": "'Unit is in TEST mode. Also during the TEST mode LED2 will pulse on and off.' (System output J6-9 pulsing = unit in TEST mode.)",
+      "checks": [
+        "Remove the TEST 1 / TEST 2 jumper; a momentary jumper leaves the unit in the selected step for 1 hour before it exits test mode on its own (source)"
+      ],
+      "severity": "info",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTRM LED2 single flash every few seconds (RTRM v4.0+, dehumidification unit)",
+      "meaning": "'Dehumidification unit - RTOM disconnected or not communicating. RTOM will flash once every few seconds.' (RTRM version 4.0 or greater.)",
+      "likelyCauses": [
+        "RTOM Modbus/power harness unplugged (Odyssey RTRM-to-RTOM connection)",
+        "Failed RTOM",
+        "Wrong RTOM/RTRM firmware pairing"
+      ],
+      "checks": [
+        "Check the RTRM-to-RTOM Modbus and power connections (help-center article 360047182172 'Odyssey RTRM to RTOM Modbus and Power Connection')",
+        "Cycle 24 V power and watch whether the RTRM LED returns to steady ON (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor SYSTEM LED on steady",
+      "meaning": "System output (RTRM-J6-9) 'ON - System is powered up. This output should be on whenever the green RTRM System LED is on.'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor SYSTEM LED pulsing",
+      "meaning": "System output (RTRM-J6-9) 'PULSING - the unit is in TEST mode'. LED indicators show PULSING while the unit is in TEST mode.",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions; Trane Commercial Help Center — How do I use Test Mode on a unit with ReliaTel Controls? (article 360037863991) and How do I use the Auto-Cycle Test Mode? (article 360060176192)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor SYSTEM LED off",
+      "meaning": "System output (RTRM-J6-9) OFF: 'If 0 VDC is seen, the RTRM does not have power, the output wiring is shorted, or there is an internal failure.'",
+      "checks": [
+        "Confirm the RTRM LED2 is on; if it is, check the zone sensor wiring from J6-9 / J6-6 to the sensor LED (field practice)",
+        "Programmable sensor: with the wires removed from the control terminals, 28-32 VDC is expected between terminals 11 and 12 (source)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions; Trane Commercial Help Center — Troubleshooting BAYSENS119 Programmable Zone Sensor (article 5123788263437) and How do I test a Programmable Zone Sensor (BAYSENS119*)? (article 360038266292)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor HEAT LED on steady",
+      "meaning": "Heating output (RTRM-J6-7) ON: the unit is in the heating mode. Note: 'If a limit switch trips on units with safety limit switches in the electric heat control circuit, no diagnostic will occur and the HEAT indication will stay ON.'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions; Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor HEAT LED flashing",
+      "meaning": "HEAT FAIL (Heating output RTRM-J6-7 pulsing). 'If any failure occurs such as loss of flame, limit switch trip, flame rollout etc, this indication is present. Further diagnostics are available by examining the Ignition Module LED.' On VAV units with RTAM: HEAT (YC only) = 'Supply Air Temperature sensor has failed if configured for Modulating Heat'. Note: 'If the Compressor Disable circuit or CC1, CC2 circuits create a lockout during heating mode, a COOL FAIL (pulsing) indication will occur, not a HEAT FAIL (pulsing) indication.'",
+      "likelyCauses": [
+        "Ignition module lockout: no flame sensed on ignition or flame dropped out (IGN 2 flash)",
+        "Combustion pressure switch not proving (IGN 3 flash)",
+        "TCO / high limit open (IGN 4 flash), rollout switch open (IGN 6 flash)",
+        "Flame sensed without gas (IGN 5 flash)",
+        "VAV modulating heat: supply air temperature sensor failed"
+      ],
+      "checks": [
+        "Read the ignition module LED flash code (see IGN entries) before touching anything else (source)",
+        "Watch a heat call: combustion blower, pressure switch closure, igniter, gas valve, flame sense microamps (field practice)",
+        "Check filters, blower, belt and limit switches for a TCO trip (field practice)",
+        "Ignition control auto-resets after 1 hour of lockout; cycling the heat call or 24 V power also resets it (source/field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — Heat Fail Diagnostic (article 16077695921037); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor COOL LED on steady",
+      "meaning": "Cooling output (RTRM-J6-8) 'ON - the system is in the cooling mode and actively cooling. The unit could be economizing or have one or both compressors on.'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor COOL LED flashing",
+      "meaning": "COOL FAIL (Cooling output RTRM-J6-8 pulsing): 'CC1 or CC2 opens during cooling, or is open when a call for compressor occurs. With RTRM version 4.0 or greater, CC1 or CC2 circuit must open on 3 consecutive cycles. On the 4th trip, the unit will lockout.' Also 'If the Compressor Disable circuit or CC1, CC2 circuits create a lockout during heating mode, a COOL FAIL (pulsing) indication will occur.' On VAV units with RTAM: COOL = 'Discharge air sensor (DTS) is open, shorted, or has failed'.",
+      "likelyCauses": [
+        "HPC / temperature discharge limit opened during compressor operation (dirty condenser, ODM failure, overcharge, non-condensables)",
+        "LPC opened (loss of charge, low airflow, restricted metering device)",
+        "Compressor internal overload, contactor coil or CC1/CC2 24 V circuit open, phase monitor open",
+        "Compressor disable input open (BAS or field device)",
+        "VAV: discharge air sensor failed"
+      ],
+      "checks": [
+        "Identify which circuit is locked out (CPR1/CPR2) in test mode and check the HPC, LPC, TDL and CC circuit for 24 V continuity (source + field practice)",
+        "Gauge up: verify head and suction pressures, condenser coil condition, ODM operation and compressor amps (field practice)",
+        "Reset the manual lockout by cycling 24 V control power or the zone sensor mode switch; on BAS units send the reset from Tracer (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane ReliaTel Microprocessor Controls Diagnostic Manual RT-SVD03G-EN (Nov 2010), as indexed on ManualsLib 2574710; Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor SERVICE LED on steady",
+      "meaning": "Service output (RTRM-J6-10) 'ON - indicates a clogged filter switch has been closed for at least 2 minutes, indicating a clogged filter.'",
+      "likelyCauses": [
+        "Dirty filters",
+        "Clogged filter switch set point too low or sensing tubing pinched/disconnected"
+      ],
+      "checks": [
+        "Replace filters; verify the clogged filter switch setting and tubing to the RTOM input (source + field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions; Trane TC*150-301 IOM (ManualsLib 959359) p.51 'Clogged Filter Switch; Fan Failure Switch'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor SERVICE LED flashing",
+      "meaning": "Fan failure: 'The service indicator on the ZSM will pulse during fan fail mode.' 'The Fan Fail switch (if installed) should have opened within the first 40 seconds, proving the supply fan has started; if the Fan Proving switch has failed to open before 40 seconds, the unit will run for 40 seconds and then stop.'",
+      "likelyCauses": [
+        "Broken or slipping belt, seized blower bearing",
+        "IDM overload tripped, IFC contactor/relay not pulling in",
+        "Fan proving switch stuck or tubing disconnected",
+        "VFD fault on VAV / multi-speed units"
+      ],
+      "checks": [
+        "Call for fan and confirm the IDM runs and the fan proving switch changes state within 40 s (source)",
+        "Check belt, motor amps, contactor and the RTOM fan-proving input (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Voyager Commercial IOM (ManualsLib 825268) p.117 'Low Pressure Control (LPC) Sequence of Operation (ReliaTel control); High Pressure Control and Temperature Discharge Limit' and p.132 'Zone Temperature Sensor (ZSM) Service Indicator; RTRM Zone Sensor Module (ZSM) Test'; Trane TC*150-301 IOM (ManualsLib 959359) p.51 'Clogged Filter Switch; Fan Failure Switch'; Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor HEAT + COOL LEDs flashing simultaneously",
+      "meaning": "'If HEAT FAIL and COOL FAIL occur at the same time (RTRM-J6-7 & 8 pulsing voltage), the coil temperature sensor is open or shorted. Additionally, for heat pump units, the unit may have failed to defrost properly.' (Table 2 Simultaneous Fail Codes.)",
+      "likelyCauses": [
+        "Heat pump coil temperature sensor (CTS) open or shorted, or unplugged from the RTRM",
+        "Defrost failure: reversing valve, ODM or CTS location issue"
+      ],
+      "checks": [
+        "Measure the CTS resistance (10 k NTC thermistor) at the RTRM plug and compare with coil temperature (source + field practice)",
+        "Run the defrost step in test mode and confirm the reversing valve shifts and the coil clears (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code? (article 360037491092), Table 1 Fail Codes / Table 2 Simultaneous Fail Codes, J6 output definitions",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor COOL + SERVICE LEDs flashing (VAV, RTAM)",
+      "meaning": "'COOL + SERVICE: Static Pressure Transducer output voltage at RTAM J1-3 is less than 0.25VDC' (static pressure transducer output failure, VAV only).",
+      "likelyCauses": [
+        "Transducer unplugged or failed",
+        "Transducer supply/ground wiring open"
+      ],
+      "checks": [
+        "Measure DC at RTAM J1-3; expect > 0.25 VDC with the transducer connected (source)",
+        "Check transducer pressure tubing and supply voltage (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone sensor HEAT + COOL + SERVICE LEDs flashing (VAV, RTAM)",
+      "meaning": "'HEAT + COOL + SERVICE: Static Pressure High Duct Static Trip. The static pressure has exceeded 3.5\" W.C. three consecutive times' (the Parts Town reproduction adds 'or an open ground wire on the transducer').",
+      "likelyCauses": [
+        "VAV boxes closed / duct dampers shut, fire damper closed",
+        "VFD ramped to max on loss of static signal",
+        "Transducer ground wire open"
+      ],
+      "checks": [
+        "Verify duct static with a manometer against the RTAM setpoint (field practice)",
+        "Check the transducer ground wire and tubing (source)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532); Parts Town 'Trane Rooftop Unit Troubleshooting Guide' (secondary)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Zone temperature sensor (ZTS) input failure (CV units)",
+      "meaning": "'Zone temperature sensor input failure on CV units' is listed as a cause of the RTRM 2-flash code. Test procedure: 'To test the mechanical zone sensor module temperature inputs at RTRM J6-1 and J6-2, read DC voltage with the sensor attached... With the sensor not attached, there should be 5.00 VDC at the terminals.' Problems to look for include 'mis-wiring, shorts/opens, excessive resistance in the circuit from corroded or loose connections, sensor inaccuracy, moisture in the sensor, and induced voltage from high voltage wires in the same conduit.'",
+      "likelyCauses": [
+        "Open or shorted ZTS thermistor wiring",
+        "Corroded/loose terminal connections adding resistance",
+        "Moisture in the sensor",
+        "Induced voltage from line-voltage wiring in the same conduit"
+      ],
+      "checks": [
+        "Read DC volts at J6-1/J6-2 with the sensor attached, then ohm the circuit and the sensor itself (source)",
+        "If the RTRM loses the heating/cooling setpoint potentiometer input it controls in default mode instantaneously (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane ReliaTel Microprocessor Controls Diagnostic Manual RT-SVD03G-EN (Nov 2010), as indexed on ManualsLib 2574710 (mechanical zone sensor test)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Programmable ZSM communication failure",
+      "meaning": "'Programmable ZSM communication failure' is a cause of the RTRM 2-flash code; the Voyager IOM defines it as 'The ZSM has failed to communicate for 15 consecutive minutes after successful communication has occurred.'",
+      "likelyCauses": [
+        "Broken communication wire between the programmable zone sensor and LTB",
+        "Failed BAYSENS019/119 sensor",
+        "Wrong sensor type configured / wiring landed on wrong terminals"
+      ],
+      "checks": [
+        "With the wires removed from the control terminals, measure 28-32 VDC between sensor terminals 11 and 12 (source)",
+        "Run the unit through test mode to confirm the RTU itself operates; normal display shows time, temperature, fan and system status (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane Voyager Commercial IOM (ManualsLib 825268) p.117 'Low Pressure Control (LPC) Sequence of Operation (ReliaTel control); High Pressure Control and Temperature Discharge Limit' and p.132 'Zone Temperature Sensor (ZSM) Service Indicator; RTRM Zone Sensor Module (ZSM) Test'; Trane Commercial Help Center — Troubleshooting BAYSENS119 Programmable Zone Sensor (article 5123788263437) and How do I test a Programmable Zone Sensor (BAYSENS119*)? (article 360038266292)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Emergency stop input open (LTB 5-6)",
+      "meaning": "'Emergency stop input is open': the Emergency Stop input at LTB 5 & 6 (3J1-12 on RTRM) — 'if this input is open, the indoor fan, heat & cooling will not run in TEST MODE, with no diagnostic output for this function' (other than the single RTRM LED2 blink when test mode is attempted).",
+      "likelyCauses": [
+        "Fire alarm / smoke relay or BAS shutdown contact open",
+        "Factory jumper removed"
+      ],
+      "checks": [
+        "Check continuity across LTB 5-6 and any field device in the loop (source)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Voyager Commercial IOM (ManualsLib 825268) emergency-stop description; Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Smoke detector active",
+      "meaning": "'Smoke detector active' is a cause of the RTRM 2-flash code; factory-installed smoke detectors provide 'instant shutdown and ICS alarm output'.",
+      "likelyCauses": [
+        "Smoke in return/supply duct",
+        "Dirty or failed detector head",
+        "Detector power/relay wiring fault"
+      ],
+      "checks": [
+        "Check the detector's own LED/alarm state and reset it per its manual; verify the shutdown contact wiring to the RTOM/RTRM (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane ReliaTel Options Module installation guide ACC-SVN05Q-EN (Trane e-library)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Frostat active",
+      "meaning": "'Frostat active' is listed as a cause of the RTRM 2-flash code. The RTOM 'monitors the supply fan proving, clogged filter, supply air temperature, exhaust fan setpoint, supply air tempering, Frostat and smoke detector.' When the Frostat opens (resets) the compressors re-start; the RTOM guide states 'there is no diagnostic during Frostat trip' (the help-center list treats it as a 2-flash cause on later firmware).",
+      "likelyCauses": [
+        "Evaporator coil freezing: low airflow, dirty filters/coil, low charge, low return temperature"
+      ],
+      "checks": [
+        "Check airflow, filters, blower and refrigerant charge before resetting; the Frostat is wired to the RTOM input (source + field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane ReliaTel Options Module installation guide ACC-SVN05Q-EN (Trane e-library)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor circuit manual-reset lockout (CPR1/CPR2)",
+      "meaning": "'The RTRM will register an auto reset lockout if either the high pressure control switch or the temperature discharge limit opens during compressor operation. If the compressor output circuit is opened four consecutive times during compressor operation, the RTRM will generate a manual reset lockout.' LPC: 'When the LPC is opened for one (1) continuous second, the compressor for that circuit is turned off immediately. The compressor will not be allowed to restart for a minimum of three (3) minutes. If four consecutive open conditions occur during the first three minutes of operation, the compressor will be locked out, a diagnostic communicated to ICS if applicable, and a manual reset will be required.'",
+      "likelyCauses": [
+        "HPC trips: dirty condenser, ODM failure, overcharge, non-condensables, high ambient",
+        "LPC trips: low charge, low evaporator airflow, restricted metering device, frozen coil",
+        "TDL (discharge temperature limit) trips: high superheat / low charge"
+      ],
+      "checks": [
+        "Determine which safety opened (HPC, LPC, TDL) by checking 24 V across each switch during a call (field practice)",
+        "Reset the manual lockout by cycling 24 V power / mode switch or via Tracer; fix the cause first (source + field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Voyager Commercial IOM (ManualsLib 825268) p.117 'Low Pressure Control (LPC) Sequence of Operation (ReliaTel control); High Pressure Control and Temperature Discharge Limit' and p.132 'Zone Temperature Sensor (ZSM) Service Indicator; RTRM Zone Sensor Module (ZSM) Test'; Trane Commercial Help Center — Low and High Pressure Control (article 12778525483277); Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor proving fault (HPC Lockout / Disable alarm via BAS)",
+      "meaning": "'Compressor Proving faults on units with ReliaTel Controls indicates that the RTRM has commanded the compressor contactor on, but the RTRM did not detect that the contactor pulled in or the RTRM detected that the contactor opened while running.' 'Based on the communication interface installed in the unit and the firmware on that interface, the diagnostic can come through in different ways including HPC Lockout or Disable alarms.'",
+      "likelyCauses": [
+        "Open in the CC1/CC2 24 V proving circuit: HPC, LPC, TDL, compressor internal overload, contactor coil",
+        "Phase monitor open",
+        "Compressor disable input open"
+      ],
+      "checks": [
+        "Check 24 V at the contactor coil and through each series safety while the RTRM calls for the compressor (source + field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — Compressor Proving on ReliaTel Controlled Units (article 42150055236109)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTVM communication failure",
+      "meaning": "'RTVM communication failure' is a cause of the RTRM 2-flash code; on the RTVM the green system LED at '1/4 second on, 2 seconds off' means 'No communication'.",
+      "likelyCauses": [
+        "Communication harness unplugged",
+        "Failed RTVM or RTRM port"
+      ],
+      "checks": [
+        "Check the RTVM LED pattern and the harness to the RTRM (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM? (article 360038608131); Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Programmable ZSM display: HEAT FAIL",
+      "meaning": "'Heat failure indicates an error in the heating system... On the display, error codes toggle with the clock' (BAYSENS019/119 programmable zone sensor).",
+      "checks": [
+        "Same diagnosis as 'Zone sensor HEAT LED flashing': read the ignition module LED"
+      ],
+      "severity": "lockout",
+      "source": "Trane ReliaTel Microprocessor Controls Diagnostic Manual RT-SVD03G-EN (Nov 2010), as indexed on ManualsLib 2574710 p.81 'Programmable Zone Sensor BAYSENS119A and BAYSENS019C'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Programmable ZSM display: COOL FAIL",
+      "meaning": "'Cool failure indicates an error in the cooling system... On the display, error codes toggle with the clock.' Note from the BAYSENS119 troubleshooting article: the sensor may falsely report a cooling failure when there is no cooling call if sensor wiring/communication to the RTU is faulty — verify wiring and communication.",
+      "checks": [
+        "Same diagnosis as 'Zone sensor COOL LED flashing'; verify sensor wiring/communication first if there was no cooling demand (source)"
+      ],
+      "severity": "lockout",
+      "source": "Trane ReliaTel Microprocessor Controls Diagnostic Manual RT-SVD03G-EN (Nov 2010), as indexed on ManualsLib 2574710 p.81; Trane Commercial Help Center — Troubleshooting BAYSENS119 Programmable Zone Sensor (article 5123788263437) and How do I test a Programmable Zone Sensor (BAYSENS119*)? (article 360038266292)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "BAYSENS119 display: E1",
+      "meaning": "E1 = heat failure (per Trane literature as quoted on HVAC-Talk 'Trane zone sensor').",
+      "severity": "lockout",
+      "source": "HVAC-Talk thread 1053121 'Trane zone sensor' quoting Trane BAYSENS119 literature (BAS-SVX17)",
+      "evidence": "single_secondary",
+      "notes": "The BAYSENS119 manual also lists E0, E6, E7 and E8 whose meanings were not seen in any source; not transcribed."
+    },
+    {
+      "code": "BAYSENS119 display: E2",
+      "meaning": "E2 = cool failure (per Trane literature as quoted on HVAC-Talk 'Trane zone sensor').",
+      "severity": "lockout",
+      "source": "HVAC-Talk thread 1053121 'Trane zone sensor' quoting Trane BAYSENS119 literature (BAS-SVX17)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "RTEM green System LED ON",
+      "meaning": "'On: OK to economize'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM green System LED slow flash",
+      "meaning": "'Slow flash: Not OK to economize' (outdoor conditions above the dry-bulb/enthalpy setpoint or economizer disabled)",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM green System LED fast flash",
+      "meaning": "'Fast flash: Not communicating with RTRM'",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Check 24 VAC to the RTEM and the communication harness to the RTRM (field practice)"
+      ]
+    },
+    {
+      "code": "RTEM green System LED OFF",
+      "meaning": "'OFF: No power or system failure'",
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Check 24 VAC to the RTEM and the communication harness to the RTRM (field practice)"
+      ]
+    },
+    {
+      "code": "RTEM LED blink: off 2 s, on 1/4 s (1/2 s on, 2 s off)",
+      "meaning": "Communications failure with the RTRM: 'BLINK Communications Failure is LED OFF for 2 seconds, then LED ON for 1/4 second' (the LED-code list words the no-communication pattern as '1/2 second on, 2 seconds off'). Distinguish from the 1-flash actuator fault, which is 'LED ON for 2 seconds, then LED OFF for 1/4 second'.",
+      "likelyCauses": [
+        "Harness between RTEM and RTRM unplugged/damaged",
+        "Failed RTEM or RTRM"
+      ],
+      "checks": [
+        "Watch whether the LED is mostly off (comm failure) or mostly on (actuator fault) (source)",
+        "Reseat the RTRM-RTEM harness; cycle 24 V (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — How do I tell the difference between a RTEM Actuator Fault and a RTEM Communications Failure? (article 360044155732); Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 1 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): Actuator fault ('1 Flash Actuator Fault is LED ON for 2 seconds, then LED OFF for 1/4 second')",
+      "likelyCauses": [
+        "Economizer actuator not driving or no feedback",
+        "Actuator wiring/plug",
+        "Damper linkage bound"
+      ],
+      "checks": [
+        "Drive the damper in the economizer test-mode step and watch travel and feedback (field practice)",
+        "Check the actuator plug and wiring at the RTEM (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671); Trane Commercial Help Center — How do I tell the difference between a RTEM Actuator Fault and a RTEM Communications Failure? (article 360044155732)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 2 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): CO2 sensor",
+      "likelyCauses": [
+        "CO2 sensor signal out of range, unpowered or miswired"
+      ],
+      "checks": [
+        "Check the CO2 sensor output/supply at the RTEM input (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 3 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): RA humidity sensor",
+      "likelyCauses": [
+        "Return air humidity sensor failed or out of range (comparative enthalpy units)"
+      ],
+      "checks": [
+        "Check the RA humidity sensor signal at the RTEM (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 4 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): RA temp sensor",
+      "likelyCauses": [
+        "Return air temperature sensor open/shorted"
+      ],
+      "checks": [
+        "Ohm the RAT thermistor at the RTEM plug (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 6 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): OA humidity sensor",
+      "likelyCauses": [
+        "Outdoor air humidity sensor failed or out of range (reference/comparative enthalpy units)"
+      ],
+      "checks": [
+        "Check the OA humidity sensor signal at the RTEM (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 7 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): No Communication with RTRM or OAT sensor has failed",
+      "likelyCauses": [
+        "Outdoor air temperature sensor open/shorted",
+        "RTRM communication lost"
+      ],
+      "checks": [
+        "Ohm the OAT sensor; check the RTEM-RTRM harness (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 8 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): MA temp sensor",
+      "likelyCauses": [
+        "Mixed air sensor open/shorted or not installed"
+      ],
+      "checks": [
+        "'Confirm the mixed air sensor is installed. If the unit has a 0-50% motorized damper and not an economizer, there is no mixed air sensor, and the 8 flash fault code should simply be ignored.' (source)",
+        "'Pull the two pin plug from the MAT inputs on the RTEM and measure resistance across the two pins; if you read open or short, replace the mixed air sensor.' (source)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671); Trane Commercial Help Center — Why am I getting an 8 flash code on my economizer? (article 360037863911)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTEM LED 9-11 flash",
+      "meaning": "Error code (1/2 second on, 1/4 second off per flash): Internal fault",
+      "likelyCauses": [
+        "RTEM board failure"
+      ],
+      "checks": [
+        "Cycle power; if the code persists replace the RTEM (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module) (article 360037863611) and What are the Economizer fault codes? (article 360060609671)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTVM green System LED ON",
+      "meaning": "'On: Normal communication with RTRM'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "RTVM green System LED 1/4 s on, 2 s off",
+      "meaning": "'1/4 second on, 2 seconds off: No communication'",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Check the harness between RTVM and RTRM (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM green System LED OFF",
+      "meaning": "'Off: No power or board failure'",
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Check 24 VAC to the RTVM (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 1 flash",
+      "meaning": "RTVM error code: Actuator fault (on 2 seconds then a 1/2 second blink)",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 2 flash",
+      "meaning": "RTVM error code: CO2 sensor",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 3 flash",
+      "meaning": "RTVM error code: RA humidity sensor",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 4 flash",
+      "meaning": "RTVM error code: RA temp sensor",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 6 flash",
+      "meaning": "RTVM error code: OA humidity sensor",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "RTVM LED 7 flash",
+      "meaning": "RTVM error code: No Communication with RTRM or OAT sensor has failed",
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (article 360060172532)",
+      "evidence": "manufacturer_doc",
+      "checks": [
+        "Same sensor/actuator checks as the matching RTEM code (field practice)"
+      ]
+    },
+    {
+      "code": "IGN LED1 OFF (Precedent ignition module)",
+      "meaning": "'If LED1 is out, this indicates that there is no power to the ignition module.'",
+      "likelyCauses": [
+        "No 24 V / heat transformer power to the ignition module",
+        "Ignition board failed",
+        "Board unresponsive after RTRM replacement (help-center article 4459483187341)"
+      ],
+      "checks": [
+        "Check power at the ignition module plug; if the RTRM was just replaced, see article 4459483187341 (source)"
+      ],
+      "severity": "shutdown",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN LED1 solid green / slow pulse (Precedent ignition module)",
+      "meaning": "'The ignition module LED1 will be solid green with no heat call and in a slow pulse (3/4 sec on, 1/4 sec off) for a heating call, and will also blink codes (1/4 sec on, 1/4 sec off with a 2 sec pause at the end of the code) for diagnostics.' On the CNT05135 electromechanical board (two LEDs, Status and Fault): Status 'Slow Flash indicates normal operation with a cool or fan only call; Fast Flash indicates normal operation with a call for heat only.'",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 2 flash (Precedent)",
+      "meaning": "'1 Hour Lockout' — 'A 2 flash diagnostic indicates that either no flame was sensed on ignition or that the flame dropped out while running.' 'The ignition control will reset automatically after 1 hour in Lock-up mode.'",
+      "likelyCauses": [
+        "No gas / gas valve not opening",
+        "Dirty or cracked flame sensor, poor flame-sense ground",
+        "Igniter failed, poor burner carry-over",
+        "Flue/combustion air problem causing flame dropout"
+      ],
+      "checks": [
+        "Watch an ignition trial for spark/HSI, gas valve voltage and flame; measure flame-sense microamps (field practice)",
+        "Reset by cycling the heat call / 24 V power, or wait 1 hour (source)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 3 flash (Precedent)",
+      "meaning": "'Pressure Switch' — 'the pressure switch did not close in the correct amount of time after the combustion fan was energized, opened while the unit was heating or is closed when the combustion fan is commanded off.'",
+      "likelyCauses": [
+        "Restricted, pulled loose or leaking pressure switch hose; flue box hose fitting restricted with debris or rust",
+        "Combustion blower not running or slow",
+        "Blocked flue / vent",
+        "Switch stuck closed"
+      ],
+      "checks": [
+        "Confirm the combustion blower runs; check hose and flue-box fitting; measure inches w.c. at the switch (source + field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 4 flash (Precedent)",
+      "meaning": "'TCO Open' (high temperature limit / thermal cut-out open).",
+      "likelyCauses": [
+        "Low airflow: dirty filters, belt, blower, closed dampers",
+        "Over-fired heat exchanger",
+        "Failed TCO"
+      ],
+      "checks": [
+        "Check temperature rise, filters and blower; ohm the TCO when cool (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 5 flash (Precedent)",
+      "meaning": "'Flame W/O Gas' — 'the ignition module is sensing a flame without a call for heat. This could be a failing flame sensor or a gas valve that is not closing.' 'If there is a (5) flash code and the indoor fan is not on, it is a bad board. If there is a (5) Flash code and there is no flame present, it is a bad board.'",
+      "likelyCauses": [
+        "Gas valve leaking through / not closing",
+        "Flame sensor or its wiring shorted",
+        "Ignition board failed"
+      ],
+      "checks": [
+        "Look for flame with the gas valve de-energized; if none and the fan is off, replace the board (source)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 6 flash (Precedent)",
+      "meaning": "'Rollout Switch Open'.",
+      "likelyCauses": [
+        "Flame rollout from a blocked heat exchanger, flue or dirty burners",
+        "Manual-reset rollout switch tripped"
+      ],
+      "checks": [
+        "Inspect the heat exchanger, burners and flue for blockage before resetting the rollout switch (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IGN 7 flash (Precedent)",
+      "meaning": "'W1 / W2 Sw' (W1/W2 input switch diagnostic). Note: 'A W1 & W2 simultaneous call (such as W1 and W2 jumped together) gives you Low Fire for 10 minutes before transitioning to High Fire' and 'you do not need a G call with a W1 call (the board will automatically turn on the fan 45 seconds after proving flame).'",
+      "likelyCauses": [
+        "W2 present without W1 / miswired heat stages",
+        "RTRM heat outputs or wiring to the ignition board"
+      ],
+      "checks": [
+        "Verify W1 and W2 24 V signals at the ignition board during a heat call (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Precedent units? (article 360038604571) and Precedent Electromechanical Ignition Board Info and Troubleshooting Tips (article 360043948432)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Voyager II IGN LED ON / slow flash / fast flash",
+      "meaning": "'ON indicates Normal operation, Slow Flash indicates a normal heat call, Fast Flash indicates an error code' (ReliaTel-controlled Voyager II ignition board).",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Reliatel controlled Voyager II units? (article 360038605131); Star Supply reproduction 'Ignition Troubleshooting Codes, ReliaTel-Electromechanical'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Voyager II IGN 1 flash",
+      "meaning": "'Communications Lockup'.",
+      "likelyCauses": [
+        "Loss of communication between the ignition board and the RTRM"
+      ],
+      "checks": [
+        "Check the harness between the RTRM and ignition board; cycle 24 V (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Reliatel controlled Voyager II units? (article 360038605131); Star Supply reproduction 'Ignition Troubleshooting Codes, ReliaTel-Electromechanical'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Voyager II IGN 2 flash",
+      "meaning": "'System Lockout'. 'The ignition control will reset automatically after 1 hour in Lock-up mode.'",
+      "likelyCauses": [
+        "Failed ignition trials (no flame / flame loss)",
+        "Pressure switch, limit or rollout trips ending in lockout"
+      ],
+      "checks": [
+        "Watch an ignition trial and check flame sense, gas pressure, pressure switch and limits (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Reliatel controlled Voyager II units? (article 360038605131); Star Supply reproduction 'Ignition Troubleshooting Codes, ReliaTel-Electromechanical'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Voyager II IGN 5 flash",
+      "meaning": "'Flame sensed without gas valve energized'.",
+      "likelyCauses": [
+        "Gas valve not closing",
+        "Flame sensor circuit shorted",
+        "Ignition board failed"
+      ],
+      "checks": [
+        "Confirm no flame with the valve de-energized; check the flame-sense wiring (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — What are the gas heat fault codes for Reliatel controlled Voyager II units? (article 360038605131); Star Supply reproduction 'Ignition Troubleshooting Codes, ReliaTel-Electromechanical'",
+      "evidence": "manufacturer_doc",
+      "notes": "Only the states seen in sources are transcribed; the article's full table (3, 4, 6+ flashes) was not retrieved."
+    },
+    {
+      "code": "CFMB LED 1 flash (Voyager 2 modulating heat)",
+      "meaning": "'Not Used'.",
+      "severity": "info",
+      "source": "Trane Commercial Help Center — Voyager 2 Modulating Heat Board (CFMB) LED Flash Codes (Old Fasco vs New ICM) (article 4423637197325)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "CFMB LED 2 flash (Voyager 2 modulating heat)",
+      "meaning": "'Under Voltage - Should have 208-230V from heat transformer. Range should be +/- 10%. Measure the voltage at the board and at the combustion fan motor.'",
+      "checks": [
+        "Measure voltage at the CFMB and at the combustion fan motor; check the heat transformer tap (source)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — Voyager 2 Modulating Heat Board (CFMB) LED Flash Codes (Old Fasco vs New ICM) (article 4423637197325)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "CFMB LED 3 flash (Voyager 2 modulating heat)",
+      "meaning": "'Over Voltage - Should have 208-230V from heat transformer. Range should be +/- 10%. Measure the voltage at the board and at the combustion fan motor.'",
+      "checks": [
+        "Measure voltage at the CFMB and at the combustion fan motor; check the heat transformer tap (source)"
+      ],
+      "severity": "lockout",
+      "source": "Trane Commercial Help Center — Voyager 2 Modulating Heat Board (CFMB) LED Flash Codes (Old Fasco vs New ICM) (article 4423637197325)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "CFMB LED 4 flash (Voyager 2 modulating heat)",
+      "meaning": "'Over Temperature - This board is not connected to any temp/safety switches in the unit, this fault should not be experienced.'",
+      "checks": [
+        "If seen, suspect the CFMB itself (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Trane Commercial Help Center — Voyager 2 Modulating Heat Board (CFMB) LED Flash Codes (Old Fasco vs New ICM) (article 4423637197325)",
+      "evidence": "manufacturer_doc",
+      "notes": "Flash pattern: 1/4 s on, 1/4 s off per count; multiple faults dwell 2 s between codes, then 5 s, and repeat until cleared. Old Fasco vs new ICM board differences are in the article and were not transcribed."
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "RTRM green System LED (LED2) steady on",
+      "meaning": "Normal, no diagnostic"
+    },
+    {
+      "pattern": "RTRM LED2 off",
+      "meaning": "No power to RTRM, output wiring shorted, or internal failure",
+      "checks": [
+        "24 VAC at RTRM input",
+        "~32 VDC J6-6 to J6-9, else replace RTRM"
+      ]
+    },
+    {
+      "pattern": "RTRM LED2 1 blink",
+      "meaning": "Emergency stop input open when test mode attempted",
+      "checks": [
+        "Continuity LTB 5-6"
+      ]
+    },
+    {
+      "pattern": "RTRM LED2 2 flashes every 2 s",
+      "meaning": "One or more diagnostics present",
+      "checks": [
+        "Read J6 outputs / zone sensor LEDs / ZSM display / Tracer for the specific fail code"
+      ]
+    },
+    {
+      "pattern": "RTRM LED2 pulsing on/off",
+      "meaning": "TEST mode active"
+    },
+    {
+      "pattern": "RTRM LED2 one flash every few seconds (v4.0+, dehumidification units)",
+      "meaning": "RTOM disconnected or not communicating",
+      "checks": [
+        "RTRM-RTOM Modbus and power harness"
+      ]
+    },
+    {
+      "pattern": "Zone sensor / J6 outputs: SYSTEM on, HEAT on, COOL on, SERVICE on",
+      "meaning": "Powered; heating; cooling (economizer or compressors); clogged filter switch closed >= 2 min"
+    },
+    {
+      "pattern": "Zone sensor HEAT pulsing",
+      "meaning": "HEAT FAIL (ignition lockout, limit, rollout; VAV: SAT sensor)",
+      "checks": [
+        "Ignition module LED code"
+      ]
+    },
+    {
+      "pattern": "Zone sensor COOL pulsing",
+      "meaning": "COOL FAIL (CC1/CC2 circuit lockout; VAV: DTS sensor)",
+      "checks": [
+        "HPC/LPC/TDL/CC circuit"
+      ]
+    },
+    {
+      "pattern": "Zone sensor SERVICE pulsing",
+      "meaning": "Fan failure (fan proving did not prove within 40 s)",
+      "checks": [
+        "Belt, IDM, fan proving switch"
+      ]
+    },
+    {
+      "pattern": "Zone sensor HEAT + COOL pulsing",
+      "meaning": "Coil temperature sensor open/shorted or defrost failure (heat pump)",
+      "checks": [
+        "CTS resistance"
+      ]
+    },
+    {
+      "pattern": "Zone sensor COOL + SERVICE pulsing (VAV)",
+      "meaning": "Static pressure transducer output < 0.25 VDC at RTAM J1-3"
+    },
+    {
+      "pattern": "Zone sensor HEAT + COOL + SERVICE pulsing (VAV)",
+      "meaning": "High duct static trip: > 3.5 in. w.c. three consecutive times"
+    },
+    {
+      "pattern": "RTEM green LED: on / slow flash / fast flash / off",
+      "meaning": "OK to economize / not OK to economize / not communicating with RTRM / no power or failure"
+    },
+    {
+      "pattern": "RTEM LED off 2 s, on 1/4 s",
+      "meaning": "Communications failure with RTRM"
+    },
+    {
+      "pattern": "RTEM LED on 2 s, off 1/4 s",
+      "meaning": "1 flash: actuator fault"
+    },
+    {
+      "pattern": "RTEM LED error flashes (1/2 s on, 1/4 s off): 1 / 2 / 3 / 4 / 6 / 7 / 8 / 9-11",
+      "meaning": "Actuator / CO2 sensor / RA humidity / RA temp / OA humidity / no RTRM comm or OAT sensor / MA temp sensor / internal fault",
+      "checks": [
+        "8 flash on a 0-50% motorized-damper unit (no MA sensor) is ignored"
+      ]
+    },
+    {
+      "pattern": "RTVM green LED: on / 1/4 s on 2 s off / off",
+      "meaning": "Normal comm with RTRM / no communication / no power or board failure"
+    },
+    {
+      "pattern": "RTVM LED error flashes 1 / 2 / 3 / 4 / 6 / 7",
+      "meaning": "Actuator fault / CO2 / RA humidity / RA temp / OA humidity / no RTRM comm or OAT sensor"
+    },
+    {
+      "pattern": "Precedent ignition module LED1: off / solid / slow pulse (3/4 s on, 1/4 s off) / blink codes (1/4 s on, 1/4 s off, 2 s pause)",
+      "meaning": "No power / no heat call / heat call / diagnostic code"
+    },
+    {
+      "pattern": "Precedent ignition module codes 2 / 3 / 4 / 5 / 6 / 7",
+      "meaning": "1-hour lockout (no flame or flame loss) / pressure switch / TCO open / flame without gas / rollout open / W1-W2 switch",
+      "checks": [
+        "Auto-reset after 1 hour lockout"
+      ]
+    },
+    {
+      "pattern": "Voyager II ignition board LED: on / slow flash / fast flash; codes 1 / 2 / 5",
+      "meaning": "Normal / heat call / error code; communications lockup / system lockout / flame sensed without gas valve energized"
+    },
+    {
+      "pattern": "CFMB (modulating heat) fault LED codes 1 / 2 / 3 / 4 (1/4 s on-off per count, 2 s between codes, 5 s pause)",
+      "meaning": "Not used / under voltage / over voltage / over temperature (should not occur)"
+    }
+  ],
+  "diagnosticTips": [
+    "TEST MODE (auto-cycle): place a jumper from TEST 1 to TEST 2 on the Low Voltage Terminal Board (LTB). The unit runs each mode for 30 seconds, scrolling through all modes relevant to that model, then exits test mode automatically; to run it again remove the jumper for ~2 seconds and restore it. Stages: Supply Fan On, Economizer open and close, Cool 1, Cool 2, Heat 1, Heat 2, Emergency Heat (heat pumps only), Outdoor Coil Defrost (heat pump only); a stage is skipped if the unit lacks that component. (help-center 360060176192 / 360037863991)",
+    "TEST MODE (step / hold): if the jumper is removed at any time during test mode the unit stays in the currently selected mode for 1 hour (except defrost on heat pumps), then exits and resumes normal operation. Specific operating states can also be selected by applying the appropriate resistance from TEST 1 to TEST 2, in any order (RT-SVD03 resistance table not transcribed). RTRM LED2 and the ZSM SYSTEM indicator pulse while in test mode. If the Emergency Stop input (LTB 5-6) is open nothing will run in test mode and LED2 gives one blink.",
+    "READING A 2-FLASH: take four DC voltage measurements on the RTRM J6 connector (J6-7 Heat, J6-8 Cool, J6-9 System, J6-10 Service; measure to J6-6): steady voltage = that mode is ON, pulsing voltage = FAIL. Table 1 'Fail Codes' and Table 2 'Simultaneous Fail Codes' in help-center article 360037491092 map single and combined pulsing outputs (HEAT, COOL, SERVICE, HEAT+COOL, COOL+SERVICE, HEAT+COOL+SERVICE) to the entries in this table. About 32 VDC between J6-6 and J6-9 is expected; if absent, replace the RTRM.",
+    "WHERE THE LEDS ARE: RTRM System LED2 is on the RTRM in the unit control box; the RTEM (economizer) and RTVM (ventilation) LEDs are on their own modules; the ignition module LED1 is on the ignition board in the gas heat section; zone sensor SYSTEM/HEAT/COOL/SERVICE LEDs are on BAYSENS zone sensors that have indicators (driven from RTRM J6-7/8/9/10); programmable sensors (BAYSENS019/119) show HEAT FAIL / COOL FAIL text toggling with the clock (BAYSENS119 also E1/E2). On BAS units the same diagnostics reach Tracer through the RTCI/TCI (compressor proving may show as 'HPC Lockout' or 'Disable' depending on the interface firmware).",
+    "ZONE SENSOR TEST: mechanical ZSM temperature input at RTRM J6-1/J6-2 reads 5.00 VDC with the sensor disconnected; with it attached read DC volts, then ohm the circuit and the thermistor. Programmable ZSM: with control wires removed, 28-32 VDC between sensor terminals 11 and 12; run the unit through test mode to prove the RTU before condemning the sensor.",
+    "CLEARING LOCKOUTS: compressor manual-reset lockouts (4 consecutive HPC/TDL/LPC/CC-circuit trips) and ignition lockouts clear by cycling 24 V control power (or the zone sensor / thermostat mode switch to OFF and back); the ignition control also auto-resets after 1 hour; on BAS units send the reset from Tracer. Fix the cause first: the RTRM v4.0+ counts consecutive trips.",
+    "RTEM 8-FLASH: on units with a 0-50% motorized outdoor-air damper (no economizer) there is no mixed-air sensor and the 8 flash code is ignored; on economizer units pull the MAT two-pin plug and ohm the sensor (open/short = replace).",
+    "RTEM ACTUATOR FAULT vs COMM FAILURE: 1-flash actuator fault = LED on 2 s / off 1/4 s; communications failure = LED off 2 s / on 1/4 s."
+  ],
+  "notes": [
+    "Enrichment pass 2026-09-26 by WebSearch only (WebFetch/curl blocked): every meaning is quoted from a search excerpt of the named Trane help-center article, IOM page or the RT-SVD03 diagnostic manual index; likelyCauses/checks combine the source with field practice and say which.",
+    "Coverage is 'partial': the RT-SVD03 full diagnostic tables (test-mode resistance values, RTDM dehumidification module LEDs, RTAM full table, RTCI/TCI LEDs, Tracer diagnostic names) and the complete Voyager II ReliaTel ignition-board table (codes 3, 4, 6+) were not retrieved; BAYSENS119 codes E0/E6/E7/E8 exist but their meanings were not seen in a credible source (a third-party blog's definitions were generic and were not used).",
+    "This sidecar supersedes the four 'builder memory / inferred' zone-sensor entries in trane.json (COOL flashing, HEAT flashing, SERVICE steady, SERVICE flashing) with sourced versions using the same code strings, and replaces the single untranscribed 'RTEM LED flashing' entry with the full RTEM flash table.",
+    "RTEM 5 flash is not defined in the Trane list (the table skips from 4 to 6)."
+  ]
+}

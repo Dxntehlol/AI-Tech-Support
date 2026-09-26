@@ -1,0 +1,847 @@
+{
+  "pack": "carrier",
+  "platformId": "comfortlink-rtu",
+  "name": "Carrier ComfortLink rooftop controls (48/50HC v3.x, 48/50TC/LC ComfortLink, 48/50A/AJ WeatherMaker, 48/50P/PG/PM WeatherMaster/Centurion, 48/50N WeatherExpert) — scrolling marquee / Navigator alert (Txxx) and alarm (Axxx) codes",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Carrier 48/50HC 04-28 Single Package Rooftop Units with ComfortLink Controls Version 3.X — Controls, Start-Up, Operation and Troubleshooting (Table 9 ComfortLink Alarm Codes; per-code 'Alert Code Txxx' paragraphs; Diagnostic LEDs)",
+      "docId": "48/50HC-05T (also 48/50HC-C03T, ManualsLib 1653595 / 1663668)",
+      "url": "https://www.manualslib.com/manual/1653595/Carrier-48hc-04-28.html"
+    },
+    {
+      "title": "Carrier 48/50HC 04-28 Controls, Start-Up, Operation and Troubleshooting (Carrier West training handbook copy)",
+      "docId": "48/50HC-C03T",
+      "url": "https://trainingcarrierwest.com/wp-content/uploads/2020/02/48-50hc-c03t-Handbook-1-page-per-side-2-sided-2-left-staples-3-hole.pdf"
+    },
+    {
+      "title": "Carrier 48/50HC ComfortLink v3.x Controls, Start-Up, Operation and Troubleshooting (shareddocs PDF)",
+      "docId": "48/50HC-05T",
+      "url": "https://www.shareddocs.com/hvac/docs/1005/Public/08/48_50HC-05T.pdf"
+    },
+    {
+      "title": "Carrier 48/50PG C03-14 Operation and Service Manual — Table 12 ComfortLink T Alarm Codes; 'Alert Code Txxx' paragraphs (pp. 37-43); Main Base Board LEDs (p. 71)",
+      "docId": "48/50PG C03-14 (ManualsLib 25373)",
+      "url": "https://www.manualslib.com/manual/25373/Carrier-48-50pg-C03-14.html?page=41"
+    },
+    {
+      "title": "Carrier WeatherMaker 48/50AJ,AK,AW,AY Operation and Service Manual — Table 114 Alert and Alarm Codes (pp. 93-97)",
+      "docId": "48/50A-15T (ManualsLib 25515 / ManualsDir 72170)",
+      "url": "https://www.manualsdir.com/manuals/72170/carrier-weathermaker-48_50aj.html?page=95"
+    },
+    {
+      "title": "Carrier WeatherMaster 48P2030-100 Controls, Start-Up, Operation, Service and Troubleshooting (economizer actuator alerts T610-T617, p. 120)",
+      "docId": "ManualsLib 1803394",
+      "url": "https://www.manualslib.com/manual/1803394/Carrier-Weathermaster-48p2030-100.html?page=120"
+    },
+    {
+      "title": "Carrier WeatherExpert 48N2 Controls, Start-Up, Operation, Service and Troubleshooting (alert/alarm table pp. 118-119)",
+      "docId": "ManualsLib 836126",
+      "url": "https://www.manualslib.com/manual/836126/Carrier-Weatherexpert-48n2.html?page=118"
+    },
+    {
+      "title": "Carrier ComfortLink 6 Series Controls, Start-Up, Operation, Service and Troubleshooting — Compressor Alarm/Alert Circuit (p. 42)",
+      "docId": "ManualsLib 1805843",
+      "url": "https://www.manualslib.com/manual/1805843/Carrier-Comfortlink-6-Series.html?page=42"
+    },
+    {
+      "title": "Carrier 48HJD/48TFD/48EJ IGC control board 'LED Error Code Service Analysis' table (same IGC board family used on ComfortLink gas units)",
+      "docId": "TSI HVAC igc_codes.pdf / ManualsLib 25388 p.39 / 25597 p.60",
+      "url": "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
+    },
+    {
+      "title": "Carrier 48LC 04 Controls, Start-Up, Operation and Troubleshooting — Basic Control Usage / Scrolling Marquee (p. 3)",
+      "docId": "ManualsLib 1663583",
+      "url": "https://www.manualslib.com/manual/1663583/Carrier-48lc-04.html?page=3"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "T051",
+      "meaning": "48/50HC: Compressor A1 Safety Trip — indicates high-pressure switch open, internal protection open, or wiring error. 48/50A/P/N (multi-compressor circuits): Circuit A, Compressor 1 Failure — compressor feedback signal (current sensor board) does not match relay state.",
+      "likelyCauses": [
+        "HPS open on circuit A (manual text)",
+        "Compressor internal overload / internal protection open (manual text)",
+        "Incorrect safety or compressor wiring, tripped circuit breaker (manual text)",
+        "Failed contactor or current sensor board (CSB) so no current is seen for 4 s after the relay is commanded on (manual text)"
+      ],
+      "checks": [
+        "Turn the compressor on in Service Test; if it does not start the manual says the likely problem is HPS open, circuit breaker trip, incorrect safety wiring or incorrect compressor wiring",
+        "Check 24 V through the compressor safety string to the contactor coil and confirm contactor pull-in (field practice)",
+        "Measure compressor amps and compare with the CSB feedback in the STATUS/INPUTS menu (field practice)",
+        "Each occurrence adds a strike to the compressor; 3 strikes lock the circuit out (A163) — clear the cause before resetting"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T Table 9 'T051 Compressor A1 Safety Trip' and 'To check out alerts T051, T052, T055, T056' paragraph; 48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 'Circuit A, Compressor 1 Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T052",
+      "meaning": "Circuit A, Compressor 2 Failure — if the current sensor board reads OFF while the compressor relay has been commanded ON for 4 continuous seconds an alert is generated; a strike is called out on the affected compressor.",
+      "likelyCauses": [
+        "HPS open, circuit breaker trip, incorrect safety wiring or incorrect compressor wiring (manual text)",
+        "Failed contactor or CSB (field practice)"
+      ],
+      "checks": [
+        "Run compressor A2 in Service Test; if it does not start check HPS, breaker, safety and compressor wiring (manual text)",
+        "Verify CSB feedback and compressor amps (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 'Compressor Alarm/Alert Circuit' — T052",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T053",
+      "meaning": "Circuit A, Compressor 3 Failure — compressor feedback (CSB) does not match relay state for 4 s.",
+      "likelyCauses": ["As T051/T052 for compressor A3"],
+      "checks": ["As T051 for compressor A3 (Service Test, safety string, CSB feedback)"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 — T053",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T054",
+      "meaning": "Circuit A, Compressor 4 Failure — compressor feedback (CSB) does not match relay state for 4 s.",
+      "likelyCauses": ["As T051/T052 for compressor A4"],
+      "checks": ["As T051 for compressor A4"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 — T054",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T055",
+      "meaning": "48/50HC: Compressor B1 Safety Trip — indicates high-pressure switch open, internal protection open, or wiring error. 48/50A/P/N: Circuit B, Compressor 1 Failure — compressor feedback signal does not match relay state.",
+      "likelyCauses": [
+        "HPS open on circuit B, internal protection open, wiring error (manual text)",
+        "Breaker trip, failed contactor or CSB (manual/field)"
+      ],
+      "checks": [
+        "Run compressor B1 in Service Test; if it does not start check HPS, breaker, safety wiring, compressor wiring (manual text)",
+        "Verify contactor pull-in, compressor amps and CSB feedback (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T Table 9 'T055 Compressor B1 Safety Trip'; 48/50PG C03-14 Table 12 'Circuit B, Compressor 1 Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T056",
+      "meaning": "Circuit B, Compressor 2 Failure — compressor feedback (CSB) does not match relay state for 4 s.",
+      "likelyCauses": ["As T051/T052 for compressor B2"],
+      "checks": ["As T051 for compressor B2"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 — T056",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T057",
+      "meaning": "Circuit B, Compressor 3 Failure — compressor feedback (CSB) does not match relay state for 4 s.",
+      "likelyCauses": ["As T051/T052 for compressor B3"],
+      "checks": ["As T051 for compressor B3"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 Table 12 / ComfortLink 6 Series p.42 — T057",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T073",
+      "meaning": "Outdoor Air Temperature Thermistor Failure — no cooling with economizer. Cause: faulty, shorted, or open thermistor caused by wiring error or loose connection. Clears automatically.",
+      "likelyCauses": [
+        "Open/shorted OAT thermistor or wiring, loose plug (manual text)"
+      ],
+      "checks": [
+        "Compare the OAT reading in the TEMPERATURES menu with a reference thermometer; ohm the thermistor at the MBB plug against the thermistor table in the controls manual (field practice)",
+        "Economizer free cooling and OAT-based lockouts are disabled while active"
+      ],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T073 – Outdoor Air Temperature Thermistor Failure'; 48/50HC-05T Table 9 T073",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T074",
+      "meaning": "Space Temperature Thermistor Failure — if U.CTL = 3 (space sensor control) then no heating or cooling. Cause: faulty, shorted, or open thermistor caused by wiring error or loose connection. Clears automatically.",
+      "likelyCauses": [
+        "T-55/T-56 space sensor or its wiring open/shorted; loose connection (manual text)",
+        "Unit configured for space sensor (U.CTL = 3) with no sensor installed (field practice)"
+      ],
+      "checks": [
+        "Check U.CTL configuration matches the installed control (thermostat vs space sensor)",
+        "Ohm the space sensor at the field terminals; check sensor wiring for shorts to ground (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T074 – Space Temperature Thermistor Failure'; 48/50HC-05T Table 9 T074",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T075",
+      "meaning": "Supply Air Temperature Thermistor Failure — no cooling with economizer and no adaptive compressor staging. Cause: faulty, shorted, or open thermistor caused by wiring error or loose connection. Clears automatically.",
+      "likelyCauses": ["Open/shorted SAT thermistor or wiring; loose plug (manual text)"],
+      "checks": [
+        "Ohm the SAT at the MBB plug against the thermistor table; verify the reading in the TEMPERATURES menu (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T075 – Supply Air Temperature Thermistor Failure'; 48/50HC-05T Table 9 T075",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T076",
+      "meaning": "Return Air Thermistor Failure — if RAT.S = Yes then no differential dry bulb control. Cause: faulty, shorted, or open thermistor caused by wiring error or loose connection. Clears automatically.",
+      "likelyCauses": ["Open/shorted RAT thermistor or wiring (manual text)"],
+      "checks": ["Ohm the RAT at the board plug; check RAT.S configuration if no RAT sensor is fitted (field practice)"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T076 – Return Air Thermistor Failure'; 48/50HC-05T Table 9 T076",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T077",
+      "meaning": "Space Relative Humidity Sensor Failure — if RH.S = Yes then no indoor humidity control. Cause: faulty, shorted, or open sensor caused by wiring error or loose connection.",
+      "likelyCauses": ["Faulty space RH sensor, 4-20 mA loop wiring open/shorted (manual/field)"],
+      "checks": ["Check the RH sensor supply and 4-20 mA signal at the board; verify RH.S configuration (field practice)"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T077 – Space Relative Humidity Sensor Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T078",
+      "meaning": "Return Air Relative Humidity Sensor Fail.",
+      "likelyCauses": ["Faulty return-air RH sensor or its wiring (field practice)"],
+      "checks": ["Check sensor power and signal at the board input; verify configuration for the installed sensor (field practice)"],
+      "severity": "warning",
+      "source": "Carrier WeatherExpert 48N2 controls manual p.118 alert table 'T078 Return Air Relative Humidity Sensor Fail'; 48/50PG C03-14 Table 12",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T079",
+      "meaning": "Mixed Air Relative Humidity Sensor Fail.",
+      "likelyCauses": ["Faulty mixed-air RH sensor or its wiring (field practice)"],
+      "checks": ["Check sensor power and signal at the board input; verify configuration (field practice)"],
+      "severity": "warning",
+      "source": "Carrier WeatherExpert 48N2 controls manual p.118 'T079 Mixed Air Relative Humidity Sensor Fail'; 48/50PG C03-14 Table 12",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T080",
+      "meaning": "Circuit C Saturated Condensing Temp Thermistor Failure (units with a third circuit).",
+      "likelyCauses": ["Open/shorted circuit C condensing thermistor or wiring (field practice)"],
+      "checks": ["Ohm the circuit C SCT thermistor at the board plug (field practice)"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.39 'Alert Code T080 – Circuit C Saturated Condensing Temp Thermistor Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T082",
+      "meaning": "Space Temperature Offset Sensor Failure — occurs if the potentiometer is outside the allowable range.",
+      "likelyCauses": ["Faulty offset slider potentiometer on the T-56 space sensor or its wiring (manual/field)"],
+      "checks": ["Ohm the offset potentiometer wires at the sensor and at the board; check for a shorted/open slider (field practice)"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T082 – Space Temperature Offset Sensor Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T090",
+      "meaning": "Circuit A Discharge Pressure Transducer Failure — occurs when the unit is configured for pressure and the board does not properly read the transducer voltage (pressure outside 0.0-667.0 psig). A circuit cannot run when this alert is active. Cause is usually a faulty transducer, faulty 5-v power supply, or a loose connection.",
+      "likelyCauses": [
+        "Faulty discharge pressure transducer (manual text)",
+        "Faulty 5 V transducer supply from the board (manual text)",
+        "Loose or corroded transducer connector (manual text)"
+      ],
+      "checks": [
+        "Compare the PRESSURES menu reading with a gauge on circuit A discharge",
+        "Check 5 Vdc supply and signal at the transducer plug; swap with the circuit B transducer to isolate (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T090/T091 – Discharge Pressure Transducer Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T091",
+      "meaning": "Circuit B Discharge Pressure Transducer Failure — pressure outside the range of 0.0 to 667.0 psig. A circuit cannot run when this alert is active. Cause is usually a faulty transducer, faulty 5-v power supply, or a loose connection.",
+      "likelyCauses": ["Faulty transducer, faulty 5 V supply, loose connection (manual text)"],
+      "checks": ["As T090 for circuit B"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T090/T091 – Discharge Pressure Transducer Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T092",
+      "meaning": "Circuit A Suction Pressure Transducer Failure — occurs when the board does not properly read the transducer voltage (pressure outside 0.0 to 420.0 psig). A circuit cannot run when this alert is active. Cause is usually a faulty transducer, faulty 5-v power supply, or a loose connection.",
+      "likelyCauses": ["Faulty suction transducer, faulty 5 V supply, loose connection (manual text)"],
+      "checks": [
+        "Compare PRESSURES menu suction reading with a gauge; check 5 Vdc and signal at the plug (field practice)",
+        "A failed suction transducer can also produce A140 reverse-rotation or T110 loss-of-charge nuisance alarms — fix it first"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T092/T093 – Suction Pressure Transducer Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T093",
+      "meaning": "Circuit B Suction Pressure Transducer Failure — pressure outside the range of 0.0 to 420.0 psig. A circuit cannot run when this alert is active. Cause is usually a faulty transducer, faulty 5-v power supply, or a loose connection.",
+      "likelyCauses": ["Faulty transducer, faulty 5 V supply, loose connection (manual text)"],
+      "checks": ["As T092 for circuit B"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T092/T093 – Suction Pressure Transducer Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T110",
+      "meaning": "Circuit A Loss of Charge — indicates low refrigerant or faulty suction pressure transducer.",
+      "likelyCauses": [
+        "Refrigerant leak / low charge (manual text)",
+        "Faulty suction pressure transducer (manual text)"
+      ],
+      "checks": [
+        "Compare standing suction pressure on circuit A with saturation pressure at ambient; leak-check if low (field practice)",
+        "Verify the suction transducer reading against a gauge (T092 may accompany a bad transducer)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T Table 9 'T110 Circuit A Loss of Charge'; 48/50AJ Table 114 'T110 Circuit A Loss of Charge'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T111",
+      "meaning": "Circuit B Loss of Charge — indicates low refrigerant or faulty suction pressure transducer.",
+      "likelyCauses": ["Refrigerant leak / low charge; faulty suction pressure transducer (manual text)"],
+      "checks": ["As T110 for circuit B"],
+      "severity": "warning",
+      "source": "48/50HC-05T Table 9 'T111 Circuit B Loss of Charge'; 48/50AJ Table 114 T111",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T126",
+      "meaning": "Circuit A High Discharge Pressure (48/50A: Circuit A High Head Pressure) — active while the circuit's saturated condensing temperature is greater than 150°F (48/50HC; 145°F on 48/50AJ/AK/AW/AY) and resets automatically. Cause is usually an overcharged system, high outdoor ambient temperature coupled with dirty outdoor coil, plugged filter drier, or a faulty high-pressure switch.",
+      "likelyCauses": [
+        "Overcharged system (manual text)",
+        "High outdoor ambient plus dirty outdoor coil (manual text)",
+        "Plugged filter drier (manual text)",
+        "Faulty high-pressure switch (manual text)",
+        "Failed/slow outdoor fan motor (field practice)"
+      ],
+      "checks": [
+        "Check condenser coil cleanliness and OFM operation; measure head pressure and subcooling (field practice)",
+        "Check liquid-line temperature drop across the filter drier",
+        "Verify the HPS opens/closes at rated pressure"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T126/T127 – Circuit High Discharge Pressure'; 48/50AJ Table 114 'T126 Circuit A High Head Pressure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T127",
+      "meaning": "Circuit B High Discharge Pressure (48/50A: Circuit B High Head Pressure) — saturated condensing temperature greater than 150°F (145°F on 48/50AJ); resets automatically.",
+      "likelyCauses": ["Overcharge, high ambient with dirty coil, plugged filter drier, faulty HPS (manual text)"],
+      "checks": ["As T126 for circuit B"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T126/T127'; 48/50AJ Table 114 'T127 Circuit B High Head Pressure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T133",
+      "meaning": "Circuit A Low Refrigerant Pressure — low suction pressure while the compressor is operating. Auto resets, but is only allowed to reset a limited number of times before the circuit is locked out and A163 is generated.",
+      "likelyCauses": [
+        "Low refrigerant pressure / low charge (manual text)",
+        "Faulty suction pressure transducer (manual text)",
+        "Restricted airflow: dirty filters, broken belt, iced evaporator (field practice)",
+        "Restricted metering device or filter drier (field practice)"
+      ],
+      "checks": [
+        "Check suction pressure with a gauge against the PRESSURES menu; check superheat and charge (field practice)",
+        "Check indoor airflow, filters and coil; check for ice on the evaporator",
+        "Check history for repeated T133 leading to A163 lockout"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T133/T134 – Circuit Low Refrigerant Pressure'; 48/50AJ Table 114 ('low refrigerant pressure alarms T133, T134 handle the situation when the compressor is operating')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T134",
+      "meaning": "Circuit B Low Refrigerant Pressure — low suction pressure while the compressor is operating; repeated trips lock out the circuit (A164).",
+      "likelyCauses": ["Low charge, faulty suction transducer, airflow restriction (manual/field)"],
+      "checks": ["As T133 for circuit B"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Codes T133/T134'; 48/50AJ Table 114",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A140",
+      "meaning": "Reverse Rotation Detected — a test is made once, on power up, for suction pressure change on the first activated circuit: the suction pressure of both circuits is sampled 5 seconds before the compressor is brought on and right when the compressor starts; if the expected drop is not seen the control declares reversed phasing and the unit is not allowed to start.",
+      "likelyCauses": [
+        "Incoming three-phase power leads phased incorrectly (scroll compressor running backward) (manual text)",
+        "Dirty or failed suction pressure transducer, or broken transducer wire, giving no pressure change (HVAC-Talk field reports)",
+        "Compressor did not actually start (contactor, breaker) during the test (field practice)"
+      ],
+      "checks": [
+        "Check outdoor/indoor fan rotation first; if reversed, swap two incoming power leads at the disconnect (manual text)",
+        "If rotation is correct, verify the suction transducers read correctly against gauges and clean/replace the transducer or repair its wiring (HVAC-Talk field reports)",
+        "Manual reset: clear the alarm and cycle power to re-run the power-up test"
+      ],
+      "severity": "shutdown",
+      "source": "48/50HC-05T / 48/50A-14T 'A140 (Reverse Rotation Detected)' paragraph; Carrier 38APS p.171 'A140 — Reverse Rotation Detected'; HVAC-Talk 'Carrier Alarm Codes A140' thread",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A150",
+      "meaning": "Unit is in Emergency Stop — the CCN emergency stop command has been received; the unit shuts down. Listed as T150 (alert) on some tables and A150 (alarm) on others.",
+      "likelyCauses": ["CCN/BAS EMSTOP command active (manual text)"],
+      "checks": [
+        "Check the CCN/building-automation system for an active emergency-stop point and release it; alarm clears automatically once EMSTOP returns to normal (manual text)"
+      ],
+      "severity": "shutdown",
+      "source": "48/50AJ Table 114 'T150 / A150 Unit is in Emergency Stop'; 30RAP ComfortLink table 'A150 Emergency Stop — CCN emergency stop command received'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A152",
+      "meaning": "Unit Down Due to Failure — unit shut down due to alarms/alerts (all circuits are down due to alarms/alerts and the unit is unable to run). Also generated when LEN (Local Equipment Network) communication is lost.",
+      "likelyCauses": [
+        "Both circuits locked out by other alarms (A163 + A164) (manual text)",
+        "Loss of LEN communication between MBB and the other boards (manual text)"
+      ],
+      "checks": [
+        "Read ALARMS > CURR for the underlying alarms and clear those first; A152 resets automatically once the alarms that prevent starting are cleared (manual text)",
+        "Check LEN bus wiring/plugs (J3/J4) and that the green LEN LED is blinking on every board (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "48/50HC-05T Table 9 'A152 Unit shut down due to alarms/alerts'; 48/50AJ Table 114 / 30RAP table 'A152 Unit Down Due to Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T153",
+      "meaning": "Real Time Clock Hardware Failure — the real-time clock on the Main Base Board has failed.",
+      "likelyCauses": ["MBB real-time clock hardware fault (manual text)"],
+      "checks": [
+        "Re-set the time/date in the CLOCK menu and cycle power; if the alert returns replace the MBB (field practice)",
+        "Occupancy schedules are unreliable while active"
+      ],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.40 'Alarm Code T153 – Real Time Clock Hardware Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A154",
+      "meaning": "Serial EEPROM Hardware Failure — hardware failure of the configuration EEPROM on the Main Base Board.",
+      "likelyCauses": ["MBB EEPROM hardware fault (manual text)"],
+      "checks": ["Cycle power; if the alarm persists the MBB must be replaced (field practice)"],
+      "severity": "shutdown",
+      "source": "48/50PG C03-14 p.40 'Alarm Code A154 – Serial EEPROM Hardware Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T155",
+      "meaning": "Serial EEPROM Storage Failure Error — a non-critical configuration value could not be stored/read from the EEPROM.",
+      "likelyCauses": ["EEPROM write error on the MBB (manual text)"],
+      "checks": ["Verify configuration values and re-enter any that have reverted; cycle power; replace MBB if repeating (field practice)"],
+      "severity": "warning",
+      "source": "48/50PG C03-14 p.40 'Alarm Code T155 – Serial EEPROM Storage Failure Error'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A156",
+      "meaning": "Critical Serial EEPROM Storage Fail Error — a critical configuration value could not be stored/read from the EEPROM; the unit will not run.",
+      "likelyCauses": ["EEPROM failure on the MBB (manual text)"],
+      "checks": ["Cycle power; if it returns replace the MBB and reconfigure (field practice)"],
+      "severity": "shutdown",
+      "source": "48/50PG C03-14 p.40 'Alarm Code A156 – Critical Serial EEPROM Storage Fail Error'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A157",
+      "meaning": "A/D Hardware Failure — the analog-to-digital converter on the Main Base Board has failed.",
+      "likelyCauses": ["MBB A/D hardware fault (manual text)"],
+      "checks": ["Cycle power; if the alarm persists replace the MBB (field practice)"],
+      "severity": "shutdown",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'A157 A/D Hardware Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A163",
+      "meaning": "Circuit A Down Due to Failure — lockout of circuit A; manual reset. Probable cause: circuit has 3 strikes or has been locked out by another alarm. (Service Test text: 'Circuit A Down Due to Failure'.)",
+      "likelyCauses": [
+        "Three strikes from T051-series compressor safety trips or T133 low-pressure trips (manual text)",
+        "Circuit locked out by another alarm (manual text)"
+      ],
+      "checks": [
+        "Read ALARMS > HIST to find the alerts that produced the strikes; correct that fault",
+        "Reset by clearing current alarms (ALARMS menu) after repair; the circuit stays locked out until manually reset (manual text)"
+      ],
+      "severity": "lockout",
+      "source": "48/50HC-05T Table 9 'A163 Circuit A Down Due to Failure' (Lockout Circuit A, Manual reset)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A164",
+      "meaning": "Circuit B Down Due to Failure — lockout of circuit B; manual reset. Probable cause: circuit has 3 strikes or has been locked out by another alarm.",
+      "likelyCauses": ["Three strikes (T055-series or T134) or lockout by another alarm (manual text)"],
+      "checks": ["As A163 for circuit B"],
+      "severity": "lockout",
+      "source": "48/50HC-05T Table 9 'A164 Circuit B Down Due to Failure' (Lockout Circuit B, Manual reset)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A200",
+      "meaning": "Linkage Timeout Error – Comm Failure — the Main Base Board has lost communication with a previously connected Linkage device (the MBB is no longer receiving commands from a Linkage network such as an EMS or building automation system).",
+      "likelyCauses": [
+        "Linkage master (VVT/3V zone controller, i-Vu, EMS) offline or removed (manual text)",
+        "CCN bus wiring fault or duplicate/changed address (field practice)"
+      ],
+      "checks": [
+        "Check the CCN bus wiring and the linkage master; verify the yellow CCN LED blinks on the MBB during communication (manual/field)",
+        "If the linkage device was intentionally removed, cycle power to clear the stored linkage (manual text)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T Table 9 'A200 Linkage Timeout – Comm Failure'; 48/50PG C03-14 Table 12",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A404",
+      "meaning": "Fire Shutdown — unit shutdown occurs when smoke is detected by the smoke detector (fire shutdown input active).",
+      "likelyCauses": [
+        "Smoke detector (supply or return) tripped (manual text)",
+        "Fire-shutdown/fire-alarm system contact open, or the FSD input wiring/jumper missing (field practice)",
+        "Dirty smoke detector head giving a nuisance trip (field practice)"
+      ],
+      "checks": [
+        "Find and clear the smoke source first; reset the smoke detector",
+        "Check the fire-shutdown input contact and wiring at the field terminal board; confirm the fire-alarm panel is not holding the contact (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "48/50HC-05T Table 9 'A404 Fire Shutdown — Unit Shutdown, smoke detected'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T408",
+      "meaning": "Dirty Air Filter — indicates a plugged filter (filter status switch input); alert generated automatically.",
+      "likelyCauses": [
+        "Plugged filters (manual text)",
+        "Filter status switch set too sensitive or misconfigured input (field practice)"
+      ],
+      "checks": [
+        "Replace filters; verify the filter status switch setpoint and that the input is configured for filter status (field practice)"
+      ],
+      "severity": "info",
+      "source": "48/50HC-05T Table 9 'T408 Dirty Air Filter'; 48/50PG C03-14 p.43 'Alert Code T408 – Dirty Air Filter'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T409",
+      "meaning": "Fan Status Switch ON, fan commanded off (Fan Status Switch On/Fan Contactor Off) — indicates a bad fan status switch or configuration incorrect.",
+      "likelyCauses": [
+        "Bad fan status switch (manual text)",
+        "Fan status input configuration incorrect (manual text)",
+        "Fan contactor welded / fan running when not commanded (field practice)"
+      ],
+      "checks": [
+        "Verify the configuration is set correctly; verify the wiring and fan status switch, with the hose connected to the high side of the switch (manual text)",
+        "Confirm the fan is actually off when commanded off (field practice)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T409 – Fan Status Switch ON, fan commanded off'; 48/50PG C03-14 p.43",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T410",
+      "meaning": "48/50HC: Fan Status Switch OFF, fan commanded on — can indicate a tripped circuit breaker, broken belt, bad indoor fan motor, configuration incorrect, or bad fan status switch. (48/50PG C03-14 numbers this as 'R-W1 Jumper Not Installed in Space Temp Mode' — see T411.)",
+      "likelyCauses": [
+        "Tripped fan circuit breaker (manual text)",
+        "Broken belt (manual text)",
+        "Bad indoor fan motor / VFD fault (manual text)",
+        "Incorrect input configuration or bad fan status switch (manual text)"
+      ],
+      "checks": [
+        "Check the fan is running: breaker, belt, motor, VFD (manual text)",
+        "Verify the fan status switch wiring, hose on the high side, and switch setpoint (manual text)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T410 – Fan Status Switch OFF, fan commanded on'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T411",
+      "meaning": "48/50HC: R-W1 Jumper Not Installed in Space Temp Mode — unable to run heat; field terminal strip terminal R must be connected to W1 for the heat to operate in Service Test (alert occurs as a reminder). (48/50PG C03-14 numbers this 'Thermostat Y2 Input Activated without Y1 Activated'.)",
+      "likelyCauses": [
+        "R-W1 jumper missing when the unit is configured for space-sensor control (manual text)"
+      ],
+      "checks": [
+        "Install the R to W1 jumper on the field terminal strip when U.CTL is set to space sensor mode (manual text)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T411 – R-W1 Jumper Not Installed in Space Temp Mode'; 48/50PG C03-14 p.43 (as T410)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T412",
+      "meaning": "Thermostat W2 Input Activated Without W1 Activated — when W2 turns On the software behaves as if W1 and W2 are both On; when W2 turns Off, as if both are Off. Resets automatically when W1 is turned On.",
+      "likelyCauses": [
+        "Bad thermostat or thermostat wiring (manual text)",
+        "W1/W2 swapped at the field terminals (field practice)"
+      ],
+      "checks": ["Verify thermostat and thermostat wiring at the field terminal strip (manual text)"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T412 – Thermostat W2 Input Activated without W1'; 48/50PG C03-14 p.43 'Alert Code T412 – Thermostat W2 Input Activated Without W1 Activated'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T413",
+      "meaning": "Thermostat Y and W Inputs Activated Simultaneously — cooling and heating demands present at the same time.",
+      "likelyCauses": [
+        "Bad thermostat or thermostat wiring; Y and W shorted together (field practice)",
+        "BAS/relay interface driving both inputs (field practice)"
+      ],
+      "checks": ["Check the thermostat inputs in the INPUTS menu and the field wiring for Y1/Y2 and W1/W2 (field practice)"],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T413 – Thermostat Y and W Inputs Activated Simultaneously'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T414",
+      "meaning": "Economizer (Belimo) actuator alert — there are 6 different alerts under this one alert code; pressing ENTER and ESCAPE on the marquee or Navigator to expand the T414 alert shows one of: Loss of Communication with the Belimo Actuator, Direction Error, Failure, Jammed, Range Error, or actuator load too high. All are generated by the Belimo actuator and reported to the ECB; they can only occur if the ECB is controlling the actuator digitally through MFT.",
+      "likelyCauses": [
+        "Loss of MFT communication between ECB and actuator (manual text)",
+        "Actuator jammed, direction error, range error or catastrophic failure (manual text)",
+        "Damper load too high — obstruction, binding linkage, or undersized actuator (manual text)"
+      ],
+      "checks": [
+        "Expand the alert (ENTER + ESCAPE) to read the sub-alert text (manual text)",
+        "Make sure the actuator is an MFT communication actuator and verify the feedback (manual text)",
+        "For load/jam alerts investigate what is increasing damper load and verify the actuator is the correct size for the unit; replace the actuator if it reports failure (manual text)"
+      ],
+      "severity": "warning",
+      "source": "48/50HC-05T 'Alert Code T414 – Economizer Actuator alerts' (Belimo MFT sub-alerts)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T418",
+      "meaning": "OAU (outdoor air unit / dedicated outdoor air accessory) alert — expands to 'T418 OAU Low CFM' or 'T418 OAU General Alarm'.",
+      "likelyCauses": ["Outdoor-air unit reporting low airflow or a general fault over the network (manual text)"],
+      "checks": ["Expand the alert to read the sub-text; troubleshoot the OAU per its own manual and check its network connection (field practice)"],
+      "severity": "warning",
+      "source": "48/50HC 04-28 controls manual (ManualsLib 1653595) p.67 'T418 OAU Low CFM; T418 OAU General Alarm'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T500",
+      "meaning": "Current Sensor Board A1 Failure — the current sensor board for compressor A1 is not reading correctly.",
+      "likelyCauses": ["Failed CSB, loose CSB wiring/plug at the MBB (manual/field)"],
+      "checks": ["Check CSB wiring and the compressor feedback in the INPUTS menu; replace the CSB if the compressor runs with correct amps but no feedback (field practice)"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T500 Current Sensor Board A1 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T501",
+      "meaning": "Current Sensor Board A2 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor A2"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T501 Current Sensor Board A2 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T502",
+      "meaning": "Current Sensor Board B1 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor B1"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T502 Current Sensor Board B1 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T503",
+      "meaning": "Current Sensor Board B2 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor B2"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T503 Current Sensor Board B2 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T504",
+      "meaning": "Current Sensor Board A3 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor A3"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T504 Current Sensor Board A3 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T505",
+      "meaning": "Current Sensor Board B3 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor B3"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T505 Current Sensor Board B3 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T506",
+      "meaning": "Current Sensor Board A4 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor A4"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T506 Current Sensor Board A4 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T507",
+      "meaning": "Current Sensor Board B4 Failure.",
+      "likelyCauses": ["Failed CSB or wiring (field practice)"],
+      "checks": ["As T500 for compressor B4"],
+      "severity": "warning",
+      "source": "48/50AJ Table 114 / 48/50PG C03-14 Table 12 'T507 Current Sensor Board B4 Failure' (search snippet of the table)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "T610",
+      "meaning": "Economizer Actuator Out of Calibration — reason for failure may be an obstruction or stuck linkage that prevents full range calibration.",
+      "likelyCauses": ["Damper obstruction or stuck linkage preventing full-stroke calibration (manual text)"],
+      "checks": ["Clear the obstruction / free the linkage; re-run the actuator calibration from the economizer service menu (manual/field)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T610 Economizer Actuator Out of Calibration'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T611",
+      "meaning": "Economizer Actuator Comm Failure — the actuators communicate over the Local Equipment Network (LEN); if this error occurs it is impossible to control the actuator and, depending on the function of the actuator, the control will shut down any process associated with it.",
+      "likelyCauses": ["LEN wiring/plug fault to the actuator, wrong actuator address, failed actuator (manual/field)"],
+      "checks": ["Check LEN wiring and connectors at the actuator and board; verify actuator address/configuration (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T611 Economizer Actuator Comm Failure'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T612",
+      "meaning": "Economizer Actuator Control Range Increased.",
+      "likelyCauses": ["Actuator detected a larger stroke than calibrated — linkage slipped or end stop moved (field practice)"],
+      "checks": ["Inspect damper linkage and end stops; recalibrate the actuator (field practice)"],
+      "severity": "info",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T612 Economizer Actuator Control Range Increased'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T613",
+      "meaning": "Econ Actuator Overload, Setpt Not Reached.",
+      "likelyCauses": ["Damper binding, obstruction, or undersized actuator (field practice)"],
+      "checks": ["Free the damper; investigate what is increasing damper load and verify actuator sizing (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T613 Econ Actuator Overload, Setpt Not Reached'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T614",
+      "meaning": "Econ Actuator Hunting Excessively.",
+      "likelyCauses": ["Unstable control loop: noisy feedback, loose linkage, unstable mixed-air/supply-air sensor (field practice)"],
+      "checks": ["Check linkage play and sensor readings; verify economizer control setpoints and damper minimum position (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T614 Econ Actuator Hunting Excessively'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T615",
+      "meaning": "Econ 1 (Outside 1) Not Economizing When it Should — fault-detection-and-diagnostics (FDD) alert.",
+      "likelyCauses": ["Damper not opening: actuator, linkage, changeover sensor (OAT/enthalpy) failure or misconfiguration (field practice)"],
+      "checks": ["Command the economizer open in Service Test and verify damper travel; check OAT/enthalpy changeover inputs and setpoints (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T615 Econ 1 (Outside 1) Not Economizing When it Should'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T616",
+      "meaning": "Econ 1 (Outside 1) Economizing When it Should Not — FDD alert.",
+      "likelyCauses": ["Damper stuck open, actuator fault, or bad changeover sensor reading (field practice)"],
+      "checks": ["Command the damper closed in Service Test and verify; check OAT/enthalpy sensors and minimum-position setting (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T616 Econ 1 (Outside 1) Economizing When it Should Not'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "T617",
+      "meaning": "Econ 1 (Outside 1) Damper Stuck or Jammed — FDD alert.",
+      "likelyCauses": ["Physical obstruction, seized damper bearings, broken linkage or failed actuator (field practice)"],
+      "checks": ["Inspect and free the damper and linkage; verify actuator drives the full stroke in Service Test (field practice)"],
+      "severity": "warning",
+      "source": "Carrier 48P2030-100 controls manual p.120 / 48N2 p.119 'T617 Econ 1 (Outside 1) Damper Stuck or Jammed'",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "IGC (integrated gas control) LED ON steady",
+      "meaning": "Normal operation.",
+      "checks": ["No action"]
+    },
+    {
+      "pattern": "IGC LED OFF",
+      "meaning": "Hardware failure — no power to the IGC or failed board.",
+      "checks": ["Check 24 V to the IGC and its fuse; replace IGC if powered and dark (field practice)"]
+    },
+    {
+      "pattern": "IGC LED 1 flash",
+      "meaning": "Fan ON/OFF delay modified.",
+      "checks": ["Informational: the fan delay jumper/setting has been changed from default"]
+    },
+    {
+      "pattern": "IGC LED 2 flashes",
+      "meaning": "Limit switch fault — high-temperature limit switch is open.",
+      "checks": ["Check indoor airflow (filters, belt, blower), limit switch continuity, and heat exchanger temperature rise (field practice)"]
+    },
+    {
+      "pattern": "IGC LED 3 flashes",
+      "meaning": "Flame sense fault — the IGC sensed flame that should not be present.",
+      "checks": ["Check for a leaking/stuck gas valve, flame sensor shorted to ground, or wiring; reset at the unit disconnect (manual text)"]
+    },
+    {
+      "pattern": "IGC LED 4 flashes",
+      "meaning": "4 consecutive limit switch faults — inadequate airflow to the unit.",
+      "checks": ["Correct airflow (filters, belt, motor, dampers) then reset power (manual text)"]
+    },
+    {
+      "pattern": "IGC LED 5 flashes",
+      "meaning": "Ignition lockout fault — the unit unsuccessfully attempted ignition for 15 minutes.",
+      "checks": ["Check gas supply and pressure, igniter, flame sensor, gas valve; reset at the unit disconnect (manual text)"]
+    },
+    {
+      "pattern": "IGC LED 6 flashes",
+      "meaning": "Induced-draft motor fault — the IGC does not sense that the induced-draft motor is operating.",
+      "checks": ["Check IDM operation and the speed/hall-effect feedback wiring to the IGC (manual text)"]
+    },
+    {
+      "pattern": "IGC LED 7 flashes",
+      "meaning": "Rollout switch fault — the rollout switch has opened. The rollout switch will automatically reset, but the IGC will continue to lock out the unit; reset at the unit disconnect.",
+      "checks": ["Find the cause of flame rollout (blocked heat exchanger/flue, low airflow, burner problems) before resetting (manual text)"]
+    },
+    {
+      "pattern": "IGC LED 8 flashes",
+      "meaning": "Internal control fault — the microprocessor has sensed an error in the software or hardware.",
+      "checks": ["Cycle power; replace the IGC if it repeats (manual text)"]
+    },
+    {
+      "pattern": "MBB red STATUS LED blinking",
+      "meaning": "Main Base Board processor running; the red LED on each board should blink in sync with the others, with the MBB as the lead board.",
+      "checks": ["If blinking is absent or asynchronous suspect a board communication issue: disconnect the LEN/CCN plugs and check resistance on the communication lines; check LEN connections at J3/J4 (manual text)"]
+    },
+    {
+      "pattern": "MBB green LEN LED blinking",
+      "meaning": "Local Equipment Network active — should always be blinking whenever power is on.",
+      "checks": ["If not blinking check board power and LEN wiring; a lost LEN can generate A152 (manual text)"]
+    },
+    {
+      "pattern": "MBB yellow CCN LED blinking",
+      "meaning": "Carrier Comfort Network communication in progress — blinks only while CCN traffic is present.",
+      "checks": ["Steady off with a BAS connected: check CCN bus wiring, address and baud rate (field practice)"]
+    }
+  ],
+  "diagnosticTips": [
+    "Display: the ComfortLink Scrolling Marquee is a 4-key, 4-character, 16-segment LED module on the main control box (ESCAPE, ENTER, up, down). Menus: Run Status, Service Test, Temperatures, Pressures, Setpoints, Inputs, Outputs, Configuration, Time Clock, Operating Modes, Alarms. The accessory Navigator (handheld) or i-Vu/CCN can also be used.",
+    "Reading an alarm in plain English: press ESCAPE to clear the marquee, scroll to ALARMS, press ENTER on CURR (currently active alarms) or HIST (alarm history); when a code is displayed press ESCAPE and ENTER at the same time to expand it — the display scrolls the full alarm text plus time/date (48LC controls manual p.3; HVAC-Talk).",
+    "Resetting alarms: ALARMS menu contains CURR (current alarms), HIST (alarm history) and R.HIS / reset items; the manual says to use the Scrolling Marquee to reset the alarm after correcting the cause. Lockout alarms (A163/A164) are manual reset; most T-alerts clear automatically when the condition goes away.",
+    "Service Test: set SERVICE TEST > TEST = ON from the marquee (the marquee writes a Control force at level 7; the Navigator writes a Service force at level 3). Service Test lets you run the indoor fan, compressors, heat stages, economizer and power exhaust individually; several alerts have a 'Service Test' variant text. In space-sensor mode the R-W1 jumper must be installed to run heat in Service Test (T411).",
+    "Alerts (Txxx) let the unit keep running with reduced function; alarms (Axxx) shut down a circuit or the unit. Compressor safety trips and low-pressure trips accumulate strikes; 3 strikes lock the circuit out (A163/A164) until manually reset.",
+    "Board LEDs: MBB has a red STATUS LED, a green LEN LED (should always blink) and a yellow CCN LED (blinks with traffic). Gas units: the IGC LED flash code is read on the IGC board in the heat section (see ledPatterns). Some ComfortLink RTUs ask for a service access code on the display: factory default is commonly 1111 (HVAC-Talk field reports — confirm in the unit's manual)."
+  ],
+  "notes": [
+    "Replaces the previous 10 from-memory entries. Every code above was seen in a search-result snippet from a Carrier manual page (ManualsLib/ManualsDir page titles or excerpts) or, for T500-T507, in an aggregated snippet of the table (marked single_secondary).",
+    "Numbering is shared across the ComfortLink rooftop family but a few 4xx codes differ between the 48/50HC v3 table and the 48/50PG C03-14 table: HC T410 = 'Fan Status Switch OFF, fan commanded on' and T411 = 'R-W1 jumper not installed', whereas PG C03-14 uses T409 = fan status off/contactor on, T410 = R-W1 jumper, T411 = Thermostat Y2 without Y1. Always read the expanded text on the display.",
+    "T051/T055 text differs by family: 48/50HC (one compressor per circuit) shows 'Compressor A1/B1 Safety Trip'; 48/50A/P/N multi-compressor units show 'Circuit A/B, Compressor n Failure' (T051-T057).",
+    "High-head threshold: 150°F saturated condensing on 48/50HC, 145°F on 48/50AJ/AK/AW/AY.",
+    "Not found in any source and therefore omitted: A153, A290 (requested by the task), and the remaining 1xx/2xx/3xx/4xx codes of the full table (e.g. T140/T141, T4xx IAQ/economizer-position alerts). T140 'High Oil Filter Pressure Drop' found in searches belongs to 30-series chillers, not the RTU table. Coverage stays 'partial'.",
+    "38AP/30RAP/30MP chillers and condensing units use their own ComfortLink tables (e.g. A200-A202 are cooler pump interlock alarms there) — do not apply this table to them."
+  ]
+}
