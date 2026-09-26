@@ -248,6 +248,7 @@ const DX_ENUMS: Record<(typeof DX_MEASUREMENT_ENUM_CODED_KEYS)[number], readonly
   moistureIndicator: ["dry", "caution", "wet"],
   suctionMeasuredAt: ["compressor_suction", "vapor_service_valve", "evap_outlet", "unknown"],
   highSideMeasuredAt: ["liquid_service_valve", "discharge_line", "vapor_service_valve", "unknown"],
+  efficiencyTier: ["standard", "high"],
   hotGasBypass: "boolean",
 };
 
@@ -325,6 +326,7 @@ function buildDiagnoseProps(): Record<string, Prop> {
     moistureIndicator: "Moisture indicator color: dry, caution, wet.",
     suctionMeasuredAt: "Where suction pressure/temperature were taken.",
     highSideMeasuredAt: "Where the high-side pressure was taken.",
+    efficiencyTier: "Condenser coil efficiency tier: standard (split 25–30 °F) or high (high-efficiency/microchannel, split 10–20 °F).",
     hotGasBypass: "true when a hot gas bypass valve is fitted and may be holding suction pressure.",
   };
   for (const key of DX_MEASUREMENT_ENUM_CODED_KEYS) {
@@ -332,7 +334,6 @@ function buildDiagnoseProps(): Record<string, Prop> {
     props[camelToSnake(key)] = e === "boolean" ? opt("boolean", enumDescriptions[key] ?? key) : opt("string", enumDescriptions[key] ?? key, { enum: e });
   }
   props.circuit = opt("string", "Circuit identifier on multi-circuit units: 1, 2, A, B.", { maxLength: 20 });
-  props.efficiency_tier = opt("string", "Condenser coil efficiency tier: standard (split 25–30 °F) or high (high-efficiency/microchannel, split 10–20 °F).", { enum: ["standard", "high"] });
   props.notes = opt("string", "Anything else about conditions (dirty coil seen, fan not running, recent work).", { maxLength: 500 });
   return props;
 }
@@ -1088,7 +1089,6 @@ function toolDiagnose(v: Validated, ctx: ToolContext): ToolOutcome {
     if (raw !== undefined) m[key] = raw;
   }
   if (str(v.circuit)) m.circuit = str(v.circuit);
-  if (str(v.efficiency_tier)) m.efficiencyTier = str(v.efficiency_tier);
   if (str(v.notes)) m.notes = str(v.notes);
   const measurements = m as unknown as DxMeasurements;
   if (!resolveRefrigerant(ctx.kb, measurements.refrigerant)) {

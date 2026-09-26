@@ -468,7 +468,8 @@ export type MetricKey =
   | keyof DxDerived
   | keyof DxMeasurements
   | "superheatDelta" // superheat - target
-  | "subcoolingDelta"; // subcooling - target
+  | "subcoolingDelta" // subcooling - target
+  | "deltaTDelta"; // deltaTF - midpoint of targetDeltaTF (table target when DB/WB known, else the mode default)
 
 /**
  * Rule semantics: `when` clauses are ANDed; `between` is inclusive [value, value2]; a numeric clause on an

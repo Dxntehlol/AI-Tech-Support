@@ -83,7 +83,9 @@ export function wetBulbFromRh(dbF: number, rhPercent: number): number | undefine
 
 /**
  * Bilinear interpolation on a grid with null cells. Values within one grid step outside the edge are
- * clamped to the edge; further out → undefined. Any null among the surrounding cells → undefined.
+ * clamped to the edge; further out → undefined. When one of the four surrounding cells is null the
+ * nearest grid cell to the point is returned instead (a null edge must not swallow the whole 2 F x 5 F
+ * box next to it); only a null nearest cell → undefined.
  */
 function bilinear(rows: number[], cols: number[], grid: (number | null)[][], r: number, c: number): number | undefined {
   if (rows.length === 0 || cols.length === 0) return undefined;
@@ -112,7 +114,10 @@ function bilinear(rows: number[], cols: number[], grid: (number | null)[][], r: 
   const b = cell(i0, j1);
   const c0 = cell(i1, j0);
   const d = cell(i1, j1);
-  if (a === null || b === null || c0 === null || d === null) return undefined;
+  if (a === null || b === null || c0 === null || d === null) {
+    const nearest = cell(fr < 0.5 ? i0 : i1, fc < 0.5 ? j0 : j1);
+    return nearest === null ? undefined : nearest;
+  }
   const top = a + (b - a) * fc;
   const bottom = c0 + (d - c0) * fc;
   return top + (bottom - top) * fr;
@@ -127,13 +132,16 @@ export function targetSuperheatFixedOrifice(kb: KnowledgeBase, indoorWbF: number
   return v === undefined ? undefined : round1(v);
 }
 
-/** Expected evaporator temperature drop from the charging-targets table (±1 °F band), if the table covers the point. */
+/** Field tolerance on a delta-T reading (Carrier / Proctor CheckMe: within 3 °F of the chart target is acceptable). */
+export const DELTA_T_TOLERANCE_F = 3;
+
+/** Expected evaporator temperature drop from the charging-targets table (±3 °F band around the chart point), if the table covers the point. */
 export function targetDeltaTFromTable(kb: KnowledgeBase, enteringDbF: number, enteringWbF: number): { min: number; max: number } | undefined {
   const t = kb.diagnostics?.charging?.targetDeltaT;
   if (!t || !Number.isFinite(enteringDbF) || !Number.isFinite(enteringWbF)) return undefined;
   const v = bilinear(t.indoorDbF, t.indoorWbF, t.targetF, enteringDbF, enteringWbF);
   if (v === undefined) return undefined;
-  return { min: Math.round(v - 1), max: Math.round(v + 1) };
+  return { min: Math.round(v - DELTA_T_TOLERANCE_F), max: Math.round(v + DELTA_T_TOLERANCE_F) };
 }
 
 type Defaults = Omit<DxRuleSet["defaults"], "byMode">;
@@ -186,14 +194,17 @@ export function deriveMetrics(kb: KnowledgeBase, input: DxMeasurements): DxDeriv
   const air = enteringAir(m);
   const highSide = m.liquidPsig ?? m.dischargePsig;
   const swapped = m.suctionPsig !== undefined && highSide !== undefined && m.suctionPsig >= highSide;
+  // In heating the vapor service valve carries hot gas: a "suction" reading there is head pressure, so
+  // everything derived from the suction side is left undefined (the high side and SC are still real).
+  const badSuction = swapped || (heating && m.suctionMeasuredAt === "vapor_service_valve");
 
   // Saturation temps, SH, SC (elevation-corrected inside superheatSubcooling)
   const table = m.refrigerant ? getTable(kb, m.refrigerant) : undefined;
   if (table && !swapped) {
     const sh = superheatSubcooling(kb, m);
-    if (sh.evapSatF !== undefined) d.evapSatF = sh.evapSatF;
+    if (sh.evapSatF !== undefined && !badSuction) d.evapSatF = sh.evapSatF;
     if (sh.condSatF !== undefined) d.condSatF = sh.condSatF;
-    if (sh.superheatF !== undefined) d.superheatF = sh.superheatF;
+    if (sh.superheatF !== undefined && !badSuction) d.superheatF = sh.superheatF;
     if (sh.subcoolingF !== undefined) d.subcoolingF = sh.subcoolingF;
   }
 
@@ -225,7 +236,7 @@ export function deriveMetrics(kb: KnowledgeBase, input: DxMeasurements): DxDeriv
   }
 
   // Compression ratio on absolute pressures
-  if (m.suctionPsig !== undefined && highSide !== undefined && !swapped) {
+  if (m.suctionPsig !== undefined && highSide !== undefined && !badSuction) {
     const patm = d.patmPsia;
     const lo = m.suctionPsig + patm;
     const hi = highSide + patm;
@@ -274,7 +285,8 @@ const ENUM_CODES: Partial<Record<keyof DxMeasurements, Record<string, number>>> 
   efficiencyTier: { standard: 0, high: 1 },
 };
 const BOOL_KEYS: (keyof DxMeasurements)[] = ["dehumidReheatActive", "defrostActive", "hotGasBypass"];
-const DEFAULT_ZERO: (keyof DxMeasurements)[] = ["headPressureControl", ...BOOL_KEYS];
+/** Absent → 0: unconfirmed head-pressure control, false booleans, and efficiencyTier (not given = standard). */
+const DEFAULT_ZERO: (keyof DxMeasurements)[] = ["headPressureControl", "efficiencyTier", ...BOOL_KEYS];
 
 /**
  * Value of a metric for rule evaluation. Numbers come back as-is; categorical measurements are mapped
@@ -286,6 +298,9 @@ function metricValue(metric: MetricKey, m: DxMeasurements, d: DxDerived): number
   }
   if (metric === "subcoolingDelta") {
     return d.subcoolingF !== undefined && d.targetSubcoolingF !== undefined ? round1(d.subcoolingF - d.targetSubcoolingF) : undefined;
+  }
+  if (metric === "deltaTDelta") {
+    return d.deltaTF !== undefined && d.targetDeltaTF ? round1(d.deltaTF - (d.targetDeltaTF.min + d.targetDeltaTF.max) / 2) : undefined;
   }
   if (metric === "targetDeltaTF") return d.targetDeltaTF ? (d.targetDeltaTF.min + d.targetDeltaTF.max) / 2 : undefined;
   if (metric in d) {
@@ -322,6 +337,7 @@ function metricSources(metric: MetricKey, mode: SystemMode): (keyof DxMeasuremen
     case "evapTdF": return heating ? ["suctionPsig", "outdoorDbF"] : ["suctionPsig", "indoorDbF"];
     case "deltaTF": return ["indoorDbF", "supplyDbF"];
     case "targetDeltaTF": return ["indoorDbF", "indoorWbF"];
+    case "deltaTDelta": return ["indoorDbF", "supplyDbF", "indoorWbF"];
     case "indoorCoilTdF": return ["liquidPsig", "indoorDbF"];
     case "compressionRatio": return ["suctionPsig", "liquidPsig"];
     case "patmPsia": return ["elevationFt"];
@@ -418,6 +434,12 @@ const PRESSURE_METRICS: Set<MetricKey> = new Set([
   "evapSatF", "condSatF", "superheatF", "subcoolingF", "superheatDelta", "subcoolingDelta", "condenserSplitF", "evapTdF",
   "indoorCoilTdF", "compressionRatio", "dischargeSuperheatF", "standingExcessPsi",
 ]);
+/**
+ * Metrics derived from the suction reading: meaningless when the low-side gauge sits on the heating-mode
+ * vapor service valve (hot gas). Discharge superheat is included because its diagnoses (wet compression,
+ * reversing-valve leak-by) are suction-side conclusions that need a trusted suction reading.
+ */
+const SUCTION_METRICS: Set<MetricKey> = new Set(["evapSatF", "superheatF", "superheatDelta", "evapTdF", "compressionRatio", "dischargeSuperheatF"]);
 
 function ruleApplies(rule: DxRule, m: DxMeasurements): boolean {
   const a = rule.appliesTo;
@@ -511,7 +533,7 @@ function validityIssues(m: DxMeasurements, d: DxDerived, defaults: Defaults): st
   if (m.mode === "heat_pump_heating") {
     issues.push("heating mode: cooling superheat/subcooling charging charts do not apply — charge by the manufacturer heating check chart or weigh-in");
   }
-  if (cooling) {
+  if (cooling || m.mode === "refrigeration") {
     const headOk = m.headPressureControl === "fan_cycling" || m.headPressureControl === "fan_vfd" || m.headPressureControl === "flooding_valve";
     const base = defaults.lowAmbientMinOutdoorDbF ?? 65;
     const min = m.meteringDevice === "fixed" && d.targetSuperheatF !== undefined ? Math.min(base, 60) : base;
@@ -519,6 +541,12 @@ function validityIssues(m: DxMeasurements, d: DxDerived, defaults: Defaults): st
       issues.push(`outdoor dry bulb not given — cannot confirm ambient is at least ${base} °F (or that head-pressure control is holding)`);
     } else if (m.outdoorDbF < min && !headOk) {
       issues.push(`outdoor ${m.outdoorDbF} °F is below ${min} °F without confirmed head-pressure control`);
+    }
+  }
+  if (cooling && m.meteringDevice === "fixed" && m.nameplateSuperheatF === undefined && d.targetSuperheatF === undefined) {
+    const air = enteringAir(m);
+    if (air.wbF !== undefined && m.outdoorDbF !== undefined) {
+      issues.push(`fixed-orifice chart gives no target at indoor WB ${air.wbF} °F / outdoor DB ${m.outdoorDbF} °F (charging not recommended)`);
     }
   }
   if (m.economizerPosition === "open") issues.push("economizer open — entering air is mixed air, load is off-chart");
@@ -640,6 +668,7 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
   // ---- 1. Sanity gate
   const highSide = m.liquidPsig ?? m.dischargePsig;
   const swapped = m.suctionPsig !== undefined && highSide !== undefined && m.suctionPsig >= highSide;
+  const badSuction = swapped || (heating && m.suctionMeasuredAt === "vapor_service_valve");
   if (swapped) {
     push(
       {
@@ -687,7 +716,7 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
   if (table && !swapped) {
     const reasons: string[] = [];
     if (heating) {
-      if (d.evapSatF !== undefined && m.outdoorDbF !== undefined && d.evapSatF > m.outdoorDbF + 2) reasons.push(`evaporating sat ${d.evapSatF} °F is above outdoor air ${m.outdoorDbF} °F`);
+      if (!badSuction && d.evapSatF !== undefined && m.outdoorDbF !== undefined && d.evapSatF > m.outdoorDbF + 2) reasons.push(`evaporating sat ${d.evapSatF} °F is above outdoor air ${m.outdoorDbF} °F`);
       if (d.condSatF !== undefined && air.dbF !== undefined && d.condSatF < air.dbF - 2) reasons.push(`condensing sat ${d.condSatF} °F is below indoor entering air ${air.dbF} °F`);
     } else {
       if (d.evapSatF !== undefined && air.dbF !== undefined && d.evapSatF > air.dbF + 2) reasons.push(`evaporating sat ${d.evapSatF} °F is above entering air ${air.dbF} °F`);
@@ -710,6 +739,25 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
     }
   }
 
+  // Fixed orifice with a null chart cell: no superheat target at these conditions (charging not recommended)
+  if (cooling && !swapped && m.meteringDevice === "fixed" && m.nameplateSuperheatF === undefined && d.targetSuperheatF === undefined && air.wbF !== undefined && m.outdoorDbF !== undefined) {
+    push(
+      {
+        ruleId: "fixed_chart_no_target",
+        condition: `Fixed-orifice chart has no superheat target at indoor WB ${air.wbF} °F / outdoor DB ${m.outdoorDbF} °F`,
+        severity: "advisory",
+        confidence: "high",
+        explanation: `The fixed-orifice superheat chart has no target at this indoor wet bulb / outdoor dry bulb (the published chart leaves the cell blank where the required superheat would be under 5 °F or the outdoor air is below 55 °F): charging by superheat is not recommended here. Raise the indoor load (close doors/windows, run the blower with the space warm, wait for a higher return wet bulb) or use the manufacturer charging chart / weigh-in to the nameplate charge instead. Follows the published fixed-orifice superheat charging chart (Carrier / Goodman / Trane; ACCA Manual T).`,
+        nextChecks: [
+          "Re-measure entering wet bulb and outdoor dry bulb after the space has warmed (or the sun is off the condenser); expect a chart cell with a target once WB rises about 4 °F.",
+          "If the load cannot be raised: recover, evacuate and weigh in the nameplate charge (plus line-set allowance), then confirm superheat later at valid conditions.",
+        ],
+        safety: ["Never add refrigerant without a leak check and a valid superheat target; a null chart cell is not a license to guess."],
+      },
+      58,
+    );
+  }
+
   // ---- 3. Validity gate
   const issues = validityIssues(m, d, defaults);
   if (swapped) issues.unshift("suction pressure is not below the high-side pressure — gauges swapped or unit off");
@@ -721,6 +769,7 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
     if (!rule || typeof rule.id !== "string" || !Array.isArray(rule.when)) continue;
     if (!ruleApplies(rule, m)) continue;
     if (swapped && (rule.chargeRelated || rule.when.some((c) => PRESSURE_METRICS.has(c.metric)))) continue;
+    if (badSuction && rule.when.some((c) => SUCTION_METRICS.has(c.metric))) continue;
     if (!table && rule.when.some((c) => PRESSURE_METRICS.has(c.metric))) continue;
     const ev = evaluateRule(rule, m, d);
     if (ev.fires) {
@@ -751,7 +800,7 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
   if (heating && m.outdoorDbF === undefined) missingKeys.add("outdoorDbF");
   for (const k of coreMeasurements(m)) if (isMeasurementMissing(m, k)) missingKeys.add(k);
   for (const k of blockedSources) missingKeys.add(k);
-  if (cooling && m.outdoorDbF !== undefined && m.outdoorDbF < (defaults.lowAmbientMinOutdoorDbF ?? 65) && (m.headPressureControl === undefined || m.headPressureControl === "unknown")) {
+  if ((cooling || m.mode === "refrigeration") && m.outdoorDbF !== undefined && m.outdoorDbF < (defaults.lowAmbientMinOutdoorDbF ?? 65) && (m.headPressureControl === undefined || m.headPressureControl === "unknown")) {
     missingKeys.add("headPressureControl");
   }
   const orderIdx = (k: keyof DxMeasurements): number => {

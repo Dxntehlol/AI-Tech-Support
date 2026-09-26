@@ -432,6 +432,7 @@ const DX_ENUMS: Record<(typeof DX_MEASUREMENT_ENUM_CODED_KEYS)[number], readonly
   moistureIndicator: ["dry", "caution", "wet"],
   suctionMeasuredAt: ["compressor_suction", "vapor_service_valve", "evap_outlet", "unknown"],
   highSideMeasuredAt: ["liquid_service_valve", "discharge_line", "vapor_service_valve", "unknown"],
+  efficiencyTier: ["standard", "high"],
   hotGasBypass: "boolean",
 };
 
@@ -483,8 +484,6 @@ export function parseMeasurements(src: Body, opts: { requireRefrigerant?: boolea
   }
   const circuit = optString(v.circuit, "circuit", 20)?.trim();
   if (circuit) m.circuit = circuit;
-  const tier = optEnum(v.efficiencyTier, "efficiency_tier", ["standard", "high"]);
-  if (tier) m.efficiencyTier = tier;
   const notes = optString(v.notes, "notes", 2000)?.trim();
   if (notes) m.notes = notes;
   return m as unknown as DxMeasurements;

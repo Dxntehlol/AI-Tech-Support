@@ -311,7 +311,8 @@ LGMV); it decodes error codes, checks power/communication, and points to the pro
 
 `fixedOrificeSuperheat`: the standard field chart (indoor WB 50–76 °F in 2 °F rows × outdoor DB
 55–115 °F in 5 °F columns; null where charging is not recommended). `targetDeltaT`: evaporator
-temperature-drop table by entering DB/WB (75/63 → 18–20, 75/58 → 22–24, 75/68 → 13–15 style).
+temperature-drop table by entering DB/WB (Carrier/Proctor CheckMe points: 75/63 → ~18.4, 75/58 → ~21.4,
+75/68 → ~14.5; the engine reports a ±3 °F band around the interpolated point).
 `heatPumpHeating.notes`, refrigeration targets in `notes`. Nameplate/manufacturer charts take
 precedence; the engine says so.
 

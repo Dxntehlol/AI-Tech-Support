@@ -139,7 +139,7 @@ export const DX_MEASUREMENT_NUMERIC_KEYS = [
 /**
  * Categorical / boolean measurements that the diagnostics engine exposes to `when[]` as numeric codes
  * (see refrigeration-cycle.json notes: sightGlass clear=0 bubbles=1 flashing=2, headPressureControl none=0 …,
- * booleans false=0 true=1). Numeric ops are therefore legal on them.
+ * efficiencyTier standard=0 high=1, booleans false=0 true=1). Numeric ops are therefore legal on them.
  */
 export const DX_MEASUREMENT_ENUM_CODED_KEYS = [
   "economizerPosition",
@@ -153,12 +153,13 @@ export const DX_MEASUREMENT_ENUM_CODED_KEYS = [
   "suctionMeasuredAt",
   "highSideMeasuredAt",
   "hotGasBypass",
+  "efficiencyTier",
 ] as const;
 /** Free-text / identifier measurements: only present/absent make sense. */
-export const DX_MEASUREMENT_STRING_KEYS = ["refrigerant", "meteringDevice", "mode", "circuit", "efficiencyTier", "notes"] as const;
-export const DX_DELTA_KEYS = ["superheatDelta", "subcoolingDelta"] as const;
+export const DX_MEASUREMENT_STRING_KEYS = ["refrigerant", "meteringDevice", "mode", "circuit", "notes"] as const;
+export const DX_DELTA_KEYS = ["superheatDelta", "subcoolingDelta", "deltaTDelta"] as const;
 
-/** Every MetricKey (DxDerived keys + DxMeasurements keys + superheatDelta/subcoolingDelta). */
+/** Every MetricKey (DxDerived keys + DxMeasurements keys + superheatDelta/subcoolingDelta/deltaTDelta). */
 export const METRIC_KEYS = new Set<string>([
   ...DX_DERIVED_NUMERIC_KEYS,
   ...DX_DERIVED_OBJECT_KEYS,
