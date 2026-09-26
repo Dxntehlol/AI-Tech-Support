@@ -1,0 +1,798 @@
+{
+  "id": "trane",
+  "manufacturer": "Trane",
+  "brands": ["Trane", "American Standard"],
+  "aliases": ["Trane Commercial", "Trane Technologies", "American Standard Commercial", "AmStd", "Ingersoll Rand Trane"],
+  "serialFormats": [
+    {
+      "id": "trane_2010_yyww",
+      "description": "2010-present: first two digits = year (10 = 2010), digits 3-4 = week of manufacture; 9-13 characters total (typically 10).",
+      "eraStart": 2010,
+      "regex": "^([12]\\d)([0-5]\\d)[A-Z0-9]{5,9}$",
+      "date": { "method": "twoDigitYear", "yearGroup": 1, "pivot": 70, "weekGroup": 2 },
+      "examples": [
+        { "serial": "12041ABCD2F", "expect": { "year": 2012, "week": 4 } },
+        { "serial": "2415836472", "expect": { "year": 2024, "week": 15 } },
+        { "serial": "1523K1ABCF", "expect": { "year": 2015, "week": 23 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "PickHVAC — Trane HVAC Age: Serial Number Decoding (https://www.pickhvac.com/hvac/age-serial-number/trane/) — '1204' = week 4 of 2012",
+        "Parts Town — Trane Serial Number Lookup (https://www.partstown.com/cm/resource-center/guides/gd2/trane-serial-number-lookup)",
+        "Inspector Handbook — Decode Trane HVAC Serial Number (https://inspectorhandbook.com/hvac/trane) — serial 2415836472 = week 15 of 2024",
+        "Building Intelligence Center — Trane HVAC age (https://www.building-center.org/trane-hvac-age/)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Date portion (YYWW) of the examples is stated by the cited decoders; the trailing characters of examples 1 and 3 are illustrative fillers used only as regex fixtures.",
+        "Collision: a 9-character serial made in 2020-2029 (e.g. '2415...') also matches the 2002-2009 one-digit-year rule (2002, week 41). Disambiguate on the nameplate: 2020+ units are R-410A or R-454B (A2L) with Symbio 700/ReliaTel and a modern QR-code plate; 2002-2009 units are R-22 (R-410A only on 2006-2009 designs) with ReliaTel/UCP. Week must be 01-53 under either reading.",
+        "No manufacturer document or warranty lookup was available to this builder; confidence capped at medium (two independent secondary decoders agree)."
+      ]
+    },
+    {
+      "id": "trane_2002_2009_yww",
+      "description": "2002-2009: 9-character serial; first digit = last digit of year (2 = 2002 ... 9 = 2009), digits 2-3 = week of manufacture.",
+      "eraStart": 2002,
+      "eraEnd": 2009,
+      "regex": "^([2-9])([0-5]\\d)[A-Z0-9]{6}$",
+      "date": { "method": "oneDigitYear", "yearGroup": 1, "decadeBase": 2000, "weekGroup": 2 },
+      "examples": [
+        { "serial": "7521ND52F", "expect": { "year": 2007, "week": 52 } },
+        { "serial": "3421A2BC9", "expect": { "year": 2003, "week": 42 } },
+        { "serial": "5083KR11F", "expect": { "year": 2005, "week": 8 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "PickHVAC — Trane HVAC Age (https://www.pickhvac.com/hvac/age-serial-number/trane/) — 'serial starting 752 = built 2007, week 52'; 2002-2009 serials are 9 characters",
+        "Building Intelligence Center — Trane HVAC age (https://www.building-center.org/trane-hvac-age/) — format introduced 2002: 1st digit year, 2nd-3rd week",
+        "Parts Town — Trane Serial Number Lookup (https://www.partstown.com/cm/resource-center/guides/gd2/trane-serial-number-lookup) — 2002 serials start with 2, 2003 with 3, etc."
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Example 1's date prefix '752' is stated by PickHVAC; examples 2 and 3 apply the same rule (year digit + week) with illustrative filler characters — they are regex/rule fixtures, not photographed nameplates.",
+        "Collision: a serial starting with 2 could be 2002 or (if the modern 2010+ format) 2020-2029. Real 2002-2009 serials are 9 characters; modern ones are usually 10 or more. If both match, check the refrigerant on the plate (R-22 => 2002-2009) and the model design sequence letter.",
+        "One-digit year cannot distinguish 2007 from 1997 by itself, but 1997 serials start with the letter M (see letter-year format), so a leading digit is 2002-2009."
+      ]
+    },
+    {
+      "id": "trane_1983_2001_letter",
+      "description": "1983-2001: serial begins with a letter = year (W 1983 ... Z 2001), digits 2-3 = week of manufacture; 9 characters typical (8-10 accepted).",
+      "eraStart": 1983,
+      "eraEnd": 2001,
+      "regex": "^([BCDEFGHJKLMNPRSWXYZ])([0-5]\\d)[A-Z0-9]{5,7}$",
+      "date": {
+        "method": "letterYear",
+        "yearGroup": 1,
+        "weekGroup": 2,
+        "map": {
+          "W": 1983, "X": 1984, "Y": 1985, "S": 1986,
+          "B": 1987, "C": 1988, "D": 1989, "E": 1990, "F": 1991, "G": 1992, "H": 1993,
+          "J": 1994, "K": 1995, "L": 1996, "M": 1997, "N": 1998, "P": 1999, "R": 2000, "Z": 2001
+        }
+      },
+      "examples": [
+        { "serial": "K1912345F", "expect": { "year": 1995, "week": 19 } },
+        { "serial": "E0212345F", "expect": { "year": 1990, "week": 2 } },
+        { "serial": "Z4512345F", "expect": { "year": 2001, "week": 45 } },
+        { "serial": "S3312345F", "expect": { "year": 1986, "week": 33 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Building Intelligence Center — Trane HVAC age (https://www.building-center.org/trane-hvac-age/) — 1983-2001 style: letter = year, positions 2-3 = week",
+        "PickHVAC — Trane HVAC Age (https://www.pickhvac.com/hvac/age-serial-number/trane/) — W=1983, X=1984, Y=1985, S=1986, B=1987 ... H=1993, J=1994 ... N=1998, P=1999, R=2000; K=1995",
+        "H2ouse / How To Look At A House — Trane furnace age (https://www.h2ouse.org/trane-furnace-age/, https://www.howtolookatahouse.com/Blog/Entries/2018/6/how-can-i-tell-the-age-of-a-trane-furnace-from-the-serial-number.html) — S = 1986 and Z = 2001 (out of alphabetical order; easily confused)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "K = 1995 (not 1990); 1990 is E. Letters A, I, O, Q, T, U, V are not used in this map.",
+        "S and Z are the out-of-order letters: two sources (h2ouse, howtolookatahouse, PickHVAC in one passage) give S = 1986 and Z = 2001; one search summary reversed them (Z = 1986, S = 2001). The pack follows the majority (S = 1986, Z = 2001). If the serial starts with S or Z, confirm with the model design sequence and plate style: 2001 units carry the 'Trane' swoosh-era plate and Voyager/Precedent model numbers; 1986 units are older designs.",
+        "Week is the two digits after the letter; a value above 53 means the serial is not this format.",
+        "Examples: the year letter and week digits are per the cited charts; the trailing characters are illustrative fillers (no dated nameplate photo was available)."
+      ]
+    },
+    {
+      "id": "trane_1980_1982_third_from_end_letter",
+      "description": "1980-1982 (approximate): the letter in the 3rd position from the end of the serial encodes the year (A/L/O = 1980, B/M/T = 1981, C/N/U = 1982); serial ends with two digits.",
+      "eraStart": 1980,
+      "eraEnd": 1982,
+      "regex": "^[A-Z0-9]{3,6}([ABCLMNOTU])\\d{2}$",
+      "date": {
+        "method": "letterYear",
+        "yearGroup": 1,
+        "map": { "A": 1980, "L": 1980, "O": 1980, "B": 1981, "M": 1981, "T": 1981, "C": 1982, "N": 1982, "U": 1982 }
+      },
+      "examples": [
+        { "serial": "1234A56", "expect": { "year": 1980 } },
+        { "serial": "98765N01", "expect": { "year": 1982 } }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "PickHVAC — Trane HVAC Age (https://www.pickhvac.com/hvac/age-serial-number/trane/) — early-1980s units: letter 3rd from the end = year (A, L & O = 1980 / B, M & T = 1981 / C, N & U = 1982)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW CONFIDENCE: only one secondary source describes this style and the overall length/structure of these serials is not documented; the regex is a best guess (ends in two digits, letter third from end). Month position was described as 'the 4th position in some formats' but could not be confirmed, so no month is decoded.",
+        "Examples are synthetic fixtures for the regex only. Treat any match as a hint: confirm age from the compressor date code, the nameplate style and the model design sequence.",
+        "Pre-1980 Trane serials and the American Standard '4th-position letter' style were not confirmed by any source available to this builder and are not decoded."
+      ]
+    }
+  ],
+  "modelFormats": [
+    {
+      "id": "trane_precedent_3_25t",
+      "family": "Precedent packaged rooftop 3-25 tons (TSC/TSD/TSH/THC/THD/TZC cooling, YSC/YSD/YHC/YHD/YZC gas-electric, WSC/WHC heat pump) incl. Foundation 3-5 t",
+      "description": "Trane / American Standard light-commercial packaged rooftop. Digits 1-3 = unit type, efficiency tier, airflow configuration; 4-6 = nominal cooling MBH; 7 = major design sequence; 8 = power supply; 9+ = heating capacity, minor design sequence and factory options (not decoded).",
+      "productType": "packaged_rtu",
+      "eraStart": 2000,
+      "regex": "^([TYW])([SHZ])([CDHJ])(\\d{3})([A-Z])([A-Z0-9])([A-Z0-9]*)$",
+      "segments": [
+        { "group": 1, "name": "Unit type", "attribute": "unit_type", "map": { "T": "DX cooling (electric heat optional)", "Y": "Gas heat / electric cooling", "W": "Heat pump" }, "notes": "Map covers the three published letters." },
+        { "group": 2, "name": "Efficiency tier", "attribute": "series", "map": { "S": "Precedent standard efficiency", "H": "Precedent high efficiency", "Z": "Precedent ultra-high efficiency" }, "notes": "Voyager uses C in this position (separate format). Z tier mapping from Trane catalog naming; verify on the product data sheet." },
+        { "group": 3, "name": "Airflow configuration", "attribute": "cabinet", "map": { "C": "Convertible (downflow or horizontal)", "D": "Downflow", "H": "Horizontal" }, "notes": "J appears in some model lists (e.g. TSJ) but its meaning was not confirmed; left raw." },
+        { "group": 4, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "tons", "map": { "037": "3", "038": "3", "181": "15", "241": "20", "301": "25" }, "notes": "036=3, 048=4, 060=5, 072=6, 090=7.5, 102=8.5, 120=10, 150=12.5, 180=15, 210=17.5, 240=20, 300=25 tons. Irregular codes 037/038 (3-ton high-efficiency variants) and 181/241/301 (15/20/25-ton variants) are mapped explicitly." },
+        { "group": 5, "name": "Major design sequence", "attribute": "revision", "notes": "Letter advances with major redesigns (A/B/C R-22; E-H R-410A era; later letters Symbio 700 / R-454B). Use it with the serial to resolve serial-format collisions." },
+        { "group": 6, "name": "Power supply", "attribute": "voltage", "map": { "1": "208-230/1/60", "3": "208-230/3/60", "4": "460/3/60", "W": "575/3/60", "D": "380-415/3/50" }, "notes": "Partial map: 1/3/4/W are the 60 Hz codes used across Trane light commercial; D = 380-415/50/3 per the YSC060 IOM nomenclature page. Other letters (50 Hz export) left raw." },
+        { "group": 7, "name": "Heating capacity, minor design sequence, factory options", "attribute": "options", "notes": "Not decoded: digit 9 heating capacity (gas: low/medium/high), digit 10-11 design/service digits, then factory-installed option string. Read the heat input (MBH) from the nameplate instead." }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": ["reliatel", "symbio_700", "voyager_ucp"],
+      "examples": [
+        { "model": "YHC036E3EMA", "expect": { "unit_type": "Gas heat / electric cooling", "series": "Precedent high efficiency", "cabinet": "Convertible (downflow or horizontal)", "tonnage": "3", "revision": "E", "voltage": "208-230/3/60" } },
+        { "model": "WHC060H3", "expect": { "unit_type": "Heat pump", "series": "Precedent high efficiency", "tonnage": "5", "revision": "H", "voltage": "208-230/3/60" } },
+        { "model": "TSC120E4", "expect": { "unit_type": "DX cooling (electric heat optional)", "series": "Precedent standard efficiency", "tonnage": "10", "revision": "E", "voltage": "460/3/60" } }
+      ],
+      "notes": [
+        "Nameplate: the model number is the first line of the Trane data plate (labelled MODEL NO. / M/N); it is the factory model, not a sales number. American Standard commercial units carry the identical model string with 'American Standard' branding.",
+        "Refrigerant by era: R-22 on design sequences up to about D (pre-2006/2010, 3-10 t changed in 2006, 12.5-25 t by 2010); R-410A from design E onward; R-454B (A2L) on 2025+ designs — always read the plate.",
+        "Foundation 3-5 t (2019+) reuses the Precedent letter scheme (TSC/TSH/YSC/YHC 036-060); which design-sequence letters denote Foundation vs Precedent was not confirmed — check the unit literature.",
+        "Digit 8 example from Trane YSC060 IOM nomenclature page (ManualsLib 741225 p.4): D = 380-415/50/3. Example YHC036E3EMA is a real American Standard listing (Winsupply INTA submittal); WHC060H3 from a Trane WHC060H3*0A troubleshooting page; TSC120E4 is composed from documented size/voltage codes."
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Trane YSC060 Installation, Operation & Maintenance — Unit Nomenclature / Model Number Description (ManualsLib 741225, page 4)",
+        "Trane Precedent 3-10 ton Gas/Electric IOM RT-SVX21*-EN (https://www.trane.com/content/dam/Trane/Commercial/lar/Peru/Manuales/Precedent/RT-SVX21R-EN_IOM_Gas-Electric.pdf)",
+        "Trane Precedent product catalog RT-PRC023-EN (Cooling and Gas/Electric)",
+        "American Standard YHC036E3EMA submittal (Winsupply INTA, 'Gas/Electric 3-10 Ton R-410A Models YSC036E-')",
+        "The Daily Thrive — How to Decode the Trane Model Number (https://thedailythrive.org/how-to-decode-trane-model-number/)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "trane_voyager_3_50t",
+      "family": "Voyager packaged rooftop (TCD/TCH cooling, YCD/YCH gas-electric, WCD/WCH heat pump): Voyager I 3-10 t (pre-2000), Voyager II 12.5-25 t, Voyager III 27.5-50 t",
+      "description": "Digits 1-3 = unit type / Voyager (C) / airflow; 4-6 = nominal cooling MBH; 7 = major design sequence; 8 = power supply; 9 = heating capacity; 10 = factory-installed options; 11 = minor design sequence; 12 = service digit.",
+      "productType": "packaged_rtu",
+      "eraStart": 1990,
+      "regex": "^([TYW])(C)([DH])(\\d{3})([A-Z])([A-Z0-9])([A-Z0-9])?([A-Z0-9])?([A-Z0-9]*)$",
+      "segments": [
+        { "group": 1, "name": "Unit type", "attribute": "unit_type", "map": { "T": "DX cooling (electric heat optional)", "Y": "Gas heat / electric cooling", "W": "Heat pump" } },
+        { "group": 2, "name": "Product line", "attribute": "series", "map": { "C": "Voyager (commercial packaged)" } },
+        { "group": 3, "name": "Airflow configuration", "attribute": "cabinet", "map": { "D": "Downflow", "H": "Horizontal" } },
+        { "group": 4, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "tons", "map": { "181": "15", "241": "20", "301": "25" }, "notes": "150=12.5, 180/181=15, 210=17.5, 240/241=20, 300/301=25 tons (Voyager II); 330=27.5, 360=30, 420=35, 480=40, 600=50 tons (Voyager III); 036-120 = 3-10 t (Voyager I)." },
+        { "group": 5, "name": "Major design sequence", "attribute": "revision" },
+        { "group": 6, "name": "Power supply", "attribute": "voltage", "map": { "1": "208-230/1/60", "3": "208-230/3/60", "4": "460/3/60", "W": "575/3/60", "D": "380-415/3/50" }, "notes": "Partial map (same code set as Precedent)." },
+        { "group": 7, "name": "Heating capacity", "attribute": "heat_capacity", "map": { "0": "No heat / cooling only", "L": "Low heat", "M": "Medium heat", "H": "High heat" }, "notes": "Gas-electric units: L/M/H tiers; verify exact MBH on the nameplate. Map from builder memory of RT-PRC001 (medium)." },
+        { "group": 8, "name": "Factory-installed options", "attribute": "options", "map": { "0": "None", "A": "Factory-installed economizer", "B": "Oversized motor", "C": "Downflow economizer and oversized motor", "H": "TXV / face-split evaporator" }, "notes": "Partial map from the Voyager 12.5-25 t product catalog nomenclature (via ManualsLib TC* manual)." },
+        { "group": 9, "name": "Minor design sequence / service digit", "attribute": "other" }
+      ],
+      "refrigerant": "R-22",
+      "controlPlatformIds": ["reliatel", "voyager_ucp", "symbio_700"],
+      "examples": [
+        { "model": "YCD150B3LA", "expect": { "unit_type": "Gas heat / electric cooling", "series": "Voyager (commercial packaged)", "cabinet": "Downflow", "tonnage": "12.5", "revision": "B", "voltage": "208-230/3/60", "heat_capacity": "Low heat", "options": "Factory-installed economizer" } },
+        { "model": "TCD181B4", "expect": { "unit_type": "DX cooling (electric heat optional)", "cabinet": "Downflow", "tonnage": "15", "revision": "B", "voltage": "460/3/60" } },
+        { "model": "YCH240E4H0", "expect": { "unit_type": "Gas heat / electric cooling", "cabinet": "Horizontal", "tonnage": "20", "revision": "E", "voltage": "460/3/60", "heat_capacity": "High heat", "options": "None" } }
+      ],
+      "notes": [
+        "Nameplate: model is the first line of the data plate. Voyager II (12.5-25 t) units built 2000-2003 use UCP controls; 2003+ use ReliaTel; 2020+ Voyager Commercial 27.5-50 t use Symbio 700.",
+        "Refrigerant: R-22 default for Voyager I/II designs through about 2009; R-410A on later design sequences (read the plate). Voyager III (27.5-50 t, sizes 330-600) uses R-410A on current designs.",
+        "Examples are composed from the documented size, voltage, heating and option codes (no complete catalog model string with all digits was available); tonnage/voltage decoding is the tested part.",
+        "The size codes 181/241/301 (from the Voyager IOM 'YCD150 thru 301' and catalog) are mapped explicitly so they read as 15/20/25 tons rather than 15.1/20.1/25.1."
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Trane Voyager TC* User Manual — nomenclature (ManualsLib 866135)",
+        "Trane Voyager 12.5-25 Tons Packaged Gas/Electric product catalog RT-PRC001-EN",
+        "Trane Voyager II Quick Reference Guide RT-PRC038K-EN",
+        "Trane IOM 'YCD150 thru 301' (YC-IOM-13, hvac.amickracing.com mirror)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "trane_odyssey_split_6_25t",
+      "family": "Odyssey commercial split system 6-25 tons: TTA cooling condensing unit, TWA heat pump condensing unit, TWE air handler (TTH export/horizontal variant)",
+      "description": "Digit 1 = T (split system); 2 = T cooling-only / W heat pump; 3 = A outdoor (condensing) unit, E indoor air handler; 4-6 = nominal capacity MBH; 7 = major design sequence; 8 = power supply; 9+ = options/design digits.",
+      "productType": "split_condensing_unit",
+      "eraStart": 2000,
+      "regex": "^(T)([TW])([AEH])(\\d{3})([A-Z])([A-Z0-9])([A-Z0-9]*)$",
+      "segments": [
+        { "group": 2, "name": "System type", "attribute": "unit_type", "map": { "T": "Cooling only (air conditioner)", "W": "Heat pump" } },
+        { "group": 3, "name": "Component", "attribute": "cabinet", "map": { "A": "Outdoor condensing unit", "E": "Indoor air handler (TWE)" }, "notes": "H (TTH) appears in 50 Hz Odyssey literature; meaning not confirmed, left raw." },
+        { "group": 4, "name": "Nominal capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "tons", "notes": "060=5/6 t class, 072=6, 076 (6.3 t nominal, listed in SS-SVX001), 090=7.5, 120=10, 150=12.5, 180=15, 240=20, 300=25." },
+        { "group": 5, "name": "Major design sequence", "attribute": "revision", "notes": "K design (2025) = R-454B per HVACDirect listing of TWA090K4AAA; earlier letters R-410A; A-D era R-22." },
+        { "group": 6, "name": "Power supply", "attribute": "voltage", "map": { "1": "208-230/1/60", "3": "208-230/3/60", "4": "460/3/60", "W": "575/3/60" }, "notes": "Partial map; 4 = 460 V 3-phase confirmed by the HVACDirect TWA090K4AAA listing." },
+        { "group": 7, "name": "Options / design digits", "attribute": "options", "notes": "Not decoded." }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": ["symbio_700", "reliatel"],
+      "examples": [
+        { "model": "TWA090K4AAA", "expect": { "unit_type": "Heat pump", "cabinet": "Outdoor condensing unit", "tonnage": "7.5", "revision": "K", "voltage": "460/3/60" } },
+        { "model": "TWE090K4AAA", "expect": { "unit_type": "Heat pump", "cabinet": "Indoor air handler (TWE)", "tonnage": "7.5", "revision": "K", "voltage": "460/3/60" } },
+        { "model": "TTA120E3", "expect": { "unit_type": "Cooling only (air conditioner)", "cabinet": "Outdoor condensing unit", "tonnage": "10", "revision": "E", "voltage": "208-230/3/60" } }
+      ],
+      "notes": [
+        "Nameplate: outdoor and indoor sections have separate plates and model numbers (TTA/TWA outdoor, TWE indoor); match design sequence letters when pairing.",
+        "Odyssey with Symbio controls (SS-SVX001C-EN, 2021+) uses Symbio 700 on the air handler; earlier Odyssey uses ReliaTel-style controls on the TWE and a simple relay/pressure-control package on the TTA.",
+        "The first two examples come from an HVACDirect listing (TWA090K4AAA**BS01 / TWE090K4AAA**BC — 7.5 ton, 460 V 3-phase, R-454B); wildcard digits were dropped. TTA120E3 is composed from documented codes."
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Trane Odyssey TTA Series IOM — Model Nomenclature (ManualsLib 2599264 p.2)",
+        "Trane Odyssey with Symbio IOM SS-SVX001C-EN (09/2021)",
+        "Trane Odyssey product catalog SS-PRC029M-EN (May 2017)",
+        "HVACDirect listing: Trane 7.5 Ton commercial split heat pump TWA090K4AAA**BS01 / TWE090K4AAA**BC (460V 3 phase, R-454B)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "trane_intellipak_20_130t",
+      "family": "IntelliPak I / II packaged rooftop 20-130 tons (SAHF, SXHF, SFHF, SLHF, SEHF, SXRF, SAHG, SXHG)",
+      "description": "Digits 1-4 = family code (S + function/configuration letters); 5 = development sequence; 6-7 = nominal tons (20-90 direct; 11/12/13 = 110/120/130); 8 = power supply (believed); long option string follows.",
+      "productType": "packaged_rtu",
+      "eraStart": 1995,
+      "regex": "^(S[AXFLE][HR][FG])([A-Z])(\\d{2})([A-Z0-9])([A-Z0-9]*)$",
+      "segments": [
+        { "group": 1, "name": "IntelliPak family code", "attribute": "series", "map": { "SAHF": "IntelliPak I rooftop (SAHF)", "SXHF": "IntelliPak I rooftop (SXHF)", "SFHF": "IntelliPak I rooftop (SFHF)", "SLHF": "IntelliPak I rooftop (SLHF)", "SEHF": "IntelliPak I rooftop (SEHF)", "SXRF": "IntelliPak I rooftop (SXRF)", "SAHG": "IntelliPak rooftop 90-130 t (SAHG)", "SXHG": "IntelliPak rooftop 90-130 t (SXHG)" }, "notes": "The individual meaning of letters 2-4 (unit function / heat / configuration) was not confirmed; only family names are given." },
+        { "group": 2, "name": "Development sequence", "attribute": "revision", "notes": "Catalog lists capacities as -C20 through -C75 and -C90, -D11, -D12, -D13, i.e. sequence letter followed by size." },
+        { "group": 3, "name": "Nominal capacity (tons)", "attribute": "tonnage", "transform": "raw", "unit": "tons", "map": { "11": "110", "12": "120", "13": "130" }, "notes": "20, 25, 30, 40, 50, 55, 60, 75, 90 tons direct; 11/12/13 = 110/120/130 tons." },
+        { "group": 4, "name": "Power supply", "attribute": "voltage", "map": { "3": "208-230/3/60", "4": "460/3/60", "W": "575/3/60" }, "notes": "Position and map believed to follow the Trane convention (4 in the SEHFF754 example = 460 V); not confirmed from the nomenclature page." },
+        { "group": 5, "name": "Option string", "attribute": "options", "notes": "Digit 20 of the full string: 1 = UL certified, 2 = CSA certified (IntelliPak IOM RT-SVX36M-EN)." }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": ["intellipak_ucm", "symbio_800"],
+      "examples": [
+        { "model": "SEHFF754RC77G9BD1B01A0CEG00000RT008600", "expect": { "series": "IntelliPak I rooftop (SEHF)", "revision": "F", "tonnage": "75", "voltage": "460/3/60" } },
+        { "model": "SXHGD114", "expect": { "series": "IntelliPak rooftop 90-130 t (SXHG)", "revision": "D", "tonnage": "110", "voltage": "460/3/60" } }
+      ],
+      "notes": [
+        "LOW CONFIDENCE: the digit-by-digit nomenclature page (RT-PRC010 / RT-SVX36) was not readable by this builder; positions were inferred from the catalog capacity codes (-C20 ... -D13) and one full model string (SEHFF754RC77G9BD1B01A0CEG00000RT008600) from the IntelliPak IOM. Second example is composed from the SXHG -D11 catalog size code.",
+        "Nameplate: the full model string is very long (38 characters); the decoder input is capped at 64 characters so it fits, but copy the first 8 characters accurately.",
+        "IntelliPak I (20-130 t) built before ~2016 uses the UCM module set with the Human Interface (HI) panel; IntelliPak with Symbio 800 (RT-SVP011) from the late 2010s; IntelliPak II 90-162 t (RT-SVX073). R-22 on early 1990s-2000s designs, R-410A after."
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Trane IntelliPak IOM RT-SVX36M-EN (2015) — model number examples and digit-20 certification note",
+        "Trane IntelliPak Rooftops 20-130 Tons product catalog RT-PRC010-EN (Nov 2008)",
+        "Trane IntelliPak II RT-SVX073A-EN (2023)"
+      ],
+      "lastVerified": "2026-09-26"
+    }
+  ],
+  "controls": [
+    {
+      "id": "reliatel",
+      "name": "Trane ReliaTel (RTRM refrigeration module with RTOM options, RTEM economizer, RTAM air-handling/VAV, RTDM dehumidification, RTVM ventilation, RTCI/TCI communication modules)",
+      "description": "Microprocessor control on Precedent 3-25 t, Voyager 12.5-25 t (2003+), Voyager III and Odyssey air handlers from about 2003 until replaced by Symbio 700 (2020s). No alphanumeric fault codes: diagnostics are shown by the RTRM green System LED (LED2), by the four LEDs on a zone sensor module (System / Heat / Cool / Service), and by the RTEM LED for the economizer. Full tables: Trane ReliaTel Service & Diagnostics manual (RT-SVD03) and the Trane Commercial Help Center 'List of Light Commercial LED Codes'.",
+      "appliesTo": ["trane_precedent_3_25t", "trane_voyager_3_50t", "trane_odyssey_split_6_25t"],
+      "faultCodes": [
+        {
+          "code": "RTRM LED2 steady ON",
+          "meaning": "Normal operation: RTRM powered, no active diagnostic.",
+          "severity": "info",
+          "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (support.trane.com article 360060172532)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "RTRM LED2 OFF",
+          "meaning": "No power to the RTRM or RTRM failed.",
+          "likelyCauses": ["No 24 VAC from TNS1 (blown secondary fuse, open primary)", "Loose RTRM power plug", "Failed RTRM"],
+          "checks": ["Measure 24 VAC at the RTRM 24 V input (transformer secondary); expect 20-28 VAC", "Check TNS1 primary voltage tap matches line voltage and the low-voltage fuse", "If 24 VAC is present at the board with LED2 dark, replace RTRM"],
+          "severity": "shutdown",
+          "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (support.trane.com article 360060172532)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "RTRM LED2 2 flashes every 2 seconds",
+          "meaning": "One or more diagnostics present. Depending on unit configuration: supply fan failure, zone temperature sensor failure (CV units), programmable zone sensor (ZSM) communication failure, compressor lockout, defrost, gas heat, smoke detector, Frostat, communication, static-pressure or discharge-air-sensor diagnostic.",
+          "likelyCauses": ["Supply fan fail (fan proving / IDM)", "Zone temperature sensor input failure on CV units (open/shorted ZTS wiring)", "Programmable ZSM communication failure", "Compressor lockout after repeated HPC/LPC trips", "Gas heat failure (ignition lockout, limit)", "Smoke detector or Frostat trip", "Discharge-air / static-pressure sensor fault on VAV units"],
+          "checks": ["Read the specific diagnostic: zone sensor LEDs (Heat / Cool / Service), the ReliaTel test-mode sequence, or a BAS/TCI or Trane service tool per help-center article 360060172412", "Check the 10k zone sensor thermistor wiring (open or short to ground) before condemning the board", "Check fan proving / dirty-filter switch inputs on the RTOM", "Check HPC/LPC/limit/flame-sense history for the locked-out circuit"],
+          "severity": "warning",
+          "source": "Trane Commercial Help Center — 'What can cause a 2 flash code on the RTRM?' (article 360038608131) and 'How do I retrieve fail codes from the RTRM when I have a 2 flash fault code?' (article 360060172412)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "RTRM LED2 pulsing on/off",
+          "meaning": "Unit is in TEST mode (LED2 pulses on and off while test mode is active).",
+          "checks": ["Remove the TEST 1 / TEST 2 jumper on the LTB; the unit exits test after about one hour on its own"],
+          "severity": "info",
+          "source": "Trane Commercial Help Center — List of Light Commercial LED Codes (support.trane.com article 360060172532)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Zone sensor COOL LED flashing",
+          "meaning": "Cooling failure: a compressor circuit is locked out (repeated HPC/LPC/compressor protection trips) — builder recollection of RT-SVD03, verify.",
+          "likelyCauses": ["Low charge / LPC trips", "HPC trips: dirty condenser, ODM failure, non-condensables, overcharge", "Compressor internal overload / contactor / phase loss"],
+          "checks": ["Identify which circuit is locked out (CPR1/CPR2) in test mode", "Check refrigerant pressures, condenser coil, ODM operation, CC contactor and compressor amps", "Reset lockout: cycle 24 V control power or switch the zone sensor mode to OFF and back"],
+          "severity": "lockout",
+          "source": "Builder memory of Trane ReliaTel Service & Diagnostics manual RT-SVD03 (zone sensor LED table) — not re-derived from the document",
+          "evidence": "inferred",
+          "notes": "LOW confidence entry; confirm against RT-SVD03 or the help-center LED list."
+        },
+        {
+          "code": "Zone sensor HEAT LED flashing",
+          "meaning": "Heating failure (gas ignition lockout, limit trip or heat-pump defrost/heat diagnostic) — builder recollection of RT-SVD03, verify.",
+          "likelyCauses": ["Ignition control (IGN) lockout: dirty flame sensor, no gas, failed igniter", "Combustion blower / pressure switch not proving", "High-limit (TCO) trip from low airflow"],
+          "checks": ["Watch an ignition trial: CBM runs, pressure switch closes, spark/HSI, GV opens, flame sense microamps", "Check filters, blower and TCO limits", "Reset by cycling the mode or 24 V power"],
+          "severity": "lockout",
+          "source": "Builder memory of Trane ReliaTel Service & Diagnostics manual RT-SVD03 — not re-derived from the document",
+          "evidence": "inferred",
+          "notes": "LOW confidence entry; confirm against RT-SVD03."
+        },
+        {
+          "code": "Zone sensor SERVICE LED on steady",
+          "meaning": "Clogged (dirty) filter indication from the filter differential pressure switch input — builder recollection of RT-SVD03, verify.",
+          "likelyCauses": ["Dirty filters", "Filter switch set point too low or tubing issue"],
+          "checks": ["Replace filters; check filter switch setting and tubing to the RTOM input"],
+          "severity": "warning",
+          "source": "Builder memory of Trane ReliaTel Service & Diagnostics manual RT-SVD03 — not re-derived from the document",
+          "evidence": "inferred",
+          "notes": "LOW confidence entry; confirm against RT-SVD03."
+        },
+        {
+          "code": "Zone sensor SERVICE LED flashing",
+          "meaning": "Supply fan failure (fan proving switch did not close after the fan was commanded on) — builder recollection of RT-SVD03, verify.",
+          "likelyCauses": ["Broken/slipping belt", "IDM failure or tripped overload", "Fan proving switch or tubing fault", "VFD fault on VAV units"],
+          "checks": ["Confirm IDM runs when G/fan is called and fan proving switch closes", "Check belt, motor amps, contactor/relay and the RTOM fan-proving input"],
+          "severity": "shutdown",
+          "source": "Builder memory of Trane ReliaTel Service & Diagnostics manual RT-SVD03 — not re-derived from the document",
+          "evidence": "inferred",
+          "notes": "LOW confidence entry; confirm against RT-SVD03."
+        },
+        {
+          "code": "RTEM LED (economizer module) flashing",
+          "meaning": "Economizer diagnostic present on the ReliaTel Economizer Module; the flash count identifies the fault (actuator, mixed-air/outdoor sensor, enthalpy/CO2 input). Full flash table: Trane help-center article 'LCU Economizer LED Codes (RTEM Module)'.",
+          "likelyCauses": ["Failed or out-of-range mixed-air sensor (MAS) or outdoor air sensor", "Economizer actuator not driving / feedback fault", "Wiring to RTRM"],
+          "checks": ["Count the flashes and look up the code in help-center article 360037863611", "Check sensor resistance (10k thermistor) and actuator travel in test mode step 'economizer'"],
+          "severity": "warning",
+          "source": "Trane Commercial Help Center — '*LCU Economizer LED Codes? (RTEM Module)' (article 360037863611); flash-count table not transcribed",
+          "evidence": "single_secondary",
+          "notes": "Table not transcribed; only the existence and meaning of a flashing RTEM LED is recorded."
+        }
+      ],
+      "ledPatterns": [
+        { "pattern": "RTRM LED2 (green System LED) steady on", "meaning": "Normal, no diagnostics" },
+        { "pattern": "RTRM LED2 off", "meaning": "No 24 VAC to RTRM or board failed", "checks": ["24 VAC at RTRM power input", "TNS1 secondary fuse"] },
+        { "pattern": "RTRM LED2 two flashes every 2 s", "meaning": "One or more diagnostics present — read them from zone sensor LEDs / test mode / service tool" },
+        { "pattern": "RTRM LED2 pulsing", "meaning": "TEST mode active" }
+      ],
+      "diagnosticTips": [
+        "TEST mode: momentarily short the TEST 1 and TEST 2 terminals on the low-voltage terminal board (LTB) for 2-3 seconds and remove the short; the unit enters step 1 (indoor fan). Each further momentary short advances one step (economizer, cool 1, cool 2, heat 1, heat 2 ... per unit configuration); holding the short in continuously auto-advances the steps. The unit leaves test mode about one hour after entry (per the UCP/ReliaTel IOM test-mode description). RTRM LED2 pulses while in test.",
+        "LEDs: RTRM System LED2 is on the RTRM board in the control box; zone sensor LEDs (System/Heat/Cool/Service) are on BAYSENS zone sensors that have LEDs.",
+        "Clearing lockouts: compressor and heat lockouts clear by cycling 24 V control power (open the unit disconnect for ~10 s) or by switching the zone sensor / thermostat mode to OFF and back; on BAS-connected units send the reset from Tracer.",
+        "Zone sensor input is a 10 kohm thermistor; an open or shorted ZTS gives a sensor-failure diagnostic (2-flash on LED2) and the RTRM falls back per its configuration. Check resistance at LTB before replacing the RTRM.",
+        "Full LED and diagnostic tables: Trane ReliaTel Service & Diagnostics Manual (RT-SVD03), ReliaTel user guide CNT-SVX15D-E4, and support.trane.com 'List of Light Commercial LED Codes'."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "Trane Commercial Help Center — List of Light Commercial LED Codes", "url": "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes" },
+        { "title": "Trane Commercial Help Center — What can cause a 2 flash code on the RTRM?", "url": "https://support.trane.com/hc/en-us/articles/360038608131-What-can-cause-a-2-flash-code-on-the-RTRM" },
+        { "title": "Trane Commercial Help Center — How do I retrieve fail codes from the RTRM when I have a 2 flash fault code?", "url": "https://support.trane.com/hc/en-us/articles/360060172412-How-do-I-retrieve-fail-codes-from-the-RTRM-when-I-have-a-2-flash-fault-code" },
+        { "title": "Trane Commercial Help Center — LCU Economizer LED Codes (RTEM Module)", "url": "https://support.trane.com/hc/en-us/articles/360037863611--LCU-Economizer-LED-Codes-RTEM-Module" },
+        { "title": "Trane ReliaTel Diagnostic Manual (ManualsLib 2574710)", "url": "https://www.manualslib.com/manual/2574710/Trane-Reliatel.html" },
+        { "title": "ReliaTel Microprocessor Control — User Guide CNT-SVX15D-E4", "url": "https://www.trane.com/WEBCACHE/CNT-SVX15D-E4_11012011.PDF" }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes",
+        "https://support.trane.com/hc/en-us/articles/360038608131-What-can-cause-a-2-flash-code-on-the-RTRM",
+        "https://support.trane.com/hc/en-us/articles/360060172412-How-do-I-retrieve-fail-codes-from-the-RTRM-when-I-have-a-2-flash-fault-code",
+        "https://support.trane.com/hc/en-us/articles/360037863611--LCU-Economizer-LED-Codes-RTEM-Module",
+        "Trane ReliaTel Service & Diagnostics Manual RT-SVD03 (builder memory for zone-sensor LED entries)"
+      ]
+    },
+    {
+      "id": "symbio_700",
+      "name": "Trane Symbio 700 unit controller",
+      "description": "Current-generation controller on Precedent 3-25 t, Voyager Commercial 27.5-50 t and Odyssey with Symbio (2019+). Descriptive alarms (no flash codes) shown on the onboard display and in the Symbio Service and Installation mobile app (Bluetooth); BACnet/Modbus and Tracer SC+ integration. Alarm names are text strings; the full diagnostic table is in the Symbio 700 application guides (BAS-SVP062 Precedent, BAS-APG048 Voyager Commercial).",
+      "appliesTo": ["trane_precedent_3_25t", "trane_voyager_3_50t", "trane_odyssey_split_6_25t"],
+      "faultCodes": [
+        {
+          "code": "Emergency Stop",
+          "meaning": "Emergency stop input active — the unit shuts down all operation while the emergency-stop binary input is in the stop state (help-center article 'Symbio 700 Emergency stop').",
+          "likelyCauses": ["Field emergency-stop contact open (or jumper removed) at the Symbio 700 binary input", "Smoke detector / fire alarm relay wired into the emergency stop input"],
+          "checks": ["Verify the emergency-stop input state on the display or app (Status > Inputs)", "Check the field contact / jumper on the low-voltage terminal strip and the smoke detector relay"],
+          "severity": "shutdown",
+          "source": "Trane Commercial Help Center — Symbio 700 Emergency stop (article 18777598342029)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Gas heat diagnostics (ignition / heat failure)",
+          "meaning": "Symbio 700 reports gas-heat diagnostics with an alarm indicator status (e.g. ignition lockout, heat failure) in its Gas Heat section — application manual 'Gas Heat; Diagnostics and Alarm Indicator Status'. Exact alarm text depends on unit configuration.",
+          "likelyCauses": ["Ignition control lockout after failed trials (flame sense, gas supply, igniter)", "Combustion blower / pressure switch not proving", "High limit (TCO) trip"],
+          "checks": ["Open Alarms on the display/app and read the alarm text and time stamp", "Run an ignition trial from Service > Test mode and watch CBM, pressure switch, GV and flame current"],
+          "severity": "lockout",
+          "source": "Trane Symbio 700 Controller Application Manual — Gas Heat; Diagnostics and Alarm Indicator Status (ManualsLib 3011763 p.54)",
+          "evidence": "single_secondary",
+          "notes": "Alarm strings not transcribed; consult the application guide for the table."
+        }
+      ],
+      "diagnosticTips": [
+        "Reset alarms: Symbio Service and Installation app > Alarms > Reset Diagnostics; or onboard display > Service > Diagnostics > Reset Diagnostics (help-center).",
+        "The onboard display and the mobile app (Bluetooth pairing from the controller) show active/historical alarms with plain-language text and suggested resolutions; use the app for setpoints, test mode and configuration.",
+        "Symbio 700 alarms are text strings, not numeric codes; record the exact alarm text and time stamp for tech support (support.trane.com asks for the unit serial).",
+        "Full alarm tables: Symbio 700 Application Guide for Precedent (BAS-SVP062C-EN) and Voyager Commercial 27.5-50 t (BAS-APG048C-EN); Precedent IOM with Symbio 700 (RT-SVX077B-EN)."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "Trane Commercial Help Center — Symbio 700 Emergency stop", "url": "https://support.trane.com/hc/en-us/articles/18777598342029-Symbio-700-Emergency-stop" },
+        { "title": "Symbio 700 Controller Application Guide — Precedent (BAS-SVP062C-EN)", "docId": "BAS-SVP062C-EN", "url": "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/precedent-3-to-25-tons/BAS-SVP062C-EN_05262023.pdf" },
+        { "title": "Symbio 700 Controller — Voyager Commercial 27.5-50 t (BAS-APG048C-EN)", "docId": "BAS-APG048C-EN", "url": "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/voyager-commercial-27-1-2-to-50-tons/BAS-APG048C-EN_04132024.pdf" },
+        { "title": "Trane Symbio 700 Controller Application Manual (ManualsLib 3011763)", "url": "https://www.manualslib.com/manual/3011763/Trane-Symbio-700-Controller.html" }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "https://support.trane.com/hc/en-us/articles/18777598342029-Symbio-700-Emergency-stop",
+        "https://www.trane.com/commercial/north-america/us/en/products-systems/smart-building-technology/symbio/symbio-700.html",
+        "https://www.manualslib.com/manual/3011763/Trane-Symbio-700-Controller.html?page=54"
+      ]
+    },
+    {
+      "id": "voyager_ucp",
+      "name": "Trane Voyager UCP (Unit Control Processor) microcontrols, pre-2003",
+      "description": "Legacy microprocessor on Voyager I/II/III (3-50 t) rooftops built roughly 1990-2003 before ReliaTel. Single red status LED on the UCP visible through a peep hole in the lower left corner of the control box cover; diagnostics via zone sensor LEDs and test mode. Full manual: Voyager Microcontrols (UCP) Service & Diagnostic Manual (support.trane.com).",
+      "appliesTo": ["trane_voyager_3_50t"],
+      "faultCodes": [
+        {
+          "code": "UCP red LED ON steady",
+          "meaning": "UCP is functioning correctly with power applied.",
+          "severity": "info",
+          "source": "Trane Voyager Commercial Installation & Operation manual — Starting the Unit / Test Modes (ManualsLib 825268 p.72); Voyager Microcontrols (UCP) Service & Diagnostic Manual (support.trane.com article 360060620431)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "UCP red LED blinking continuously",
+          "meaning": "Unit is in TEST mode.",
+          "checks": ["Remove the short from the TEST terminals; the UCP exits test mode after about one hour in any step"],
+          "severity": "info",
+          "source": "Trane Voyager Commercial Installation & Operation manual — Test Modes (ManualsLib 825268 p.72)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "UCP red LED OFF",
+          "meaning": "UCP not powered or failed (LED glows whenever the UCP is functioning with power applied).",
+          "likelyCauses": ["No 24 VAC (TNS1 secondary fuse, primary tap)", "Failed UCP"],
+          "checks": ["Check 24 VAC at the UCP power terminals; if present with LED dark, replace the UCP"],
+          "severity": "shutdown",
+          "source": "Trane Voyager Commercial Installation & Operation manual — Test Modes (ManualsLib 825268 p.72) (inverse of the 'glows if functioning' statement)",
+          "evidence": "single_secondary"
+        }
+      ],
+      "ledPatterns": [
+        { "pattern": "Red LED on", "meaning": "UCP OK" },
+        { "pattern": "Red LED blinking", "meaning": "Test mode" },
+        { "pattern": "Red LED off", "meaning": "No power / UCP failed" }
+      ],
+      "diagnosticTips": [
+        "TEST mode: short across the TEST terminals on the unit low-voltage terminal board (LTB) for 2-3 seconds and remove; the UCP LED blinks and step 1 turns on the indoor fan motor (IDM). Each following momentary short advances the step; the unit may be left in any step for up to one hour, after which the UCP exits test mode.",
+        "The red UCP LED is visible through the peep hole in the lower left corner of the control box cover without removing the cover.",
+        "Zone sensor LEDs (System/Heat/Cool/Service) on BAYSENS sensors report the same failure classes as ReliaTel (heat failure, cooling failure, dirty filter/fan failure) — see the UCP Service & Diagnostic Manual for the table.",
+        "Clear lockouts by cycling 24 V control power or switching the zone sensor mode to OFF and back."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "Voyager Microcontrols (UCP) Service & Diagnostic Manual — Trane Commercial Help Center", "url": "https://support.trane.com/hc/en-us/articles/360060620431-Voyager-Microcontrols-UCP-Service-Diagnostic-Manual" },
+        { "title": "Trane Voyager Commercial Installation & Operation Manual — Test Modes (ManualsLib 825268 p.72)", "url": "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=72" },
+        { "title": "Trane Voyager I & II, III Microcontrols User Manual (Manualzz 22750248)", "url": "https://manualzz.com/doc/22750248/trane-voyager-i-and-ii--iii-microcontrols-user-manual" }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "https://support.trane.com/hc/en-us/articles/360060620431-Voyager-Microcontrols-UCP-Service-Diagnostic-Manual",
+        "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=72"
+      ]
+    },
+    {
+      "id": "intellipak_ucm",
+      "name": "Trane IntelliPak UCM module controls with Human Interface (legacy)",
+      "description": "Module-based control on IntelliPak I rooftops (20-130 t) before Symbio 800: RoofTop Module (RTM, 1U48), Heat module, compressor modules, VAV/exhaust modules and the unit-mounted Human Interface (HI, 1U65) LCD keypad that displays plain-text diagnostics and status. Diagnostics are text messages, not numeric codes. Full list: IntelliPak Programming, Troubleshooting manual and IOM RT-SVX36.",
+      "appliesTo": ["trane_intellipak_20_130t"],
+      "faultCodes": [
+        {
+          "code": "HI COMMUNICATIONS FAILURE - CHECK INTERPROCESSOR COMM LINK",
+          "meaning": "The unit-mounted Human Interface (HI, 1U65) is not communicating with the RoofTop Module (RTM, 1U48).",
+          "likelyCauses": ["Loose or damaged interprocessor communication (IPC) link wiring between HI and RTM", "RTM not powered / failed", "HI failed"],
+          "checks": ["Check the IPC bus connections at the HI and RTM (polarity, shield, terminations)", "Verify RTM power LED and module DIP/address settings", "Cycle power and watch whether HI re-establishes communication"],
+          "severity": "warning",
+          "source": "Trane Commercial Help Center — IntelliPak (Legacy) HI Comm Loss (article 19893668115853)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Heat Module Communication Failure",
+          "meaning": "The RTM has lost communication with the Heat Module.",
+          "likelyCauses": ["IPC wiring to the heat module", "Heat module unpowered or failed"],
+          "checks": ["Check IPC link and power at the heat module; check module address/DIP settings"],
+          "severity": "warning",
+          "source": "Trane IntelliPak I Programming, Troubleshooting manual (ManualsLib 865947) — diagnostics section",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Heat Fail",
+          "meaning": "Displayed on the HI when the freezestat (4S12) closes its contacts because the temperature of the air entering the heating coils falls to 40 F (hydronic/steam heat units).",
+          "likelyCauses": ["Loss of hot water / steam to the heating coil", "Control valve failed closed", "Coil airflow with heat off at low outdoor temperature"],
+          "checks": ["Check heating-medium supply and valve position", "Verify freezestat 4S12 setting/contacts and reset after the coil warms"],
+          "severity": "lockout",
+          "source": "Trane IntelliPak IOM (ManualsLib 687076) — freezestat / Heat Fail description",
+          "evidence": "single_secondary"
+        }
+      ],
+      "diagnosticTips": [
+        "Diagnostics and mode status are read on the unit-mounted Human Interface LCD (Diagnostics menu) or a remote HI panel; alarm relays can be configured for BAS.",
+        "Common IPC (interprocessor communication) faults are usually wiring/termination problems at the modules; check the link before replacing modules.",
+        "Full diagnostic text list and troubleshooting trees: IntelliPak I Programming, Troubleshooting manual and IOM RT-SVX36M-EN (Trane eLibrary)."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "Trane Commercial Help Center — IntelliPak (Legacy) HI Comm Loss", "url": "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss" },
+        { "title": "Trane IntelliPak I Programming, Troubleshooting manual (ManualsLib 865947)", "url": "https://www.manualslib.com/manual/865947/Trane-Intellipak-I.html" },
+        { "title": "Trane IntelliPak IOM RT-SVX36M-EN (2015)", "docId": "RT-SVX36M-EN" }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss",
+        "https://www.manualslib.com/manual/865947/Trane-Intellipak-I.html",
+        "https://www.manualslib.com/manual/687076/Trane-Intellipak.html"
+      ]
+    },
+    {
+      "id": "symbio_800",
+      "name": "Trane Symbio 800 unit controller (IntelliPak)",
+      "description": "Touchscreen unit controller on IntelliPak I/II rooftops from the late 2010s (RT-SVP011 'IntelliPak with Symbio 800'). Diagnostics are plain-text alarms on the touchscreen/Tracer TU, similar in style to Symbio 700. The alarm table was not transcribed by this builder; the one entry below is the shared emergency-stop behaviour.",
+      "appliesTo": ["trane_intellipak_20_130t"],
+      "faultCodes": [
+        {
+          "code": "Emergency Stop",
+          "meaning": "Emergency stop input active — unit shut down while the emergency-stop input is in the stop state (same behaviour as documented for Symbio 700; confirm text in RT-SVP011).",
+          "checks": ["Check the emergency-stop input status on the touchscreen and the field contact / smoke detector relay wiring"],
+          "severity": "shutdown",
+          "source": "Trane IntelliPak with Symbio 800 RT-SVP011G-EN (not transcribed); behaviour per Symbio 700 help-center article 18777598342029",
+          "evidence": "inferred",
+          "notes": "LOW confidence: alarm text inferred from the Symbio 700 article; verify in RT-SVP011."
+        }
+      ],
+      "diagnosticTips": [
+        "Alarms and reset are on the touchscreen (Alarms > Reset) or via Tracer TU service tool; full table in RT-SVP011G-EN (IntelliPak with Symbio 800)."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "IntelliPak with Symbio 800 — RT-SVP011G-EN", "docId": "RT-SVP011G-EN", "url": "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVP011G-EN_02112023.pdf" }
+      ],
+      "confidence": "low",
+      "sources": [
+        "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVP011G-EN_02112023.pdf"
+      ]
+    }
+  ],
+  "electrical": [
+    {
+      "familyRegex": "trane_precedent_3_25t|trane_voyager_3_50t|trane_odyssey_split_6_25t",
+      "familyLabel": "Precedent / Voyager light-commercial rooftops with ReliaTel (and Symbio 700) controls, 3-25 tons",
+      "controlVoltage": "24 VAC from TNS1 (control transformer, fused secondary); Symbio 700 units also carry a separate 24 VAC controls transformer",
+      "components": [
+        { "designator": "CPR1 / CPR2", "name": "Compressor 1 / 2", "notes": "From Trane wiring diagram legend 1213-4333 (REF DES list)" },
+        { "designator": "CC1 / CC2", "name": "Compressor contactor 1 / 2", "notes": "Legend 1213-4333" },
+        { "designator": "ODM1 / ODM2", "name": "Outdoor (condenser) fan motor 1 / 2", "notes": "Legend 1213-4333" },
+        { "designator": "IDM", "name": "Indoor (supply) fan motor", "notes": "Legend 1213-4333; belt drive on 6-25 t, direct drive on 3-5 t" },
+        { "designator": "TNS1", "name": "Control transformer (24 V secondary)", "notes": "Legend 1213-4333" },
+        { "designator": "HPC1 / HPC2", "name": "High pressure control (cutout) circuit 1 / 2", "notes": "Legend 1213-4333" },
+        { "designator": "LPC1 / LPC2", "name": "Low pressure control circuit 1 / 2", "notes": "Legend 1213-4333" },
+        { "designator": "RTRM", "name": "ReliaTel Refrigeration Module (main unit controller)", "notes": "Builder memory of Precedent wiring manual; verify designator on the unit diagram" },
+        { "designator": "RTOM", "name": "ReliaTel Options Module (fan proving, dirty filter, smoke detector, DAS, condensate overflow inputs)", "notes": "Builder memory" },
+        { "designator": "RTEM", "name": "ReliaTel Economizer Module", "notes": "Help-center article title confirms the module name" },
+        { "designator": "RTAM", "name": "ReliaTel Air-handling Module (VAV / SZVAV supply-fan control)", "notes": "Builder memory" },
+        { "designator": "RTDM", "name": "ReliaTel Dehumidification Module (hot-gas reheat)", "notes": "Builder memory" },
+        { "designator": "RTVM", "name": "ReliaTel Ventilation Module (ventilation override / demand-controlled ventilation)", "notes": "Builder memory" },
+        { "designator": "RTCI / TCI", "name": "ReliaTel Communication Interface (Trane Comm / BACnet / LonTalk to Tracer)", "notes": "Builder memory" },
+        { "designator": "LTB", "name": "Low-voltage terminal board (thermostat / zone sensor / TEST terminals)", "notes": "TEST terminals named in the UCP/ReliaTel test-mode instructions" },
+        { "designator": "ZTS / ZSM", "name": "Zone temperature sensor (10 kohm thermistor) / zone sensor module", "notes": "Builder memory" },
+        { "designator": "IGN", "name": "Ignition control module (gas heat)", "notes": "Builder memory" },
+        { "designator": "GV", "name": "Gas valve", "notes": "Builder memory" },
+        { "designator": "CBM", "name": "Combustion blower motor", "notes": "Builder memory" },
+        { "designator": "TCO1 / TCO2", "name": "Temperature cutout (high limit) switches, gas heat", "notes": "Builder memory" },
+        { "designator": "FS", "name": "Flame sensor", "notes": "Builder memory" },
+        { "designator": "PS", "name": "Combustion air pressure switch", "notes": "Builder memory; designator varies by diagram" },
+        { "designator": "OAS / OHS", "name": "Outdoor air temperature sensor / outdoor humidity (enthalpy) sensor for economizer", "notes": "Builder memory" },
+        { "designator": "MAS", "name": "Mixed air temperature sensor (economizer)", "notes": "Builder memory" },
+        { "designator": "ECA", "name": "Economizer actuator", "notes": "Builder memory" },
+        { "designator": "SMD", "name": "Smoke detector (supply / return)", "notes": "Builder memory" },
+        { "designator": "CCH", "name": "Crankcase heater", "notes": "Builder memory" },
+        { "designator": "F1 / F2", "name": "Fuses (control / motor circuits)", "notes": "Builder memory" }
+      ],
+      "safetyDevices": [
+        "HPC1/HPC2 high pressure cutouts (auto reset; repeated trips counted by RTRM/Symbio -> compressor lockout)",
+        "LPC1/LPC2 low pressure controls (ignored briefly at start; repeated trips -> lockout)",
+        "Compressor internal overload / motor protector",
+        "TCO1/TCO2 gas-heat high limits and flame rollout (auto/manual reset per unit)",
+        "Combustion air pressure switch (proves CBM)",
+        "Frostat (evaporator freeze protection, on RTOM/RTRM input)",
+        "Smoke detector (SMD) and condensate overflow switch inputs (RTOM) — shut the unit down",
+        "Fan proving switch and dirty filter switch (RTOM) — produce fan-failure / service diagnostics"
+      ],
+      "terminalLabels": {
+        "R": "24 VAC hot to thermostat (conventional-thermostat interface on LTB)",
+        "G": "Indoor fan call",
+        "Y1": "Cooling stage 1",
+        "Y2": "Cooling stage 2",
+        "W1": "Heating stage 1",
+        "W2": "Heating stage 2",
+        "X2": "Trane thermostat interface terminal (system-failure / emergency-heat indication on some units) — verify on the unit diagram",
+        "TEST 1 / TEST 2": "Short 2-3 s to enter ReliaTel/UCP test mode",
+        "ZSM 1-12": "Zone sensor module terminals (zone temp, setpoint, mode, fan, LEDs) numbered on the LTB per the unit diagram",
+        "BAS": "RTCI/TCI communication module terminals (Trane Comm 3/4, BACnet MS/TP + / -); Symbio 700 BACnet MS/TP on the controller"
+      },
+      "sequenceOfOperation": [
+        "Cooling (ReliaTel): on Y1/zone-sensor cooling demand the RTRM starts the IDM (immediately or per fan mode), then — if an RTEM economizer is fitted and outdoor conditions are suitable — modulates the economizer first; when the economizer cannot satisfy the load, the RTRM closes CC1 to start CPR1 (and ODM) after the minimum off-timer; Y2 / further demand brings on CPR2 via CC2. HPC/LPC trips are counted per cooling cycle; repeated trips lock out that compressor until reset.",
+        "Heating (gas, ReliaTel): on W1 the RTRM energizes the ignition control (IGN); the combustion blower (CBM) starts and the pressure switch must prove; after prepurge the igniter sparks and the gas valve (GV) opens; flame sensor (FS) must prove within the trial time or IGN retries then locks out (heat-failure diagnostic). Indoor fan starts after the heat fan-on delay; TCO limits open the ignition circuit on overtemperature. W2 stages the second heat stage / high fire.",
+        "Heat pump: RTRM energizes the reversing valve solenoid in the cooling mode (Trane 'O' logic), defrost by demand/time via the defrost control; electric heat staged via W1/W2 with the compressor.",
+        "Ventilation / economizer: RTEM drives the economizer actuator to minimum position when the fan runs occupied; free cooling enabled by dry-bulb or enthalpy (OHS) comparison; CO2 demand-controlled ventilation via RTVM when fitted."
+      ],
+      "notes": [
+        "Designators CPR, CC, ODM, IDM, TNS, HPC, LPC are transcribed from the legend of Trane wiring diagram 1213-4333 (Trane eLibrary); the remaining designators are from builder memory of the Precedent ReliaTel wiring manual and must be confirmed against the diagram printed on the unit (drawing number on the control-box door).",
+        "3-phase scroll compressors on 208-230/460/575 V units are rotation-sensitive: verify rotation at start-up (suction/discharge pressures, noise); Trane fits a phase monitor on many 3-phase ReliaTel/Symbio units — check for a 'PM' / phase-monitor relay on the diagram before assuming.",
+        "Symbio 700 units: the controller replaces RTRM/RTOM/RTEM functions on one board with expansion modules; thermostat interface is via the Symbio 700 low-voltage terminals (R/G/Y1/Y2/W1/W2) or zone sensor; BACnet MS/TP directly on the controller."
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Trane wiring diagram 1213-4333 D — LEGEND (REF DES / DESCRIPTION), Trane eLibrary https://elibrary.tranetechnologies.com/public/commercial-hvac/Literature/Wiring%20Diagrams/1213-4333_D_11102022.pdf",
+        "Wiring Manual — Packaged Gas/Electric with ReliaTel Controls 3-10 Tons (Precedent ReliaTel Wiring, hvac.amickracing.com mirror)",
+        "ReliaTel Microprocessor Control User Guide CNT-SVX15D-E4",
+        "Trane Voyager Commercial IOM — Test Modes (ManualsLib 825268 p.72)"
+      ]
+    },
+    {
+      "familyRegex": "trane_intellipak_20_130t",
+      "familyLabel": "IntelliPak I rooftops 20-130 tons (UCM modules with Human Interface; Symbio 800 on later units)",
+      "controlVoltage": "24 VAC to the UCM modules from the unit control transformer; 115 VAC control circuit for motors/starters (verify on the unit schematic)",
+      "components": [
+        { "designator": "1U48", "name": "RoofTop Module (RTM) — main unit controller", "notes": "From Trane help-center article 'IntelliPak (Legacy) HI Comm Loss'" },
+        { "designator": "1U65", "name": "Human Interface (HI) module — unit-mounted LCD keypad", "notes": "From the same help-center article" },
+        { "designator": "4S12", "name": "Freezestat (closes at 40 F entering-air temperature at the heating coil -> 'Heat Fail')", "notes": "From the IntelliPak IOM (ManualsLib 687076)" },
+        { "designator": "Heat Module", "name": "UCM heat module (gas / electric / hydronic heat control)", "notes": "Named in IntelliPak troubleshooting manual diagnostics" }
+      ],
+      "safetyDevices": [
+        "Freezestat 4S12 on hydronic/steam heat units",
+        "High/low pressure cutouts per compressor circuit (numbered designators on the unit schematic)",
+        "Supply-fan and exhaust-fan VFD faults reported to the RTM",
+        "Duct high static pressure switch on VAV units"
+      ],
+      "terminalLabels": {
+        "IPC": "Interprocessor communication link between UCM modules and the HI (check first on any 'comm failure' diagnostic)"
+      },
+      "sequenceOfOperation": [
+        "The RTM (1U48) receives zone/discharge-air/static setpoints, stages compressors through the compressor modules, controls economizer and VAV supply fan (VFD or IGV) and reports status/diagnostics to the Human Interface (1U65) and BAS."
+      ],
+      "notes": [
+        "IntelliPak uses numeric-prefixed designators (1U48, 4S12 ...) keyed to the schematic sheet; always read the legend on the unit's own diagram. Only designators confirmed by the cited sources are listed."
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss",
+        "https://www.manualslib.com/manual/687076/Trane-Intellipak.html"
+      ]
+    }
+  ],
+  "commonIssues": [
+    {
+      "symptom": "RTRM System LED2 flashing 2 times every 2 s; unit running but zone complains",
+      "likelyCauses": ["Zone temperature sensor wiring open/shorted (10k thermistor) — very common", "Programmable zone sensor communication failure", "Supply fan proving / dirty filter input", "Compressor lockout from HPC/LPC trips"],
+      "checks": ["Ohm the ZTS at the LTB (about 10 kohm at 77 F)", "Read the specific diagnostic through zone sensor LEDs / test mode / service tool", "Check fan proving and filter switches and their tubing"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": ["https://support.trane.com/hc/en-us/articles/360038608131-What-can-cause-a-2-flash-code-on-the-RTRM"]
+    },
+    {
+      "symptom": "Economizer stuck open or closed, high humidity / high supply temperature, RTEM LED flashing",
+      "likelyCauses": ["Failed RTEM module or economizer actuator", "Mixed-air or outdoor-air sensor drifted/open", "Enthalpy (OHS) sensor failure", "Linkage / damper blades seized"],
+      "checks": ["Run test mode to the economizer step and watch actuator travel", "Check MAS/OAS resistance and the RTEM flash code", "Verify minimum position setpoint and the OA changeover setting"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": ["https://support.trane.com/hc/en-us/articles/360037863611--LCU-Economizer-LED-Codes-RTEM-Module"]
+    },
+    {
+      "symptom": "No cooling, Cool LED flashing / compressor locked out",
+      "likelyCauses": ["Low charge from leaks (LPC trips)", "Dirty condenser or failed ODM (HPC trips)", "Compressor contactor or internal overload", "Phase loss or reverse rotation on 3-phase scroll"],
+      "checks": ["Pressures and superheat/subcooling per circuit", "ODM operation and condenser cleanliness", "CC coil voltage and contacts, compressor amps vs RLA", "Reset by cycling 24 V power and observe the next trip"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t|trane_odyssey_split_6_25t",
+      "confidence": "medium",
+      "evidence": "inferred",
+      "sources": ["Builder field-pattern summary; lockout behaviour per help-center 2-flash article"]
+    },
+    {
+      "symptom": "Gas heat will not light or locks out intermittently (Heat LED flashing)",
+      "likelyCauses": ["Dirty/cracked flame sensor rod (low microamps)", "Combustion pressure switch not closing (blocked flue/inducer, cracked tubing)", "Gas pressure low / regulator", "Igniter failed", "High-limit TCO tripping on low airflow (dirty filters, belt slip)"],
+      "checks": ["Watch a full ignition trial in test mode heat step", "Flame current, manifold pressure, pressure-switch differential", "Filters, belt tension and blower amps"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t",
+      "confidence": "medium",
+      "evidence": "inferred",
+      "sources": ["Builder field-pattern summary; ignition sequence per ReliaTel gas/electric IOM RT-SVX21"]
+    },
+    {
+      "symptom": "Supply fan failure diagnostic (Service LED flashing) or unit shuts down on airflow",
+      "likelyCauses": ["Broken or slipping belt (belt-drive 6-25 t)", "Blower motor overload / bad bearings", "Fan proving switch or tubing", "VFD fault on VAV / SZVAV units"],
+      "checks": ["Belt condition and tension, sheave alignment", "Motor amps and bearing noise", "Fan proving switch closure with fan running", "VFD fault log"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t",
+      "confidence": "medium",
+      "evidence": "inferred",
+      "sources": ["Builder field-pattern summary"]
+    },
+    {
+      "symptom": "Water in the unit / condensate overflow shutdown",
+      "likelyCauses": ["Clogged condensate drain or trap", "Unit not level", "Condensate overflow switch tripped (RTOM input)"],
+      "checks": ["Clear and flush the drain; verify trap depth against unit negative pressure", "Check the overflow switch and reset"],
+      "appliesTo": "trane_precedent_3_25t|trane_voyager_3_50t",
+      "confidence": "medium",
+      "evidence": "inferred",
+      "sources": ["Builder field-pattern summary"]
+    },
+    {
+      "symptom": "Human Interface shows 'HI COMMUNICATIONS FAILURE' or module communication failures",
+      "likelyCauses": ["IPC link wiring/terminations", "Module power loss", "Failed module"],
+      "checks": ["Inspect the IPC bus wiring at each module and the HI", "Check module power LEDs and addresses"],
+      "appliesTo": "trane_intellipak_20_130t",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": ["https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss"]
+    }
+  ],
+  "support": {
+    "phone": "310-878-0059 (Trane Commercial Help Center callback/voice support line per the help-center overview article; 7:30-4:30 Central, Mon-Fri — verify; live support for 3-25 t RTU installation/start-up requires the unit serial number)",
+    "url": "https://support.trane.com/hc/en-us",
+    "literatureUrl": "https://elibrary.tranetechnologies.com/",
+    "literatureSearchHint": "Search the Trane eLibrary (elibrary.tranetechnologies.com > Commercial HVAC) by literature order number (e.g. RT-SVX21*-EN Precedent 3-10 t gas/electric IOM, RT-SVX077 Precedent with Symbio 700, RT-PRC023 Precedent catalog, RT-PRC001 Voyager 12.5-25 t, RT-SVX36 IntelliPak IOM, SS-SVX001 Odyssey with Symbio) or by the wiring diagram drawing number printed on the unit (e.g. 1213-4333). support.trane.com hosts LED-code lists, the UCP service manual and Symbio 700 articles.",
+    "notes": "American Standard commercial units are the same product; use Trane literature. Residential Trane consumer line is separate."
+  },
+  "notes": [
+    "Web research for this pack was limited to search-engine summaries; WebFetch was unavailable, so the IOM nomenclature pages and the ReliaTel diagnostic tables could not be read in full. Entries marked 'builder memory' or evidence 'inferred' were not re-derived from a document and must be verified before relying on them.",
+    "Serial number decoding: 2010+ YYWW, 2002-2009 YWW, 1983-2001 letter+WW — all three from agreeing secondary decoders (no manufacturer document), hence medium. The 1980-1982 style is low.",
+    "Model nomenclature beyond digit 8 (heating capacity, options) is only partially decoded; read heat input, MCA/MOP and charge from the nameplate.",
+    "Refrigerant defaults: R-22 through the early-2000s designs; R-410A on Precedent 3-10 t from 2006 and 12.5-25 t / IntelliPak by 2010; R-454B (A2L) on 2025+ Precedent/Odyssey designs — always confirm from the plate.",
+    "Compressor Protection Module (CPM) could not be confirmed as a Trane light-commercial component name; not included."
+  ],
+  "sources": [
+    "https://www.building-center.org/trane-hvac-age/",
+    "https://www.pickhvac.com/hvac/age-serial-number/trane/",
+    "https://www.partstown.com/cm/resource-center/guides/gd2/trane-serial-number-lookup",
+    "https://inspectorhandbook.com/hvac/trane",
+    "https://www.h2ouse.org/trane-furnace-age/",
+    "https://www.howtolookatahouse.com/Blog/Entries/2018/6/how-can-i-tell-the-age-of-a-trane-furnace-from-the-serial-number.html",
+    "https://www.manualslib.com/manual/741225/Trane-Ysc060.html?page=4 (YSC060 IOM — Unit Nomenclature)",
+    "https://www.manualslib.com/manual/866135/Trane-Voyager-Tc.html (Voyager TC* nomenclature)",
+    "https://www.manualslib.com/manual/2599264/Trane-Odyssey-Tta-Series.html?page=2 (Odyssey TTA nomenclature)",
+    "https://www.trane.com/content/dam/Trane/Commercial/ap/philippines/Products-Systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVX36M-EN_02012015.pdf",
+    "https://hvacdirect.com/trane-7-5-ton-11-0-eer-14-1-ieer-commercial-split-heat-pump-system-460v-3-phase-r454b-twa090k4aaa-bs01-twe090k4aaa-bc.html",
+    "https://support.trane.com/hc/en-us/articles/360060172532-List-of-Light-Commercial-LED-Codes",
+    "https://support.trane.com/hc/en-us/articles/360038608131-What-can-cause-a-2-flash-code-on-the-RTRM",
+    "https://support.trane.com/hc/en-us/articles/360060172412-How-do-I-retrieve-fail-codes-from-the-RTRM-when-I-have-a-2-flash-fault-code",
+    "https://support.trane.com/hc/en-us/articles/360037863611--LCU-Economizer-LED-Codes-RTEM-Module",
+    "https://support.trane.com/hc/en-us/articles/18777598342029-Symbio-700-Emergency-stop",
+    "https://support.trane.com/hc/en-us/articles/360060620431-Voyager-Microcontrols-UCP-Service-Diagnostic-Manual",
+    "https://www.manualslib.com/manual/825268/Trane-Voyager-Commercial.html?page=72",
+    "https://support.trane.com/hc/en-us/articles/19893668115853-IntelliPak-Legacy-HI-Comm-Loss",
+    "https://www.manualslib.com/manual/865947/Trane-Intellipak-I.html",
+    "https://www.manualslib.com/manual/687076/Trane-Intellipak.html",
+    "https://elibrary.tranetechnologies.com/public/commercial-hvac/Literature/Wiring%20Diagrams/1213-4333_D_11102022.pdf",
+    "https://support.trane.com/hc/en-us/articles/45121131579661-Trane-Commercial-Customer-Help-Center-Overview-Self-Service-Live-Factory-Support",
+    "https://www.trane.com/WEBCACHE/CNT-SVX15D-E4_11012011.PDF"
+  ],
+  "confidence": "medium",
+  "lastReviewed": "2026-09-26"
+}
