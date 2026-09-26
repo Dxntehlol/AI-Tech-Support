@@ -1,5 +1,7 @@
-import { test, describe, before } from "node:test";
+import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -12,9 +14,9 @@ import { createFakeClient } from "./agent/fakeClient.ts";
 import type { MessagesStreamer, StreamLike, StreamParams } from "./agent/client.ts";
 import { isTurnRunning } from "./agent/chat.ts";
 import type { AppConfig, ChatEvent, DisplayMessage, KnowledgeBase } from "./types.ts";
-import { createApp, type AppDeps } from "./app.ts";
+import { createApp, renderConfigJs, type AppDeps } from "./app.ts";
 import { detectImageType, foldMessages, parseImages, parseMeasurements, summarizeToolResult } from "./routes/util.ts";
-import { passwordFromAuthorization, secretsMatch } from "./routes/auth.ts";
+import { isPublicPath, passwordFromAuthorization, secretsMatch } from "./routes/auth.ts";
 import { openStreamCount } from "./routes/conversations.ts";
 
 const NOW = new Date("2026-09-26T12:00:00Z");
@@ -24,8 +26,23 @@ const PNG_1PX = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPh
 const JPEG_HEAD = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(28, 1)]).toString("base64");
 
 let kb: KnowledgeBase;
+/** A stand-in web/ directory with the PWA files, so header rules are tested independently of the real client. */
+let pwaDir: string;
 before(() => {
   kb = loadKnowledge(join(PROJECT_ROOT, "knowledge"), { strict: false });
+  pwaDir = mkdtempSync(join(tmpdir(), "hvac-web-"));
+  mkdirSync(join(pwaDir, "icons"));
+  mkdirSync(join(pwaDir, "vendor"));
+  writeFileSync(join(pwaDir, "index.html"), "<!doctype html><html><body>shell</body></html>");
+  writeFileSync(join(pwaDir, "app.js"), "console.log('app');");
+  writeFileSync(join(pwaDir, "styles.css"), "body{margin:0}");
+  writeFileSync(join(pwaDir, "sw.js"), "self.addEventListener('fetch', () => {});");
+  writeFileSync(join(pwaDir, "manifest.webmanifest"), JSON.stringify({ name: "HVAC Field Assistant", short_name: "HVAC Assist", display: "standalone" }));
+  writeFileSync(join(pwaDir, "icons", "icon-192.png"), Buffer.from(PNG_1PX, "base64"));
+  writeFileSync(join(pwaDir, "vendor", "marked.min.js"), "// vendored");
+});
+after(() => {
+  rmSync(pwaDir, { recursive: true, force: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -197,6 +214,57 @@ describe("app basics", () => {
     });
   });
 
+  test("GET /config.js: same-origin apiBase, package.json version, demo flag, never cached", async () => {
+    const pkg = JSON.parse(readFileSync(join(PROJECT_ROOT, "package.json"), "utf8")) as { version: string };
+    await withServer({ demo: true }, async (c) => {
+      const res = await c.get("/config.js");
+      assert.equal(res.status, 200);
+      assert.match(res.headers.get("content-type") ?? "", /^(application|text)\/javascript/);
+      assert.equal(res.headers.get("cache-control"), "no-store");
+      const text = await res.text();
+      assert.equal(text, `window.APP_CONFIG = { apiBase: "", version: ${JSON.stringify(pkg.version)}, demo: true };\n`);
+      // The script must evaluate to the documented shape.
+      const sandbox: { APP_CONFIG?: { apiBase: string; version: string; demo: boolean } } = {};
+      new Function("window", text)(sandbox);
+      assert.deepEqual(sandbox.APP_CONFIG, { apiBase: "", version: pkg.version, demo: true });
+    });
+    await withServer({ demo: false }, async (c) => {
+      assert.match(await (await c.get("/config.js")).text(), /demo: false \};\n$/);
+    });
+    assert.equal(renderConfigJs({ version: '1.0.0"; alert(1); "', demo: false }), 'window.APP_CONFIG = { apiBase: "", version: "1.0.0\\"; alert(1); \\"", demo: false };\n');
+  });
+
+  test("static header rules: sw.js scope + no-cache, manifest media type, shell revalidated, assets cached an hour", async () => {
+    await withServer({ config: { webDir: pwaDir } }, async (c) => {
+      const sw = await c.get("/sw.js");
+      assert.equal(sw.status, 200);
+      assert.equal(sw.headers.get("service-worker-allowed"), "/");
+      assert.equal(sw.headers.get("cache-control"), "no-cache");
+      assert.match(sw.headers.get("content-type") ?? "", /javascript/);
+
+      const manifest = await c.get("/manifest.webmanifest");
+      assert.equal(manifest.status, 200);
+      assert.match(manifest.headers.get("content-type") ?? "", /^application\/manifest\+json/);
+      assert.equal(manifest.headers.get("cache-control"), "public, max-age=3600");
+      assert.equal(((await manifest.json()) as { short_name: string }).short_name, "HVAC Assist");
+
+      for (const path of ["/", "/index.html"]) {
+        const shell = await c.get(path);
+        assert.equal(shell.status, 200, path);
+        assert.equal(shell.headers.get("cache-control"), "no-cache", path);
+        assert.equal(shell.headers.get("service-worker-allowed"), null, path);
+      }
+      for (const path of ["/app.js", "/styles.css", "/icons/icon-192.png", "/vendor/marked.min.js"]) {
+        const asset = await c.get(path);
+        assert.equal(asset.status, 200, path);
+        assert.equal(asset.headers.get("cache-control"), "public, max-age=3600", path);
+        assert.equal(asset.headers.get("service-worker-allowed"), null, path);
+      }
+      assert.match((await c.get("/icons/icon-192.png")).headers.get("content-type") ?? "", /image\/png/);
+      assert.equal((await c.get("/config.js")).headers.get("cache-control"), "no-store");
+    });
+  });
+
   test("unknown /api path → JSON 404 envelope", async () => {
     await withServer({}, async (c) => {
       await expectError(await c.get("/api/nope"), 404, "not_found");
@@ -238,6 +306,48 @@ describe("security", () => {
     });
   });
 
+  test("bearer auth: token compared like the password; wrong/empty/odd schemes → 401 with WWW-Authenticate", async () => {
+    await withServer({ config: { appPassword: "s3cret" } }, async (c) => {
+      for (const auth of ["Bearer nope", "Bearer s3cre", "Bearer s3cret extra", "Bearer", "Bearer ", "Token s3cret", "s3cret", ""]) {
+        const res = await c.get("/api/units", { headers: auth ? { Authorization: auth } : {} });
+        assert.equal(res.status, 401, `Authorization: ${JSON.stringify(auth)}`);
+        assert.match(res.headers.get("www-authenticate") ?? "", /^Basic realm="HVAC Field Assistant"/);
+        await expectError(res, 401, "auth");
+      }
+      for (const auth of ["Bearer s3cret", "bearer s3cret", "  Bearer   s3cret  ", "BASIC " + Buffer.from(":s3cret").toString("base64")]) {
+        const res = await c.get("/api/units", { headers: { Authorization: auth } });
+        assert.equal(res.status, 200, `Authorization: ${JSON.stringify(auth)}`);
+      }
+      // Bearer works on state-changing routes too (the native shell's only option).
+      const created = await c.json("POST", "/api/conversations", {}, { headers: { Authorization: "Bearer s3cret" } });
+      assert.equal(created.status, 201);
+      // A password with a colon survives Basic (split on the first colon only) and Bearer (verbatim).
+    });
+    await withServer({ config: { appPassword: "a:b:c" } }, async (c) => {
+      assert.equal((await c.get("/api/units", { headers: { Authorization: "Bearer a:b:c" } })).status, 200);
+      assert.equal((await c.get("/api/units", { headers: { Authorization: `Basic ${Buffer.from("tech:a:b:c").toString("base64")}` } })).status, 200);
+    });
+  });
+
+  test("public paths need no password: health, config.js, manifest, sw.js, icons — everything else does", async () => {
+    await withServer({ config: { appPassword: "s3cret", webDir: pwaDir } }, async (c) => {
+      for (const path of ["/api/health", "/config.js", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png"]) {
+        const res = await c.get(path);
+        assert.equal(res.status, 200, path);
+      }
+      for (const path of ["/", "/index.html", "/app.js", "/styles.css", "/vendor/marked.min.js", "/api/units", "/api/reference/refrigerants"]) {
+        const res = await c.get(path);
+        assert.equal(res.status, 401, path);
+        await expectError(res, 401, "auth");
+      }
+      // Missing public files are still 404s, not 401s, so the client can tell "not installed" from "locked".
+      assert.equal((await c.get("/icons/missing.png")).status, 404);
+      // Prefix tricks do not widen the exemption.
+      assert.equal((await c.get("/iconsx/app.js")).status, 401);
+      assert.equal((await c.get("/api/healthz")).status, 401);
+    });
+  });
+
   test("auth helpers", () => {
     assert.equal(passwordFromAuthorization(`Basic ${Buffer.from("u:p:w").toString("base64")}`), "p:w");
     assert.equal(passwordFromAuthorization("Bearer tok"), "tok");
@@ -245,6 +355,12 @@ describe("security", () => {
     assert.equal(passwordFromAuthorization(undefined), undefined);
     assert.equal(secretsMatch("a", "a"), true);
     assert.equal(secretsMatch("a", "b"), false);
+    for (const p of ["/api/health", "/api/health/", "/config.js", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png", "/icons/maskable/512.png"]) {
+      assert.equal(isPublicPath(p), true, p);
+    }
+    for (const p of ["/", "/index.html", "/app.js", "/api/units", "/api/healthz", "/icons", "/iconsx/a.png", "/sw.js.map", "/api/health/x"]) {
+      assert.equal(isPublicPath(p), false, p);
+    }
   });
 
   test("Origin mismatch → 403; same host and allowlisted origins pass; GET ignores Origin", async () => {
@@ -261,6 +377,63 @@ describe("security", () => {
       const preflight = await fetch(`${c.base}/api/conversations`, { method: "OPTIONS", headers: { Origin: "capacitor://localhost", "Access-Control-Request-Method": "POST" } });
       assert.equal(preflight.status, 204);
       assert.match(preflight.headers.get("access-control-allow-headers") ?? "", /Authorization/);
+    });
+  });
+
+  test("CORS: allowlisted origins get an echoed origin + Vary; preflight passes without auth; others get nothing", async () => {
+    const native = "capacitor://localhost";
+    await withServer({ config: { appPassword: "s3cret" }, allowOrigins: [native, "http://localhost"] }, async (c) => {
+      // Preflight: 204, no auth needed, full CORS header set.
+      const pre = await fetch(`${c.base}/api/conversations`, {
+        method: "OPTIONS",
+        headers: { Origin: native, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization, content-type" },
+      });
+      assert.equal(pre.status, 204);
+      assert.equal(pre.headers.get("access-control-allow-origin"), native);
+      assert.equal(pre.headers.get("access-control-allow-headers"), "Authorization, Content-Type");
+      assert.equal(pre.headers.get("access-control-allow-methods"), "GET, POST, PATCH, DELETE, OPTIONS");
+      assert.equal(pre.headers.get("access-control-allow-credentials"), null);
+      assert.match(pre.headers.get("vary") ?? "", /\bOrigin\b/);
+      assert.match(pre.headers.get("access-control-max-age") ?? "", /^\d+$/);
+      assert.equal(pre.headers.get("www-authenticate"), null);
+
+      // Actual request: origin echoed (never "*"), auth still enforced.
+      const denied = await c.get("/api/units", { headers: { Origin: native } });
+      assert.equal(denied.status, 401);
+      assert.equal(denied.headers.get("access-control-allow-origin"), native);
+      const ok = await c.json("POST", "/api/conversations", {}, { headers: { Origin: native, Authorization: "Bearer s3cret" } });
+      assert.equal(ok.status, 201);
+      assert.equal(ok.headers.get("access-control-allow-origin"), native);
+      assert.match(ok.headers.get("vary") ?? "", /\bOrigin\b/);
+      // Exact match: case-insensitive on the origin, but scheme/port variants are distinct origins.
+      assert.equal((await c.get("/api/health", { headers: { Origin: "CAPACITOR://LOCALHOST" } })).headers.get("access-control-allow-origin"), "CAPACITOR://LOCALHOST");
+      for (const other of ["https://localhost", "http://localhost:8787", "http://evil.example", "null"]) {
+        const res = await c.get("/api/health", { headers: { Origin: other } });
+        assert.equal(res.status, 200, other);
+        assert.equal(res.headers.get("access-control-allow-origin"), null, other);
+        assert.match(res.headers.get("vary") ?? "", /\bOrigin\b/, other);
+        const rejectedPre = await fetch(`${c.base}/api/conversations`, { method: "OPTIONS", headers: { Origin: other, "Access-Control-Request-Method": "POST" } });
+        assert.equal(rejectedPre.status, 204, other);
+        assert.equal(rejectedPre.headers.get("access-control-allow-origin"), null, other);
+        assert.equal(rejectedPre.headers.get("access-control-allow-methods"), null, other);
+        // ...and the Origin/Host guard still blocks state changes from them.
+        const write = await c.json("POST", "/api/conversations", {}, { headers: { Origin: other, Authorization: "Bearer s3cret" } });
+        await expectError(write, 403, "forbidden");
+      }
+      // Requests without an Origin (curl, same-origin GET) are untouched.
+      const plain = await c.get("/api/health");
+      assert.equal(plain.headers.get("access-control-allow-origin"), null);
+    });
+    // Empty allowlist: no CORS headers at all, even for an origin that would otherwise be common.
+    await withServer({ allowOrigins: [] }, async (c) => {
+      const res = await c.get("/api/health", { headers: { Origin: native } });
+      assert.equal(res.headers.get("access-control-allow-origin"), null);
+      assert.doesNotMatch(res.headers.get("vary") ?? "", /\bOrigin\b/);
+    });
+    // Allowlist from config (ALLOW_ORIGINS) is honoured when deps.allowOrigins is not given.
+    await withServer({ config: { allowOrigins: ["ionic://localhost"] } }, async (c) => {
+      const res = await c.get("/api/health", { headers: { Origin: "ionic://localhost" } });
+      assert.equal(res.headers.get("access-control-allow-origin"), "ionic://localhost");
     });
   });
 

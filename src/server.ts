@@ -52,10 +52,7 @@ if (demo) {
   client = createAnthropicClient(config);
 }
 
-const allowOrigins = (process.env.ALLOW_ORIGINS ?? "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const allowOrigins = config.allowOrigins ?? [];
 
 const app = createApp({ client, config, kb, repos, demo, allowOrigins, log: (m) => console.log(`[${new Date().toISOString()}] ${m}`) });
 
@@ -64,7 +61,8 @@ const server = app.listen(config.port, config.host, () => {
   console.log(`HVAC Field Assistant listening on http://${host}:${config.port}`);
   console.log(`  model=${config.claudeModel} effort=${config.claudeEffort} fallbacks=${config.claudeFallbacks} webSearch=${config.enableWebSearch ? "on" : "off"}${demo ? " demo=on" : ""}`);
   console.log(`  knowledge: ${kb.manufacturers.length} manufacturer packs, ${kb.refrigerants.tables.size} refrigerants, ${kb.diagnostics.rules.rules.length} diagnostic rules, ${kb.electrical.components.length} electrical components, ${kb.electrical.procedures.length} procedures`);
-  console.log(`  db=${config.dbPath}${config.appPassword ? " auth=basic" : " auth=none (loopback only)"}${allowOrigins.length ? ` cors=${allowOrigins.join(",")}` : ""}`);
+  console.log(`  db=${config.dbPath}${config.appPassword ? " auth=basic|bearer" : " auth=none (loopback only)"}`);
+  console.log(allowOrigins.length ? `  cors=on origins=${allowOrigins.join(",")}` : "  cors=off (same-origin only; set ALLOW_ORIGINS for native shells)");
 });
 server.on("error", (err) => {
   console.error(`Failed to listen on ${config.host}:${config.port}: ${err.message}`);

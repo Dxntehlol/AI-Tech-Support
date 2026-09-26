@@ -743,4 +743,6 @@ export interface AppConfig {
   replayImageWindow: number;
   knowledgeDir: string;
   webDir: string;
+  /** Origins allowed via CORS (native shells, e.g. capacitor://localhost); empty/absent = same-origin only. */
+  allowOrigins?: string[];
 }
