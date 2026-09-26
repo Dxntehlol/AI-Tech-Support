@@ -1,0 +1,604 @@
+{
+  "version": "1",
+  "procedures": [
+    {
+      "id": "unit_dead",
+      "symptom": "Unit completely dead — no fans, no compressor, no board lights, no thermostat display",
+      "aliases": ["unit is dead", "no power", "nothing runs", "dead unit", "no display", "everything off", "unit won't turn on"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "Prove the meter live-dead-live; a dead-reading panel may still be live on one leg (single-pole failure, blown fuse on one phase).",
+        "480/575 V: CAT III/IV meter and arc-rated PPE (NFPA 70E) for live checks at the disconnect and panel.",
+        "Lock out and tag before touching line-voltage terminals."
+      ],
+      "steps": [
+        { "step": "Confirm the disconnect is on and the pull-out/fuse block is fully seated; read line-to-line voltage on the LINE side of the disconnect (all legs).", "expect": "Nominal voltage on every leg pair (208-230/460/575 ±10 %).", "ifNot": "Upstream: breaker in the building panel (reset fully OFF then ON), utility, a tripped main. If the breaker trips again immediately, do not keep resetting — find the fault." },
+        { "step": "Read line-to-line on the LOAD side of the disconnect/fuses; read across each fuse.", "expect": "Same voltage as the line side; ~0 V across each fuse.", "ifNot": "Line voltage across a fuse = blown fuse (replace with the same type/size and find why); no load-side voltage with good fuses = open disconnect pole." },
+        { "step": "Read voltage at the unit's terminal block / contactor line side, and check the unit's own branch protection (fuses, breakers inside the unit, blower door interlock switch).", "expect": "Line voltage at the unit terminal block.", "ifNot": "Burned lug, broken wire in the whip, open door switch — repair the connection." },
+        { "step": "Read the control transformer: primary voltage at the tap in use, then secondary (24 VAC) at the transformer and at the board R–C.", "expect": "Primary present; 24–28 VAC secondary; 24 V at R–C.", "ifNot": "Primary present, no secondary = transformer open (check the wrong-tap/overload cause first); secondary present at the transformer but not at R–C = blown control fuse/board breaker (3 A) — find the 24 V short before replacing (see intermittent 24 V loss)." },
+        { "step": "If the control fuse is good and R–C reads 24 V but the board shows no LED/status: check the board's line-voltage supply (120/240 V L1–N or L1–L2 to the board), its own fuse, and the thermostat display (a dead stat with 24 V at the unit = stat wire or stat).", "expect": "Board LED on; thermostat display on.", "ifNot": "Board with power in and no life = board; stat dead with R–C present at the unit = open R/C wire to the stat or a dead stat." },
+        { "step": "With power restored, verify the safeties and check why the failure happened (thermostat wire short, a grounded component, water intrusion in the disconnect, a compressor short that blew the fuses).", "expect": "Unit responds to a call; no repeat fuse/breaker trips.", "ifNot": "Go to 'breaker/fuse trips' if protection opens again." }
+      ],
+      "commonCauses": [
+        "Tripped breaker or blown fuse (often from a shorted compressor, condenser fan motor, or water in the disconnect)",
+        "Disconnect pull-out removed or a burned pole",
+        "Blown control (3 A) fuse from a shorted thermostat wire or 24 V coil",
+        "Failed control transformer (wrong tap, overload, secondary short)",
+        "Open blower door interlock, loose lug, rodent-chewed whip",
+        "Dead thermostat / BAS controller power supply"
+      ]
+    },
+    {
+      "id": "no_cooling_fans_run_compressor_off",
+      "symptom": "No cooling — indoor and/or condenser fans run but the compressor is off",
+      "aliases": ["no cooling", "fans run compressor off", "compressor not running", "blowing warm air", "compressor won't come on", "not cooling", "warm air"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump"],
+      "safety": [
+        "Contactor line side is live with the unit idle; keep fingers and probes clear of the line terminals.",
+        "Momentary diagnostic jumpers only — attended, seconds, removed before leaving. Never jumper the RDS/mitigation on A2L units.",
+        "Discharge capacitors before handling."
+      ],
+      "steps": [
+        { "step": "Read any fault code on the board / thermostat / phase monitor / compressor protection module first (HPS, LPS, lockout, ASC delay, RDS mitigation, phase loss).", "expect": "Code identifies the open safety or a delay in progress.", "ifNot": "No code: continue tracing; note that a blinking 'delay' may just be the anti-short-cycle timer (wait 5 min)." },
+        { "step": "Verify the cooling call is arriving: Y1 (and Y2 if staged) to C at the unit terminal strip = 24 VAC with the stat/BAS calling.", "expect": "24 VAC on Y1–C.", "ifNot": "No Y: thermostat/BAS (setpoint, mode, schedule, override, compressor lockout) or the stat wire — see 'call present but unit idle'." },
+        { "step": "Trace the 24 V safety chain from Y toward the contactor coil: read across HPS, LPS/LOC, freeze stat, condensate switch, duct smoke, fire relay, phase monitor contact, ASC timer.", "expect": "~0 V across every device; 24 V arrives at the contactor coil.", "ifNot": "24 V across a device = it is open — diagnose that device (pressures with gauges for HPS/LPS, coil temp for freeze stat, phase monitor LED, timer)." },
+        { "step": "At the contactor: 24 V across the coil? Is the armature pulled in?", "expect": "Coil energized and pulled in.", "ifNot": "Coil voltage present, not pulled in = open coil or jammed armature (ohm the coil, power off); pulled in but no compressor = go on." },
+        { "step": "Contactor pulled in: read line voltage on the LOAD side (T1–T2, T2–T3, T3–T1 for 3-ph; T1–T2 for 1-ph) and the drop across each pole.", "expect": "Full voltage on all legs at the load side, < 0.5 V across each pole.", "ifNot": "Missing leg = burned pole/blown fuse (single-phasing); replace the contactor / fuse." },
+        { "step": "Voltage at the compressor terminals with 0 A: power off, cool-down consideration, then ohm the windings and megger to ground (see the compressor components).", "expect": "Windings per pattern, > 100 MΩ.", "ifNot": "Open overload hot → cool 1–2 h and retest; open winding/grounded → compressor." },
+        { "step": "Compressor hums or trips: single-phase → run capacitor under load, start components; 3-phase → voltage imbalance, rotation, single-phasing. See the dedicated procedures.", "expect": "Root cause found and corrected; compressor runs with amps ≤ RLA.", "ifNot": "Escalate to refrigeration-side diagnosis (locked from slugging, high head)." }
+      ],
+      "commonCauses": [
+        "Open safety in the Y chain (HPS after a dirty condenser or dead condenser fan; LPS/LOC from low charge)",
+        "Board lockout after repeated safety trips (needs a reset after the fix)",
+        "Contactor coil open or burned contacts",
+        "Compressor internal overload open (hot) — cool down and re-test",
+        "Anti-short-cycle or thermostat delay still timing",
+        "RDS mitigation active on A2L units (blower forced on, compressor locked out)",
+        "Phase monitor tripped (phase loss/reversal) on 3-phase units"
+      ]
+    },
+    {
+      "id": "compressor_hums_wont_start_1ph",
+      "symptom": "Single-phase compressor hums / buzzes and won't start, then trips on overload",
+      "aliases": ["hums won't start", "compressor hums", "compressor buzzing", "locked rotor", "hard start", "compressor hums then clicks off", "1-ph compressor won't start"],
+      "appliesTo": ["split_condensing_unit", "split_heat_pump", "packaged_rtu", "refrigeration_condensing_unit"],
+      "safety": [
+        "Stand to the side of the compressor terminal cover when starting; a weakened terminal can vent (terminal venting hazard). Never start with the terminal cover off.",
+        "Discharge run and start capacitors through a bleed resistor before handling.",
+        "Do not keep hitting the compressor with LRA — each attempt heats the windings; limit attempts and let it cool."
+      ],
+      "steps": [
+        { "step": "Confirm line voltage at the compressor while it tries to start (contactor closed): read at the contactor load side during the hum.", "expect": "≥ 90 % of nominal during the start attempt (e.g. ≥ 207 V on a 230 V unit).", "ifNot": "Voltage sags badly = undersized wire, bad connection, utility; fix the supply first." },
+        { "step": "Check the run capacitor under load (or bench) on the HERM section: µF = 2652 × A / V on the HERM lead.", "expect": "Within ±6 % of rating; can not bulged/leaking.", "ifNot": "Weak/open cap → replace with the same µF and equal-or-higher volts; retest the start." },
+        { "step": "If a start capacitor/potential relay (or hard-start kit) is fitted: check the start cap (printed range, vent intact, bleed resistor) and the relay contacts 1–2 (closed at rest) and coil 2–5.", "expect": "Start cap within −0/+20 %; relay contacts closed at rest, coil continuous.", "ifNot": "Replace the failed start component (kit) with the correct rating for the compressor." },
+        { "step": "Check the pressure differential: has the compressor been off long enough to equalize (3–5 min)? Is there a stuck TXV/check valve holding head pressure?", "expect": "Suction and discharge nearly equal before the start.", "ifNot": "Wait for equalization; if it never equalizes, diagnose the refrigerant side; a hard-start kit may be justified on a non-equalizing system." },
+        { "step": "Power off, leads off: ohm C-S, C-R, S-R and megger to ground; consider the compressor temperature.", "expect": "C-S + C-R ≈ S-R within 10 %, no 0 Ω, > 100 MΩ to ground.", "ifNot": "Shorted/grounded winding → compressor. Open C-S/C-R with S-R intact → overload open, cool 1–2 h." },
+        { "step": "All electrical checks pass and it still draws LRA and trips: a mechanically locked compressor (liquid slugging, oil loss, bearing seizure). Try a hard-start kit once as a diagnostic; if the compressor still will not start, condemn it.", "expect": "Starts with the kit → compressor is tight but usable (investigate why: flood-back, crankcase heater, migration); still LRA → replace.", "ifNot": "Before replacement: acid test the oil, check for flood-back causes (charge, TXV, airflow) so the new compressor survives." }
+      ],
+      "commonCauses": [
+        "Weak or open run capacitor (most common)",
+        "Failed start capacitor / potential relay on CSR compressors",
+        "Low line voltage or a bad connection at start",
+        "Starting against an unequalized head pressure (short cycle, stuck check valve)",
+        "Liquid refrigerant in the compressor (migration; failed crankcase heater)",
+        "Mechanically seized compressor (bearing, scroll set, oil loss)"
+      ]
+    },
+    {
+      "id": "compressor_wont_start_3ph",
+      "symptom": "Three-phase compressor won't start — hums, trips, or nothing",
+      "aliases": ["3 phase compressor won't start", "3-ph compressor hums", "three phase no start", "single phasing", "compressor trips on start 3-phase"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "chiller", "refrigeration_condensing_unit"],
+      "safety": [
+        "460/575 V: CAT III/IV meter and leads, arc-rated PPE per NFPA 70E for live measurements.",
+        "Never energize a compressor with the terminal cover removed; stand to the side.",
+        "Lock out and verify all three legs dead before ohming windings; never megger under vacuum or with a VFD connected."
+      ],
+      "steps": [
+        { "step": "Read all three line-to-line voltages at the contactor line side with the unit idle and during the start attempt.", "expect": "All three present and balanced within 2 % (NEMA MG-1); no leg collapses on start.", "ifNot": "A missing/low leg = blown fuse, burned disconnect pole, utility phase loss — see 'phase loss / single-phasing'. Imbalance > 2 %: fix before running." },
+        { "step": "Contactor pulled in? Read the drop across each pole under the start attempt and the load-side voltages T1–T2, T2–T3, T3–T1.", "expect": "< 0.5 V across each pole; full voltage on all three load-side pairs.", "ifNot": "One pole open/burned = single-phasing the compressor (loud hum, no start) — replace the contactor." },
+        { "step": "Check the phase monitor / compressor protection module LED and the board code (phase loss, reversal, unbalance, high discharge temperature, CoreSense codes).", "expect": "OK / no fault.", "ifNot": "Correct the condition the monitor reports; a reversal after power work → swap two line leads at the unit line side." },
+        { "step": "Clamp each leg during the start: LRA for > 2–3 s then trip = locked rotor or single-phased; 0 A on one leg = open leg/winding.", "expect": "Brief inrush then amps settle near/below RLA.", "ifNot": "Continue to winding checks." },
+        { "step": "Power off, leads off: ohm T1–T2, T2–T3, T3–T1 and megger each to ground at 500 VDC.", "expect": "Legs equal within ±5 %; > 100 MΩ.", "ifNot": "All open on a hot shell = internal overload; cool 1–2 h. One leg open/shorted or < 1 MΩ → compressor." },
+        { "step": "Scroll compressors that start but are loud with no pressure differential and low amps: reversed rotation — verify with a phase rotation meter and correct at the line side.", "expect": "Correct rotation: pressures separate, normal sound, amps near RLA.", "ifNot": "If rotation is correct and it still will not pump: failed scroll set / IPR open → compressor." }
+      ],
+      "commonCauses": [
+        "Single-phasing: blown fuse on one leg, burned contactor pole, open lug",
+        "Phase monitor or protection module lockout (phase loss/reversal/unbalance)",
+        "Voltage imbalance > 2 % overheating the motor",
+        "Internal overload open from a previous overheating event",
+        "Reversed rotation after utility/disconnect work",
+        "Open or grounded winding, mechanically seized compressor"
+      ]
+    },
+    {
+      "id": "breaker_fuse_trips",
+      "symptom": "Breaker trips or fuses blow (immediately or after running)",
+      "aliases": ["breaker trips", "blows fuses", "keeps tripping", "fuse blown", "trips breaker on start", "trips the breaker", "shorted"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "A breaker that trips instantly indicates a short or ground fault — do not reset repeatedly; each reset is an arc event. Isolate the fault first.",
+        "Lock out before ohming or meggering; discharge capacitors; disconnect VFDs and electronic controls before meggering.",
+        "Replace fuses with the same class/size (time-delay, per nameplate MOP); never upsize."
+      ],
+      "steps": [
+        { "step": "Establish the pattern: trips on the compressor start (instant), after minutes of running, or randomly; which protection opens (unit fuses, building breaker, control fuse).", "expect": "Pattern points to short (instant), overload (delayed), or intermittent connection/water (random).", "ifNot": "Ask the site for history; check the breaker itself (warm, worn, many resets)." },
+        { "step": "Power off, locked out: megger the compressor windings to ground (leads off) and each motor (condenser fan, blower) to ground; ohm each for shorts.", "expect": "> 100 MΩ; no winding shorted.", "ifNot": "< 1 MΩ or a dead short = the grounded component; replace it (compressor burnout: clean-up/driers)." },
+        { "step": "Inspect for shorted capacitors (bulged/leaking; a shorted cap reads ~0 Ω), chafed line-voltage wires against the cabinet, water in the disconnect/junction boxes, and burned terminals at the compressor and contactor.", "expect": "No shorted caps or grounded wires.", "ifNot": "Replace the cap / repair the wiring, seal the water entry." },
+        { "step": "Delayed trips: clamp running amps on each leg vs nameplate RLA/FLA; compute voltage and current imbalance; compare the breaker/fuse size with the nameplate MOP and the wire size with MCA.", "expect": "Amps ≤ RLA/FLA, imbalance ≤ 2 % V / 10 % A, protection sized ≤ MOP and ≥ MCA-based minimum.", "ifNot": "High amps → head pressure/airflow/weak cap/low voltage; undersized or wrong-type protection → correct it (time-delay fuses for motor loads)." },
+        { "step": "Control fuse (3 A) blowing: see 'intermittent 24 V loss / control fuse blowing' — a shorted 24 V wire or coil.", "expect": "24 V circuit isolated and repaired.", "ifNot": "Do not fit a larger fuse." },
+        { "step": "After the repair: start the unit and monitor start amps (LRA spike duration) and running amps for 15+ minutes; verify the breaker/fuses stay cool.", "expect": "Normal start, stable amps, cool protection.", "ifNot": "Recheck for a second fault (e.g. compressor damaged by the short)." }
+      ],
+      "commonCauses": [
+        "Grounded/shorted compressor winding or fan motor",
+        "Shorted run capacitor",
+        "Water in the disconnect or a chafed wire to the cabinet",
+        "Overload from high head pressure, low voltage, weak capacitor, or a seizing motor",
+        "Weak breaker or wrong fuse type/size",
+        "Loose connection heating the breaker/fuse clip"
+      ]
+    },
+    {
+      "id": "short_cycling",
+      "symptom": "Compressor short cycles (runs briefly, stops, restarts repeatedly)",
+      "aliases": ["short cycling", "cycles on and off", "rapid cycling", "compressor cycling", "runs a minute and stops", "cycles too often"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "refrigeration_condensing_unit"],
+      "safety": [
+        "Short cycling overheats start components and the compressor — do not leave a unit cycling on a safety while you diagnose elsewhere.",
+        "Momentary jumpers to identify the opener only; never leave a safety bypassed."
+      ],
+      "steps": [
+        { "step": "Time the cycle and identify what ends the run: a board code (HPS/LPS/freeze), the overload (compressor stops, contactor stays in), the contactor dropping (24 V chain), or the thermostat/BAS call dropping.", "expect": "The terminating device is identified.", "ifNot": "Watch the contactor and the 24 V at Y1 and the coil at the moment it stops." },
+        { "step": "If Y drops: thermostat location/anticipator/cycle rate, BAS staging or a stat wired to the wrong stage, a loose Y/R wire, or a fault (intermittent 24 V).", "expect": "Y steady through the run.", "ifNot": "Go to 'call present but unit idle' / 'intermittent 24 V loss'." },
+        { "step": "If a pressure switch ends the run: gauges on. HPS → high head (dirty condenser, dead fan, fan cycling control, overcharge, non-condensables); LPS → low suction (low charge, restriction, low airflow, iced coil, low ambient without head-pressure control).", "expect": "Pressure at trip matches the switch label; root cause on the refrigerant/airflow side.", "ifNot": "Trip at a normal pressure → switch drifted → replace." },
+        { "step": "If the compressor overload ends the run with the contactor still in: check amps vs RLA, voltage under load, voltage/current imbalance, run capacitor, condenser airflow, and the compressor's cooling (suction gas superheat too high = low charge).", "expect": "Amps ≤ RLA, balanced supply, cap in tolerance.", "ifNot": "Correct the overload cause; if the shell is very hot with normal amps, suspect internal problems." },
+        { "step": "Check the anti-short-cycle protection (board, stat, timer) is in place and working: minimum off time 3–5 min.", "expect": "The unit cannot restart within the delay.", "ifNot": "A jumpered/failed timer lets the compressor slam back on against head pressure — restore the delay." },
+        { "step": "Oversized unit / low load (space satisfies quickly): confirm with run times and delta-T; consider staging, fan cycling, or setpoint deadband changes rather than a repair.", "expect": "Cycle length consistent with the load.", "ifNot": "Document as an application issue." }
+      ],
+      "commonCauses": [
+        "High-pressure switch trips (dirty condenser, condenser fan failure)",
+        "Low-pressure switch trips (low charge, restriction, iced evaporator, low airflow)",
+        "Compressor overload from high amps / poor motor cooling",
+        "Thermostat/BAS call dropping (location, cycle rate, loose wire)",
+        "Anti-short-cycle timer bypassed or failed",
+        "Oversized equipment or low load"
+      ]
+    },
+    {
+      "id": "condenser_fan_dead",
+      "symptom": "Condenser (outdoor) fan not running — compressor runs, head pressure climbs, HPS trips",
+      "aliases": ["condenser fan dead", "outdoor fan not running", "OFM dead", "fan not spinning outside", "condenser fan won't start", "condenser fan hums"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "refrigeration_condensing_unit"],
+      "safety": [
+        "Fan blades can start without warning (fan cycling controls, delays) — lock out before reaching into the fan section.",
+        "Discharge the fan capacitor before handling; the motor shell may be hot enough to burn.",
+        "Shut the compressor down if head pressure is rising with the fan dead."
+      ],
+      "steps": [
+        { "step": "With the compressor running and a fan call, read line voltage at the fan motor leads (after any fan cycling switch / head-pressure control / fan relay).", "expect": "Line voltage at the motor.", "ifNot": "No voltage: open fan cycling switch (check pressure vs setpoint), open fan relay/contactor pole, broken wire, or the board is holding the fan off (low ambient logic, defrost on heat pumps — normal during defrost)." },
+        { "step": "Voltage present, motor humming or dead: power off, spin the blade by hand.", "expect": "Spins freely for several turns.", "ifNot": "Seized/rough bearings → replace the motor (check the blade and rain shield too)." },
+        { "step": "Spins freely: test the FAN section of the capacitor (under load 2652 × A / V on the FAN lead, or bench).", "expect": "Within ±6 % of rating.", "ifNot": "Replace the capacitor (the exact µF the motor label calls for)." },
+        { "step": "Cap good, voltage present, spins freely, still no run: ohm the windings and check for a tripped internal thermal overload (motor hot → let it cool 20–30 min and retry).", "expect": "Windings continuous; runs when cool.", "ifNot": "Open winding cold, or grounded → replace the motor (match HP, RPM, volts, frame, shaft, rotation)." },
+        { "step": "Motor runs but slowly / wrong direction / high amps: verify rotation (air should blow up/out per the design), the blade pitch/diameter, and amps vs FLA; on speed-controlled fans verify the control's sensor and setpoint.", "expect": "Correct rotation, amps ≤ FLA.", "ifNot": "Reversed rotation on a reversible motor → change the rotation plug/leads; high amps → wrong blade or wrong motor." },
+        { "step": "Verify head pressure returns to normal and clear any HPS lockout.", "expect": "Condensing temperature ≈ ambient + 15–30 °F.", "ifNot": "Continue with condenser cleaning / refrigerant-side diagnosis." }
+      ],
+      "commonCauses": [
+        "Seized fan motor bearings",
+        "Failed fan run capacitor (FAN section of the dual cap)",
+        "Fan cycling switch or head-pressure control open/failed",
+        "Motor thermal overload tripped (hot motor, high ambient, dirty motor)",
+        "Open fan relay/contactor pole or broken lead",
+        "Board holding the fan off (defrost, low-ambient logic)"
+      ]
+    },
+    {
+      "id": "blower_wont_run",
+      "symptom": "Indoor blower (supply fan) won't run — belt-drive or PSC direct-drive",
+      "aliases": ["blower won't run", "no airflow", "indoor fan dead", "supply fan not running", "IFM dead", "blower not starting", "blower hums"],
+      "appliesTo": ["packaged_rtu", "air_handler", "furnace"],
+      "safety": [
+        "Lock out and verify the wheel is stopped before entering the blower compartment; belt drives pull fingers in.",
+        "Electric heat or gas heat with no airflow trips limits — do not force a heat call while diagnosing the blower.",
+        "Discharge motor capacitors before handling."
+      ],
+      "steps": [
+        { "step": "Confirm the fan call: G (or the board's fan output) = 24 V with a fan call; the board/relay energized (LED or click).", "expect": "24 V on G–C at the board; fan relay/contactor (IFC/IFR) energized.", "ifNot": "No G: thermostat/BAS fan mode, stat wire; G present but no relay action → board fan output or relay coil." },
+        { "step": "Read line voltage at the fan contactor/relay LOAD side and at the motor leads (all legs on 3-phase).", "expect": "Full voltage at the motor terminals.", "ifNot": "Burned relay contacts/contactor pole, open motor overload/starter (reset and check heater size), blown motor fuse, open door interlock, VFD not running (see the VFD procedure)." },
+        { "step": "Voltage present, motor not turning: power off, spin the motor/wheel by hand; check the belt (broken/slipped), sheaves and set screws.", "expect": "Motor and wheel spin freely; belt intact and tensioned.", "ifNot": "Seized bearings → motor/blower bearing replacement; broken belt → replace (then check why: alignment, tension, sheave wear)." },
+        { "step": "PSC direct-drive: test the run capacitor under load or bench; check the speed-tap connection.", "expect": "Cap within ±6 %; correct tap energized.", "ifNot": "Replace the cap / correct the tap." },
+        { "step": "Ohm the windings (3-phase legs within 5 %; PSC common-run/common-start continuous) and megger to ground; consider a tripped internal thermal overload on a hot motor.", "expect": "Windings good, > 100 MΩ.", "ifNot": "Open/grounded → replace the motor (match HP, RPM, frame, volts, rotation)." },
+        { "step": "Motor runs: verify rotation, amps vs FLA (panels on), and airflow (static/temperature rise).", "expect": "Amps ≤ FLA, airflow within design.", "ifNot": "High amps → sheave too open / low static; low amps + poor airflow → reversed rotation or a wheel loose on the shaft." }
+      ],
+      "commonCauses": [
+        "Broken or slipped belt; seized blower or motor bearings",
+        "Fan relay/contactor contacts burned or coil open",
+        "Motor overload/starter tripped; blown fuse",
+        "Failed run capacitor (PSC)",
+        "Board fan output or G call missing",
+        "VFD faulted / not enabled"
+      ]
+    },
+    {
+      "id": "blower_runs_constantly",
+      "symptom": "Indoor blower runs constantly / won't shut off",
+      "aliases": ["blower runs constantly", "fan won't shut off", "fan runs all the time", "blower never stops", "continuous fan", "indoor fan stuck on"],
+      "appliesTo": ["packaged_rtu", "air_handler", "furnace", "split_heat_pump"],
+      "safety": [
+        "On A2L (R-32/R-454B) units a blower running with no call may be RDS mitigation — check the board code BEFORE assuming a relay fault, and treat a leak alarm as real (ventilate, no ignition sources).",
+        "Lock out before pulling relays or touching line-voltage fan wiring."
+      ],
+      "steps": [
+        { "step": "Check the thermostat/BAS fan mode (ON vs AUTO), occupancy schedule (occupied mode runs the fan continuously on most commercial RTUs), and any fan-on override.", "expect": "Fan set to AUTO / unoccupied and still running.", "ifNot": "Continuous fan in occupied mode is normal — explain, adjust the schedule if wanted." },
+        { "step": "Read the board's fault code: RDS mitigation (A2L), a limit/rollout trip that runs the fan to cool the heat exchanger, a stuck-open limit, or a 'fan on for smoke detector/pressurization' input.", "expect": "No fault; no mitigation active.", "ifNot": "Diagnose the fault the board shows (A2L: 'a2l_mitigation_active'; limits: 'no heat on gas RTU')." },
+        { "step": "Read G–C at the unit terminal strip with the stat in AUTO and no call.", "expect": "0 V on G.", "ifNot": "24 V on G with no call = thermostat or a shorted G wire (G to R) — disconnect G at the strip: fan stops → stat/wire." },
+        { "step": "G = 0 V and the fan still runs: check the fan relay/contactor (IFR/IFC) — welded contacts (fan runs with the coil de-energized) or a board fan relay stuck.", "expect": "Relay contacts open with the coil de-energized; motor voltage 0 V.", "ifNot": "Power off; if the relay contacts read closed with no coil voltage → replace the relay/board." },
+        { "step": "Check the fan limit / fan-off delay: gas units run the fan for a post-purge (60–180 s) after heat; a limit switch stuck open keeps the fan on; a fan-limit control set to 'manual on'.", "expect": "Fan stops after the normal off delay.", "ifNot": "Replace the limit / set the control." },
+        { "step": "ECM/constant torque motors: a tap continuously energized (backfed through another tap or a mis-wired humidifier/EAC relay) runs the motor with no call — check each tap for 24 V with no call.", "expect": "0 V on all taps with no call.", "ifNot": "Find the backfeed (isolation relay needed for accessories)." }
+      ],
+      "commonCauses": [
+        "Thermostat fan ON / occupied schedule (normal)",
+        "RDS mitigation active on A2L units",
+        "Welded fan relay/contactor contacts or a stuck board relay",
+        "Shorted G wire or a thermostat fault",
+        "Limit switch stuck open (fan runs to cool the heat exchanger)",
+        "ECM tap backfed by an accessory"
+      ]
+    },
+    {
+      "id": "intermittent_24v_loss_control_fuse_blowing",
+      "symptom": "Intermittent loss of 24 V control power / control fuse (3 A) keeps blowing",
+      "aliases": ["intermittent 24 V", "control fuse blowing", "3 amp fuse blows", "loses control power", "transformer fuse", "low voltage short", "24 V short", "blows the fuse when it calls"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "Never install a larger control fuse or a jumper across the fuse holder — the transformer will burn and the wiring can ignite.",
+        "Line voltage is next to the 24 V terminals in most panels; identify before probing.",
+        "Use a temporary 3 A automotive-style fuse or a fused jumper for isolation tests, and remove it when done."
+      ],
+      "steps": [
+        { "step": "Determine when the fuse blows: at power-up (short present all the time) or only on a specific call (Y, G, W, O, economizer) — that call's circuit contains the short.", "expect": "Pattern narrows the circuit.", "ifNot": "If random: suspect a rubbing wire (roof curb, damper linkage, blower compartment) or moisture in a thermostat/sensor." },
+        { "step": "Power off. Disconnect all thermostat wires at the unit strip and ohm each stat wire to C and to ground, and R to ground.", "expect": "OL on every wire to ground and to C (except intentional C).", "ifNot": "A wire shorted to ground/C = damaged stat cable (rodents, staples, curb chafe) — replace the cable or the damaged section." },
+        { "step": "Isolate loads one at a time: remove one lead from each 24 V coil/accessory (contactor coil, fan relay, reversing valve solenoid, economizer actuator, damper actuator, humidifier, UV light transformer) and ohm each coil.", "expect": "Coils read their normal resistance (contactor 10–30 Ω, relays 50–300 Ω); nothing reads ~0 Ω or to ground.", "ifNot": "A shorted coil/actuator → replace it." },
+        { "step": "Check the transformer sizing: add up the VA of everything on it (accessories added over the years) and clamp the secondary under the heaviest call.", "expect": "Amps × 24 ≤ nameplate VA; ≥ 22 V at the board under load.", "ifNot": "Overloaded transformer → add a separate transformer for accessories (with an isolation relay), do not upsize the fuse." },
+        { "step": "Intermittent loss without a blown fuse: wiggle-test connections at the transformer secondary, the fuse holder (corroded/loose clips), the board's R/C terminals, and the door interlock switch; check for a thermostat cable splice in the return air.", "expect": "Stable 24 V through the wiggle test and thermal cycling.", "ifNot": "Re-terminate, replace the fuse holder, replace the door switch." },
+        { "step": "Replace the fuse with the correct 3 A rating, restore all leads, and run every call (Y1, Y2, G, W1, W2, O/B, economizer) while watching the secondary current.", "expect": "All calls work; secondary current within VA.", "ifNot": "The last call that blows it contains the fault — isolate again within that circuit." }
+      ],
+      "commonCauses": [
+        "Thermostat cable shorted to ground/C (rodents, roof-curb chafe, staples)",
+        "Shorted 24 V coil (contactor, reversing valve solenoid, relay) or damper actuator",
+        "Overloaded control transformer from added accessories",
+        "Corroded fuse holder / loose secondary connections",
+        "Miswired thermostat (R to C) or a failed thermostat",
+        "Water in the economizer/sensor wiring"
+      ]
+    },
+    {
+      "id": "hps_trips",
+      "symptom": "High-pressure switch trips / high head pressure lockout",
+      "aliases": ["HPS trips", "high pressure trip", "high pressure lockout", "head pressure high", "high pressure fault", "HP switch open", "HPS open"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "refrigeration_condensing_unit"],
+      "safety": [
+        "Never leave the HPS bypassed; a momentary, attended jumper with gauges on is only to prove the switch is the opener.",
+        "Discharge pressures can exceed 600 psig — use hoses/gauges rated for the refrigerant; stand clear of relief valves.",
+        "A2L units: HPS trips can accompany a leak/mitigation — check the RDS state before opening the system."
+      ],
+      "steps": [
+        { "step": "Gauges on; confirm the head pressure at trip against the switch label (R-410A typically 600–650 psig; R-22 ~ 400–450; verify).", "expect": "Trip pressure matches the label.", "ifNot": "Trips well below the setting = switch drifted/oil-fouled capillary → replace; never adjust a factory switch." },
+        { "step": "Check the condenser fan(s): running, correct rotation, full speed, fan cycling/head-pressure control not holding the fan off in warm weather.", "expect": "All condenser fans running at full speed above ~ 65 °F ambient.", "ifNot": "See 'condenser fan dead'; fix the fan cycling control setting." },
+        { "step": "Inspect the condenser coil: dirt, cottonwood, grease, bent fins, recirculation (blocked discharge, adjacent unit exhaust), airflow direction.", "expect": "Clean coil; condensing temperature ≈ ambient + 15–30 °F (10–20 °F on high-efficiency/microchannel).", "ifNot": "Clean the coil (both sides of a slab coil; split coil sections apart on double coils)." },
+        { "step": "Check the charge and non-condensables: subcooling high with a high condensing temperature = overcharge; a condensing pressure that stays high with the unit off and equalized (standing pressure above the saturation pressure at ambient) = air/non-condensables.", "expect": "Subcooling at target; standing pressure = saturation at ambient.", "ifNot": "Recover the excess charge / recover, evacuate and weigh in the charge." },
+        { "step": "Check for a high-side restriction after the HPS tap (rare) or a closed/partially closed discharge/liquid service valve, and hot-gas/reheat valves stuck.", "expect": "Service valves fully open; no temperature drop across valves/driers.", "ifNot": "Open the valve / replace the restricted component." },
+        { "step": "Clear the board lockout (power cycle/thermostat) after the fix and monitor head pressure for 15+ minutes at full load.", "expect": "Head pressure stable within the normal range; no repeat trip.", "ifNot": "Re-examine for intermittent fan problems (thermal overload cycling) or a failing fan speed control." }
+      ],
+      "commonCauses": [
+        "Dirty or blocked condenser coil",
+        "Condenser fan not running / wrong rotation / fan cycling control fault",
+        "Overcharge or non-condensables",
+        "Head-pressure control (fan speed) holding the fan slow in warm weather",
+        "Drifted HPS or oil-fouled sensing capillary",
+        "Closed service valve or high-side restriction"
+      ]
+    },
+    {
+      "id": "lps_trips_lockout",
+      "symptom": "Low-pressure switch trips / low-pressure or loss-of-charge lockout",
+      "aliases": ["LPS trips", "low pressure lockout", "low pressure fault", "loss of charge", "LOC open", "LPS open", "low pressure switch open", "low suction"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "refrigeration_condensing_unit"],
+      "safety": [
+        "Never jumper the LPS to get cooling; running a low-charge compressor overheats it and pumps out the oil.",
+        "A2L refrigerants: an LPS/loss-of-charge trip may mean a leak — check the RDS/mitigation status, ventilate, no ignition sources, A2L-rated equipment.",
+        "Momentary, attended diagnostic jumpers only, gauges on, removed before leaving."
+      ],
+      "steps": [
+        { "step": "Read the board code and count: single LPS trip vs lockout after several; note the bypass timer (boards ignore LPS for the first 90–180 s and in defrost).", "expect": "Code confirms LPS/LOC.", "ifNot": "If the code is for the loss-of-charge switch, expect a near-empty system." },
+        { "step": "Gauges on before the start: standing pressure. Then start (bypass the lockout by cycling power only) and watch suction pressure vs the switch label (R-410A LPS typically opens ~ 20–50 psig; LOC ~ 7 psig; verify).", "expect": "Suction stays above the cut-out under load.", "ifNot": "Trips at the label pressure → refrigerant-side cause; trips above it → switch." },
+        { "step": "Check indoor airflow first: filters, evaporator coil (iced? dirty?), blower running at the right speed, belt, closed dampers/VAV boxes, economizer stuck open in cold weather.", "expect": "Airflow at design (≈ 400 CFM/ton), coil clean, no ice.", "ifNot": "Restore airflow; let the coil thaw fully before charge diagnosis." },
+        { "step": "Check the charge: superheat/subcooling (TXV: subcooling low + superheat high = undercharge; fixed orifice: superheat high) and look for the leak (electronic detector, bubbles at joints, oil spots at the coil, Schraders, service valve caps).", "expect": "Charge on target.", "ifNot": "Find and repair the leak, evacuate to < 500 microns, weigh in the nameplate charge." },
+        { "step": "Check for a restriction: temperature drop across the filter-drier (> 3 °F), frost at the TXV/orifice, a TXV that will not open (lost bulb charge, bulb loose), low condensing pressure starving the TXV in cold weather.", "expect": "No drop across the drier; TXV controls superheat.", "ifNot": "Replace the drier/TXV; add or repair head-pressure control for low-ambient operation." },
+        { "step": "Low ambient: if the unit is cooling below ~ 55 °F outdoor (server rooms, economizer failure), verify the head-pressure control and the low-ambient kit are working.", "expect": "Condensing pressure held high enough for the metering device.", "ifNot": "Repair the fan cycling switch / speed control / flooding valve; fix the economizer so mechanical cooling is not needed at low ambient." }
+      ],
+      "commonCauses": [
+        "Low charge / refrigerant leak",
+        "Low indoor airflow (filters, iced or dirty coil, blower, dampers)",
+        "Liquid-line restriction (drier, TXV, kinked line)",
+        "Low ambient operation without working head-pressure control",
+        "TXV failed closed / lost bulb charge",
+        "Drifted LPS or a loss-of-charge switch on a near-empty system"
+      ]
+    },
+    {
+      "id": "no_heat_gas_rtu",
+      "symptom": "No heat on a gas-fired RTU / furnace — ignition sequence troubleshooting",
+      "aliases": ["no heat", "gas heat not working", "furnace won't light", "burners won't light", "ignition lockout", "no ignition", "flame failure", "heat lockout", "won't fire"],
+      "appliesTo": ["packaged_rtu", "furnace"],
+      "safety": [
+        "NEVER bypass the rollout switch, high limit, auxiliary limit, or inducer pressure switch, and never jumper the gas valve — the sequence proves safe combustion conditions in order.",
+        "Smell gas or find a valve leaking through: shut the gas cock, ventilate, no ignition sources, leak-test before continuing.",
+        "After any burner, ignition, or heat-exchanger work: run a combustion analysis and test CO in the supply air and flue before returning the unit to service; inspect the heat exchanger for cracks when a rollout has tripped.",
+        "Lockouts clear by cycling the thermostat/power only after the cause is corrected."
+      ],
+      "steps": [
+        { "step": "Read the ignition control's LED/diagnostic code and the thermostat/BAS heat call: W1 (and W2) to C = 24 V at the board with the stat calling.", "expect": "24 V on W1; board code shows where the sequence stops.", "ifNot": "No W: thermostat/BAS mode/setpoint/schedule, stat wire; go to 'call present but unit idle'." },
+        { "step": "Verify the safety string: read across the rollout switch(es), high limit, auxiliary limit — 24 V across a switch = open.", "expect": "~0 V across each; all closed cold.", "ifNot": "Open rollout: inspect the heat exchanger, flue, burners, and gas pressure BEFORE resetting (manual reset). Open limit cold: replace with the exact rating; open limit hot: airflow/temperature rise problem." },
+        { "step": "Inducer: does it run on the call? Measure line voltage at the inducer; then the pressure switch — inducer suction on a manometer vs the switch label (e.g. −0.6 in. w.c.); read across the switch contacts.", "expect": "Inducer runs; suction exceeds the switch setting; switch closes (~0 V across).", "ifNot": "No inducer: board output/motor. Switch not closing: blocked flue/inlet/condensate trap, cracked/plugged hose, weak inducer wheel, wrong switch for altitude; switch stuck closed before the inducer runs = board waits/locks out → replace the switch." },
+        { "step": "Ignition: HSI should glow (measure ~120 V at the igniter, or the igniter current) for the warm-up period; spark systems should spark at the electrode. Then the gas valve receives 24 V.", "expect": "Igniter glows/sparks; 24 V across the gas valve terminals at the end of the warm-up.", "ifNot": "No glow with voltage: open/cracked igniter (ohm it cold). No voltage to the igniter/valve with safeties closed: board relay → replace the control." },
+        { "step": "Gas valve energized, no flame: inlet gas pressure (natural ≈ 7 in. w.c. inlet, 3.5 in. w.c. manifold; LP ≈ 11 / 10 in. w.c. — verify nameplate), gas cock open, valve opening (listen/feel; pressure at the manifold port), plugged burners/orifices, igniter position relative to the burner.", "expect": "Manifold pressure at nameplate with burners lit.", "ifNot": "Correct the gas supply; replace a valve that has 24 V but no flow (do not disassemble valves)." },
+        { "step": "Burners light then drop out (flame failure retries → lockout): measure flame-sense current in series with the flame rod (DC µA). Minimums are board-specific — read the board label/IOM: Honeywell S86xx/S89xx/SmartValve ≈ 1.0 µA min (2–6 healthy); White-Rodgers 50A55/50E47 ≈ 0.7 µA min; most OEM RTU/furnace boards (Carrier IGC, Lennox SureLight, Trane) are satisfied at 0.5–1.5 µA with 2–6 µA typical.", "expect": "Steady flame current with margin above the minimum.", "ifNot": "Clean the rod (fine abrasive pad), check its position in the flame, the ceramic insulator, burner ground strap, board ground, and 120 V polarity/neutral; a cracked insulator or open lead reads 0 µA." },
+        { "step": "Flame stable: verify the temperature rise against the nameplate (25–55 / 35–65 °F typical), the blower on/off delays, and that limits do not cycle; run the combustion analysis (O2/CO/CO air-free) and check CO in the supply air.", "expect": "Rise within range; CO air-free within the manufacturer's limits (typically < 100 ppm; ambient supply CO 0 ppm).", "ifNot": "High rise → airflow; high CO → burner/heat exchanger/venting problem — do not leave the unit in service." }
+      ],
+      "commonCauses": [
+        "Dirty/mispositioned flame sensor (ignites, drops out, locks out)",
+        "Pressure switch not proving (blocked flue, condensate trap, hose, weak inducer)",
+        "Failed hot-surface igniter",
+        "Rollout or limit open (heat exchanger, airflow, over-firing)",
+        "Gas supply: cock closed, low pressure, valve not opening",
+        "Ignition control board relay failure; no W call from the stat/BAS"
+      ]
+    },
+    {
+      "id": "economizer_not_modulating",
+      "symptom": "Economizer not modulating — damper stuck open, stuck closed, or not economizing",
+      "aliases": ["economizer not working", "economizer stuck", "damper stuck open", "damper won't open", "no free cooling", "economizer stuck closed", "outdoor air damper", "JADE fault", "economizer alarm"],
+      "appliesTo": ["packaged_rtu"],
+      "safety": [
+        "Release the actuator (button/lever) before moving the damper by hand; gears and linkage can pinch.",
+        "Roof edges and open hood sections — fall protection; secure the hood against wind.",
+        "Actuator 24 V shares the control transformer — a shorted actuator blows the control fuse."
+      ],
+      "steps": [
+        { "step": "Read the controller's status: JADE/W7220 display (faults: MA/OA sensor fail, actuator fault, changeover values), W7212 LEDs, or the BAS economizer points.", "expect": "No sensor/actuator faults; readings plausible for the day.", "ifNot": "Replace the faulted sensor/actuator per the fault list (JADE sensors are the 20 kΩ Sylk types — verify)." },
+        { "step": "Verify the controller inputs: 24 VAC power, fan proving/occupied input, Y1 call, OAT/MAT/RAT sensor values vs a thermometer, enthalpy sensor 4–20 mA if fitted; minimum-position setting.", "expect": "Sensors within ±2 °F of measured; inputs present.", "ifNot": "Open/drifted sensor → replace and reposition (MAT sensor in the mixed-air stream after the damper, not in the sun/return only)." },
+        { "step": "Command the actuator: read the controller's 2–10 VDC output (or use the test/override mode) while watching the damper.", "expect": "Voltage rises toward 10 V on a free-cooling call and the damper follows; falls to the minimum (~ 3–4 V) when not economizing; 2 V / closed when the fan is off.", "ifNot": "Output present, no motion → actuator or linkage; no output with valid inputs → controller/changeover setting." },
+        { "step": "Mechanical: release the actuator and stroke the damper by hand; check shaft clamps, linkage, blade bearings, hood ice/debris, and that the blades seal closed.", "expect": "Smooth full travel; no binding.", "ifNot": "Free the linkage, tighten clamps, replace seized bearings." },
+        { "step": "Changeover logic: confirm the setpoint type (dry-bulb A/B/C/D dial, differential, enthalpy) is right for the climate and the day's conditions actually permit free cooling.", "expect": "Economizing when outdoor conditions are below the changeover; mechanical cooling added when the mixed air cannot meet setpoint.", "ifNot": "Adjust the setting; a dial at 'D' (~ 50 °F) rarely economizes; enthalpy sensors drift with age (replace every few years)." },
+        { "step": "Verify the consequences: damper stuck open in hot/cold weather → high cooling/heating load, coil freeze, HPS/LPS trips; stuck closed → ventilation/CO2 complaints. Confirm the minimum position with a CO2 or airflow check if IAQ is the complaint.", "expect": "Damper closes to minimum with the fan on, fully closed with the fan off.", "ifNot": "Document the setting change and the fault history for the BAS." }
+      ],
+      "commonCauses": [
+        "Failed or drifted mixed-air/outdoor-air/enthalpy sensor",
+        "Actuator failed or linkage/shaft clamp loose; damper blades seized",
+        "Controller changeover setpoint wrong for the climate",
+        "Loss of 24 V to the actuator (transformer overload, fuse)",
+        "Controller fault/lockout (JADE alarm) or BAS override",
+        "Minimum position mis-set after a repair"
+      ]
+    },
+    {
+      "id": "vfd_fault_motor_wont_ramp",
+      "symptom": "VFD fault or motor won't ramp — supply fan / condenser fan / compressor drive",
+      "aliases": ["VFD fault", "drive fault", "drive tripped", "motor won't ramp", "VFD not running", "drive won't start", "OC fault", "OV fault", "UV fault", "OH fault", "ground fault drive", "drive in bypass"],
+      "appliesTo": ["packaged_rtu", "air_handler", "chiller", "split_condensing_unit"],
+      "safety": [
+        "Lethal DC-bus voltage remains after power off: wait the manual's discharge time, then measure the bus < 50 VDC before touching terminals (NFPA 70E).",
+        "Never megger the motor or leads with the drive connected — disconnect the motor leads at the drive output first.",
+        "Bypass mode runs the motor across the line with full-voltage starts; verify the bypass contactor is dead during work.",
+        "480/575 V: CAT III/IV meter, arc-rated PPE for live measurements."
+      ],
+      "steps": [
+        { "step": "Record the active fault and the fault history/log before resetting (with the time stamps and the drive's own recorded values: current, bus volts, frequency, temperature at trip).", "expect": "Fault identified (OC/OV/UV/OH/GF/external/communication).", "ifNot": "No fault but not running → skip to the control checks (step 4)." },
+        { "step": "By fault — first checks: OC: motor/cable shorted (disconnect and megger), mechanical binding (belt/bearing), accel ramp too fast, wrong motor data. OV: decel too fast (overhauling load), high line voltage. UV: line sag, loose input lug, blown input fuse, aged bus capacitors. OH: clogged heatsink/fan, high enclosure temperature, blocked louvers. GF: motor/cable insulation → megger with the drive disconnected.", "expect": "First-check condition found and corrected.", "ifNot": "Clear the fault after the fix; if it recurs with no external cause, suspect the drive (IGBT/bus caps)." },
+        { "step": "Input power: measure all three line-to-line voltages at the drive input and compute imbalance; check the input fuses and lug torque.", "expect": "Balanced within 2 %, at nominal; fuses good.", "ifNot": "Imbalance/sag → correct the supply; drives trip on ripple from imbalance." },
+        { "step": "Control: HOA in AUTO (or HAND to test), run-enable/safety interlock input closed (freeze stat, smoke detector, high static switch, fire alarm relay are often in the enable circuit), speed reference present at the terminals (0–10 V / 4–20 mA / network) and the control-source parameter matches.", "expect": "Enable present, reference tracks the BAS/board command, drive shows 'run'.", "ifNot": "No enable/reference → the interlock or controller, not the drive; in HAND the motor runs → the auto command chain is the problem." },
+        { "step": "Output: clamp all three output legs (do NOT trust the meter's output volts); compare with the keypad's current and frequency; check the motor for binding and the belt/sheaves.", "expect": "Balanced output currents ≤ motor FLA; frequency ramps to command.", "ifNot": "Missing/unbalanced leg → output stage, cable, or motor; motor FLA parameter wrong → set from the nameplate." },
+        { "step": "Static-pressure control (supply fans): verify the duct static transducer reading vs a manometer, the setpoint, and the PID direction; a failed transducer drives the fan to max or min.", "expect": "Fan speed modulates to hold static; transducer within ±0.1 in. w.c.", "ifNot": "Replace the transducer / correct the tubing (kinked, disconnected)." },
+        { "step": "Return to AUTO, verify the drive's parameters are documented (save/backup), and monitor for repeat faults; check the drive's cooling fan and the enclosure filters.", "expect": "Stable operation in AUTO.", "ifNot": "Recurring faults with all external causes ruled out → drive replacement; match kW/HP, voltage, enclosure and control I/O." }
+      ],
+      "commonCauses": [
+        "Run enable/safety interlock open (freeze stat, smoke detector, high static) or HOA in OFF",
+        "Missing speed reference / failed static pressure transducer",
+        "Input voltage sag or imbalance; blown input fuse",
+        "Clogged heatsink / cooling fan (OH)",
+        "Motor or cable insulation failure (GF/OC) — megger with the drive disconnected",
+        "Accel/decel ramps or motor parameters set wrong; aged DC-bus capacitors"
+      ]
+    },
+    {
+      "id": "phase_loss_single_phasing",
+      "symptom": "Phase loss / single-phasing — 3-phase unit loud hum, motors trip, phase monitor fault",
+      "aliases": ["phase loss", "single phasing", "lost a phase", "phase monitor fault", "one leg missing", "phase failure", "utility phase loss", "motors humming"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "chiller", "air_handler"],
+      "safety": [
+        "Shut the compressor and motors down immediately on a suspected single-phase condition — motors overheat within minutes on two legs.",
+        "480/575 V live measurements: CAT III/IV meter, arc-rated PPE (NFPA 70E). Prove the meter live-dead-live.",
+        "Lock out before replacing fuses/contactors; a single leg can remain live with the others dead."
+      ],
+      "steps": [
+        { "step": "Stop the equipment. Read all three line-to-line voltages at the unit disconnect LINE side, then the load side, then the contactor line side.", "expect": "All three pairs at nominal within 2 %.", "ifNot": "A pair reading low/zero at the line side = utility/building panel (open fuse, breaker pole, lug); at the load side only = blown disconnect fuse or burned pole." },
+        { "step": "Note the trap: with a motor connected, a lost leg can still read a 'ghost' voltage (regenerated through the motor windings). Read with the loads OFF (contactors open) to see the true leg; a leg that reads 30–60 % of nominal under load and normal unloaded is high-resistance, not open.", "expect": "Consistent readings loaded vs unloaded.", "ifNot": "High-resistance connection → locate with a voltage-drop across each connection under load and repair." },
+        { "step": "Check every fuse individually (voltage across each under load), the disconnect blades/clips (heat discoloration), lugs (torque), and each contactor pole drop.", "expect": "~0 V across each fuse/pole; no discoloration.", "ifNot": "Replace the blown fuse (same class/size) and find why it blew (a shorted motor/compressor often blows one leg); replace burned contactors/disconnects." },
+        { "step": "Check the phase monitor: LED/fault type (loss, reversal, unbalance, under/over voltage) and its setpoint dial; verify it re-closes with the supply corrected.", "expect": "OK indication; contact closed.", "ifNot": "If the supply is proven good and balanced and the monitor still faults → replace the monitor; never jumper it." },
+        { "step": "After correcting: verify phase sequence with a rotation meter (utility repairs and disconnect swaps change it) — scrolls must rotate correctly; check compressor amps/pressures on the first start.", "expect": "Correct rotation; balanced currents ≤ 10 % imbalance.", "ifNot": "Reversed → swap two incoming lines at the unit's line side (all motors) — see 'reversed rotation after power work'." },
+        { "step": "Assess motor damage: megger the compressor and motors, check for a hot shell / burned smell, and check the oil for acid on a compressor that ran single-phased for long.", "expect": "> 100 MΩ, windings balanced.", "ifNot": "Low megohm or an unbalanced winding → replace before it fails on the next start." }
+      ],
+      "commonCauses": [
+        "Utility phase loss or a blown fuse upstream (panel, disconnect)",
+        "Burned contactor pole or disconnect blade",
+        "Loose/corroded lug creating a high-resistance leg",
+        "A shorted motor blowing one fuse",
+        "Phase monitor nuisance setting or failure",
+        "Reversed sequence after utility or electrical work"
+      ]
+    },
+    {
+      "id": "reversed_rotation_after_power_work",
+      "symptom": "Reversed rotation after power work — scroll compressor loud, not pumping, fans backwards",
+      "aliases": ["reversed rotation", "running backwards", "wrong rotation", "compressor backwards", "scroll reverse rotation", "fan spinning backwards", "after utility work", "phase sequence"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "chiller", "air_handler"],
+      "safety": [
+        "Stop a reversed scroll immediately — it overheats and can be damaged in minutes (Copeland AE4-1294).",
+        "Lock out before swapping leads; verify all legs dead; work at the unit's line side, not at a motor, unless only one motor is reversed.",
+        "Re-verify sequence with a rotation meter after any change; never rely on the sound alone."
+      ],
+      "steps": [
+        { "step": "Confirm the symptom: scroll loud/rattling, suction and discharge pressures nearly equal, amps well below RLA, compressor warming fast; fans moving little air with high noise; blower amps low.", "expect": "Signs match reverse rotation.", "ifNot": "If pressures separate normally and amps are normal, rotation is correct — look elsewhere (IPR, valves)." },
+        { "step": "Check the history: utility transformer/service work, a replaced disconnect, contactor, VFD bypass, or a motor swap since the unit last ran correctly.", "expect": "A power-side change explains the reversal.", "ifNot": "No change and reversal detected → a phase monitor may be reporting a supply sequence change from the utility." },
+        { "step": "Verify with a phase-rotation meter at the unit's line terminals (and compare with the phase monitor's indication).", "expect": "Sequence matches the unit's required rotation (marked on the unit/phase monitor).", "ifNot": "Reverse: lock out and swap any two incoming line leads at the disconnect load side or the unit terminal block — every motor in the unit reverses together." },
+        { "step": "If only ONE motor is reversed (after that motor was replaced or its leads were disturbed), swap two leads at that motor only.", "expect": "That motor's rotation corrected; others unchanged.", "ifNot": "Reversible single-phase motors: change the rotation plug/lead per the motor label." },
+        { "step": "Restart and confirm: scroll pumps (suction drops, discharge rises), amps near RLA, quiet; fan airflow direction correct; blower amps and static normal.", "expect": "Normal operation.", "ifNot": "If the scroll now pumps but is noisy/hot with high amps, it may have been damaged by extended reverse running — monitor and check the oil." },
+        { "step": "Document the sequence and label the disconnect; check the phase monitor's reversal setting is enabled so it catches a future utility change.", "expect": "Phase monitor enforces sequence.", "ifNot": "Install a phase monitor on scroll units that lack one." }
+      ],
+      "commonCauses": [
+        "Utility/service transformer replacement changing the sequence",
+        "Disconnect, contactor, or VFD bypass rewired with two leads swapped",
+        "Motor replacement with leads swapped",
+        "Phase monitor removed or set to ignore reversal",
+        "Reversible motor rotation plug set wrong"
+      ]
+    },
+    {
+      "id": "ecm_blower_dead",
+      "symptom": "ECM / X13 / constant-torque blower dead or won't run",
+      "aliases": ["ECM dead", "ECM blower not running", "X13 motor won't run", "variable speed blower dead", "ECM module", "ECM motor twitches", "constant torque motor won't start"],
+      "appliesTo": ["packaged_rtu", "air_handler", "furnace", "split_heat_pump"],
+      "safety": [
+        "Line voltage is present at the ECM at all times; never unplug the motor's power connector under power (module damage and arc). Wait several minutes after power-off before unplugging the module.",
+        "Lock out before spinning the wheel or removing the motor.",
+        "Never energize two 24 V taps at once on X13/constant-torque motors."
+      ],
+      "steps": [
+        { "step": "Test order 1 — HIGH VOLTAGE: with the unit powered (no call needed), read line voltage at the motor's power connector (L–N or L1–L2; 3-phase where applicable).", "expect": "Nominal line voltage present continuously.", "ifNot": "Door interlock, blown fuse, unplugged/burned connector, board line-voltage relay — repair the supply." },
+        { "step": "Test order 2 — LOW-VOLTAGE COMMAND: X13/constant torque — 24 VAC between the energized tap (1–5) and C with a fan call; variable-speed — the control signal (serial/PWM/0–10 V per the board) plus 24 V common.", "expect": "24 V on exactly one tap (X13) or the correct data/PWM signal with the call.", "ifNot": "Board fan output / tap wiring / thermostat G — the motor is fine; fix the command." },
+        { "step": "Both present, motor dead: power off, lock out, spin the wheel by hand; check for obstructions, a loose wheel, water/ice.", "expect": "Spins freely and quietly.", "ifNot": "Seized bearings → motor (module may be reusable on separable designs)." },
+        { "step": "Separable module (ECM 2.3/3.0 style): power off, wait, unplug the module; ohm the three motor phase leads at the motor connector — equal within ±10 %, none to the shell; check the module's connector for corrosion/water.", "expect": "Balanced windings, nothing to ground → motor good; dead module.", "ifNot": "Unbalanced/open/grounded → replace the motor (and check the module)." },
+        { "step": "Motor twitches/rocks and stops, or runs then shuts down: high static (filters, coil, closed dampers), a module failing under load, or a rotor position sensing fault — measure static and check the module's connector.", "expect": "Static within design; smooth ramp.", "ifNot": "Reduce static; if the fault persists at normal static → replace the module/motor." },
+        { "step": "Replacement: match the OEM part or a programmed universal (constant-torque motors need the correct tap/torque programming; variable-speed OEM motors are programmed per model); after install verify amps, airflow and that only one tap is energized per call.", "expect": "Motor runs on every call at the expected airflow.", "ifNot": "Re-check the tap mapping on the board and any accessory relays backfeeding taps." }
+      ],
+      "commonCauses": [
+        "Missing line voltage to the motor (door switch, fuse, connector)",
+        "No 24 V/data command (board fan output, tap wiring, thermostat G)",
+        "Failed ECM module (moisture, heat, voltage spikes)",
+        "Seized bearings / obstructed wheel",
+        "High static causing over-current shutdowns",
+        "Wrong programming on a replacement motor"
+      ]
+    },
+    {
+      "id": "no_call_verify_demand",
+      "symptom": "Call present at the thermostat/BAS but the unit stays idle — verify the demand is reaching the unit",
+      "aliases": ["no call", "unit idle", "no demand", "stat calling but nothing happens", "BAS calling unit not running", "no call at the unit", "not getting a call", "unit not responding to thermostat"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "Momentary diagnostic jumper only (R to Y1/G/W1 at the unit strip), attended, removed before leaving — it bypasses the thermostat's staging/delays, not the unit's safeties.",
+        "Do not jumper on communicating (data-bus) systems; use the board/thermostat diagnostics instead.",
+        "Line-voltage terminals are adjacent to the low-voltage strip in many panels."
+      ],
+      "steps": [
+        { "step": "At the unit's low-voltage terminal strip/board, read R–C.", "expect": "24–28 VAC.", "ifNot": "No R–C: transformer/control fuse/door switch → 'unit completely dead'." },
+        { "step": "With the thermostat/BAS commanding cooling (or heat/fan), read each call terminal to C at the unit: Y1, Y2, W1, W2, G, O/B.", "expect": "24 VAC on every terminal the stat/BAS should be energizing (Y1 + G for stage-1 cooling; W1 for heat; O/B per heat-pump logic).", "ifNot": "Missing call at the unit = the stat/BAS output or the wire. Missing G only = fan control setting; Y present without G on a commercial unit = normal if the board runs the fan on Y." },
+        { "step": "If the call is missing: at the thermostat/DDC controller, check mode (COOL/HEAT/AUTO), setpoint vs space temperature, schedule/unoccupied setback, hold/override state, compressor lockout or minimum-off timers, outdoor-air lockouts (economizer-only or heat-pump balance points), and any alarm the controller is holding.", "expect": "Controller intends to call and its output terminal shows 24 V.", "ifNot": "Controller not calling by design (schedule/override/lockout) → adjust or explain; see 'BAS or thermostat override'." },
+        { "step": "Controller output is 24 V but the unit terminal is 0 V: the wire. Ohm the conductor end-to-end (disconnect both ends) and to the others; look for splices, rodent damage, roof-curb chafe, or a relay/isolation module between the BAS and the unit (check its coil and contact).", "expect": "Continuity, no shorts.", "ifNot": "Repair/replace the cable or the interface relay." },
+        { "step": "If the call IS present at the unit and it still does nothing: momentarily jumper R to Y1 (or G/W1) at the unit strip to remove the stat from the picture.", "expect": "Unit responds identically to the jumper → the fault is in the unit (board delays, safety chain, contactor) — go to the matching procedure.", "ifNot": "Unit runs on the jumper but not on the stat = weak/intermittent call (voltage drop, loose terminal, a stat output relay with high resistance) — read the call voltage under load (> 20 V)." },
+        { "step": "Check the board's own reasons for ignoring a call: anti-short-cycle/minimum-off timers, lockouts from prior faults (needs a reset), RDS mitigation (A2L), a jumper/DIP setting (e.g. 'BAS mode' expecting a different input), or an unoccupied input pulling the unit to setback.", "expect": "Board LED/display shows the call accepted and the sequence starting.", "ifNot": "Reset the lockout after correcting its cause; fix the configuration." }
+      ],
+      "commonCauses": [
+        "Thermostat/BAS not actually calling (schedule, override, mode, setpoint, lockout timers)",
+        "Open or damaged thermostat cable / interface relay between BAS and unit",
+        "Board lockout or delay from a previous fault",
+        "Communicating thermostat waiting on delays or in a fault state",
+        "Missing C reference causing a weak call (power-stealing stat)",
+        "Unit configuration (DIP/jumper/occupancy input) ignoring the call"
+      ]
+    },
+    {
+      "id": "24v_safety_chain_trace",
+      "symptom": "Trace the 24 V safety chain to find the open device (cooling or heating call not reaching the contactor/board output)",
+      "aliases": ["safety chain", "trace 24 V", "find the open safety", "24 V chain", "safety circuit open", "which safety is open", "control circuit trace", "24v"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "Diagnostic jumper rule: a jumper across a suspected open switch is momentary, attended, applied only to confirm the opener, and NEVER left in place — a bypassed safety runs the unit into damage or a fire.",
+        "Never jumper gas-heat safeties (rollout, limit, pressure switch), the RDS on A2L units, or a phase monitor.",
+        "Board inputs may be 24 VDC or resistive (thermistor) rather than switched 24 VAC — read the diagram before jumpering anything."
+      ],
+      "steps": [
+        { "step": "Get the unit's ladder diagram (inside the control panel door) and identify the chain for the call in question. Typical cooling chain: TRAN → control fuse → board R → thermostat Y → HPS → LPS/LOC → freeze stat → condensate overflow switch → duct smoke detector(s) → fire-alarm shutdown relay → phase monitor contact → anti-short-cycle timer → contactor coil → C.", "expect": "Every device in the chain identified with its designator and location.", "ifNot": "Without a diagram, follow the wire from the contactor coil backwards physically." },
+        { "step": "Read the board's diagnostic code first — modern boards wire each safety to its own input and name the open one.", "expect": "Code names the device (HPS, LPS, freeze, condensate, smoke).", "ifNot": "No code or a legacy hard-wired chain → meter method." },
+        { "step": "Meter method A (walk the chain): common lead on C; with the call active, move the hot lead from device to device downstream from R.", "expect": "24 V at every point up to the open device; 0 V immediately after it.", "ifNot": "24 V all the way to the contactor coil but no pull-in = the coil (or its return to C) — ohm the coil." },
+        { "step": "Meter method B (across each device): read voltage ACROSS each switch/contact with the call active.", "expect": "~0 V across closed devices; 24 V across the one that is open.", "ifNot": "Two devices open → 24 V splits/reads odd; walk the chain instead." },
+        { "step": "Confirm the opener with gauges/thermometer/its own indicator, not with a jumper: HPS/LPS → pressures vs setpoints; freeze stat → coil temperature; condensate switch → pan level/float; duct smoke → its LED/reset; fire relay → alarm panel state; phase monitor → its LED; timer → wait it out.", "expect": "The device is open for a real reason (or is failed).", "ifNot": "Open with normal conditions → the device failed; replace with the exact rating." },
+        { "step": "If a momentary jumper is used to confirm a suspected failed switch: gauges on, hand on the disconnect, seconds only, then remove it, replace the device, and re-verify the chain end-to-end.", "expect": "Unit runs with the jumper only for as long as it takes to confirm; permanent repair made.", "ifNot": "Runs normally with the jumper but trips again immediately without it → the condition is real (e.g. real high pressure) — fix the cause, not the switch." },
+        { "step": "Voltage reads low (< 20 V) rather than zero: a high-resistance contact/splice in the chain — read the drop across each device under load, re-terminate.", "expect": "Full 24 V at the coil.", "ifNot": "Overloaded transformer (see 'intermittent 24 V loss')." }
+      ],
+      "commonCauses": [
+        "High- or low-pressure switch open (real pressure problem or a drifted switch)",
+        "Condensate overflow switch open (plugged drain)",
+        "Duct smoke detector tripped or dirty; fire-alarm relay open",
+        "Freeze stat open (airflow/charge)",
+        "Phase monitor tripped; anti-short-cycle timer timing",
+        "Loose spade/terminal, corroded splice, contactor coil open"
+      ]
+    },
+    {
+      "id": "a2l_mitigation_active",
+      "symptom": "A2L unit (R-32 / R-454B) — blower running continuously, no compressor/heat, RDS or leak fault displayed",
+      "aliases": ["A2L", "mitigation active", "refrigerant leak detected", "RDS fault", "RDS alarm", "leak sensor fault", "R-454B leak", "R-32 leak", "blower on compressor locked out", "A2L lockout", "sensor end of life"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "furnace"],
+      "safety": [
+        "Treat an RDS leak alarm as a real flammable-refrigerant leak until proven otherwise: ventilate the space and the unit, eliminate ignition sources (no brazing, smoking, non-A2L-rated tools/lights, arcing switches with panels open), and use A2L-rated leak detectors, recovery machines and vacuum pumps.",
+        "NEVER bypass, jumper, disconnect or disable the RDS sensor or the mitigation blower to 'get the unit running'; do not clear the alarm without finding the cause.",
+        "Do not connect gauges or open the refrigerant circuit until the RDS state has been checked and the area ventilated; A2L charge limits per room area apply to repairs.",
+        "Lock out before servicing the sensor; sensor mounting/orientation and the OEM part are mandatory."
+      ],
+      "steps": [
+        { "step": "Read the fault code on the board/thermostat before touching anything: distinguish 'refrigerant detected' from 'sensor fault / communication lost' from 'sensor end-of-life'.", "expect": "Code identifies the reason for mitigation.", "ifNot": "Blower on with no code → not mitigation; go to 'blower runs constantly'." },
+        { "step": "Refrigerant detected: ventilate; with an A2L-rated detector check the indoor coil, drain pan area, line-set connections, Schraders, TXV/distributor joints and the sensor location; check system pressures only after the area is ventilated.", "expect": "Leak found (or the sensor cleared after ventilation with a documented transient cause such as solvent/cleaner fumes).", "ifNot": "No leak found and the sensor keeps alarming → suspect a contaminated/failed sensor (replace with the OEM part) — but rule out a slow leak with a pressure/standing check first." },
+        { "step": "Sensor fault / communication / end-of-life: check the sensor's supply and data at its connector against the diagram, connector seating and cable damage (common after coil/filter service); replace the sensor with the OEM part if powered but not responding or flagged end-of-life (sensors have a finite service life, typically 10–15 years).", "expect": "Sensor communicating, status OK.", "ifNot": "No supply → board/harness." },
+        { "step": "Repair any leak per A2L practice: recover with A2L-rated equipment, nitrogen purge while brazing (no refrigerant present), evacuate, weigh in the nameplate charge (never exceed it); pressure/leak test before recharging.", "expect": "Leak-free system at nameplate charge.", "ifNot": "Do not return an A2L unit to service with a known leak." },
+        { "step": "Clear mitigation per the IOM (many boards hold the blower ≥ 5 minutes after the sensor clears, then need a power cycle or thermostat reset) and verify: blower returns to normal control, compressor and heat are allowed, no fault redisplayed.", "expect": "Normal operation on a cooling call; no RDS alarm.", "ifNot": "Alarm returns → re-check the sensor and for a residual leak; verify the board firmware/sensor pairing." },
+        { "step": "Verify that no field-added ignition sources exist near the coil (non-A2L-listed UV lights, humidifiers, electric heat kits) and document the event (code, concentration if displayed, sensor replaced, leak location) for the site.", "expect": "Installation compliant; record complete.", "ifNot": "Remove/replace non-listed accessories; advise the customer." }
+      ],
+      "commonCauses": [
+        "Real refrigerant leak at the indoor coil / line set",
+        "Sensor end-of-life or drift",
+        "Sensor cable disconnected or damaged during service",
+        "Transient contamination (cleaning chemicals, refrigerant from nearby recovery)",
+        "Non-OEM or mis-mounted replacement sensor",
+        "Board/sensor communication fault"
+      ]
+    },
+    {
+      "id": "bas_or_thermostat_override",
+      "symptom": "BAS or thermostat override / schedule keeping the unit off or in the wrong mode",
+      "aliases": ["BAS override", "thermostat override", "schedule", "unoccupied", "setback", "DDC override", "point overridden", "building automation holding unit off", "in hand", "override on"],
+      "appliesTo": ["packaged_rtu", "split_condensing_unit", "split_heat_pump", "air_handler", "chiller"],
+      "safety": [
+        "Coordinate with the building operator before changing BAS points or schedules; releasing an override may start equipment unexpectedly (lock out any unit being worked on).",
+        "Do not leave a BAS point in manual/override to 'make it work' — document the change and the reason.",
+        "A jumper at the unit to test bypasses the BAS's safety logic (e.g. smoke/pressurization) — momentary and attended only."
+      ],
+      "steps": [
+        { "step": "At the BAS front end / controller (or the thermostat), check the unit's occupancy mode, schedule, holiday/exception schedules, and the current effective setpoints (occupied vs unoccupied heating/cooling setpoints).", "expect": "Occupied with a cooling/heating setpoint the space temperature is beyond.", "ifNot": "Unoccupied/setback = the unit is idle by design; adjust the schedule or use a temporary occupancy override." },
+        { "step": "Look for overridden points: occupancy, enable, fan command, compressor stages, damper position, heating/cooling lockouts, outdoor-air lockouts (mechanical cooling disabled below an OAT, heat disabled above one), and alarms (high static, smoke, low temperature) latched by the controller.", "expect": "No manual overrides; no latched alarms.", "ifNot": "Release the override (with the operator's agreement) or reset the alarm after fixing its cause." },
+        { "step": "Compare the controller's output points with the physical terminals: BAS 'Y1 command = ON' should give 24 V on Y1–C at the unit (or a relay closing).", "expect": "Command and physical output agree.", "ifNot": "Controller output relay/triac failed, an interface relay between BAS and unit failed, or wiring — see 'call present but unit idle'." },
+        { "step": "Thermostats: check hold/permanent hold, keypad lockout, mode (OFF/COOL/HEAT/AUTO with a deadband), fan mode, the compressor protection timer, and any 'system in lockout' display; power-cycle a stat that shows a communication fault to the unit.", "expect": "Stat intends to call and displays the call (snowflake/flame icon).", "ifNot": "Reconfigure the stat; replace if it will not call with correct settings and 24 V on R–C." },
+        { "step": "Verify occupancy inputs at the unit (occupancy sensor, BAS unoccupied contact, door/night-setback switch) are in the state you expect; a stuck 'unoccupied' contact holds commercial RTUs in setback with the damper closed.", "expect": "Occupancy input reads occupied.", "ifNot": "Repair the sensor/contact; temporary override at the stat/BAS to keep the space comfortable meanwhile." },
+        { "step": "Leave the system in AUTO with overrides released and document any schedule/setpoint change for the building operator.", "expect": "Unit follows the schedule; no lingering manual points.", "ifNot": "Escalate to the controls contractor for programming faults." }
+      ],
+      "commonCauses": [
+        "Unoccupied schedule / setback, holiday schedule",
+        "Point overridden in manual at the BAS or a latched alarm",
+        "Outdoor-air lockout of mechanical cooling/heating",
+        "Thermostat hold, mode, keypad lockout, or compressor protection timer",
+        "Failed BAS output relay or interface relay",
+        "Occupancy sensor/contact stuck unoccupied"
+      ]
+    }
+  ]
+}

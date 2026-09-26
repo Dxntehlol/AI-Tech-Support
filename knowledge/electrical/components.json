@@ -1,0 +1,1353 @@
+{
+  "version": "1",
+  "components": [
+    {
+      "id": "run_capacitor",
+      "name": "Run capacitor (dual or single)",
+      "aliases": ["cap", "run cap", "dual run capacitor", "dual cap", "HERM/FAN/C capacitor", "oval capacitor", "round capacitor", "45/5 cap"],
+      "function": "Continuously shifts phase to the start/auxiliary winding of PSC compressors and fan motors so the motor develops torque and runs efficiently. Dual caps serve the compressor (HERM) and condenser fan (FAN) from a shared common (C) terminal.",
+      "tests": [
+        {
+          "name": "Capacitance under load (preferred)",
+          "energized": true,
+          "steps": [
+            "With the unit running, clamp the wire on the capacitor's HERM (or FAN) terminal only — never the compressor common lead or the line lead.",
+            "Read AC volts across the same capacitor section (C to HERM, or C to FAN).",
+            "Compute µF = 2652 × amps / volts and compare with the rating printed on the can."
+          ],
+          "expected": "Within ±6 % of the printed µF (or the printed tolerance if different, e.g. ±5 % / ±10 %).",
+          "tolerance": "±6 % of rating; replace if low. A reading far above rating usually means the clamp is on the wrong wire."
+        },
+        {
+          "name": "Bench capacitance (meter)",
+          "energized": false,
+          "steps": [
+            "Kill and lock out power; verify dead with a meter proved live-dead-live.",
+            "Discharge the capacitor through a bleed resistor (≈ 20 kΩ, 5 W) across each section, then remove the leads (note which wire went where).",
+            "Measure each section with a capacitance meter (C to HERM, C to FAN).",
+            "Inspect: bulged/domed top, oil leakage, rust, burned terminals."
+          ],
+          "expected": "Within the printed tolerance; can flat and dry.",
+          "tolerance": "±6 % typical; replace on any bulge/leak regardless of the reading."
+        }
+      ],
+      "failureModes": [
+        "Weak (low µF): compressor runs hot and high amps, trips overload, hums or fails to start in hot weather; fan runs slow/hot.",
+        "Open section: motor hums and does not start (single-phase), or fan does not turn; spinning the fan by hand may start it.",
+        "Shorted: blows the fuse or trips the breaker, or the motor draws locked-rotor amps.",
+        "Bulged or leaking can (pressure-interrupter opened): replace on sight."
+      ],
+      "safety": [
+        "Capacitors hold a lethal charge after power is off — discharge through a bleed resistor (never a screwdriver, which pits terminals and can weld) before touching terminals.",
+        "Replace with the same µF and an equal or higher voltage rating (370 V can be replaced by 440 V, not the reverse). Match the tolerance rating if the manufacturer specifies it.",
+        "Insulated tools and gloves when working near the capacitor with the disconnect on; capacitor cases are typically at ground potential but the terminals are not."
+      ],
+      "tools": ["Clamp meter with µA-to-A range", "Capacitance meter", "Bleed resistor", "Insulated screwdrivers"],
+      "notes": [
+        "The under-load formula 2652 × A / V is only valid measuring the current in the capacitor lead itself.",
+        "A run capacitor replaced with the wrong µF changes the phase angle and shortens motor life; do not 'round up' to the next size.",
+        "Aged caps often test fine cold and fail hot: test after the unit has run 15+ minutes on a hot day when the complaint is intermittent."
+      ]
+    },
+    {
+      "id": "start_capacitor",
+      "name": "Start capacitor and hard-start kit",
+      "aliases": ["start cap", "hard start", "hard-start kit", "kickstart", "SPP", "electrolytic capacitor", "starting capacitor"],
+      "function": "High-µF electrolytic capacitor switched into the start winding for a fraction of a second by a potential relay (or PTC / solid-state relay in kits) to give a CSR compressor high starting torque, then removed from the circuit.",
+      "tests": [
+        {
+          "name": "Bench capacitance and bleed resistor",
+          "energized": false,
+          "steps": [
+            "Lock out power and discharge the capacitor through a bleed resistor (many start caps have a 15–20 kΩ bleed resistor across the terminals — check it is intact, ≈ 15–20 kΩ).",
+            "Measure capacitance with the leads removed.",
+            "Inspect for a ruptured vent, bulge, or burned smell."
+          ],
+          "expected": "Within the printed range (typically labeled as a range, e.g. 88–108 µF) — tolerance is nominally −0 / +20 %; read the can.",
+          "tolerance": "−0 / +20 % of the labeled minimum; replace if below the printed range or if the vent has blown."
+        },
+        {
+          "name": "In-circuit start behavior",
+          "energized": true,
+          "steps": [
+            "Clamp the start-capacitor lead and watch for a brief (< 1 s) burst of current on start, then zero as the potential relay opens.",
+            "If current stays on the start cap for more than ~1–2 s the relay is not opening — the start cap will overheat and vent."
+          ],
+          "expected": "Short current pulse on start, then 0 A on the start-capacitor lead.",
+          "tolerance": "Any sustained current after start is a fault (relay stuck closed)."
+        }
+      ],
+      "failureModes": [
+        "Vented/blown (bleed resistor missing, relay stuck closed, or repeated short cycling): compressor hums then trips.",
+        "Open: no starting torque — compressor hums for a few seconds then the overload trips.",
+        "Bleed resistor open: potential relay contacts arc and weld."
+      ],
+      "safety": [
+        "Discharge before handling; start capacitors store more energy than run caps.",
+        "Hard-start kits are a band-aid on a compressor that is hard-starting because of a mechanical problem, low voltage, or a weak run capacitor — find the cause first.",
+        "Never install a start capacitor without a relay (PTC or potential) to remove it from the circuit."
+      ],
+      "tools": ["Capacitance meter", "Bleed resistor", "Clamp meter"],
+      "notes": ["Start capacitors are rated for a limited number of starts per hour (typically 20); short-cycling kills them."]
+    },
+    {
+      "id": "potential_relay",
+      "name": "Potential (start) relay",
+      "aliases": ["start relay", "voltage relay", "PTC relay", "solid state start relay", "CSR relay"],
+      "function": "Normally-closed relay that drops the start capacitor out of the circuit once the motor comes up to speed. Potential relays pick up on the back-EMF generated across the start winding (terminals 1-2 contacts, 2-5 coil across the start winding); PTC devices go high-resistance from self-heating.",
+      "tests": [
+        {
+          "name": "Contact and coil check",
+          "energized": false,
+          "steps": [
+            "Power off, discharge the start capacitor, pull the relay.",
+            "Ohm terminals 1 to 2: normally closed contacts should read near 0 Ω at rest.",
+            "Ohm terminals 2 to 5: coil should read a few thousand ohms (varies by relay — compare to the OEM part) — 0 Ω or OL is bad.",
+            "Verify the relay is the correct pick-up voltage for the compressor (it is voltage-specific, not universal); the label states pick-up/drop-out volts."
+          ],
+          "expected": "1-2 closed (< 1 Ω), coil 2-5 continuous (typically 2–10 kΩ), mounted upright as marked.",
+          "tolerance": "Contacts > a few ohms = pitted; replace with the OEM part number."
+        }
+      ],
+      "failureModes": [
+        "Contacts welded closed: start cap stays in circuit, start cap vents within minutes, compressor may run then trip.",
+        "Contacts burned open: no start capacitor in the circuit — compressor hums, trips on overload.",
+        "Wrong relay (voltage rating) or mounted at the wrong angle: intermittent hard starting.",
+        "PTC devices: need ~2–3 min to cool between starts; short-cycling defeats them."
+      ],
+      "safety": [
+        "Discharge the start capacitor before touching the relay.",
+        "Terminals 1, 2 and 5 are at line potential and back-EMF can exceed line voltage (~ 1.5×) when the motor runs."
+      ],
+      "tools": ["Multimeter", "Bleed resistor"],
+      "notes": ["Copeland-style wiring: 1 to start cap, 2 to S/start winding, 5 to R/run (line). Verify with the wiring diagram — kits differ."]
+    },
+    {
+      "id": "contactor",
+      "name": "Contactor (compressor / fan)",
+      "aliases": ["C", "C1", "C2", "CC", "compressor contactor", "contactor coil", "definite purpose contactor", "DP contactor", "contacts", "OFC", "IFC contactor"],
+      "function": "24 V (or 120/240 V) coil closes heavy power contacts to start the compressor and/or condenser fan on a call from the control board or thermostat through the safety chain.",
+      "tests": [
+        {
+          "name": "Coil and control voltage",
+          "energized": true,
+          "steps": [
+            "With a cooling call, measure across the coil terminals (A1-A2).",
+            "If ~24 VAC is present and the contactor is not pulled in: kill power and ohm the coil.",
+            "If no coil voltage: trace the 24 V safety chain back toward the board (see 24 V path tracing)."
+          ],
+          "expected": "24 VAC ±10 % across the coil (≈ 21–27 V) and the armature pulled in; coil resistance typically 10–30 Ω for 24 V coils (compare to a known good).",
+          "tolerance": "Coil below ~19 V = low control voltage (transformer overloaded, voltage drop in the chain); coil open (OL) = replace."
+        },
+        {
+          "name": "Contact voltage drop under load",
+          "energized": true,
+          "steps": [
+            "With the compressor running, measure AC volts from the line side to the load side of each pole (L1-T1, L2-T2, L3-T3).",
+            "Compare pole to pole; also compare line-to-line voltages on the load side to the line side."
+          ],
+          "expected": "Near 0 V across each closed pole (< 0.1–0.5 V).",
+          "tolerance": "More than ~0.5–1 V across a pole under load = pitted/burned contacts; replace the contactor. A pole with full line voltage across it is open (single-phasing)."
+        },
+        {
+          "name": "Mechanical inspection",
+          "energized": false,
+          "steps": [
+            "Power off and locked out. Look for pitted, discolored or welded contacts, a buzzing/chattering shading coil, debris (ants, dirt), and a sticky armature.",
+            "Press the armature by hand: it should move freely and return."
+          ],
+          "expected": "Clean contacts, free armature.",
+          "tolerance": "Contacts more than ~50 % eroded or any welding = replace. Never file contacts."
+        }
+      ],
+      "failureModes": [
+        "Coil open: no pull-in with 24 V present.",
+        "Chattering: low control voltage, dirty pole face, ants/debris, or a bad transformer.",
+        "Contacts welded closed: compressor runs with no call (unit will not shut off, freezes the coil, ices the suction line).",
+        "Burned/pitted contacts: high voltage drop, single-phasing a 3-phase compressor, nuisance overload trips.",
+        "Single-pole residential-style contactors leave one leg hot at the compressor even when open."
+      ],
+      "safety": [
+        "Line side of the contactor is live whenever the disconnect is on, even with no call — treat it as live.",
+        "Lock out and tag out before touching contacts; verify dead with a meter proved on a known live source (live-dead-live).",
+        "Do not manually push in a contactor with the panel open on 3-phase 460/575 V gear without arc-rated PPE (NFPA 70E)."
+      ],
+      "tools": ["Multimeter", "Clamp meter"],
+      "notes": ["Designators vary: C, CC, C1/C2 (compressor), OFC (outdoor fan), IFC (indoor fan). Read the diagram legend."]
+    },
+    {
+      "id": "control_relay",
+      "name": "Control relay (ice-cube / fan relay)",
+      "aliases": ["relay", "fan relay", "ice cube relay", "IFR", "CR", "TDR", "time delay relay", "pilot relay", "DPDT relay", "SPDT relay"],
+      "function": "Low-current relay that switches control-circuit loads (blower, dampers, staging, heat) from a 24 V (or 120 V) coil; many are plug-in ice-cube relays with an LED and a manual test button.",
+      "tests": [
+        {
+          "name": "Coil voltage and contact transfer",
+          "energized": true,
+          "steps": [
+            "Read voltage across the coil terminals with the call active.",
+            "Listen/feel for the click; with the coil energized read voltage across the NO contacts (should be ~0 V when closed) and from the common to the load.",
+            "If the coil is energized but the contacts do not transfer, kill power and ohm the contacts (NO should go from OL to < 1 Ω)."
+          ],
+          "expected": "Rated coil voltage present, contacts transfer, < 0.5 V drop across closed contacts under load.",
+          "tolerance": "Coil pulls in at ≥ ~85 % of rated voltage; sticking or > 1 V drop = replace."
+        }
+      ],
+      "failureModes": [
+        "Contacts burned open (high inrush loads such as blower motors).",
+        "Contacts welded closed (blower runs constantly).",
+        "Coil open, or coil burned from overvoltage on the wrong tap.",
+        "Loose in the socket / corroded pins on rooftop units — reseat first."
+      ],
+      "safety": [
+        "Relay sockets often carry both 24 V and line-voltage circuits on adjacent pins — identify before probing.",
+        "Time-delay relays energize loads after a delay; wait the delay before deciding a relay has failed."
+      ],
+      "tools": ["Multimeter"],
+      "notes": ["Pin numbering depends on the relay family (e.g. 8-pin octal vs 11-pin vs 14-blade ice-cube); use the diagram printed on the relay case, not a remembered layout."]
+    },
+    {
+      "id": "control_transformer",
+      "name": "Control transformer (TRAN)",
+      "aliases": ["transformer", "TRAN", "TRANS", "xfmr", "24 V transformer", "class 2 transformer", "40 VA transformer", "75 VA transformer", "control power transformer"],
+      "function": "Steps line voltage (120/208/240/460/575 V primary, usually multi-tap) down to 24 VAC for the control circuit; sized in VA; usually protected by a secondary fuse or an internal fusible link.",
+      "tests": [
+        {
+          "name": "Primary and secondary voltage",
+          "energized": true,
+          "steps": [
+            "Confirm the primary tap matches the measured line voltage (208 vs 240 tap is the classic mistake; 208 on a 240 tap gives ~21 V, 240 on a 208 tap gives ~28 V and overheats the coils).",
+            "Read secondary voltage unloaded (control circuit open) and loaded (call active).",
+            "If the secondary reads 0 V with primary present: check the secondary fuse (3 A) or a blown internal fusible link (transformer is dead — replace).",
+            "Clamp the secondary lead under full load: amps × 24 ≈ VA drawn; compare to the nameplate VA."
+          ],
+          "expected": "≈ 24–28 VAC unloaded (27 V typical), ≥ ~22 V under full load; secondary current below the VA rating / 24.",
+          "tolerance": "Loaded voltage below ~20 V or amps above VA/24 = overloaded or wrong tap; 0 V = open secondary/fuse."
+        },
+        {
+          "name": "Winding resistance",
+          "energized": false,
+          "steps": [
+            "Power off. Ohm the primary (typically tens to a few hundred ohms depending on tap) and the secondary (typically < 5 Ω).",
+            "OL on either = open winding (often the internal thermal link after a control short)."
+          ],
+          "expected": "Both windings continuous; no winding to the frame.",
+          "tolerance": "OL = replace. Find the short that killed it before installing the new one."
+        }
+      ],
+      "failureModes": [
+        "Secondary fuse blown from a shorted 24 V wire, a shorted contactor/relay coil, a shorted damper actuator or a mis-wired thermostat (R to C).",
+        "Internal fusible link open (transformer 'dead') after a sustained short.",
+        "Overloaded: too many accessories (economizer, powered humidifier, UV lights) on a 40 VA transformer — low control voltage, chattering contactors.",
+        "Wrong primary tap after a voltage change or replacement."
+      ],
+      "safety": [
+        "Primary side is line voltage — lock out before changing taps or replacing.",
+        "Replace a secondary fuse with the same rating; never jumper it. A fuse that blows again means a short remains.",
+        "Do not exceed the VA rating — add a second transformer for accessories rather than upsizing beyond what the board is rated for."
+      ],
+      "tools": ["Multimeter", "Clamp meter (mA/A)"],
+      "notes": [
+        "Rule of thumb: each 24 V contactor coil ≈ 5–10 VA, a board ≈ 5–10 VA, economizer actuator ≈ 5–10 VA, a communicating thermostat 2–5 VA.",
+        "Grounded 'C' side: many boards ground the common; a short from R to chassis blows the fuse instantly."
+      ]
+    },
+    {
+      "id": "single_phase_compressor",
+      "name": "Single-phase compressor motor (PSC/CSR)",
+      "aliases": ["1-ph compressor", "compressor windings", "C S R", "common start run", "hermetic compressor", "scroll compressor single phase", "recip compressor"],
+      "function": "Hermetic motor with a run winding (C-R) and a higher-resistance start winding (C-S), protected by an internal (line-break) or external overload; started with a run capacitor (PSC) and optionally a start capacitor + relay (CSR).",
+      "tests": [
+        {
+          "name": "Winding resistance (C-S, C-R, S-R)",
+          "energized": false,
+          "steps": [
+            "Lock out, discharge capacitors, and remove all leads from the compressor terminals.",
+            "Read ohms C-S, C-R and S-R with a low-ohms meter.",
+            "Apply the pattern: R(S-R) = R(C-S) + R(C-R); C-R is the lowest reading, C-S the highest single winding.",
+            "If C-S and C-R read open but S-R is intact, the internal overload is open — let the compressor cool 1–2 hours and re-test before condemning."
+          ],
+          "expected": "C-R < C-S < S-R, with C-S + C-R ≈ S-R (within ~10 %); readings typically 0.5–5 Ω; no OL, no 0 Ω.",
+          "tolerance": "Sum mismatch > ~10 % or any OL/0 Ω after cool-down = winding or terminal fault."
+        },
+        {
+          "name": "Insulation to ground (megohm)",
+          "energized": false,
+          "steps": [
+            "With the leads removed and the system NOT under vacuum, megger each terminal to a clean spot on the shell/discharge line at 500 VDC.",
+            "Record all three readings and the compressor temperature."
+          ],
+          "expected": "> 100 MΩ good; 20–100 MΩ investigate; < 20 MΩ suspect; < 1 MΩ condemn.",
+          "tolerance": "Per Copeland/Emerson AE bulletins; readings drop with refrigerant in the oil and rise as the compressor warms."
+        },
+        {
+          "name": "Running amps and start test",
+          "energized": true,
+          "steps": [
+            "Clamp the common lead at start: expect a brief LRA spike, then running amps.",
+            "Compare running amps with the nameplate RLA and head pressure; a compressor drawing LRA and tripping in 1–5 s is locked or has no start assist.",
+            "Verify the run capacitor under load before condemning a 'locked' compressor."
+          ],
+          "expected": "Starts within 1 s; run amps ≤ RLA at normal head pressure.",
+          "tolerance": "LRA for more than a few seconds = locked rotor / start-circuit failure."
+        }
+      ],
+      "failureModes": [
+        "Open internal overload (hot): reads open C-S and C-R — cool and re-test.",
+        "Locked rotor: hums, draws LRA, trips; often from a weak run cap, low voltage, liquid slugging, or a stuck mechanical.",
+        "Grounded winding: trips breaker, low megohm.",
+        "Shorted turns: high amps, imbalance of the sum rule, hot shell.",
+        "Burned terminal (fusite) pin: intermittent open, burn marks at the terminal cover."
+      ],
+      "safety": [
+        "Compressor terminal venting hazard: a weak or corroded terminal can blow out of the shell with refrigerant and oil on fire when energized — never energize a compressor with the terminal cover off, and stand to the side when starting.",
+        "Never megger a compressor in a vacuum (arcing inside the shell) and never with a VFD/electronic control connected.",
+        "Lock out and discharge capacitors before touching terminals; the shell may be hot enough to burn."
+      ],
+      "tools": ["Low-ohms multimeter", "Megohmmeter (500 VDC)", "Clamp meter", "Bleed resistor"],
+      "notes": [
+        "Cool-down before condemning: an internal overload can take 1–2 h (longer on large scrolls) to reset; blowing a fan on the shell speeds it up.",
+        "Do not diagnose a compressor as bad from a hot-off-the-shell reading; document the cool-down and the retest."
+      ]
+    },
+    {
+      "id": "three_phase_compressor",
+      "name": "Three-phase compressor motor",
+      "aliases": ["3-ph compressor", "3 phase compressor", "T1 T2 T3", "scroll compressor 3 phase", "phase rotation", "reverse rotation", "tandem scroll"],
+      "function": "Three equal windings (T1, T2, T3) energized directly through a 3-pole contactor — no capacitors or start relay. Scrolls are direction-sensitive: reversed rotation means no pumping.",
+      "tests": [
+        {
+          "name": "Winding balance and insulation",
+          "energized": false,
+          "steps": [
+            "Lock out, remove the leads at the compressor and read T1-T2, T2-T3, T3-T1 with a low-ohms meter.",
+            "Megger each terminal to the shell at 500 VDC (not under vacuum, VFD disconnected)."
+          ],
+          "expected": "The three readings equal within ±5 %; no OL (unless an internal overload is open hot — cool and re-test), no 0 Ω; > 100 MΩ to ground.",
+          "tolerance": "> 5 % spread = shorted turns or bad terminal; < 20 MΩ suspect, < 1 MΩ condemn."
+        },
+        {
+          "name": "Running amps per leg and rotation",
+          "energized": true,
+          "steps": [
+            "Read amps on all three legs; compute current imbalance (≤ 10 %, expect 6–10× the voltage imbalance).",
+            "Read line-to-line voltage at the contactor load side; compute voltage imbalance (≤ 1–2 %, NEMA MG-1).",
+            "Scroll rotation: correct rotation = normal sound, suction pressure drops, discharge rises, amps at expected level. Reversed = loud/rattling, no pressure change, amps well below RLA, internal protector trips in minutes.",
+            "Use a phase-rotation meter on the supply after any utility or disconnect work; to correct, swap any two line leads at the unit's line side (not at the compressor, so the fans stay correct)."
+          ],
+          "expected": "Balanced legs, correct rotation, amps near RLA at design head pressure.",
+          "tolerance": "Current imbalance > 10 % or voltage > 2 %: correct the supply before running; reversed scroll = shut down immediately."
+        }
+      ],
+      "failureModes": [
+        "Single-phasing (one leg lost): loud hum, will not start, high amps on the two live legs, overload trips; often a blown fuse or burned contactor pole.",
+        "Reversed rotation after power work: scroll makes noise, does not pump, trips protector.",
+        "Shorted or grounded winding: breaker trips, low megohm, acid in the oil.",
+        "Tandem/trio scrolls: one compressor of the pair failing shows as low capacity and an amp mismatch between compressors."
+      ],
+      "safety": [
+        "460/575 V: CAT III/IV meter and leads, arc-rated PPE per NFPA 70E when measuring live.",
+        "Terminal venting hazard: never energize with the terminal cover removed.",
+        "Lock out before ohming; verify all three legs dead — a single-pole disconnect failure can leave one leg live."
+      ],
+      "tools": ["Phase rotation meter", "Clamp meter", "Low-ohms multimeter", "Megohmmeter"],
+      "notes": [
+        "Copeland scroll bulletins: a scroll run in reverse for extended time can fail; many boards (and phase monitors) lock out on reverse rotation.",
+        "Compressor amps well below RLA plus no pressure differential on a 3-phase scroll = check rotation before anything else."
+      ]
+    },
+    {
+      "id": "scroll_internal_protection",
+      "name": "Scroll internal protection (IPR valve / internal overload / discharge thermostat)",
+      "aliases": ["IPR", "internal pressure relief", "internal overload", "line break overload", "discharge line thermostat", "DLT", "internal thermostat", "compressor protector", "ASTP", "CoreSense"],
+      "function": "Built-in protections: an internal pressure-relief (IPR) valve opens discharge to suction at a large differential (e.g. ~375–450 psid on R-410A scrolls), an internal line-break overload opens the motor on temperature/current, and on some units a discharge-line thermostat or external module (Copeland CoreSense / Danfoss) locks the compressor out.",
+      "tests": [
+        {
+          "name": "Identify a tripped internal protector vs a failed compressor",
+          "energized": false,
+          "steps": [
+            "Windings C-S and C-R open (1-ph) or all legs open (3-ph) with S-R intact on a hot shell = overload open.",
+            "Cool the shell 1–2 hours (fan across it) and re-ohm before condemning.",
+            "Check for an external module (CoreSense LED codes, discharge thermostat) that may be holding the contactor open."
+          ],
+          "expected": "Windings return after cool-down; the cause of overheating (charge, airflow, voltage, rotation) is found.",
+          "tolerance": "Still open after a full cool-down = open winding/overload — replace."
+        },
+        {
+          "name": "IPR/ASTP activity",
+          "energized": true,
+          "steps": [
+            "Symptoms: a hissing/whoosh sound from the compressor, sudden drop in discharge pressure with suction rising, amps drop, compressor hot; repeats every few minutes.",
+            "Find the cause of the high differential: blocked condenser, failed condenser fan, restricted liquid line/TXV, closed service valve, overcharge or non-condensables."
+          ],
+          "expected": "No IPR cycling at normal operating pressures.",
+          "tolerance": "Any IPR cycling = shut down and correct the high-side problem."
+        }
+      ],
+      "failureModes": [
+        "Overload trips repeatedly from high head, low charge (loss of motor cooling), voltage problems, or reversed rotation.",
+        "IPR stuck open after repeated operation: no pumping, high suction/low discharge, scroll set damaged by heat.",
+        "Discharge thermostat open: compressor locked out until cooled; often from low charge/high superheat."
+      ],
+      "safety": [
+        "A shell hot enough to open the overload can burn skin; wait for cool-down before handling.",
+        "Do not bypass or jumper an overload or discharge thermostat to 'test' — run the compressor only after finding why it overheated."
+      ],
+      "tools": ["Multimeter", "Clamp meter", "Infrared thermometer"],
+      "notes": ["Copeland AE bulletins cover the ASTP (advanced scroll temperature protection) cool-down: up to 2+ hours on large scrolls."]
+    },
+    {
+      "id": "condenser_fan_motor",
+      "name": "Condenser (outdoor) fan motor — PSC",
+      "aliases": ["OFM", "condenser fan", "outdoor fan motor", "condenser fan motor", "CFM", "OFM1", "OFM2", "fan motor", "PSC motor"],
+      "function": "Permanent-split-capacitor motor driving the condenser fan; runs whenever the compressor contactor (or a fan cycling control) energizes it. Needs its run capacitor and free bearings.",
+      "tests": [
+        {
+          "name": "Power, capacitor and amps",
+          "energized": true,
+          "steps": [
+            "With a cooling call and the contactor closed, read line voltage at the motor leads (through the fan cycling switch / head-pressure control if fitted).",
+            "If voltage is present and the motor hums or is dead: check the run capacitor under load (2652 × A / V on the FAN terminal lead) and spin the blade by hand with power off to feel for seized bearings.",
+            "Clamp running amps and compare with the motor's FLA on its label."
+          ],
+          "expected": "Motor starts within 1–2 s, amps ≤ FLA, blade spins freely with power off.",
+          "tolerance": "Amps > FLA = wrong blade/pitch, wrong rotation, tight bearings, or low voltage; no start with voltage and a good cap = motor."
+        },
+        {
+          "name": "Windings and ground",
+          "energized": false,
+          "steps": [
+            "Ohm the leads: common to run and common to start should show a few to tens of ohms; OL = open (thermal overload may reset when cool).",
+            "Each lead to the motor frame: OL (> 20 MΩ with a megger)."
+          ],
+          "expected": "Continuous windings, nothing to the frame.",
+          "tolerance": "Open after cooling or a grounded winding = replace."
+        }
+      ],
+      "failureModes": [
+        "Bearings seized (motor hot, hums, trips its internal overload) — the most common on rooftops.",
+        "Run capacitor weak/open: slow or no start; spinning the blade starts it.",
+        "Thermal overload cycling: motor runs then quits when hot, restarts later — high head pressure follows.",
+        "Wrong rotation on replacement (reversible motors: check the rotation jumper/plug).",
+        "Rain-shield/weep holes plugged; water in the motor."
+      ],
+      "safety": [
+        "Fan blades can start without warning when the contactor pulls in — lock out before reaching into the fan section.",
+        "Discharge the fan capacitor before handling.",
+        "Replacement motors must match HP, RPM, voltage, frame, rotation, shaft size and the capacitor µF the motor label calls for."
+      ],
+      "tools": ["Clamp meter", "Multimeter", "Capacitance meter"],
+      "notes": ["A dead condenser fan drives head pressure up quickly; expect an HPS trip, high amps and possibly an IPR event."]
+    },
+    {
+      "id": "belt_drive_blower",
+      "name": "Belt-drive indoor blower (motor, belt, sheaves, bearings)",
+      "aliases": ["IFM", "blower motor", "indoor fan motor", "belt drive blower", "supply fan", "belt", "sheave", "pulley", "blower bearings", "blower wheel"],
+      "function": "Line-voltage (often 3-phase) motor driving the supply blower through a belt and adjustable sheaves; blower speed (CFM/static) is set by the sheave setting; the motor is protected by an overload or a starter.",
+      "tests": [
+        {
+          "name": "Belt, alignment and bearings",
+          "energized": false,
+          "steps": [
+            "Lock out. Check belt tension (≈ 1/2 to 3/4 in. deflection per 12 in. of span, or use a tension gauge) and condition (glazing, cracks, dust piles under the drive).",
+            "Check sheave alignment with a straightedge and wear (dish-shaped grooves = worn sheave).",
+            "Rotate the wheel by hand: rough, noisy, or wobbling = bearings; check set-screw tightness on the wheel and sheaves."
+          ],
+          "expected": "Correct tension, sheaves aligned, wheel spins freely and quietly.",
+          "tolerance": "Any belt squeal at start, glazing, or a wobbling wheel = correct before diagnosing airflow."
+        },
+        {
+          "name": "Amps vs FLA and voltage",
+          "energized": true,
+          "steps": [
+            "Clamp each leg with all access panels in place (open panels change the static and the amps).",
+            "Compare to the motor nameplate FLA × service factor; compute voltage/current imbalance on 3-phase.",
+            "Amps above FLA with the correct belt/sheave = too much airflow (sheave opened too far, ductwork removed, low static) or a motor problem."
+          ],
+          "expected": "Amps at or below FLA (SF 1.15 allowed briefly), balanced legs.",
+          "tolerance": "> FLA: close the sheave (reduces CFM) or correct the cause; < 50 % FLA = broken belt, wheel slipping on the shaft, or wrong rotation."
+        }
+      ],
+      "failureModes": [
+        "Belt broken/slipping: motor runs, no airflow, coil freezes or limit trips on heat.",
+        "Bearings failed (blower or motor): noise, hot bearing housings, motor overload trips.",
+        "Wrong rotation after a phase change: moves some air (30–50 %) with high noise and low amps.",
+        "Motor overload/starter tripped: check the manual reset and heater sizing."
+      ],
+      "safety": [
+        "Lock out the disconnect AND verify the blower is stopped before entering the blower compartment; a belt drive can pull fingers in.",
+        "Never run the blower with panels off to 'see it' — static drops, amps rise, and the wheel is exposed.",
+        "Replace belts and sheaves with matched sizes; a wrong belt section slips and overheats."
+      ],
+      "tools": ["Belt tension gauge", "Straightedge", "Clamp meter", "Tachometer"],
+      "notes": ["Airflow check by temperature rise or static + fan curve after any sheave adjustment."]
+    },
+    {
+      "id": "ecm_blower_motor",
+      "name": "ECM / X13 / constant-torque blower motor",
+      "aliases": ["ECM", "X13", "constant torque motor", "variable speed blower", "ECM module", "Genteq", "Evergreen", "Endura", "ECM 2.3", "ECM 3.0", "brushless DC blower"],
+      "function": "Electronically commutated motor with an integral (or separate) drive module. Line voltage (120/240 V, or 3-phase on larger units) must be present continuously; a low-voltage command (24 VAC on numbered taps for X13/constant-torque, or serial/PWM/0–10 V data for variable-speed) tells it to run and at what torque/airflow.",
+      "tests": [
+        {
+          "name": "Test order: high-voltage first, then the command",
+          "energized": true,
+          "steps": [
+            "1. Verify line voltage at the motor's power plug (L/G/N or L1/L2) with the unit powered — an ECM with no line voltage does nothing regardless of the command.",
+            "2. Verify the low-voltage command: X13/constant torque — 24 VAC between the energized tap (1–5) and C with a fan call; variable-speed — the control signal per the board (serial/PWM/0–10 V) and 24 V common.",
+            "3. Both present and the motor does not run: with power off, spin the wheel (bearings, obstruction); if free, the motor/module has failed.",
+            "4. If separable (ECM 2.3/3.0 with a detachable module): power off, unplug the module, ohm the three motor phase leads — equal within ±10 % and none to the shell — a good motor with a dead module = replace the module only."
+          ],
+          "expected": "Line voltage present at all times; 24 V (or data) on command; motor ramps up smoothly.",
+          "tolerance": "Missing line voltage → wiring/door switch/fuse; missing command → board/thermostat; both present, no run → motor/module."
+        },
+        {
+          "name": "Airflow and amps",
+          "energized": true,
+          "steps": [
+            "Constant-torque motors ramp up in high static (amps rise); check filters, coil and static before condemning airflow.",
+            "Watch for a motor that ramps then shuts down (over-current/over-temp protection) — often high static or a bad module."
+          ],
+          "expected": "Amps within the label FLA; smooth steady speed.",
+          "tolerance": "Repeated shutdowns or a motor that 'twitches' and stops = module/rotor position sensing fault."
+        }
+      ],
+      "failureModes": [
+        "Module failed (moisture, voltage spikes, heat): motor twitches/rocks and stops, or is dead with power and command present.",
+        "Bearings/rotor: rough spin, noise, no start.",
+        "No command: bad board output, open tap wire, wrong tap selected, thermostat not calling G.",
+        "Line voltage lost with control present: door switch, blown fuse, unplugged connector.",
+        "Wrong replacement programming (variable-speed OEM motors are programmed per model)."
+      ],
+      "safety": [
+        "The ECM module stores charge — wait several minutes after killing power before unplugging the module; never unplug the power connector with the motor running or under power (damages the module).",
+        "Line voltage is present at the motor even with no fan call.",
+        "Verify the 24 V taps are never bridged together (backfeeding two taps destroys the control)."
+      ],
+      "tools": ["Multimeter", "Clamp meter", "OEM diagnostic tool (TECMate / Genteq tester) where available"],
+      "notes": ["X13 taps: energizing more than one tap at once is a fault condition. Read the board's fan-tap wiring on the diagram."]
+    },
+    {
+      "id": "vfd",
+      "name": "Variable frequency drive (VFD) — supply fan / condenser fan / compressor",
+      "aliases": ["VFD", "drive", "variable speed drive", "inverter", "ABB ACH", "Danfoss FC", "Yaskawa", "supply fan VFD", "condenser fan VFD", "HOA", "bypass"],
+      "function": "Rectifies line power to a DC bus and synthesizes a variable-frequency output to control motor speed for supply-fan static control, condenser fan head-pressure control or compressor capacity. Controlled by a 0–10 V / 4–20 mA / BAS signal and a run enable.",
+      "tests": [
+        {
+          "name": "Fault codes and inputs",
+          "energized": true,
+          "steps": [
+            "Read and log the active and historical fault codes on the keypad before resetting anything.",
+            "Check the run-enable/safety input, the speed reference (0–10 V / 4–20 mA / network), and the HOA (hand-off-auto) or bypass switch position.",
+            "Verify incoming line voltage and balance at the drive's input terminals (voltage imbalance > 2 % causes ripple/bus faults)."
+          ],
+          "expected": "No active faults; enable present; speed reference tracks the command; input voltage balanced within 2 %.",
+          "tolerance": "First checks by fault: OC (over-current) → motor/cable short, mechanical binding, accel too fast; OV (over-voltage) → decel too fast, high line, regeneration; UV (under-voltage) → line dip, loose input lug, blown input fuse; OH (over-heat) → fan/heatsink clogged, high ambient; GF (ground fault) → motor/cable insulation."
+        },
+        {
+          "name": "Output measurement",
+          "energized": true,
+          "steps": [
+            "Do NOT trust output volts on an ordinary true-RMS meter — the PWM output reads wrong (often high) on most meters; use output amps (clamp each leg; balanced within 10 %) or a low-pass-filtered meter (VFD/LoZ-LPF mode).",
+            "Compare output frequency and amps on the keypad with the clamp readings."
+          ],
+          "expected": "Balanced output currents, within the motor FLA, tracking the commanded frequency.",
+          "tolerance": "One leg missing or unbalanced > 10 % = output IGBT, cable, or motor."
+        },
+        {
+          "name": "DC-bus discharge before touching",
+          "energized": false,
+          "steps": [
+            "Open the disconnect and wait the discharge time stated in the drive manual (commonly 5–15 minutes, longer on large drives; the DC-bus LED going out is not proof).",
+            "Measure DC across the bus terminals (+/−) with a meter rated for the voltage: verify < 50 VDC before touching terminals or the motor leads.",
+            "Also verify AC input dead (live-dead-live) — bypass contactors can feed the motor without the drive."
+          ],
+          "expected": "< 50 VDC on the bus, AC dead at input and output.",
+          "tolerance": "Any bus voltage above 50 V: keep waiting; a bus that will not discharge indicates a failed bleeder — treat as live."
+        }
+      ],
+      "failureModes": [
+        "Nuisance trips from input voltage imbalance, loose lugs, or a decel/accel ramp set too fast.",
+        "Cooling fan/heatsink clogged: OH faults on hot afternoons.",
+        "DC-bus capacitors aged: UV/ripple faults, humming.",
+        "Output IGBT failure: motor single-phases, GF or OC fault on run.",
+        "Wrong parameters after replacement (motor FLA, V/Hz, max frequency, control source).",
+        "Motor insulation stressed by long lead lengths without a load reactor/filter."
+      ],
+      "safety": [
+        "Lethal DC-bus voltage remains after power is removed — wait per the manual and measure the bus < 50 VDC before working inside (NFPA 70E).",
+        "Never megger the motor or cables with the drive connected — it destroys the output transistors; disconnect the motor leads at the drive first.",
+        "Drives in bypass (HOA switch in bypass) run the motor across the line without the drive's protection — expect full-voltage starts.",
+        "480/575 V drives: CAT III/IV meter and arc-rated PPE for live measurements."
+      ],
+      "tools": ["True-RMS meter with low-pass filter (VFD mode)", "Clamp meter", "Drive manual / parameter list"],
+      "notes": [
+        "Read the parameters before replacing: control source (keypad/terminal/network), motor nameplate data, min/max Hz, PID setpoints for static control.",
+        "Motor 'won't ramp': check the speed reference at the drive terminals with the board/BAS commanding — 0 V reference with run enable = the controller, not the drive."
+      ]
+    },
+    {
+      "id": "crankcase_heater",
+      "name": "Crankcase heater",
+      "aliases": ["CCH", "crankcase heat", "sump heater", "belly band heater", "compressor heater", "insertion heater"],
+      "function": "Resistive heater (band around the shell or insertion type) that keeps the compressor oil warm during off cycles so liquid refrigerant does not migrate into the sump and slug/foam on start. Usually energized whenever the unit has power and the compressor is off (through a contactor NC auxiliary contact, a thermostat, or continuously).",
+      "tests": [
+        {
+          "name": "Heater current and resistance",
+          "energized": true,
+          "steps": [
+            "With the compressor off and power on for the required pre-heat time, feel the sump (warm to the touch) and clamp the heater lead (typically 0.2–1 A; 40–90 W at line voltage).",
+            "Power off: ohm the heater — R ≈ V² / W (e.g. 240 V, 70 W → ≈ 820 Ω); OL = open.",
+            "Check the control: NC auxiliary contact on the contactor, an ambient thermostat, or a heater relay."
+          ],
+          "expected": "Warm sump, amps and ohms consistent with the wattage on the label.",
+          "tolerance": "OL, 0 A, or a cold sump after 24 h of power = replace/repair the circuit."
+        }
+      ],
+      "failureModes": [
+        "Open heater: cold-morning start-up slugging, foaming oil, noisy start, seized scroll after seasonal shutdown.",
+        "Heater energized continuously while running (wrong wiring): wasted energy, overheated oil.",
+        "Band heater loose or fallen off the shell.",
+        "Insertion heater cracked well or corroded."
+      ],
+      "safety": [
+        "Line voltage is present at the heater whenever the disconnect is on — even with no call.",
+        "Follow the manufacturer's pre-heat requirement (commonly 12–24 h) after a power outage or seasonal restart before starting the compressor; a jumper for a 'quick' start can slug the compressor."
+      ],
+      "tools": ["Clamp meter", "Multimeter"],
+      "notes": ["A unit whose disconnect is pulled every winter loses crankcase heat; start-up in spring needs the pre-heat period."]
+    },
+    {
+      "id": "phase_monitor",
+      "name": "Phase monitor / phase-loss relay",
+      "aliases": ["phase loss monitor", "PM", "PMR", "phase sequence relay", "phase protection", "ICM 408", "Kriwan", "Copeland CoreSense communications", "phase failure relay"],
+      "function": "Monitors the three-phase supply for phase loss, reversal, under/over voltage and imbalance; its relay contact sits in the 24 V safety chain (or the contactor coil circuit) and drops the compressor when the supply is bad. LED indicates status/fault type.",
+      "tests": [
+        {
+          "name": "Status LED and contact check",
+          "energized": true,
+          "steps": [
+            "Read the LED per the legend on the device (green = OK; red/flash codes for phase loss, reversal, unbalance, under/over voltage).",
+            "Measure the three line-to-line voltages at the monitor's sensing terminals; compute imbalance.",
+            "With the monitor happy, verify its output contact passes 24 V (read across the contact: ~0 V closed).",
+            "If it shows reversal after power work: swap two incoming lines at the unit disconnect load side (not at a single motor)."
+          ],
+          "expected": "Green/OK with balanced voltage within the device's setpoints; contact closed.",
+          "tolerance": "Trip thresholds vary (typically 5–10 % unbalance, ±10 % voltage): check the adjustment dial before condemning the supply."
+        }
+      ],
+      "failureModes": [
+        "Correctly reporting a real supply problem (most 'phase monitor faults' are utility/disconnect/fuse problems).",
+        "Setpoint dial bumped or set too tight — nuisance trips.",
+        "Failed monitor: OK LED but open contact, or no LED with all three phases present.",
+        "Miswired sensing leads after a component replacement."
+      ],
+      "safety": [
+        "Sensing terminals are line voltage (up to 600 V) — CAT III/IV meter and PPE.",
+        "Never jumper out a phase monitor to 'get the unit running' — it is protecting the compressor from single-phasing and reverse rotation."
+      ],
+      "tools": ["Multimeter", "Phase rotation meter"],
+      "notes": ["Reversal detection means the monitor also enforces scroll rotation: if it trips on reversal after a new service/transformer, the utility sequence changed."]
+    },
+    {
+      "id": "high_pressure_switch",
+      "name": "High-pressure switch (HPS)",
+      "aliases": ["HPS", "HPC", "high pressure control", "high pressure cutout", "HP switch", "manual reset high pressure"],
+      "function": "Normally-closed pressure switch on the discharge/liquid side that opens the 24 V safety chain (or a board input) when head pressure exceeds its setting; auto-reset with a differential, or manual reset on some units and most refrigeration.",
+      "tests": [
+        {
+          "name": "Pressure vs switch state",
+          "energized": true,
+          "steps": [
+            "Gauge the high side while watching the switch/board input as pressure rises.",
+            "Typical R-410A trip 600–650 psig (reset ~420–500); R-22 ~ 400–450 psig; R-454B similar to R-410A — verify on the switch label/IOM and note some boards lock out after several trips.",
+            "If the unit trips at normal pressure: the switch is bad or a refrigerant/oil-fouled capillary; if the unit trips at the correct pressure: solve the high head (condenser, fan, charge, non-condensables)."
+          ],
+          "expected": "Switch closed (~0 V across it) below the setpoint; opens only at the rated pressure.",
+          "tolerance": "Opens more than ~10 % below the label setting = replace; never adjust a factory-set switch."
+        },
+        {
+          "name": "Continuity",
+          "energized": false,
+          "steps": [
+            "Power off, disconnect one lead, ohm the switch with the system at rest: NC → < 1 Ω.",
+            "Manual-reset types: press the reset; if it will not reset with pressure at rest, replace."
+          ],
+          "expected": "Closed at rest.",
+          "tolerance": "OL at rest pressure = open switch (or a pressure still above reset)."
+        }
+      ],
+      "failureModes": [
+        "Tripping because head pressure is genuinely high: dirty condenser, dead condenser fan/fan cycling control, overcharge, non-condensables, restricted liquid line.",
+        "Nuisance trips: switch drifted, loose wire, chattering in the chain.",
+        "Stuck closed: no protection — compressor can reach the IPR/relief valve.",
+        "Schrader-mounted switch leaking / depressor pin damaged."
+      ],
+      "safety": [
+        "Never bypass or jumper the HPS except momentarily, attended, with gauges on, to confirm the switch is the opener — and remove the jumper before leaving.",
+        "Discharge-line pressures can exceed 600 psig; use hoses and gauges rated for R-410A/R-454B.",
+        "A2L systems: pressure switches may also feed the RDS/mitigation logic — do not defeat."
+      ],
+      "tools": ["Gauges/manifold rated for the refrigerant", "Multimeter"],
+      "notes": ["Boards often count HPS trips (e.g. 3 strikes → lockout) and display a code; clear the lockout by cycling power/thermostat after the fix."]
+    },
+    {
+      "id": "low_pressure_switch",
+      "name": "Low-pressure switch (LPS) / loss-of-charge switch (LOC)",
+      "aliases": ["LPS", "LPC", "low pressure control", "loss of charge switch", "LOC", "LP switch", "low pressure cutout"],
+      "function": "Normally-closed switch on the suction side that opens when suction pressure falls below its setting (freeze/low-charge protection); a loss-of-charge switch on the liquid line opens at a much lower pressure (near-empty system). Boards typically bypass it for the first 1–3 minutes after start and lock out after repeated trips.",
+      "tests": [
+        {
+          "name": "Pressure vs switch state",
+          "energized": true,
+          "steps": [
+            "Gauge the suction (or liquid, for LOC) side and compare with the label: R-410A LPS commonly opens ~ 20–50 psig and closes ~ 45–95 psig (e.g. Carrier 48TC LPS 27 open / 44 close; LOC ~ 7 psig); R-22 ~ 5–25 psig — verify the IOM.",
+            "Trip at a normal pressure = switch; trip at the setpoint = find the low-pressure cause (low charge, restriction, iced coil, no airflow, TXV starved, low load, cold ambient with no head-pressure control)."
+          ],
+          "expected": "Closed at normal running suction pressure; opens only below its setpoint.",
+          "tolerance": "Opening more than ~5 psi above the label = replace."
+        },
+        {
+          "name": "Continuity at rest",
+          "energized": false,
+          "steps": [
+            "With the system equalized (well above the setpoint), disconnect a lead and ohm the switch.",
+            "OL with pressure present = open switch; 0 Ω regardless of pressure = stuck closed."
+          ],
+          "expected": "< 1 Ω at standing pressure.",
+          "tolerance": "Any OL at standing pressure = replace."
+        }
+      ],
+      "failureModes": [
+        "Repeated LPS lockouts: low charge or a restriction — treat as a refrigerant-side problem, not a switch problem, until proven otherwise.",
+        "Low-ambient trips: cooling call below ~55 °F outdoor with no head-pressure control.",
+        "Loss-of-charge switch open: the system is essentially empty — find and repair the leak, evacuate, weigh in the charge.",
+        "Switch stuck closed: compressor runs the system into a vacuum, pulls in air/moisture."
+      ],
+      "safety": [
+        "Never jumper the LPS to 'get cooling'; running a low-charge compressor overheats the motor and pumps oil out.",
+        "A2L (R-32/R-454B) units: an LPS/LOC trip can mean a leak — check the RDS state and ventilate before opening the system; no ignition sources.",
+        "Momentary diagnostic jumpers only, attended, gauges on, and removed before leaving."
+      ],
+      "tools": ["Gauges", "Multimeter"],
+      "notes": ["Many boards ignore the LPS during the first 90–180 s and during defrost; a 'random' LPS code often traces to the coil icing at the end of a long run."]
+    },
+    {
+      "id": "freeze_stat",
+      "name": "Freeze stat / freeze protection thermostat",
+      "aliases": ["freezestat", "freeze protection", "FS", "FPT", "low temperature limit", "coil freeze switch", "evaporator freeze sensor", "FZ"],
+      "function": "Temperature switch (strapped to the suction line or evaporator, or a capillary averaging element across a hot-water/chilled-water coil) that opens the cooling safety chain when the coil approaches freezing; on hydronic coils it stops the fan and closes the outdoor damper.",
+      "tests": [
+        {
+          "name": "Setpoint and state",
+          "energized": false,
+          "steps": [
+            "Locate the element; verify it is in contact with the suction line/coil (loose = nuisance or no protection).",
+            "Ohm across the switch at room temperature: NC → < 1 Ω.",
+            "Check the setpoint (commonly opens ~ 25–35 °F on DX suction lines; 35–38 °F on hydronic coils, manual or auto reset per the unit).",
+            "Chill the element (ice/spray) to verify it opens, then warms and closes (auto-reset types)."
+          ],
+          "expected": "Closed at room temperature, opens near the setpoint, element firmly attached.",
+          "tolerance": "Opens above ~40 °F or stays open when warm = replace."
+        }
+      ],
+      "failureModes": [
+        "Tripping because the coil is actually freezing: low airflow (filters, blower, ice), low charge, low load, TXV/metering problem.",
+        "Element loose or moved; sensing ambient not the coil.",
+        "Manual-reset stat tripped from a cold-night economizer event (hydronic) — reset only after finding why.",
+        "Open capillary element (kinked/broken) = permanently open."
+      ],
+      "safety": [
+        "Never jumper a freeze stat on a hydronic coil — a frozen coil bursts and floods the space.",
+        "Attended, momentary jumpers only for DX diagnosis; remove before leaving."
+      ],
+      "tools": ["Multimeter", "Freeze spray or ice", "Thermometer"],
+      "notes": ["Repeated DX freeze trips: check evaporator airflow and superheat before touching the switch."]
+    },
+    {
+      "id": "limit_rollout_switch",
+      "name": "High-limit, auxiliary limit and flame rollout switches",
+      "aliases": ["limit switch", "high limit", "LS", "auxiliary limit", "rollout switch", "flame rollout", "RS", "manual reset rollout", "temperature limit", "fan limit"],
+      "function": "Bimetal temperature switches in the heat-exchanger/supply-air path (limit: auto-reset, opens on high supply temperature) and at the burner box (rollout: manual reset, opens when flame rolls out of the heat exchanger); all in series with the gas valve/ignition control's safety input.",
+      "tests": [
+        {
+          "name": "State and cause",
+          "energized": true,
+          "steps": [
+            "With a heat call and burners out, read voltage across each switch in the chain (24 V across a switch = that switch is open).",
+            "Limit open: check airflow (filters, blower speed, closed dampers, dirty coil, blower not running) and the temperature rise vs nameplate before anything else.",
+            "Rollout open (manual reset): look for a cracked/plugged heat exchanger, blocked flue, plugged burners, delayed ignition, or low inducer pressure — reset only after inspection.",
+            "Verify the limit setpoint matches the unit (printed on the switch) if replaced."
+          ],
+          "expected": "All switches closed (~0 V across) during normal firing; temperature rise within the nameplate range.",
+          "tolerance": "Any switch that opens repeatedly is a symptom, not the fault; a switch that reads open when cool = failed (replace with the exact rating)."
+        }
+      ],
+      "failureModes": [
+        "Limit cycling: low airflow, over-firing (manifold pressure high), blocked supply, blower delay wrong.",
+        "Rollout tripped: heat-exchanger crack, flue/inducer problem, dirty burners, gas pressure.",
+        "Switch failed open (bimetal fatigue) — reads OL when cool.",
+        "Auxiliary limit on downflow/horizontal units tripped by heat soak with the blower off."
+      ],
+      "safety": [
+        "NEVER bypass, jumper, or replace a rollout or limit with a different rating — they are the last line against fire and CO. A tripped rollout means a heat-exchanger/venting inspection and a CO test before return to service.",
+        "A heat exchanger that trips the rollout must be inspected for cracks (visual/camera, combustion analysis, pressure test) before the unit is left running.",
+        "Combustion products: test CO in the supply air and flue with a calibrated analyzer after any burner work."
+      ],
+      "tools": ["Multimeter", "Combustion analyzer", "Manometer", "Thermometer"],
+      "notes": ["Boards show distinct codes for limit vs rollout (e.g. 'limit open', 'rollout open'); read the code before the meter."]
+    },
+    {
+      "id": "ignition_control_flame_sensor",
+      "name": "Ignition control, hot-surface igniter and flame sensor (gas heat)",
+      "aliases": ["IGC", "ignition board", "ignition module", "HSI", "hot surface igniter", "igniter", "flame sensor", "flame rod", "flame sense", "spark igniter", "DSI", "direct spark", "gas valve", "inducer", "pressure switch", "SmartValve", "S8610", "50A55", "furnace control"],
+      "function": "Sequences gas heat: inducer proves draft through the pressure switch, igniter heats (HSI ~ 1,500 °F, glowing) or sparks, the gas valve opens, and flame rectification through the flame rod must prove within the trial-for-ignition time or the control retries and locks out.",
+      "tests": [
+        {
+          "name": "Ignition sequence walk-through",
+          "energized": true,
+          "steps": [
+            "Heat call (24 V on W at the board) → inducer runs → pressure switch closes (24 V passes; 0 V across the switch) → igniter warms 15–45 s (HSI visibly glowing; ~120 V at the igniter on 120 V types; measure current 1–5 A depending on igniter) → gas valve energized (24 V across the valve terminals) → burners light → flame proven.",
+            "Read the board's LED/diagnostic code for where the sequence stopped.",
+            "Pressure switch not closing: measure inducer suction with a manometer against the switch label (e.g. −0.6 in. w.c.); blocked flue, condensate trap, cracked hose, weak inducer.",
+            "Gas valve energized, no flame: inlet/manifold gas pressure (typ. 3.5 in. w.c. natural manifold, verify nameplate), igniter position/cracked HSI, plugged burners/orifices."
+          ],
+          "expected": "Sequence completes within the trial-for-ignition (typically 4–7 s after the valve opens) on the first try.",
+          "tolerance": "Any step that stalls identifies the component; retries and lockouts point at ignition/flame proving."
+        },
+        {
+          "name": "Flame-sense microamps",
+          "energized": true,
+          "steps": [
+            "Put a DC µA meter in series with the flame-sensor lead (or use the board's diagnostic readout if it has one).",
+            "Read steady-state flame current with the burners lit. Minimum and healthy values are BOARD-SPECIFIC — read the board label/IOM. Typical guidance: Honeywell S86xx/S89xx/SmartValve families ≈ 1.0 µA minimum, 2–6 µA healthy; White-Rodgers 50A55/50E47 family ≈ 0.7 µA minimum, 1–5 µA typical; many OEM integrated furnace/RTU boards (Carrier/Bryant IGC, Lennox SureLight, Trane/American Standard) are satisfied at 0.5–1.5 µA with 2–6 µA typical — verify.",
+            "Low current: clean the flame rod with fine Scotch-Brite/steel wool (not sandpaper), check the rod position in the flame envelope, the ceramic insulator for cracks, the burner ground strap and the board ground, and polarity/neutral of the 120 V supply (rectification needs a good ground and correct polarity)."
+          ],
+          "expected": "Steady flame current above the board's minimum with margin (commonly 2–6 µA DC).",
+          "tolerance": "Below the board minimum → dropouts/flashing flame-failure codes; zero with flame present → open rod/lead, bad ground, reversed polarity."
+        },
+        {
+          "name": "Hot-surface igniter resistance",
+          "energized": false,
+          "steps": [
+            "Power off, unplug the igniter and ohm it: silicon carbide ≈ 40–200 Ω, silicon nitride (120 V) ≈ 10–20 Ω or (24–80 V types) as specified — compare to the part spec; inspect for cracks.",
+            "Handle by the base only; skin oils shorten silicon-carbide igniter life."
+          ],
+          "expected": "Within the spec range, no cracks.",
+          "tolerance": "OL = open igniter."
+        }
+      ],
+      "failureModes": [
+        "Flame sensor dirty/mispositioned: ignites then drops out after a few seconds, repeated retries then lockout.",
+        "Pressure switch not proving: blocked flue/inlet, plugged condensate trap, weak inducer, cracked hose, high altitude without the correct switch.",
+        "HSI cracked/open: no glow, lockout.",
+        "Gas valve coil open, low gas pressure, valve not opening (24 V present, no gas).",
+        "Board relay failure: no output to the valve/igniter with inputs satisfied.",
+        "Delayed ignition (rollout trips): plugged crossover/carryover, low manifold pressure, misaligned burners."
+      ],
+      "safety": [
+        "Never bypass the rollout, limit or pressure switch, and never jumper the gas valve — the ignition sequence proves safe combustion conditions in order.",
+        "Smell gas or find a leaking valve? Shut the gas cock, ventilate, no ignition sources, and leak-test before proceeding.",
+        "After any burner/heat-exchanger work: test CO in the supply air and flue with a combustion analyzer and check the heat exchanger before returning the unit to service.",
+        "Lockouts clear by cycling the thermostat/power only after the cause is corrected; repeated resets without diagnosis risk gas accumulation."
+      ],
+      "tools": ["DC µA meter (or a meter with a µA DC range)", "Manometer", "Combustion analyzer", "Multimeter"],
+      "notes": [
+        "Grounding matters: flame rectification uses the burner/chassis ground — a rusty burner ground strap can mimic a bad sensor.",
+        "Many RTU boards show the flame current on the display/LED count; read it there first."
+      ]
+    },
+    {
+      "id": "defrost_board",
+      "name": "Defrost board and sensors (heat pump)",
+      "aliases": ["defrost control", "DFB", "defrost timer", "defrost thermostat", "DFT", "coil sensor", "demand defrost", "defrost relay", "outdoor coil sensor", "OAT sensor"],
+      "function": "Times or demand-initiates defrost on a heat pump: energizes the reversing-valve solenoid (or de-energizes, per O/B logic), stops the outdoor fan, and calls electric/gas supplemental heat while the outdoor coil melts; terminates on coil temperature (defrost thermostat/sensor, ~ 50–80 °F) or a maximum time (~ 10 min).",
+      "tests": [
+        {
+          "name": "Forced defrost and sensor check",
+          "energized": true,
+          "steps": [
+            "Read the board's LED/fault code; check the DIP/jumper settings (30/60/90 min or demand).",
+            "Force defrost with the board's test pins (jumper momentarily per the board label — usually with the defrost thermostat closed or bypassed for test) and observe: outdoor fan stops, reversing valve shifts, auxiliary heat energized (W2/W out), suction rises.",
+            "Ohm or read the coil sensor: a thermistor (compare to the board's temperature table — commonly 10 kΩ at 77 °F; verify) or a bimetal defrost thermostat (closed below ~ 30 °F, open above ~ 60 °F)."
+          ],
+          "expected": "Defrost initiates on the test, terminates on temperature or time; sensor reads per the table.",
+          "tolerance": "Sensor out of table/open/shorted = the usual cause of no-defrost or constant-defrost; replace and reposition on the coil return bend the manual specifies."
+        }
+      ],
+      "failureModes": [
+        "Coil iced solid: sensor open/loose, board not initiating, reversing valve not shifting, outdoor fan not stopping.",
+        "Constant or too-frequent defrost: sensor shorted, DIP settings, low charge (coil too cold).",
+        "Board relay failure: no reversing-valve output; no W out (cold supply air during defrost).",
+        "Steam/water-hammer complaints from defrost are normal; prolonged 'clunks' with no coil clearing are not."
+      ],
+      "safety": [
+        "Defrost test pins are on a live board — use an insulated jumper and never leave it in place.",
+        "Auxiliary heat during defrost: electric heat strips draw full amps; verify the airflow proving interlocks."
+      ],
+      "tools": ["Multimeter", "Thermometer/thermistor chart", "Insulated jumper"],
+      "notes": ["O vs B: Carrier/Bryant/Payne/ICP energize the reversing valve in cooling (O); Rheem/Ruud energize in heating (B). A mis-set thermostat runs backwards."]
+    },
+    {
+      "id": "economizer_controller",
+      "name": "Economizer controller, actuator and sensors",
+      "aliases": ["economizer", "economiser", "W7220", "JADE", "W7212", "Belimo ZIP", "EconoMi$er", "economizer actuator", "MAT sensor", "OAT sensor", "enthalpy sensor", "C7400", "C7660", "mixed air sensor", "outdoor air damper", "minimum position", "OA damper"],
+      "function": "Uses outdoor-air temperature/enthalpy (single or differential changeover) to open the outdoor-air damper for free cooling when suitable, modulates it to hold a mixed-air setpoint (~ 50–55 °F), holds a minimum ventilation position when the fan runs, and closes when the unit is off. Actuators run on 24 VAC with a 2–10 VDC (or 0–10 / floating) position signal; many controllers report faults (JADE displays them; W7212 uses LEDs).",
+      "tests": [
+        {
+          "name": "Controller inputs and outputs",
+          "energized": true,
+          "steps": [
+            "Confirm 24 VAC to the controller and a fan/cooling call at its inputs (Y1 in, G, occupied).",
+            "Check the sensors: OAT/MAT thermistors (e.g. 10 kΩ @ 77 °F; JADE uses 20 kΩ Sylk/thermistor — verify) or enthalpy sensors (4–20 mA); an open MAT sensor typically drives the damper full closed or full open depending on the controller.",
+            "Read the actuator command: 2–10 VDC between the controller's actuator output and common (2 V = closed, 10 V = open; ~ 3–4 V minimum position typical) — and confirm the damper position tracks it.",
+            "JADE/W7220: read the fault/alarm list and sensor values on the display; W7212: LED (free cool / exhaust / minimum) and the changeover setpoint dial (A/B/C/D)."
+          ],
+          "expected": "Sensors within table; command voltage tracks the setpoint; damper moves smoothly from closed to open and returns to minimum.",
+          "tolerance": "Command present, no damper motion = actuator/linkage; no command with good inputs = controller or changeover setting; damper at full open in hot weather = sensor/changeover fault."
+        },
+        {
+          "name": "Actuator and linkage",
+          "energized": true,
+          "steps": [
+            "Feel the linkage: binding, slipping shaft clamp, stripped gears (Belimo actuators can be released with the manual button and turned by hand).",
+            "Command 10 V (or use the controller's test/override mode) and time full stroke (≈ 90–150 s).",
+            "Check the actuator's 24 V supply under load (drops below 20 V = transformer overloaded)."
+          ],
+          "expected": "Full, smooth stroke; blades seal at closed.",
+          "tolerance": "Loose clamps and seized blade bearings mimic controller faults — fix mechanically first."
+        }
+      ],
+      "failureModes": [
+        "Damper stuck open in summer/winter (actuator dead, linkage, controller): high cooling/heating load, coil freeze, HPS/LPS trips.",
+        "Sensor failure/drift: no free cooling, or economizing in hot humid weather.",
+        "Minimum position mis-set: over-ventilation (energy), or under-ventilation (IAQ/CO2).",
+        "Loss of 24 V (shared transformer overloaded) → actuator fails closed (spring return) or stays put.",
+        "Wrong changeover setpoint for the climate (dry-bulb vs enthalpy)."
+      ],
+      "safety": [
+        "Actuator gears and the damper linkage can pinch — release the actuator (button/lever) before working the blades by hand.",
+        "Economizer sections are open to the outdoors on the roof: mind the hood edges and the fall-protection rules."
+      ],
+      "tools": ["Multimeter", "Thermistor chart / controller display", "Manual damper release"],
+      "notes": [
+        "Fault codes on JADE (W7220) such as 'MA sensor fail', 'OA sensor fail', 'actuator fault' name the component; reading them saves time.",
+        "Free cooling changeover: single dry-bulb (~ 55–75 °F setting), differential, or enthalpy — know which the controller is set for."
+      ]
+    },
+    {
+      "id": "thermostat_24v_circuit",
+      "name": "Thermostat and 24 V control circuit (R, C, Y1, Y2, G, W1, W2, O/B)",
+      "aliases": ["thermostat", "stat", "t-stat", "24 V circuit", "control circuit", "R C Y G W", "Y1", "Y2", "W1", "W2", "O/B", "thermostat wiring", "low voltage", "control wiring", "terminal strip"],
+      "function": "The thermostat (or BAS/DDC controller) closes 24 V from R to the call terminals: G (fan), Y1/Y2 (cooling stages), W1/W2 (heat stages), O/B (reversing valve, heat pumps); C is the common return. The unit's board/terminal strip passes those calls through the safety chain to the contactors, relays and ignition control.",
+      "tests": [
+        {
+          "name": "Verify the call at the unit",
+          "energized": true,
+          "steps": [
+            "At the unit's low-voltage terminal strip, read R to C: 24–28 VAC (if 0 V: transformer/fuse/door switch).",
+            "With the stat calling, read Y1 (Y2, W1, W2, G, O/B as applicable) to C: 24 VAC = the call is arriving. No voltage = thermostat, wiring, BAS/DDC output, or a stat-side safety (many communicating stats withhold Y until the compressor delay expires).",
+            "Jumper R to Y1 (momentarily, attended) at the unit strip: if the unit runs, the problem is upstream (stat/wire/BAS); if not, the problem is inside the unit.",
+            "Thermostat wire faults: shorted (fuse blows), open (no call), wrong terminal (e.g. O/B mis-set on a heat pump)."
+          ],
+          "expected": "24 VAC on each energized call terminal to C; the unit responds to the same call jumpered at the strip.",
+          "tolerance": "Call voltages below ~19 V = voltage drop or overloaded transformer; check the C connection and splices."
+        }
+      ],
+      "failureModes": [
+        "Thermostat not calling (batteries, schedule/setback, mode, staging delays, lockout after a fault).",
+        "Open or shorted thermostat cable (rodents, roof-curb rub, splices in the return).",
+        "Missing C (power-stealing stats misbehave).",
+        "BAS/DDC override, schedule or an alarm holding the call off.",
+        "Wrong terminal wiring after a stat change (Y on W, O/B reversed)."
+      ],
+      "safety": [
+        "24 V is not shock-hazardous but a short R-to-C or R-to-ground blows the transformer fuse or the transformer; take care with bare strands at the strip.",
+        "Diagnostic jumpers are momentary and attended; bypassing safeties in the Y circuit (HPS/LPS/freeze) with a jumper is only to identify the opener — never leave it.",
+        "Line voltage is often within inches of the 24 V strip — know which terminals are which before probing."
+      ],
+      "tools": ["Multimeter", "Insulated jumper wire"],
+      "notes": [
+        "Terminal designations vary (W vs W1, Y vs Y1, 'DH' for dehumidification); read the diagram.",
+        "Communicating (proprietary) thermostats use data pairs (e.g. 4-wire ABCD) — no 24 V on Y/W; diagnose from the board's display."
+      ]
+    },
+    {
+      "id": "fuses_breakers_disconnect",
+      "name": "Fuses, circuit breakers and disconnect",
+      "aliases": ["fuse", "fuses", "breaker", "circuit breaker", "disconnect", "disconnect switch", "fused disconnect", "MOP", "MCA", "HACR breaker", "time delay fuse", "control fuse", "3 A fuse", "blown fuse", "tripped breaker"],
+      "function": "Overcurrent protection sized by the nameplate MCA (minimum circuit ampacity — wire size) and MOP/MOCP (maximum overcurrent protection — fuse/breaker size); the disconnect isolates the unit for service. The control transformer secondary has its own small fuse (typically 3 A) or breaker.",
+      "tests": [
+        {
+          "name": "Verify each leg with load",
+          "energized": true,
+          "steps": [
+            "Read voltage line-to-line on the line side and load side of the disconnect/fuses; a single-phase or 3-phase leg missing on the load side = blown fuse/open pole.",
+            "Read across each fuse (line to load of the same fuse): 0 V = good; line voltage across it = blown. Do not rely on ohms with the fuse in place (parallel paths).",
+            "Breaker: reset by pushing fully OFF then ON; a breaker that trips instantly = short/ground fault; trips after minutes = overload or a weak breaker (warm to the touch).",
+            "Check lug torque and heat discoloration; measure the drop across a suspect connection under load."
+          ],
+          "expected": "All legs present line and load side, < 0.5 V drop across any fuse/connection under load, breaker cool.",
+          "tolerance": "Voltage across a fuse = blown; a warm breaker or discolored lug = high-resistance connection."
+        }
+      ],
+      "failureModes": [
+        "Fuse blown on one leg (single-phasing a 3-phase compressor; motors hum).",
+        "Wrong fuse type/size (fast-acting instead of time-delay; sized below MOP) — nuisance blowing on start.",
+        "Breaker weak from repeated tripping; loose lugs overheating.",
+        "Control fuse (3 A) blowing repeatedly — a short in the 24 V circuit, never a bigger fuse.",
+        "Disconnect pull-out installed upside-down/off; a pole burned open inside."
+      ],
+      "safety": [
+        "Fuses and breakers protect the wire, not the motor: never upsize beyond the nameplate MOP/MOCP.",
+        "Live-dead-live: prove the meter on a known live source, test the disconnect load side (all legs, line-to-line and line-to-ground), re-prove the meter, then lock out and tag (NFPA 70E).",
+        "Replacing fuses in an energized fused disconnect on 480/575 V requires arc-rated PPE; open the disconnect and pull the fuses with a fuse puller.",
+        "A breaker that keeps tripping is a fault indicator — find the short/ground before resetting it repeatedly."
+      ],
+      "tools": ["Multimeter (CAT III/IV for 480/575 V)", "Fuse puller", "Torque screwdriver"],
+      "notes": ["MCA/MOP are on the nameplate: MOP is the largest fuse/breaker allowed; MCA sets the minimum wire ampacity."]
+    },
+    {
+      "id": "low_ambient_head_pressure_control",
+      "name": "Low-ambient head-pressure controls (fan cycling switch, fan speed control / Motormaster, flooding valve)",
+      "aliases": ["low ambient control", "low ambient kit", "fan cycling switch", "fan cycling control", "head pressure control", "Motormaster", "condenser fan speed control", "fan VFD", "flooding valve", "headmaster", "winter start", "low ambient", "pressure fan switch"],
+      "function": "Keeps condensing pressure high enough for the metering device in cold weather: a fan cycling pressure switch turns the condenser fan(s) on/off around a pressure band; a fan speed controller (temperature or pressure sensing, e.g. Carrier Motormaster or a condenser-fan VFD) modulates fan speed; a head-pressure (flooding) valve backs liquid into the condenser to reduce its active area. Some units add a 'winter start' relay that bypasses the LPS for a few minutes.",
+      "tests": [
+        {
+          "name": "Fan cycling switch",
+          "energized": true,
+          "steps": [
+            "Gauge the high side and watch the fan: it should stop when pressure falls to the cut-out and restart at the cut-in (typical R-410A settings ~ 250–300 psig on / 175–225 off — verify on the switch/IOM).",
+            "Read across the switch contacts: ~0 V closed (fan on), line voltage open (fan off).",
+            "Fan short-cycling (seconds) = differential too narrow or a switch failing; fan never stopping in cold weather = switch stuck closed or the wrong control."
+          ],
+          "expected": "Fan cycles within the band; condensing temperature holds within the range the metering device needs (liquid pressure roughly ≥ 200 psig R-410A / ≥ 150 psig R-22 — verify).",
+          "tolerance": "Setpoints outside the label by > 15 psi = replace/adjust per the IOM."
+        },
+        {
+          "name": "Fan speed controller / condenser fan VFD",
+          "energized": true,
+          "steps": [
+            "Confirm the sensing element location (liquid line/condenser coil temperature probe, or a pressure transducer) and its reading.",
+            "Measure motor voltage/current as ambient or pressure changes — the fan should slow as head pressure drops and run full speed above the changeover. Motormaster-type controls: the motor must be a control-compatible type (PSC/ECM per the kit), and the voltage will read low at reduced speed.",
+            "VFD-driven condenser fans: read the drive's speed reference and faults; check the transducer 0–5/0–10 V or 4–20 mA output against a gauge."
+          ],
+          "expected": "Fan speed tracks head pressure; no hunting.",
+          "tolerance": "Motor stalled/humming at low speed = wrong motor for the control; no speed change = sensor or controller."
+        },
+        {
+          "name": "Flooding (head pressure) valve",
+          "energized": false,
+          "steps": [
+            "Confirm the setting (dome charge, e.g. 180 or 220 psig types for R-22/R-410A families) and that the system carries the extra winter charge and receiver the valve requires.",
+            "In cold weather with the fan running: liquid pressure should hold near the valve setting; in warm weather the valve should be fully closed to bypass (no effect).",
+            "Valve failed: low head in winter (flashing sight glass, TXV starving, LPS trips) or high head in summer (valve stuck bypassing)."
+          ],
+          "expected": "Head pressure held near the valve setting when ambient is low.",
+          "tolerance": "Cannot be adjusted; replace if it does not hold pressure or bypasses in summer."
+        }
+      ],
+      "failureModes": [
+        "Fan cycling switch stuck closed/open; capillary leaked (reads zero pressure = fan runs forever or never).",
+        "Speed controller sensor loose from the coil/liquid line — fan at full speed in cold weather → low head, flashing liquid, LPS lockouts.",
+        "Flooding valve dome charge lost — no head-pressure control.",
+        "Insufficient charge for the flooding valve (needs extra 'winter charge' per the IOM).",
+        "Fan motor incompatible with the speed control (hums, overheats)."
+      ],
+      "safety": [
+        "Condenser fans under a cycling/speed control start without warning — lock out before working in the fan section.",
+        "Do not jumper a fan cycling switch to 'fix' low head pressure — that defeats the control; adjust or replace to the IOM setting.",
+        "Speed-controlled motors may be at reduced voltage but are still live."
+      ],
+      "tools": ["Gauges", "Multimeter", "Clamp meter", "Thermometer"],
+      "notes": [
+        "Below ~ 55–65 °F outdoor, charge diagnosis by pressures is unreliable unless head-pressure control is holding the condensing pressure — restrict airflow to the condenser or block the coil to check charge.",
+        "Multi-fan units often cycle only the fan nearest the liquid outlet; the others may be staged by the board."
+      ]
+    },
+    {
+      "id": "solenoid_valves",
+      "name": "Solenoid valves: hot-gas bypass, liquid line and reversing valve coil",
+      "aliases": ["solenoid", "solenoid coil", "hot gas bypass solenoid", "HGBP", "liquid line solenoid", "LLSV", "reversing valve", "reversing valve solenoid", "RVS", "RV coil", "4-way valve", "O/B solenoid", "unloader solenoid"],
+      "function": "Coil-operated valves: the reversing valve solenoid (24 V) pilots the 4-way valve to swap heat-pump modes (energized in cooling on O-logic units, in heating on B-logic); liquid line solenoids control pump-down; hot-gas bypass solenoids enable capacity control; compressor unloader solenoids stage capacity on larger recips/digital scrolls.",
+      "tests": [
+        {
+          "name": "Coil energized and valve shifting",
+          "energized": true,
+          "steps": [
+            "Read voltage across the coil with the call (24 VAC for reversing valve; 24/120/240 V for others per the diagram).",
+            "Magnetism check: with the coil energized, a screwdriver blade held near the coil is attracted (or slide the coil partly off the stem — never fully remove an energized AC coil: it overheats and burns out within seconds).",
+            "Reversing valve: energize and listen for the shift ('whoosh'); compare the four line temperatures — the two hot lines and two cold lines swap when it shifts. A valve energized and not shifting: low charge/pressure differential, stuck valve, or a bad pilot.",
+            "Hot-gas bypass: with the solenoid energized, the bypass line should get hot and suction pressure should rise/hold; no change = coil, plugged pilot, or the bypass regulator."
+          ],
+          "expected": "Coil voltage present on the call; valve shifts within seconds; temperature pattern confirms the shift.",
+          "tolerance": "Coil ohms typically 10–100 Ω (compare to a known good); OL = open coil; voltage present with no magnetic pull = open coil."
+        }
+      ],
+      "failureModes": [
+        "Coil open (often after running with the coil removed from the stem).",
+        "Reversing valve stuck mid-position: both indoor and outdoor coils lukewarm, suction and discharge pressures converge, compressor amps drop — 'internal bypass'.",
+        "Reversing valve not shifting from low charge (needs a minimum differential) or plugged pilot capillary.",
+        "Liquid line solenoid stuck closed: pump-down runs the unit into LPS.",
+        "Hot-gas bypass stuck open: low capacity, high suction, warm supply."
+      ],
+      "safety": [
+        "Never pull a coil off its stem while energized — it draws inrush current continuously without the core and burns.",
+        "Reversing valve replacement is brazing on a charged/recovered system with the valve body wrapped/cooled; recover refrigerant first (A2L: no ignition sources, ventilate).",
+        "Hot-gas lines exceed 200 °F — burn hazard when comparing line temperatures."
+      ],
+      "tools": ["Multimeter", "Thermometer/clamp probes", "Gauges"],
+      "notes": ["Verify O vs B logic on the thermostat before condemning a reversing valve that 'never shifts' — a mis-set thermostat runs backwards, a stuck valve does not respond to either."]
+    },
+    {
+      "id": "anti_short_cycle_timer",
+      "name": "Anti-short-cycle timer / compressor time delay",
+      "aliases": ["ASCT", "ASC", "short cycle timer", "time delay", "compressor delay", "TDR", "ICM 102", "delay on make", "delay on break", "minimum off time", "lockout timer", "cycle protector"],
+      "function": "Enforces a minimum compressor off time (typically 3–5 min) and/or a start delay so pressures equalize before restart and the compressor is not short-cycled; built into most boards and thermostats, or a separate delay relay in the Y circuit on older units.",
+      "tests": [
+        {
+          "name": "Delay behavior",
+          "energized": true,
+          "steps": [
+            "Break and restore the Y call; time the delay before the contactor pulls in (compare with the board/timer setting; boards often show a countdown or a 'delay' LED).",
+            "With the call present and the delay expired, read 24 V across the timer output to C: present = timer passing; missing with 24 V on its input = timer open.",
+            "Stand-alone timers: verify the wiring (in series with the Y call to the contactor coil) and the adjustment dial."
+          ],
+          "expected": "Compressor starts after the set delay; no start within the delay.",
+          "tolerance": "No start ever with the input present after 10 min = failed timer; no delay at all = timer bypassed/jumpered (unit will short-cycle)."
+        }
+      ],
+      "failureModes": [
+        "Timer failed open: 'fans run, compressor off' with 24 V arriving at the timer.",
+        "Timer stuck closed/jumpered: short cycling, compressor starting against head pressure (hard starts, tripped overloads).",
+        "Delay set too long for the application, misread as 'no cooling'.",
+        "Thermostat and board delays stacking (5 + 5 min) — normal, but explain it before condemning."
+      ],
+      "safety": [
+        "Do not defeat the delay to speed up a test more than once — starting a compressor against unequalized head pressure risks a locked-rotor trip and start-component damage.",
+        "Timer contacts are in the 24 V circuit; some older timers are line-voltage — check the diagram."
+      ],
+      "tools": ["Multimeter", "Stopwatch"],
+      "notes": ["Many boards also enforce a minimum ON time (e.g. 3 min) so short calls do not chop the run."]
+    },
+    {
+      "id": "current_sensor",
+      "name": "Current sensor / current switch / airflow proving",
+      "aliases": ["current switch", "CT", "current transducer", "current sensing relay", "CSR sensor", "airflow proving", "fan status", "compressor current sensor", "CoreSense CT", "amp sensor", "flow proving switch"],
+      "function": "Solid-core or split-core sensor around a motor lead that closes a contact (current switch) or outputs 0–5/0–10 V or 4–20 mA (transducer) proportional to the current; used to prove fan/compressor status to the board or BAS, to detect a broken belt, or to feed a compressor protection module.",
+      "tests": [
+        {
+          "name": "Sensor output vs clamp",
+          "energized": true,
+          "steps": [
+            "Clamp the same lead with your own meter and compare with the sensor's output (contact closed above its trip point; analog output scaled per its range).",
+            "Current switch not closing with the motor running: threshold set above the actual amps (adjust the trip dial), only one turn of wire through the core on a low-amp motor (add turns to multiply the current), or a failed switch.",
+            "Verify the sensor is around ONE conductor (line and neutral together cancel to zero)."
+          ],
+          "expected": "Status contact closes/opens with the motor; analog output tracks the clamp within ±5 %.",
+          "tolerance": "Trip point adjustable on most; re-set after any motor or sheave change."
+        }
+      ],
+      "failureModes": [
+        "'Fan failure' / 'no airflow' alarm with the fan running: threshold too high, sensor on the wrong wire, contact failed.",
+        "Belt broken: motor amps drop below the threshold → correct alarm (check the belt before the sensor).",
+        "Analog output drift; loose CT lead; CT installed with two conductors through it."
+      ],
+      "safety": [
+        "Split-core sensors clamp around a live conductor — lock out when installing or repositioning.",
+        "Never open the secondary of a current transformer (metering CT) while the primary carries current — dangerous voltage develops; current switches/transducers are burden-integrated and safe, metering CTs are not."
+      ],
+      "tools": ["Clamp meter", "Multimeter"],
+      "notes": ["A status sensor tells the board the motor is drawing current, not that air is moving — a slipping belt or a wheel loose on the shaft still shows amps (reduced)."]
+    },
+    {
+      "id": "refrigerant_detection_system",
+      "name": "Refrigerant detection system (RDS) and mitigation — A2L units (R-32, R-454B, R-454A, R-1234yf)",
+      "aliases": ["RDS", "A2L", "refrigerant leak detection sensor", "leak sensor", "A2L sensor", "mitigation board", "refrigerant detection sensor", "RDS sensor", "R-454B", "R-32", "R-454A", "dissipation", "leak mitigation", "end of life sensor"],
+      "function": "Required on A2L (mildly flammable) refrigerant systems by UL 60335-2-40 / ASHRAE 15: a sensor mounted in the indoor coil/drain-pan area detects refrigerant concentration; on detection the control board runs the mitigation sequence — indoor blower forced ON at the mitigation airflow (dissipation), compressor and (electric/gas) heat locked out, dampers/ventilation per the design, an alarm/fault code displayed — for a minimum time (typically ≥ 5 minutes) after the concentration clears. The sensor has a finite life (~ 10–15 years) and reports end-of-life and fault codes; a failed or missing sensor also triggers mitigation or lockout.",
+      "tests": [
+        {
+          "name": "Identify mitigation vs a fan/board fault",
+          "energized": true,
+          "steps": [
+            "Blower running with no call, compressor and heat locked out, and a fault/alarm code at the board or thermostat = suspect RDS mitigation. Read the code (board LED/display, thermostat alert) BEFORE resetting anything.",
+            "Locate the sensor (near the indoor coil/drain pan or in the return-air path per the IOM); check its connection and status LED, and the sensor cable for damage (an open sensor circuit = fault → mitigation/lockout on most designs).",
+            "If the code is a leak detection: treat it as a real leak until proven otherwise — ventilate, no ignition sources, use an A2L-rated leak detector at the coil, line set, and joints.",
+            "If the code is sensor fault / end-of-life / communication: replace the sensor with the OEM part (sensors are calibrated to the refrigerant and mounting location) and reset per the IOM; do not run the unit with the sensor bypassed.",
+            "After a sensor replacement or leak repair, verify the mitigation clears, the blower returns to normal control, and the compressor is allowed to run."
+          ],
+          "expected": "Sensor status OK, no leak detected, mitigation not active; blower and compressor respond to normal calls.",
+          "tolerance": "Any RDS fault: the unit will not cool/heat until resolved — this is by design, not a nuisance."
+        },
+        {
+          "name": "Sensor power and communication",
+          "energized": true,
+          "steps": [
+            "Verify the sensor's supply (24 VAC/VDC per the board) and its data/output (typically a digital/serial signal or a 0–5/0–10 V analog output to the board — see the wiring diagram).",
+            "Boards typically show a distinct code for 'sensor communication lost' vs 'refrigerant detected' vs 'sensor end of life'."
+          ],
+          "expected": "Supply present, communication established, no fault.",
+          "tolerance": "Sensor with supply but no output = replace; no supply = board/wiring."
+        }
+      ],
+      "failureModes": [
+        "Real refrigerant leak at the indoor coil → mitigation (blower forced on, compressor/heat locked out).",
+        "Sensor end-of-life or drift → permanent mitigation/lockout until replaced.",
+        "Sensor disconnected/damaged during a coil or filter change → fault.",
+        "Contaminants (cleaning chemicals, solvents, refrigerant from a nearby recovery) triggering a temporary detection.",
+        "Wrong or non-OEM sensor after replacement → false faults."
+      ],
+      "safety": [
+        "A2L refrigerants are flammable at concentration: when mitigation is active or a leak is suspected, ventilate the space, keep ignition sources away (no brazing, no smoking, no non-rated electrical work), and use A2L-rated recovery machines, vacuum pumps and leak detectors.",
+        "Never bypass, jumper, or disable the RDS or the mitigation blower — it is a code-required safety and defeating it leaves a flammable concentration in the space.",
+        "Do not begin refrigerant-side work (gauges, recovery, brazing) until the RDS alarm has been checked and the leak located and the area ventilated.",
+        "Follow the A2L sizing/charge limits (max charge per room area) when repairing; do not add charge beyond the nameplate."
+      ],
+      "tools": ["Board/thermostat fault display", "A2L-rated combustible/refrigerant leak detector", "Multimeter", "OEM sensor part"],
+      "notes": [
+        "Mitigation typically holds for at least 5 minutes after the sensor clears, and some boards require a manual reset or power cycle — read the IOM.",
+        "Field-installed accessories (UV lights, humidifiers, electric heat) on A2L units must be A2L-listed; non-listed ignition sources near the coil are prohibited."
+      ]
+    }
+  ],
+  "reference": [
+    {
+      "topic": "Voltage imbalance (NEMA MG-1)",
+      "content": [
+        "Percent voltage imbalance = 100 × (maximum deviation from the average line-to-line voltage) / (average line-to-line voltage). Measure all three line-to-line voltages at the same point (the unit's terminals) with the load running.",
+        "Example: 460 / 455 / 470 V → average 461.7 V, max deviation 8.3 V → 1.8 % imbalance.",
+        "NEMA MG-1 (Part 14): keep imbalance ≤ 1 %; investigate above 1 %; derate the motor above 1–2 % per the MG-1 curve — factor ≈ 1.0 at 1 %, 0.95 at 2 %, 0.88 at 3 %, 0.82 at 4 %, 0.75 at 5 %; do not operate the motor above 5 % imbalance.",
+        "Winding temperature rise increases roughly as 2 × (percent imbalance)²: a 3.5 % imbalance adds ~25 % extra heating. Current imbalance is typically 6–10 times the voltage imbalance.",
+        "Causes: unequal single-phase loads on the same service, an open or high-resistance connection (lug, fuse clip, contactor pole), utility problems, an open delta transformer bank, or a failing motor winding. Check with the unit off (supply) and on (unit wiring/contactor).",
+        "Source: NEMA MG-1 Motors and Generators, Part 14 (voltage unbalance derating); Copeland/Emerson AE bulletins on three-phase compressor application."
+      ]
+    },
+    {
+      "topic": "Current imbalance (3-phase motors)",
+      "content": [
+        "Percent current imbalance = 100 × (maximum deviation from the average leg current) / (average leg current), clamped one leg at a time with the compressor running steadily.",
+        "Guideline: ≤ 10 % is acceptable; expect roughly 6–10× the voltage imbalance. A leg at 0 A is single-phasing — shut the compressor down.",
+        "Roll the leads (rotate all three one position at the contactor: L1→T2, L2→T3, L3→T1, keeping the rotation direction). If the high current follows the line, the problem is the supply/contactor; if it stays with the motor terminal, suspect the compressor winding or terminal connection.",
+        "Also check: contactor pole drop (< 0.5 V), lug torque, discoloration at the compressor terminal block, and the voltage imbalance first — current imbalance with balanced voltage is a motor problem.",
+        "Source: NEMA MG-1; Copeland/Emerson AE bulletins (three-phase compressor electrical checks)."
+      ]
+    },
+    {
+      "topic": "Reading motor and compressor nameplates (RLA, FLA, LRA, MCC, SF, MCA, MOP)",
+      "content": [
+        "RLA (Rated Load Amps): a UL-defined figure for compressors, RLA = MCC / 1.56 (MCC = maximum continuous current, the overload trip point) — it is NOT the amps the compressor should draw; normal running amps are typically 60–100 % of RLA and vary with head pressure and voltage.",
+        "FLA (Full Load Amps): motor current at rated horsepower/torque (fans, blowers, pumps); running above FLA × service factor (SF, usually 1.0–1.15) overheats the motor.",
+        "LRA (Locked Rotor Amps): inrush at start, typically 5–7× RLA/FLA; a compressor drawing LRA for more than a few seconds is locked or has a start-circuit failure.",
+        "MCA (Minimum Circuit Ampacity): sizes the wire; MOP/MOCP (Maximum Overcurrent Protection): the largest fuse/HACR breaker allowed. Never exceed MOP.",
+        "Voltage/phase: 208-230/1/60, 208-230/3/60, 460/3/60, 575/3/60. Operating range is typically ±10 % of nominal (e.g. 197–253 V for 208-230); check the range on the plate.",
+        "Compressor plates also list: refrigerant, oil type/charge, test pressures, and sometimes MCC. The unit plate lists per-circuit compressor RLA/LRA, fan FLA/HP, heat kW/MBH, and the test pressures.",
+        "Source: UL 1995/60335-2-40 definitions; Copeland/Emerson AE bulletin on compressor electrical ratings; NEC Article 440."
+      ]
+    },
+    {
+      "topic": "Rotation checks (3-phase and scroll compressors)",
+      "content": [
+        "Scroll compressors pump in one direction only. Reversed: loud/rattling noise, suction and discharge pressures do not separate, amps well below RLA, compressor heats and the internal protector trips in minutes. Reciprocating compressors pump either way; fans and blowers in reverse move some air with high noise.",
+        "After any power work (new service, utility transformer change, disconnect or contactor replacement, VFD bypass work), verify phase sequence at the unit with a phase-rotation meter before starting a scroll.",
+        "To correct: swap any two of the three incoming line leads at the unit's line side (disconnect load side or contactor line side) — all motors then reverse together. Never swap at a single motor unless only that motor is reversed (e.g. after a motor replacement).",
+        "Phase monitors lock out on reversal; a compressor that trips 'reverse rotation' on a CoreSense/phase monitor after utility work is telling the truth.",
+        "Source: Copeland/Emerson AE4-1294 (Copeland scroll compressors: reverse rotation); Danfoss scroll application guidelines."
+      ]
+    },
+    {
+      "topic": "Voltage-drop measurement (connections, contactors, wire)",
+      "content": [
+        "Measure voltage ACROSS a suspected connection or contact under load: a closed contact, splice or fuse should show near 0 V (< 0.5 V; > 1 V across a contactor pole means burned contacts).",
+        "Circuit voltage drop: read at the panel and at the unit with the unit running; more than ~3 % (e.g. > 7 V on 240 V, > 14 V on 480 V) indicates undersized wire, long runs, or a bad connection. Low voltage raises motor current and heat, and can keep contactors from pulling in.",
+        "24 V control: read R to C at the board with everything calling; a drop from ~27 V unloaded to < 20 V loaded = overloaded transformer or a high-resistance connection in the chain. Voltage drops across individual safeties (read across each switch): 24 V across a switch = it is open; ~0 V = closed.",
+        "Infrared or touch check: warm lugs, discolored insulation, and melted terminal blocks are high-resistance connections; re-terminate and torque to spec.",
+        "Source: NEC 210.19 informational note (3 % branch, 5 % total recommended); manufacturer service manuals."
+      ]
+    },
+    {
+      "topic": "Electrical safety: LOTO, live-dead-live, meter categories, arc flash, capacitors, A2L",
+      "content": [
+        "Lockout/tagout per NFPA 70E and OSHA 1910.147: open the disconnect, apply your lock and tag, try to start the unit, and verify zero energy. A pulled fuse block is not a lockout.",
+        "Live-dead-live: prove the meter on a known live source, test every conductor to be touched (line-to-line and line-to-ground on all legs), then re-prove the meter on the live source. A dead meter battery or a blown meter fuse reads 0 V on a live circuit.",
+        "Meter category: use CAT III (600 V) minimum for 208/240 V equipment and CAT III 1000 V / CAT IV 600 V rated meters and leads for 480/575 V distribution; fused test leads; never measure amps with the meter leads in the voltage jacks.",
+        "Arc-flash: measuring live 480/575 V in an open panel is energized work — arc-rated PPE (category per the label/incident-energy study), face shield, insulating gloves; keep the body out of the line of the panel; work de-energized whenever possible.",
+        "Capacitors: discharge every run and start capacitor through a bleed resistor (≈ 20 kΩ, 5 W) before touching terminals or removing leads; VFD DC buses need the manual's discharge time and a measured < 50 VDC before entry.",
+        "A2L refrigerants (R-32, R-454B): no ignition sources (open flame, non-rated electrical tools, sparking contactors with the panel open) when a leak is suspected or mitigation is active; ventilate; A2L-rated recovery/vacuum/leak-detection equipment; never defeat the RDS.",
+        "Rooftop hazards: fall protection near edges/hatches, wind on panels/doors, hot surfaces (discharge lines > 200 °F, motors), and condenser fans starting without warning.",
+        "Source: NFPA 70E (Standard for Electrical Safety in the Workplace); OSHA 29 CFR 1910.147; UL 60335-2-40 / ASHRAE 15 for A2L systems."
+      ]
+    },
+    {
+      "topic": "24 V control path tracing (safety chain method)",
+      "content": [
+        "Typical cooling safety chain order (verify on the unit's ladder diagram): control transformer secondary (TRAN) → control fuse/breaker (3 A) → board R terminal → thermostat/BAS call on Y → high-pressure switch (HPS) → low-pressure/loss-of-charge switch (LPS/LOC) → freeze stat → condensate overflow switch → duct smoke detector(s) → fire-alarm/shutdown relay → phase monitor contact → anti-short-cycle timer → compressor contactor coil (C/CC) and back to C (common).",
+        "Method: with the call active, put the meter's common lead on C and walk the hot lead along the chain — 24 V is present up to the open device and 0 V after it. Alternatively read ACROSS each device: ~0 V = closed, 24 V = the opener.",
+        "Boards with dedicated inputs: many modern boards wire each safety to its own input and show a code (HPS open, LPS open, freeze, condensate) — read the code first, then measure.",
+        "Momentary diagnostic jumper: a jumper across a suspected open switch, applied attended and for seconds only, confirms the opener; it is never a fix and never left in place. Never jumper rollout/limit/pressure switches on gas heat or the RDS on A2L units.",
+        "Grounded common: on many units C is chassis-grounded; a 24 V wire chafed to the cabinet blows the control fuse — a fuse that blows immediately on power = short; that blows on the call = a shorted coil/actuator in that circuit.",
+        "Source: manufacturer IOM/service manuals (ladder diagrams and legends); ACCA/NATE service fundamentals."
+      ]
+    },
+    {
+      "topic": "Reading ladder (schematic) diagrams",
+      "content": [
+        "A ladder diagram shows power on the two vertical rails (line voltage on the upper section, 24 V on the lower section, separated by the transformer) and each load on a horizontal rung with its controls (switches, contacts, safeties) in series to its left.",
+        "Contacts are drawn in their de-energized, shelf state: a normally-open (NO) contact is open until its coil is energized; a normally-closed (NC) contact conducts until energized. Pressure/temperature switches are drawn at atmospheric/room conditions.",
+        "Designators: C/CC (compressor contactor), OFC/OFR (outdoor fan), IFC/IFR (indoor fan), TRAN (transformer), HPS/LPS (pressure switches), LS (limit), RS (rollout), FS (freeze stat), CH (crankcase heater), IGC (ignition control), DFB (defrost board), ECON (economizer), PM (phase monitor), TDR (time delay relay). Every legend is unit-specific — read the legend on the diagram.",
+        "Match the wiring diagram (physical layout, wire colors, terminal numbers) with the ladder (logic) to find where a wire physically runs.",
+        "Sequence of operation text in the IOM tells what should happen in what order; use it as the checklist while tracing.",
+        "Source: manufacturer wiring diagrams (inside the unit's control-panel door) and IOMs."
+      ]
+    },
+    {
+      "topic": "Wire-color caveats",
+      "content": [
+        "Thermostat wire colors (R red, C blue/black, Y yellow, G green, W white, O/B orange/dark blue) are conventions, not rules — a previous tech may have used any color. Verify at both ends with a meter before trusting a color.",
+        "Line voltage: black/red/blue for phases, white for neutral (120 V), green/bare for ground in North America; 480 V often uses brown/orange/yellow with gray neutral. Factory harness colors in units follow the diagram's color codes (e.g. 'BLK', 'YEL', 'VIO' abbreviations on the diagram).",
+        "Replacement components can come with different lead colors than the diagram (ECM motors, capacitors, transformers with multi-tap primaries: black common, red 240 V, orange 208 V, etc. — check the transformer label).",
+        "Faded/sun-bleached wires on rooftops (orange looks yellow, red looks pink) — use the terminal number, not the shade.",
+        "Never assume a white wire is neutral inside a unit: it is frequently a hot leg or the 24 V W heat call.",
+        "Source: manufacturer diagrams; NEC 200.6/210.5 identification requirements."
+      ]
+    },
+    {
+      "topic": "Megohm (insulation resistance) testing of compressors and motors",
+      "content": [
+        "Test at 500 VDC (hermetic compressors and motors up to 600 V), leads removed, each terminal to a clean ground on the shell/discharge line. Take the reading after ~60 s.",
+        "Bands: > 100 MΩ good; 20–100 MΩ investigate (moisture, acid, contaminated oil — check the oil/acid test, drier, moisture indicator, re-test after run time); < 20 MΩ suspect winding insulation breakdown; < 1 MΩ condemn (grounded winding; treat the system as contaminated/burnout).",
+        "Readings are affected by refrigerant dissolved in the oil (lower when cold and just after shutdown), temperature (rise as the compressor warms) and moisture. Trend readings over time rather than relying on a single number; compare all three terminals.",
+        "Never megger in a vacuum: the thin gas inside the shell ionizes and arcs to the shell, damaging the motor. Never megger with a VFD or electronic control connected — it destroys the drive's output stage. Discharge the winding after the test.",
+        "Source: Copeland/Emerson AE bulletins (e.g. AE4-1294 scroll service and application engineering guidance on insulation resistance); IEEE 43 general practice."
+      ]
+    },
+    {
+      "topic": "Capacitor testing and the 2652 rule",
+      "content": [
+        "Under-load capacitance: µF = 2652 × A / V, with amps clamped on the capacitor's HERM (or FAN) lead only and volts read across that capacitor section while the motor runs. The constant 2652 comes from 1 / (2π × 60 Hz) × 10⁶.",
+        "The measurement is invalid on the compressor common lead or line lead (reads far too high) — on a dual capacitor test the HERM and FAN sections separately.",
+        "Tolerance: ±6 % of the rating printed on the can unless the can states otherwise (±5 %, ±10 %); start capacitors are −0 / +20 % of the printed minimum.",
+        "Bench test: discharge, remove leads, capacitance meter; replace on bulge, leak, or rust regardless of the reading. Voltage rating equal or higher, µF the same.",
+        "Source: capacitor manufacturer data (Genteq/Titan/AmRad), Copeland AE bulletins on PSC/CSR compressor starting components."
+      ]
+    },
+    {
+      "topic": "VFD measurements and first checks by fault",
+      "content": [
+        "Output voltage from a PWM drive cannot be read accurately with a standard true-RMS meter — use output current (balanced within 10 % of each other, below motor FLA) or a meter with a low-pass filter / VFD mode. The keypad's output frequency and current are the reference.",
+        "Fault first checks: OC (over-current) → shorted motor/cable, mechanical binding, accel too fast, wrong motor data; OV (over-voltage) → decel too fast, regenerating load, high line; UV (under-voltage) → line sag, loose input lug, blown input fuse, weak bus caps; OH (over-temperature) → heatsink/fan clogged, high ambient, enclosure ventilation; GF (ground fault) → motor or cable insulation (megger with the drive DISCONNECTED).",
+        "Before touching: open the disconnect, wait the manual's discharge time, measure the DC bus < 50 VDC, and verify the input and the bypass contactor are dead (live-dead-live).",
+        "Motor won't ramp: check run enable/safety input, HOA in AUTO, speed reference present at the terminals (0–10 V / 4–20 mA), min/max frequency parameters, and PID setpoint/feedback (static pressure transducer) before suspecting the drive.",
+        "Source: drive manufacturer manuals (ABB ACH, Danfoss FC, Yaskawa); NFPA 70E for stored-energy verification."
+      ]
+    },
+    {
+      "topic": "Single-phase compressor winding relationships",
+      "content": [
+        "Terminals: C (common), S (start), R (run). Resistances: R(S-R) = R(C-S) + R(C-R); C-R (run winding) is the lowest reading, C-S (start winding) the higher single winding, S-R the highest (the two in series). Typical values 0.5–5 Ω; use a low-ohms meter and clean pins.",
+        "Open C-S and C-R with an intact S-R = the internal line-break overload (in series with common) is open — the compressor is hot; cool 1–2 hours and re-test before condemning.",
+        "Mismatch of the sum by more than ~10 % or an unexpected order = shorted turns or mis-identified pins; verify the pin layout from the compressor label/terminal cover.",
+        "Identify unmarked pins: the pair with the highest resistance excludes common; the remaining pin is C; from C, the lower reading is R, the higher is S.",
+        "Source: Copeland/Emerson AE bulletins (single-phase compressor electrical checks); Tecumseh service handbook."
+      ]
+    }
+  ]
+}
