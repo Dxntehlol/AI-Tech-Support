@@ -107,11 +107,6 @@
     "yearGroup": 2,
     "weekGroup": 1,
     "map": {
-     "L": 1960,
-     "M": 1961,
-     "N": 1962,
-     "P": 1963,
-     "R": 1964,
      "S": 1965,
      "T": 1966,
      "U": 1967,
@@ -155,7 +150,8 @@
    "notes": [
     "building-center.org: year letter (2nd or 3rd position) begins with L and cycles to H, skipping O, Q and Z, representing 1960-1979; week is the leading 1-2 digits. Grokipedia gives the worked example 12E12345 -> week 12 of 1976, which agrees with the map (E = 1976).",
     "The 1974 example is constructed from the rule, not from a dated nameplate. Letters L-W map to 1960-1969, below the engine's 1965 floor; treat any such decode as 'pre-1965, confirm on plate'.",
-    "No collision with the modern WWYY style (that one has four digits before the letter) or with the 1970s letter-month style (that one starts with a letter)."
+    "No collision with the modern WWYY style (that one has four digits before the letter) or with the 1970s letter-month style (that one starts with a letter).",
+    "Letters L, M, N, P, R (1960-1964) are outside the assistant's supported range and were removed; units that old should be dated from the nameplate era."
    ]
   },
   {
