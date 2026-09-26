@@ -1,0 +1,812 @@
+{
+  "pack": "rheem-aaon",
+  "platformId": "orion-vccx2",
+  "name": "AAON Orion (WattMaster) VCCX2 / VCC-X unit controller with RSMD refrigerant module and compressor controller flash codes",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "VCCX2 Controller Technical Guide, Orion Control Systems / AAON, ASM01698, software SS1088 (G039840)",
+      "docId": "G039840 / ASM01698",
+      "url": "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/G039840-VCCX2-T.pdf"
+    },
+    {
+      "title": "AAON Orion VCCX2 Technical Manual (ManualsLib mirror of the technical guide): p.89 'Alarm Detection and Sensor Failure Alarms', p.91 'Mechanical Failure and Failure Mode Alarms', p.92 'Title 24 Economizer Alarms', p.100 'Troubleshooting - VCCX2 Controller and EM1 LED Diagnostics', p.112 'Alarm Screens'",
+      "docId": "manualslib 2182541 / 2236153",
+      "url": "https://www.manualslib.com/manual/2182541/Aaon-Orion-Vccx2.html?page=89"
+    },
+    {
+      "title": "VCCX-IP Controller Technical Guide ASM07424 (software SS1186) and VCCX-454 Controller Technical Guide ASM07503 (software SS1188) - successor controllers with the same alarm set",
+      "docId": "ASM07424 / ASM07503",
+      "url": "https://www.aaon.com/hubfs/Controls%20Literature/VCCX-IP%20TGD%20Rev%20K.pdf"
+    },
+    {
+      "title": "RSMD Technical Guide ASM02201 (software SS1067, G039810) and RSMD2R Technical Guide G088350 - Refrigerant System Module alarms",
+      "docId": "G039810 / G088350",
+      "url": "https://www.aaon.com/hubfs/Controls%20Literature/G039810-RSMD-TGD-G.pdf"
+    },
+    {
+      "title": "AAON RSMD Technical Manual (ManualsLib) p.17 'Alarms Screen and Definitions'; AAON RSMD-CM Technical Manual (ManualsLib) p.19 'Alarms Screens' (RSMD-CM Technical Guide G102439 Rev. A)",
+      "docId": "manualslib 1511875 / 2516670",
+      "url": "https://www.manualslib.com/manual/1511875/Aaon-Rsmd.html?page=17"
+    },
+    {
+      "title": "AAON RN Series Installation, Operation & Maintenance Manual - 'LED Flash Alarm Codes' / 'Compressor Controller Flash Code Details' (Table 32 Compressor Controller LED Descriptions, Table 33 Compressor Controller ALERT Flash Codes)",
+      "docId": "RN IOM (manualslib 817789 p.63; RN Series IOM 20251210 p.57)",
+      "url": "https://www.aaon.com/hubfs/RN%20Series%20IOM%2020251210.pdf"
+    },
+    {
+      "title": "Copeland Application Engineering Bulletin AE8-1328 - Copeland Digital Compressor Controller (flash code troubleshooting table; the compressor controller used on AAON RN/RQ digital-scroll units)",
+      "docId": "AE8-1328",
+      "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1328"
+    },
+    {
+      "title": "AAON Compressor Protection Module Technical Guide, label P/N G143890 (CPM_TGD_D) - 'Alarm Status LED Diagnostic Codes'",
+      "docId": "G143890",
+      "url": "https://www.aaon.com/hubfs/Controls%20Literature/CPM_TGD_D.pdf"
+    },
+    {
+      "title": "AAON Touchscreen Controller User's Manual (190702) - 'General Alarms' p.61, 'Shutdown Alarms' p.62 (obsolete product; alarm names not captured)",
+      "docId": "AAON_TS_Controller_Manual_190702",
+      "url": "https://23126496.fs1.hubspotusercontent-na1.net/hubfs/23126496/AAON_TS_Controller_Manual_190702.pdf"
+    },
+    {
+      "title": "Parts Town - AAON Rooftop Unit Troubleshooting & Alarm Codes (secondary)",
+      "url": "https://www.partstown.com/cm/resource-center/guides/gd2/aaon-rooftop-unit-troubleshooting-alarm-codes"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "Mechanical Cooling Failure",
+      "meaning": "Listed in the VCCX2 technical guide under 'Mechanical Failure and Failure Mode Alarms' (LCD alarm text 'MECH COOL FAIL' on the Orion controller family): the controller detected that mechanical cooling did not produce the expected supply-air result while in Cooling Mode. The exact trigger delay/offset text was not captured in search summaries.",
+      "likelyCauses": [
+        "Compressor(s) not running: RSMD compressor fault or lockout, CPM/compressor-controller trip, contactor, overload, high/low pressure switch",
+        "Refrigerant circuit fault (low charge, restriction, failed EEV/digital scroll unloader)",
+        "Supply air temperature sensor reading wrong so cooling proof is never seen",
+        "Condenser fan / head-pressure control failure"
+      ],
+      "checks": [
+        "Read the RSMD/RSMD2R module alarm screen and the compressor controller ALERT/TRIP LEDs before condemning the VCCX2",
+        "Confirm cooling stage relay LEDs (RLY) are on and 24 VAC reaches the compressor contactor coil",
+        "Verify supply air temperature sensor against a reference thermometer in the supply duct",
+        "Check charge by subcooling with the digital scroll forced to 100 percent"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91); Orion System Manager TS II manual module alarm list ('MECH COOL FAIL')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Mechanical Heating Failure",
+      "meaning": "Listed in the VCCX2 technical guide under 'Mechanical Failure and Failure Mode Alarms': heating was called while in Heating Mode but the supply air did not respond as expected. Note mechanical heating is disabled when the Outdoor Air Temperature is above the Heating Lockout Setpoint. Exact trigger text not captured in search summaries.",
+      "likelyCauses": [
+        "Gas heat ignition control lockout (check the furnace's own ignition-control LED)",
+        "Electric heat: open limit, failed contactor/SCR, blown heater fuse",
+        "Hot water/steam: valve or pump failure",
+        "Supply air temperature sensor fault"
+      ],
+      "checks": [
+        "Confirm heat stage relay LEDs are on and the heat section's own diagnostics (ignition control / limit) are clear",
+        "Verify supply air temperature rise with heat energized",
+        "Verify OAT is below the Heating Lockout Setpoint (heat will not run above it)"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91) and Heating Mode sequence (p.71)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Fan Proving Alarm (FAN POF)",
+      "meaning": "'Failure Proof of Flow Interlock Alarm' on the LCD alarm screen ('FAN POF'). The Fan Proving input (BI1 'Proof of Airflow', 24 VAC wet contact) is required to protect the equipment from running without the main fan being on; if the proof of flow contact does not close after the supply fan is commanded on, the alarm is generated and the unit is prevented from running heating/cooling.",
+      "likelyCauses": [
+        "Supply fan / VFD not running (VFD fault, broken belt, overload, disconnect open)",
+        "Proving device (differential pressure switch or current switch) failed, mis-set, or tubing plugged",
+        "Open wiring or missing 24 VAC to BI1 (dry contacts are not recognized - the input needs 24 VAC)"
+      ],
+      "checks": [
+        "Check the VFD keypad/fault log and fan rotation",
+        "With the fan running, measure 24 VAC at BI1; if absent, jumper the proving switch to isolate switch vs wiring",
+        "Verify the proving switch setpoint and tubing orientation"
+      ],
+      "severity": "shutdown",
+      "source": "VCCX2 Controller Technical Guide G039840, Binary Inputs (BI1 Proof of Airflow) and 'Alarm Screens' (ManualsLib 2236153 p.112: 'FAN POF')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Return/Exhaust Fan Proving Alarm",
+      "meaning": "Exhaust Fan / Return Fan Proof of Flow alarm: added as BI:126 'Exhaust Fan / Return Fan Proof of Flow Alarm' in later SS1088 revisions; generated when the return/exhaust fan proof-of-flow input does not prove after the fan is commanded on.",
+      "likelyCauses": [
+        "Return/exhaust fan or its VFD not running",
+        "Proving switch failed or not wired to the configured expansion input",
+        "Input not configured to match the installed proving device"
+      ],
+      "checks": [
+        "Verify the fan is actually running and the proving contact closes (24 VAC at the input)",
+        "Check the binary input configuration in Prism 2 / service tool matches the installed hardware"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, revision history (BI:126 Exhaust Fan / Return Fan Proof of Flow Alarm) and 'Mechanical Failure and Failure Mode Alarms'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Dirty Filter Alarm (DIRTY FILTER)",
+      "meaning": "A differential pressure switch is used to provide a 24 VAC wet contact closure (BI2) to indicate a Dirty Filter status; the closure generates the Dirty Filter Alarm (LCD text 'DIRTY FILTER').",
+      "likelyCauses": [
+        "Filters loaded",
+        "Filter switch setpoint too low, tubing reversed or plugged",
+        "Switch wired to the wrong input"
+      ],
+      "checks": [
+        "Inspect/replace filters; the alarm should clear once the switch opens",
+        "Verify the switch setpoint and that the high-pressure tap is upstream of the filters"
+      ],
+      "severity": "info",
+      "source": "VCCX2 Controller Technical Guide G039840, Binary Inputs (BI2 Dirty Filter) and 'Alarm Screens' (ManualsLib 2236153 p.112)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Emergency Shutdown Alarm (EMERG SHUTDOWN)",
+      "meaning": "BI8 Emergency Shutdown Input is a 24 VAC wet contact input used to initiate shutdown of the HVAC unit when a normally closed smoke detector, firestat, or other shutdown condition contact is opened. If the contact opens, it will initiate shutdown of the VCCX2 and will generate an alarm condition; the unit immediately removes all compressor and heating outputs. If an Occupied relay is configured, it will remain energized; the controller stays active and can still drive alarm relays.",
+      "likelyCauses": [
+        "Smoke detector, firestat, or other life-safety contact tripped",
+        "Loss of 24 VAC to the shutdown loop (blown fuse, loose wire, tripped phase monitor feeding the loop)",
+        "Smoke detector needs reset after a test or dust event"
+      ],
+      "checks": [
+        "Check the smoke detector / firestat status and reset it",
+        "Measure 24 VAC at BI8 with the loop intact; trace the loop for an open contact or broken wire",
+        "Do not jumper the input except momentarily for diagnosis - it is a life-safety interlock"
+      ],
+      "severity": "shutdown",
+      "source": "VCCX2 Controller Technical Guide G039840, Binary Inputs (BI8 Emergency Shutdown) and 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91); 'Alarm Screens' p.112 ('EMERG SHUTDOWN')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Bad SAT Sensor (Supply Air Temperature Sensor Failure)",
+      "meaning": "The Supply Air Temperature Sensor Failure Alarm is generated when the controller detects an open or short circuit on the Supply Air Temperature input. The controller continuously performs self diagnostics during normal operation to determine if any operating failures have occurred. Sensor diagnostics: a voltage above 4.88 VDC at the input indicates an open sensor or wiring; less than 0.05 VDC indicates a short.",
+      "likelyCauses": [
+        "Open or shorted 10k Type III thermistor or its wiring",
+        "Sensor unplugged / connector corroded",
+        "Wrong sensor type installed"
+      ],
+      "checks": [
+        "Measure input voltage at the controller: >4.88 VDC = open, <0.05 VDC = short",
+        "Disconnect and measure sensor resistance (about 10k ohms at 77 F) and compare to the temperature/resistance table",
+        "Repair wiring or replace the sensor; the alarm clears when a valid reading returns"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89) and Troubleshooting sensor voltage table",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Bad OAT Sensor (Outdoor Air Temperature Sensor Failure)",
+      "meaning": "Outdoor Air Temperature sensor reads open or shorted. Failsafe: when the Outdoor Air Temperature Sensor fails, the Outdoor Air reading will be artificially set to the half point between the Cooling and Heating Lockout Setpoints, which allows the cooling and heating to continue operating (economizer free cooling is lost).",
+      "likelyCauses": [
+        "Open/shorted OAT thermistor or wiring (sensor is outdoors - UV/moisture damage common)",
+        "E-BUS outdoor temperature/humidity sensor not communicating"
+      ],
+      "checks": [
+        "Check voltage at the OAT input (>4.88 VDC open, <0.05 VDC short) or E-BUS sensor status",
+        "Measure sensor resistance at the controller end to include wiring"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89) - OAT failsafe text",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Bad Space Sensor (Space Temperature Sensor Failure)",
+      "meaning": "Space temperature sensor reads open or shorted (same open/short detection as the other thermistor inputs). Listed among the VCCX2 alarms ('Bad Space Sensor').",
+      "likelyCauses": [
+        "Open/shorted wall sensor or wiring",
+        "Sensor configured as the controlling sensor but not installed",
+        "E-BUS digital space sensor not communicating"
+      ],
+      "checks": [
+        "Check input voltage / resistance at the controller",
+        "If the unit is supposed to control from supply or return air, correct the configuration instead of adding a sensor"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Bad RAT Sensor (Return Air Temperature Sensor Failure)",
+      "meaning": "Return air temperature sensor reads open or shorted. Listed among the VCCX2 alarms ('Bad RAT Sensor').",
+      "likelyCauses": [
+        "Open/shorted return air thermistor or wiring",
+        "Sensor configured but not installed"
+      ],
+      "checks": [
+        "Check input voltage / resistance at the controller; verify configuration"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Bad CO2 Sensor",
+      "meaning": "When the VCCX2 expects a CO2 sensor but does not detect it, IAQ Mode is disabled and the alarm is generated. If the sensor is properly detected after the unit has alarmed, the alarm will be cleared and the unit will return to CO2 control.",
+      "likelyCauses": [
+        "E-BUS space or duct CO2 sensor unplugged / not communicating",
+        "Sensor configured but never installed",
+        "Sensor power or E-BUS cable fault"
+      ],
+      "checks": [
+        "Check the E-BUS cable and sensor power; watch the E-BUS LED for traffic",
+        "Confirm the CO2 configuration matches the installed sensor"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' (ManualsLib p.89)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Airflow Sensor Alarm (Outdoor / Supply / Return Airflow Sensor Alarm)",
+      "meaning": "If the controller is configured to have any airflow sensors, but the controller does not detect that the sensor is connected, then the applicable alarm (Outdoor Airflow Sensor Alarm, Supply Airflow Sensor Alarm, Return Airflow Sensor Alarm) will occur. If the sensor is properly detected after the unit has alarmed, the alarm will be cleared.",
+      "likelyCauses": [
+        "EBTRON / GreenTrol / Paragon airflow station not communicating or unpowered",
+        "Airflow monitoring configured for an air stream that has no station"
+      ],
+      "checks": [
+        "Check station power and its E-BUS / signal wiring",
+        "Remove the airflow configuration for streams without a station"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Alarm Detection and Sensor Failure Alarms' - Airflow Alarms (ManualsLib p.89)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Supply Air Temperature Cutoff",
+      "meaning": "Temperature protection: if the supply air temperature drops below the Low Supply Air Temperature Cutoff Setpoint for 10 minutes, the Low Supply Air Temperature Cutoff Alarm is generated and cooling is cut off. This mode and alarm will be cancelled if the Supply Air Temperature rises above the Low Supply Air Temperature Cutoff Setpoint by 5 degrees.",
+      "likelyCauses": [
+        "Low airflow across the evaporator (dirty filters, VFD too slow, iced coil)",
+        "Compressor not staging off / digital scroll stuck loaded",
+        "Cold outdoor air with economizer or damper stuck open in heating season",
+        "Supply air sensor reading low"
+      ],
+      "checks": [
+        "Compare SAT reading to a reference thermometer",
+        "Check filters, fan speed vs command, and coil for ice",
+        "Verify economizer damper position vs command"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, temperature protection / 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Supply Air Temperature Cutoff",
+      "meaning": "Temperature protection is activated immediately when the supply air temperature rises above the user-adjustable High Supply Air Temperature Cutoff Setpoint; heating is disabled and the High Supply Air Temperature Cutoff alarm is generated.",
+      "likelyCauses": [
+        "Low airflow with heat energized (filters, fan speed, closed dampers)",
+        "Heat stage stuck on (welded contactor, gas valve not closing)",
+        "Cutoff setpoint set too low for the heat type"
+      ],
+      "checks": [
+        "Check airflow and that heat relays de-energize when commanded off",
+        "Verify the High SAT Cutoff Setpoint is appropriate"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, temperature protection / 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Control Temp Failure Alarm",
+      "meaning": "When the Space (controlling sensor) Temperature drops below the Heating Mode Enable Setpoint minus the Control Mode Low Alarm Offset setpoint for 30 seconds, the controller will generate a Low Control Temp Failure Alarm.",
+      "likelyCauses": [
+        "Heating not keeping up (see Mechanical Heating Failure)",
+        "Unit off / unoccupied with low setback",
+        "Alarm offset set too tight"
+      ],
+      "checks": [
+        "Confirm heating is operating and staging",
+        "Review Heating Mode Enable Setpoint and Control Mode Low Alarm Offset"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Mechanical Failure and Failure Mode Alarms' (ManualsLib p.91)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Title 24 Economizer Air Temperature Sensor Failure",
+      "meaning": "Title 24 (FDD) Economizer alarm: Economizer Temperature Sensor Failure occurs when the Outside Air or Supply Air Temperature Sensor is shorted or missing.",
+      "likelyCauses": [
+        "Open/shorted OAT or SAT sensor or wiring"
+      ],
+      "checks": [
+        "Diagnose as for Bad OAT / Bad SAT Sensor"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Title 24 Economizer Alarms' (ManualsLib p.92)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Title 24 Economizer Damper Failure",
+      "meaning": "Title 24 (FDD) Economizer alarm generated when the economizer is enabled but the damper feedback signal (0-10 VDC into the EM1 expansion module) is not within 10 percent of the desired position.",
+      "likelyCauses": [
+        "Actuator failed, stripped, or lost power",
+        "Feedback wire open or not connected to the EM1",
+        "Damper linkage bound"
+      ],
+      "checks": [
+        "Command the damper from the service tool and compare the feedback voltage to the command",
+        "Verify actuator power and feedback wiring at the EM1"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Title 24 Economizer Alarms' (ManualsLib p.92)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Title 24 Economizer Excess Outdoor Air",
+      "meaning": "Title 24 (FDD) Economizer alarm generated when the economizer is not enabled but the feedback signal indicates a damper position more open than the minimum position.",
+      "likelyCauses": [
+        "Actuator not closing to minimum (failed spring return, wrong stroke)",
+        "Feedback signal offset / mis-scaled",
+        "BAS override holding the damper open"
+      ],
+      "checks": [
+        "Check the actual damper position against the minimum setpoint and the feedback voltage",
+        "Look for BACnet/BAS overrides on the economizer output"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Title 24 Economizer Alarms' (ManualsLib p.92)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Title 24 Economizer Not Economizing When It Should",
+      "meaning": "Title 24 (FDD) Economizer alarm listed by name in the VCCX2 technical guide: conditions are suitable for economizer cooling but the economizer is not economizing. Detailed trigger text not captured in search summaries.",
+      "likelyCauses": [
+        "Economizer disabled by configuration or enthalpy/dry-bulb changeover setpoints",
+        "Damper failed closed",
+        "OAT or OA humidity sensor reading incorrectly"
+      ],
+      "checks": [
+        "Verify economizer enable setpoints and the OAT / OA humidity readings",
+        "Command the damper open and confirm feedback"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Title 24 Economizer Alarms' (ManualsLib p.92) - alarm name",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Title 24 Economizer Economizing But Shouldn't",
+      "meaning": "Title 24 (FDD) Economizer alarm listed by name in the VCCX2 technical guide: the economizer is economizing when outdoor conditions do not permit it. Detailed trigger text not captured in search summaries.",
+      "likelyCauses": [
+        "Damper stuck open / actuator failed",
+        "Changeover setpoint mis-set",
+        "OAT sensor reading low"
+      ],
+      "checks": [
+        "Compare OAT reading and changeover setpoints; check damper position vs command"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, 'Title 24 Economizer Alarms' (ManualsLib p.92) - alarm name",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Relay Run Time Exceeded Alarm",
+      "meaning": "Alarm listed by name in the VCCX2 technical guide alarm list ('relay run time exceeded alarm'): a relay output's accumulated run time has exceeded its configured run-time limit (maintenance reminder). Detailed text not captured in search summaries.",
+      "likelyCauses": [
+        "Scheduled maintenance interval reached for the associated output (filters, belts, compressor hours)"
+      ],
+      "checks": [
+        "Perform the maintenance, then reset the run-time counter in Prism 2 / service tool"
+      ],
+      "severity": "info",
+      "source": "VCCX2 Controller Technical Guide G039840, alarm list (relay run time exceeded alarm)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Fan Array Controller Alarm",
+      "meaning": "Alarm listed by name in the VCCX2 technical guide alarm list ('Fan Array Controller alarm'); the VCCX2 (SS1088 v2.36+) also exposes Fan Array Controller motor current and speed percent over BACnet. Detailed trigger text not captured in search summaries.",
+      "likelyCauses": [
+        "Fan array (ECM/EC fan wall) controller reporting a motor fault or loss of communication"
+      ],
+      "checks": [
+        "Read the fan array controller's own status and each fan's fault LED; check its E-BUS/communication link to the VCCX2"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, alarm list; SS1088 VCCX2 revision log (v2.36 BACnet fan array points)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Direct Fire Heat Alarm",
+      "meaning": "Alarm listed by name in the VCCX2 technical guide alarm list ('direct fire heat alarm') for units with a direct-fired gas heat section. Detailed trigger text not captured in search summaries.",
+      "likelyCauses": [
+        "Direct-fired burner flame safeguard lockout or airflow proving fault"
+      ],
+      "checks": [
+        "Check the burner flame-safeguard control's own fault code and the burner airflow proving switch"
+      ],
+      "severity": "warning",
+      "source": "VCCX2 Controller Technical Guide G039840, alarm list (direct fire heat alarm)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Suction Pressure Failure (RSMD: LOW SUCT / SP1)",
+      "meaning": "RSMD refrigerant system module alarm: occurs if suction pressure stays below the Low Suction Pressure Setpoint for one minute or falls below 40 psi for five seconds. This alarm will shut down the system and power must be cycled to clear the alarm.",
+      "likelyCauses": [
+        "Low refrigerant charge / leak",
+        "Low evaporator airflow (dirty filters, VFD/fan fault, iced coil, closed dampers)",
+        "Restricted TXV/EEV, liquid line drier, or plugged strainer",
+        "Failed suction pressure transducer or wiring reading low"
+      ],
+      "checks": [
+        "Verify the suction transducer against a gauge on the same port (the RSMD diagnostic screen shows the transducer reading)",
+        "Check charge by subcooling with the compressor forced to full capacity",
+        "Check airflow: filters, fan speed command vs actual, coil condition",
+        "Look for frost at the metering device (restriction); then cycle power to the RSMD to clear the lockout"
+      ],
+      "severity": "lockout",
+      "source": "RSMD Technical Guide G039810 / RSMD2R G088350, alarm definitions ('Low Suction Pressure'); AAON RSMD Technical Manual (ManualsLib) p.17 'Alarms Screen and Definitions'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Suction Pressure 2 (SP2) Failure",
+      "meaning": "RSMD-CM alarm for the second circuit: occurs if Suction Pressure 2 stays below the Low Suction Pressure Setpoint for one minute or falls below 40 psi for five seconds. This alarm will shut down the system and power must be cycled to clear the alarm. (One ManualsLib RSMD summary states a 20-second delay for SP2 - confirm against the module's own guide.)",
+      "likelyCauses": [
+        "Same as circuit 1: low charge, low airflow, restriction, bad transducer on circuit 2"
+      ],
+      "checks": [
+        "Diagnose circuit 2 as for Low Suction Pressure Failure; cycle power to the RSMD to clear"
+      ],
+      "severity": "lockout",
+      "source": "RSMD-CM Technical Guide G102439 Rev. A / AAON RSMD-CM Technical Manual (ManualsLib) p.19 'Alarms Screens'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Head Pressure Detected (RSMD)",
+      "meaning": "RSMD high head pressure alarm condition, activated when the head pressure (Head Pressure 1 or Head Pressure 2) rises above 550 psi; this causes the condenser output to go to 100 percent. Power must be cycled to the RSMD to clear the alarm. (RSMV variant: alarm deactivates when head pressure drops below 540 psig.)",
+      "likelyCauses": [
+        "Condenser fan not running / head-pressure control output failure",
+        "Dirty or blocked condenser coil, recirculating hot air",
+        "Overcharge or non-condensables",
+        "Failed head pressure transducer reading high"
+      ],
+      "checks": [
+        "Verify the transducer against a gauge on the discharge/liquid line",
+        "Check condenser fan operation and the 0-10 VDC condenser signal",
+        "Clean the coil; check subcooling for overcharge; then cycle RSMD power to clear"
+      ],
+      "severity": "lockout",
+      "source": "RSMD Technical Guide G039810, alarm definitions ('High Head Pressure Detected'); RSMV Technical Guide AA-RSMV-TGD-D (540 psig release)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Suction Pressure Sensor Failure / No Suction Pressure Detected",
+      "meaning": "RSMD alarm: indicates the Suction Pressure Sensor (transducer) is not detected by the system. There is no compressor failure from this alarm; the failure will be unsafe suction pressure (low-suction protection is lost). RSMD sensor diagnostics: voltage above 4.98 VDC indicates an open sensor or wiring; less than 0.38 VDC indicates a shorted sensor.",
+      "likelyCauses": [
+        "Transducer unplugged, open/shorted cable, or failed transducer",
+        "Transducer not powered (5 VDC supply)"
+      ],
+      "checks": [
+        "Measure transducer signal voltage at the RSMD (>4.98 VDC open, <0.38 VDC short) and the 5 VDC supply",
+        "Compare the RSMD diagnostic-screen pressure to a gauge; replace the transducer if the signal is wrong"
+      ],
+      "severity": "warning",
+      "source": "AAON RSMD Technical Manual (ManualsLib) p.17 'Alarms Screen and Definitions'; RSMD2R Technical Guide G088350 ('No Suction Pressure Detected'); RSMD guide sensor voltage diagnostics",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Head Pressure Sensor Failure / No Head Pressure Detected",
+      "meaning": "RSMD alarm: indicates the Head Pressure Sensor 1 (or 2) is not detected by the system. This will cause the condenser fan/valve output to go to 100 percent (loss of head pressure reading drives the condenser signal to 100 percent until the compressor shuts down).",
+      "likelyCauses": [
+        "Transducer unplugged, open/shorted cable, or failed transducer",
+        "5 VDC transducer supply missing"
+      ],
+      "checks": [
+        "Measure transducer signal voltage (>4.98 VDC open, <0.38 VDC short) and supply at the RSMD",
+        "Expect the condenser fans at full speed while this alarm is active - do not chase that as a separate fault"
+      ],
+      "severity": "warning",
+      "source": "AAON RSMD Technical Manual (ManualsLib) p.17 'Alarms Screen and Definitions'; RSMD2R G088350 ('No Head Pressure Detected'); RSMVHPQ Technical Guide ASM02786",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor 1 / Compressor 2 Fault (RSMD: COMP1 / COMP 2)",
+      "meaning": "RSMD alarm: occurs if the compressor fails to run 45 seconds after the relay is activated or if the run signal is lost after activation. Binary Input 1 is the Compressor 1 status, typically sourced from the auxiliary contacts on the compressor contactor after it has run through the compressor safeties; if it opens, the Compressor Enable Relay de-energizes and a compressor alarm is generated, with a retry after five minutes. If a COMP 1 or 2 fault occurs five times within a four-hour period, the compressor will be locked out and power must be cycled to the RSMD to clear the alarm.",
+      "likelyCauses": [
+        "Compressor safety open in the contactor coil circuit (HPS, LPS, compressor controller TRIP, phase monitor)",
+        "Contactor not pulling in / bad aux contact or aux contact wiring",
+        "Compressor overload or internal protector open",
+        "Compressor controller (Copeland DCC) in alarm - read its flash code"
+      ],
+      "checks": [
+        "With the RSMD relay energized, check 24 VAC through the safety string to the contactor coil and note which device opened",
+        "Verify the aux contact closes and 24 VAC returns to the RSMD binary input",
+        "Read the compressor controller ALERT LED flash code",
+        "After repair, cycle power to the RSMD to clear a lockout"
+      ],
+      "severity": "lockout",
+      "source": "AAON RSMD Technical Manual (ManualsLib) p.17 'Alarms Screen and Definitions'; RSMD Technical Guide G039810 binary input description",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor 1 / 2 HPS Fault (RSMD-CM: COMP1 HPS FAULT)",
+      "meaning": "RSMD-CM alarm: occurs if the compressor relay is energized and the binary input is energized but the binary input de-energizes within the first 15 minutes of the compressor call (high pressure switch trip). The module allows four retries but locks out on the fifth fault; the retry count resets if the RSMD-CM goes to Off Mode or the compressor has run successfully for two hours since the last fault.",
+      "likelyCauses": [
+        "High pressure switch tripping: condenser fan/head-pressure control failure, dirty coil, overcharge, non-condensables",
+        "HPS wiring intermittent"
+      ],
+      "checks": [
+        "Watch head pressure on the RSMD diagnostic screen as the compressor starts",
+        "Verify condenser fan operation and coil cleanliness; check the HPS trip point",
+        "Cycle power to the RSMD-CM to clear the lockout after repair"
+      ],
+      "severity": "lockout",
+      "source": "RSMD-CM Technical Guide G102439 Rev. A / AAON RSMD-CM Technical Manual (ManualsLib) p.19 'Alarms Screens'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "EBUS SLAVE (SLV) TIMEOUT (RSMD-CM)",
+      "meaning": "RSMD-CM alarm: indicates that communication has been lost between the RSMD-CM and the Main controller (VCCX2) or other E-BUS modules that may be connected.",
+      "likelyCauses": [
+        "E-BUS cable unplugged or damaged",
+        "Module address/DIP switch conflict",
+        "Main controller halted or powered down"
+      ],
+      "checks": [
+        "Check E-BUS cables and connectors between the VCCX2 and modules; watch the COMM/EBUS LEDs for activity",
+        "Verify module addressing and that the VCCX2 heartbeat LEDs are blinking"
+      ],
+      "severity": "warning",
+      "source": "RSMD-CM Technical Guide G102439 Rev. A / AAON RSMD-CM Technical Manual (ManualsLib) p.19 'Alarms Screens'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Emergency Shutdown (RSMD module)",
+      "meaning": "RSMD alarm: if the module's Emergency Shutdown binary input is activated, the RSMD generates an alarm and shuts down the compressor relay.",
+      "likelyCauses": [
+        "Unit shutdown loop (smoke/firestat/phase monitor) open",
+        "Loss of 24 VAC to the shutdown input"
+      ],
+      "checks": [
+        "Check the shutdown loop and the VCCX2 Emergency Shutdown alarm (usually present together)"
+      ],
+      "severity": "shutdown",
+      "source": "RSMD Technical Guide G039810, binary input / alarm description",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 2 - High Discharge Temperature",
+      "meaning": "Copeland Digital Compressor Controller (used on AAON RN/RQ digital scroll compressors) ALERT flash code 2: discharge thermistor above trip set point or thermistor short circuited. Resets after 30 minutes and motor cools down; if 5 events occur within 4 hours, the compressor is locked out. Flash code 2 activates the 30-minute anti-short-cycle timer.",
+      "likelyCauses": [
+        "Low charge / low suction density (high superheat) overheating the scroll",
+        "High compression ratio: dirty condenser, condenser fan failure",
+        "Digital scroll unloading with poor return gas cooling",
+        "Shorted discharge thermistor"
+      ],
+      "checks": [
+        "Measure discharge line temperature and suction superheat; check charge and condenser operation",
+        "Check thermistor resistance; replace if shorted",
+        "Cycle power after repair if locked out"
+      ],
+      "severity": "lockout",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes' / Figure 'Compressor Controller Flash Code Details'; Copeland AE8-1328 flash code table",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 3 - Compressor Protector Trip",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 3: no compressor current is detected when the compressor should be running (demand signal from the system controller is greater than 1.44 VDC and no compressor current is detected). Resets when compressor current is detected. Codes 3, 4, 5 and 9 activate the two-minute anti-short-cycle timer.",
+      "likelyCauses": [
+        "Compressor internal overload / protector open",
+        "Contactor not pulled in, open contactor coil circuit (HPS/LPS open), blown fuse, open compressor winding",
+        "Current sensor loop not routed through the compressor lead"
+      ],
+      "checks": [
+        "Check voltage at the contactor load side with a call; verify contactor coil circuit and safeties",
+        "Check compressor winding resistance and internal protector (let it cool)",
+        "Verify the compressor lead passes through the controller's current sensor"
+      ],
+      "severity": "warning",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes'; Copeland AE8-1328; AAON RN flash code 3 video reference (AE8-1328 R5)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 4 - Locked Rotor",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 4: locked rotor condition sensed by the controller on four consecutive start-ups (compressor trips within seconds of each start) within a 20-second window. Activates the two-minute anti-short-cycle timer.",
+      "likelyCauses": [
+        "Seized or mechanically bound scroll",
+        "Single-phasing / low voltage on a 3-phase compressor, bad contactor contact",
+        "Failed run capacitor (single-phase units)",
+        "Liquid slugging on start"
+      ],
+      "checks": [
+        "Check all three phases at the compressor terminals on a start attempt",
+        "Check locked-rotor amps and winding resistance; check for liquid in the crankcase"
+      ],
+      "severity": "lockout",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes'; Copeland AE8-1328",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 5 - Demand Signal Loss",
+      "meaning": "Copeland Digital Compressor Controller ALERT code for loss of the digital scroll demand signal: demand input signal is below 0.5 VDC; resets after the demand input signal rises above 1.0 VDC. (Code number 5 is taken from the AE8-1328 feature order - High Discharge Temperature, Protector Trip, Locked Rotor, Demand Signal Loss, Discharge Thermistor Fault, Welded Contactor, Low Voltage - confirm on the unit's flash-code label.)",
+      "likelyCauses": [
+        "0-5 / 1-5 VDC demand wire from the RSMD/VCCX2 open or loose",
+        "RSMD analog output failed",
+        "Wrong controller configuration for the digital compressor"
+      ],
+      "checks": [
+        "Measure the demand voltage at the controller's demand terminals with a cooling call",
+        "Check the RSMD analog output and wiring"
+      ],
+      "severity": "warning",
+      "source": "Copeland AE8-1328 flash code table (demand signal loss thresholds); AAON RN Series IOM Table 33",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 6 - Discharge Thermistor Fault",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 6: the controller is not receiving a signal from the discharge temperature thermistor. The thermistor may be missing, disconnected or a wire is broken. The alarm relay contacts will close and the controller will not increase the capacity of the compressor beyond 50 percent loading.",
+      "likelyCauses": [
+        "Discharge thermistor unplugged, broken wire, or open thermistor",
+        "Thermistor not installed after compressor replacement"
+      ],
+      "checks": [
+        "Check thermistor connection and resistance at the controller",
+        "Expect capacity limited to 50 percent until repaired (unit will appear low on cooling)"
+      ],
+      "severity": "warning",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes'; Copeland AE8-1328",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 7 - Unloader Solenoid Fault",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 7: unloader solenoid fault - listed in AE8-1328 as reserved for future use.",
+      "likelyCauses": [
+        "Not normally seen; if displayed, suspect the digital unloader solenoid coil or its wiring"
+      ],
+      "checks": [
+        "Check the unloader solenoid coil resistance and wiring"
+      ],
+      "severity": "info",
+      "source": "Copeland AE8-1328 flash code table; AAON RN Series IOM Table 33",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 8 - Compressor Contactor Fault (Welded Contactor)",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 8: compressor current is detected when the system controller demand signal is below 1.44 VDC. The compressor contactor may have welded contacts.",
+      "likelyCauses": [
+        "Welded / stuck contactor contacts",
+        "Contactor coil held in by a wiring fault or BAS override",
+        "Current sensor picking up another load"
+      ],
+      "checks": [
+        "Remove the call and verify the contactor drops out; replace the contactor if contacts are welded",
+        "Verify the current sensor loop is on the compressor lead only"
+      ],
+      "severity": "warning",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes'; Copeland AE8-1328",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor controller ALERT Flash Code 9 - Low Voltage",
+      "meaning": "Copeland Digital Compressor Controller ALERT flash code 9: low voltage / brown-out condition - the 24 VAC control voltage is too low for reliable operation (all LEDs flashing at the same rate also indicates the 24 VAC supply is too low for operation). Activates the two-minute anti-short-cycle timer.",
+      "likelyCauses": [
+        "Overloaded or undersized control transformer",
+        "High resistance in the 24 VAC circuit, poor common connection",
+        "Low line voltage"
+      ],
+      "checks": [
+        "Measure 24 VAC at the controller under load; check transformer VA and line voltage"
+      ],
+      "severity": "warning",
+      "source": "AAON RN Series IOM, Table 33 'Compressor Controller ALERT Flash Codes'; Copeland AE8-1328",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "VCCX2 ALARM (red) LED on continuously",
+      "meaning": "A diagnostic LED that lights up and stays lit when there is an alarm present; the specific alarm text is on the LCD alarm screen, the System Manager TS II, Prism 2, or BACnet.",
+      "checks": [
+        "Scroll the LCD 'Alarms' screen (press ENTER to step through, or let it auto-scroll) to read the alarm names"
+      ]
+    },
+    {
+      "pattern": "VCCX2 STATUS 2 LED blinks once every 10 seconds",
+      "meaning": "Normal software operation.",
+      "checks": [
+        "No action"
+      ]
+    },
+    {
+      "pattern": "VCCX2 STATUS 2 LED blinks twice every 10 seconds",
+      "meaning": "An override is active (a point is being overridden from the service tool, System Manager, or BAS).",
+      "checks": [
+        "Find and release the override in Prism 2 / service tool or the BACnet priority array before diagnosing 'wrong' operation"
+      ]
+    },
+    {
+      "pattern": "VCCX2 STATUS 2 LED blinks three times every 10 seconds",
+      "meaning": "One of the outputs is in Force mode.",
+      "checks": [
+        "Release forced outputs in the service tool when testing is complete"
+      ]
+    },
+    {
+      "pattern": "VCCX2 STATUS 1 LED blinking",
+      "meaning": "Diagnostic blink-code LED that should not be blinking under normal operation; blinking indicates a controller problem.",
+      "checks": [
+        "Cycle controller power; if it persists, contact AAON Controls support with the blink count"
+      ]
+    },
+    {
+      "pattern": "VCCX2 POWER, APP HB, OS HB, WDOG, EBUS, LOOP COMM, BACNET, RLY1-RLY8 LEDs",
+      "meaning": "Power applied; application and operating-system heartbeats (should blink continuously); watchdog; E-BUS activity to expansion modules; local loop communication; BACnet activity; and the commanded state of each relay output.",
+      "checks": [
+        "A heartbeat LED that stops blinking indicates a halted controller - cycle power",
+        "RLY LEDs show which outputs (fan, cooling/heating stages) are commanded; compare with what is actually running"
+      ]
+    },
+    {
+      "pattern": "VCC-X EM1 expansion module ALARM LED on, relays off, analog outputs at 0 VDC",
+      "meaning": "The EM1 module has not received communications from the VCCX2 for more than 1 minute (loss of E-BUS communication).",
+      "checks": [
+        "Check the E-BUS cable between the VCCX2 and the EM1; the EM1 COMM LED should blink on and off every time it receives a valid E-BUS request"
+      ]
+    },
+    {
+      "pattern": "RSMD / RSMD-CM / RM454 ALARM LED above the LCD lit red and blinking",
+      "meaning": "An alarm is present on the refrigerant system module; the alarms display and scroll automatically from the module's ALARMS screen ('NO ALARMS' when none).",
+      "checks": [
+        "Read the module's ALARMS screen; low-suction, high-head and compressor lockouts on the RSMD require cycling power to the module to clear"
+      ]
+    },
+    {
+      "pattern": "AAON Compressor Protection Module (G143890) status LED steady green",
+      "meaning": "Unit is powered up and the module is not detecting any fault conditions.",
+      "checks": [
+        "No action"
+      ]
+    },
+    {
+      "pattern": "AAON Compressor Protection Module (G143890) status LED flashing red, N flashes",
+      "meaning": "The module has detected a fault condition and is now in alarm mode; the number of flashes indicates what alarm is present (see 'Alarm Status LED Diagnostic Codes' in the CPM technical guide - the per-count table was not captured).",
+      "checks": [
+        "Count the flashes and look them up in the CPM technical guide G143890 'Alarm Status LED Diagnostic Codes' table"
+      ]
+    },
+    {
+      "pattern": "Compressor controller (Copeland Digital Compressor Controller) TRIP LED on",
+      "meaning": "The compressor protector is open, or supply power to the compressor is missing.",
+      "checks": [
+        "Check voltage to the compressor and the internal protector; let the compressor cool"
+      ]
+    },
+    {
+      "pattern": "Compressor controller TRIP LED flashing",
+      "meaning": "The anti-short-cycle timer is active (2 minutes after codes 3, 4, 5, 9; 30 minutes after code 2).",
+      "checks": [
+        "Wait out the timer; do not cycle power repeatedly to bypass it"
+      ]
+    },
+    {
+      "pattern": "Compressor controller ALERT LED flashes N times, pauses, repeats",
+      "meaning": "The number of consecutive flashes is the Flash Code and correlates to a particular abnormal condition: 2 High Discharge Temperature, 3 Compressor Protector Trip, 4 Locked Rotor, 5 Demand Signal Loss, 6 Discharge Thermistor Fault, 7 Unloader Solenoid Fault (reserved), 8 Compressor Contactor Fault (welded contactor), 9 Low Voltage; code 1 reserved for future use.",
+      "checks": [
+        "See the matching 'Compressor controller ALERT Flash Code N' fault entries"
+      ]
+    },
+    {
+      "pattern": "Compressor controller: all LEDs flashing at the same rate",
+      "meaning": "24 VAC supply is too low for operation.",
+      "checks": [
+        "Measure 24 VAC at the controller; check the transformer and connections"
+      ]
+    }
+  ],
+  "diagnosticTips": [
+    "Where to look: the VCCX2 board (LEDs and 2-line LCD with keypad) is in the unit's control compartment; the System Manager TS II or the LCD alarm screen shows 'No Alarms' or 'Alarms' - press ENTER to scroll through the active alarms or let them auto-scroll. Prism 2 (PC software) and the Modular Service Tool show the same alarms with full names, and alarms must be configured in Prism 2 to be reported.",
+    "The VCCX2 detects sensor open/short by input voltage: above 4.88 VDC = open sensor or wiring, below 0.05 VDC = short. For Space, Supply, Outdoor or Return temperature sensors you can check resistance with the sensor disconnected or voltage while connected. RSMD transducer inputs use 4.98 VDC (open) / 0.38 VDC (short).",
+    "Refrigerant-side faults (low suction, high head, compressor fault, transducer failure) are detected by the RSMD / RSMD2R / RSMD-CM / RM454 refrigerant system module and passed to the VCCX2 over E-BUS - read the module's own ALARMS screen and diagnostic (pressure) screens. Low Suction, High Head and 5-in-4-hour compressor lockouts require cycling power to the module to clear.",
+    "AAON RN/RQ digital-scroll units have a Copeland Digital Compressor Controller per digital compressor: read the ALERT LED flash count and TRIP LED (RN IOM 'Compressor Controller Flash Code Details'). Newer units may use the AAON Compressor Protection Module (G143890) whose status LED is green (OK) or flashing red with a flash count.",
+    "If configured, the VCCX2 Alarm Active relay energizes any time a VCCX2 alarm is active - useful for a BAS binary alarm point.",
+    "STATUS 2 LED blinking 2x or 3x every 10 s means an override or forced output is active - release overrides (service tool, System Manager, or BACnet priority array) before troubleshooting unexpected operation.",
+    "The optional AAON Touchscreen Controller (obsolete) lists alarms under 'General Alarms' (p.61) and 'Shutdown Alarms' (p.62) of its user manual; its alarm names were not captured here.",
+    "Controls support: AAON Controls (918) 382-6450 / support.controls@aaon.com; VCCX2 technical guide G039840 (ASM01698), RSMD guide G039810, RSMD2R G088350, CPM G143890."
+  ],
+  "notes": [
+    "Coverage is partial: the VCCX2 technical guide's alarm sections (p.89-92) were transcribed from search-result excerpts, not read in full; exact trigger text for Mechanical Cooling Failure and Mechanical Heating Failure, and full definitions for the Title 24 'Not Economizing When It Should' / 'Economizing But Shouldn't', Relay Run Time Exceeded, Fan Array Controller and Direct Fire Heat alarms were not captured (names confirmed in the guide's alarm list).",
+    "A 'High Control Temp Failure Alarm' likely exists (the guide defines a 'Control Mode High Alarm Offset' used when the controlling sensor rises above the Cooling Mode Enable Setpoint) but the alarm name was not seen verbatim, so it is not included.",
+    "The 6 codes in the existing pack entry are all retained here (Low Suction Pressure Failure, Mechanical Cooling Failure, Mechanical Heating Failure, Fan Proving Alarm, Dirty Filter Alarm, sensor failure alarms - the last now split into Bad SAT / OAT / Space / RAT / CO2 sensor entries). Meanings were tightened to the guide text where search excerpts allowed.",
+    "VCCX-IP (ASM07424) and VCCX-454 (ASM07503, R-454B units) are the successors to the VCCX2 with the same alarm set; RM454-D/-V/-Z modules replace the RSMD family on R-454B units and use the same ALARM LED / LCD alarm screen scheme.",
+    "AAON RN/RQ model strings with the 'Communicating' controls option denote the factory VCCX2/VCC-X controller; no separate numeric 'communicating fault code' list exists - the alarms are the text alarms above.",
+    "AAON Touchscreen Controller (AAON_TS_Controller_Manual_190702) and Touchscreen Mini Controller alarm names, and the AAON Field Controller / Prism 2 supervisory alarms, were not captured in search summaries and are not included.",
+    "Water-source heat pump (WH/WV series) 'LED Diagnostic Codes' (1 High Discharge Pressure, 2 Emergency Shutdown Aux, 3 High Condensate Level, 4 Low Control Voltage, 5 High Control Voltage, 6 Low Suction Pressure) belong to a different AAON board and are intentionally excluded from this rooftop platform."
+  ]
+}

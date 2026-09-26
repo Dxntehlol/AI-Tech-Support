@@ -1,0 +1,738 @@
+{
+  "pack": "daikin-goodman",
+  "platformId": "microtech-iii",
+  "name": "Daikin Applied MicroTech III unit controller (Rebel DPS/DPH, Maverick II MPS, RoofPak RPS/RDT/RFS/RCS/RAH, self-contained SWP/SWT) and MicroTech II applied-rooftop legacy",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Daikin Applied OM 920 (rev -1 through -7) - MicroTech III Unit Controller for Commercial Rooftop, Applied Rooftop and Self-Contained Systems (DPS, MPS, RAH, RCS, RDS, RDT, RFS, RPS, SWP, SWT) - Operations Manual, 'Alarms' chapter (Alarm Classes, Faults, Problems, Warnings, Alarm Clearing)",
+      "docId": "OM 920",
+      "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/media/MicroTech%20III%20for%20AHU%20Manual%20Daikin%20OM%20920.pdf/"
+    },
+    {
+      "title": "Daikin Applied ED 15112 (rev -7 through -20) - MicroTech III Rooftop and Self Contained Unit Controller Protocol Information / Network Integration Guide (BACnet, LonWorks) - Table 40 'Current Alarm' enumeration (Warnings 1-99, Problems 100-199, Faults 200-255)",
+      "docId": "ED 15112",
+      "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/media/ED%2015112-20.pdf/"
+    },
+    {
+      "title": "Daikin Applied OM 1141 - Rebel DPS 03-28 Operation and Maintenance Manual (MicroTech III alarms: Faults, Problems, Warnings, Alarm Clearing; inverter compressor limits)",
+      "docId": "OM 1141",
+      "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/mediaprd/Rebel%20DPS%2003-28%20-%20OM%201141-5%20(pub%201-11-21).pdf/"
+    },
+    {
+      "title": "Daikin Applied IM 1125 - Rebel Commercial Packaged Rooftop Systems Installation and Maintenance Manual / OM 1263 Rebel Refrigerant-Only Controls - Troubleshooting: Inverter Board Fault Codes (as reproduced on ManualsLib 'Daikin MicroTech III DPS Installation and Maintenance Manual', pp. 69-98)",
+      "docId": "IM 1125 / OM 1263",
+      "url": "https://www.manualslib.com/manual/1423224/Daikin-Microtech-Iii-Dps.html?page=69"
+    },
+    {
+      "title": "Daikin Applied IM 917 - MicroTech III BACnet MS/TP Communication Module for Rooftop and Self-Contained Unit Controllers - Installation and Maintenance Manual (BSP LED / BUS LED tables); IM 916 BACnet IP module",
+      "docId": "IM 917 / IM 916",
+      "url": "https://tahoeweb.daikinapplied.com/api/general/DownloadDocumentByName/media/IM%20917-6.pdf/"
+    },
+    {
+      "title": "McQuay OM 137 / OM 138 - MicroTech II Applied Rooftop Unit Controller Operation Manual (Discharge Air Control / Space Comfort Control) - 'Alarm Control' Faults, Problems, Warnings (legacy MicroTech II names)",
+      "docId": "OM 137 / OM 138",
+      "url": "https://www.manualslib.com/manual/1326625/Mcquay-Microtech-Ii.html?page=91"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "Airflow Fault",
+      "meaning": "Fault (alarm value 208). 'An Airflow Fault occurs if differential pressure switch PC7 fails to detect airflow for longer than the airflow timer (default = 120 seconds) and on VAV units the current duct static pressure indication is less than half the static pressure setpoint after the unit leaves the Startup operating state or any time afterward, while the unit is running.' The unit is shut down and remains shut down until the fault is manually cleared through the unit keypad or via a network signal. (Older OM 920 / MicroTech II text calls the same alarm 'Fan Fail'.)",
+      "likelyCauses": [
+        "Supply fan not running: VFD faulted or not enabled, fan contactor/overload open, broken belt, motor failure",
+        "PC7 airflow (fan-proving) differential pressure switch failed, tubing kinked/disconnected, or set point too high for the airflow",
+        "R63 fan-status relay contacts not making (PC7 is wired in series with R63 to DI1) - reported field cause",
+        "VAV units: duct static pressure transducer reading under half of set point (blocked pickup tube, transducer failure, closed dampers)",
+        "Airflow timer too short for a slow VFD ramp"
+      ],
+      "checks": [
+        "Confirm the supply fan actually runs when commanded (Manual Control / Unit Status); read any VFD fault code at the drive",
+        "With the fan running, verify PC7 closes: check its tubing to the blower section and jumper PC7 momentarily to prove the DI1 input (field practice)",
+        "Check the R63 relay coil/contacts in the PC7 circuit and 24 VAC at DI1",
+        "VAV: compare the displayed duct static to the set point; check the static pressure tubing and transducer",
+        "Clear the fault at Alarm Lists -> Active Alarms -> Clear Alarms once the cause is fixed"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920 'Alarms' -> Faults -> Airflow Fault (ManualsLib Daikin MicroTech III Operation Manuals p.84); ED 15112 Table 40 value 208 'Airflow Fault'; HVAC-Talk 'Daikin airflow fault' (PC7/R63 wiring, corroboration only)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Discharge Air Temp Fault",
+      "meaning": "Fault (alarm value 212, 'Low Discharge Air Temp'). When the Low Discharge Air Temperature fault occurs the unit is shut down and remains shut down until the Low Discharge Air Temperature fault is manually cleared through the unit keypad or via a network signal.",
+      "likelyCauses": [
+        "Heating failure in cold weather (gas furnace lockout, electric heat stages not energizing, hot-water valve/coil no flow) with outside air damper open",
+        "Economizer / outside-air damper stuck open or minimum position too high in low ambient",
+        "Discharge air sensor reading low (poor location in a cold plenum, partially failed thermistor)",
+        "Cooling running when it should not (compressor contactor welded, wrong mode)"
+      ],
+      "checks": [
+        "Compare the displayed DAT with a reference thermometer in the discharge plenum",
+        "Verify heat operates: furnace status/FSG lockout, electric heat contactors, hot-water valve stroke and supply temperature",
+        "Check outside-air damper actuator position and minimum OA set point against current ambient",
+        "Ohm the DAT thermistor (10k NTC) and inspect wiring to the MCB/expansion module input"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920 'Alarms' -> Faults -> Low Discharge Air Temperature (ManualsLib p.84); ED 15112 Table 40 value 212",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Discharge Air Temp Fault",
+      "meaning": "Fault (alarm value 216, 'High Discharge Air Temp'). Discharge air temperature above the high limit; unit shut down (Fault class - manual clear). The specific temperature threshold text was not visible in the sources seen; ED 15112 notes the enumeration text 'High'/'Low' Discharge Air Temp Fault.",
+      "likelyCauses": [
+        "Heat running out of control: gas valve stuck open, electric heat contactor welded, hot-water/steam valve failed open",
+        "Low airflow across the heater (dirty filters, closed dampers, VFD at minimum) raising discharge temperature",
+        "DAT sensor drifted/shorted toward a high reading"
+      ],
+      "checks": [
+        "Verify the heat source de-energizes when the controller commands off (gas valve voltage, heat contactors, valve actuator)",
+        "Check airflow: filters, dampers, supply fan speed",
+        "Compare DAT display with a reference thermometer; ohm the thermistor"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920 'Alarms' -> Faults (High Discharge Temperature listed among faults); ED 15112 Table 40 value 216 'High Discharge Air Temp'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Return Air Temp Fault",
+      "meaning": "Fault (alarm value 220, 'High Return Air Temp'). Return air temperature above the high return limit; unit shut down (Fault class). On MicroTech II the equivalent 'Hi Return Tmp' fault shuts the unit down and it remains shut down until the fault is manually cleared through the unit keypad or via a network signal.",
+      "likelyCauses": [
+        "Fire or abnormal heat source in the space/return plenum (this alarm is a smoke/fire safety function)",
+        "Return air sensor located near a heat source or shorted",
+        "Heat running with the return damper closed / recirculation of hot discharge air"
+      ],
+      "checks": [
+        "Treat as a potential fire/overheat condition first - inspect the space and return plenum",
+        "Compare the displayed RAT with a reference thermometer; ohm the RAT thermistor and wiring",
+        "Check for hot discharge air short-cycling into the return (open access panels, failed return damper)"
+      ],
+      "severity": "shutdown",
+      "source": "ED 15112 Table 40 value 220 'High Return Air Temp'; OM 920 faults list ('High Return Temperature'); McQuay OM 137 MicroTech II 'Alarm Control - Faults' (Hi Return Tmp shutdown/manual clear text)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Duct High Limit Fault",
+      "meaning": "Fault (alarm value 224, 'Duct High Limit'). Duct high limit (supply duct high static pressure switch) input opened - unit shut down and remains shut down until the fault is manually cleared through the unit keypad or via a network signal.",
+      "likelyCauses": [
+        "Closed or stuck fire/smoke dampers, closed VAV boxes at start-up",
+        "Supply-fan VFD / static-pressure control overshoot",
+        "Duct high-limit switch (DHL) set point too low or switch failed",
+        "Dirty filters combined with high fan speed"
+      ],
+      "checks": [
+        "Read the DHL switch setting and duct static at the switch tap",
+        "Verify VAV boxes/dampers open before fan start; check the SAF VFD ramp and duct static set point",
+        "Ohm the DHL switch and its wiring to the controller digital input"
+      ],
+      "severity": "shutdown",
+      "source": "ED 15112 Table 40 value 224 'Duct High Limit'; OM 920 'Alarms' -> Faults; ED 15112 alarm point 'Duct High Limit Fault'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Discharge Sensor Fail",
+      "meaning": "Fault (alarm value 228, 'Discharge Sensor Fail'). 'When a Discharge Air Sensor fault occurs (after the Sensor Alarm Delay, default 30 seconds), the unit is shut down. It remains shut down until the Discharge Air Sensor fault is manually cleared through the unit keypad or via a network signal.'",
+      "likelyCauses": [
+        "DAT sensor open or shorted (10k thermistor)",
+        "Sensor wiring damaged or unplugged at the MCB / expansion module analog input",
+        "Sensor removed from the discharge plenum during service and not reconnected"
+      ],
+      "checks": [
+        "Ohm the DAT sensor and compare with the thermistor table in OM 920 (10k at 77 F); inspect wiring",
+        "Confirm the sensor is on the correct analog input and the input is configured for the sensor type",
+        "Clear the fault after repair; the Sensor Alarm Delay (default 30 s) must elapse before it re-trips"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920-1 / OM 920 'Alarms' -> Faults -> Discharge Air Sensor (McQuay MicroTech III RAH OM on ManualsLib); ED 15112 Table 40 value 228",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Control Temp Fault",
+      "meaning": "Fault (alarm value 244, 'Control Temp Fault'). 'A Control Temperature Fault that shuts down the unit is initiated if any of the following is true': the return air sensor is not present and reliable and Return Air is selected as the control temperature and a space sensor is not available; a network or local space sensor is not present and reliable and Space is selected as the control temperature and a return temperature sensor is not available; the OAT sensor is not present and reliable and Outdoor Air is selected as the control temperature; or the mixed air temperature sensor is not present or reliable and Mixed Air is selected as the control temperature. The unit remains shut down until the fault is manually cleared through the unit keypad or via a network signal.",
+      "likelyCauses": [
+        "Return air / space / OAT / mixed-air sensor open or shorted while selected as Control Temp Source with no fallback sensor",
+        "Network space temperature not being written by the BAS (stale/NaN) with Control Temp Source = Space and no wired sensor",
+        "Wrong Control Temp Source selection for the sensors actually installed"
+      ],
+      "checks": [
+        "Check Commissioning/Unit Setup -> Control Temp Source and confirm the corresponding sensor reads a valid value on the Temperatures screen",
+        "Ohm the selected sensor (10k NTC) and its wiring; check Space Sensor Present setting",
+        "If BAS-supplied space temp is used, verify the network write is arriving (ED 15112 point) and not defaulting"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920 'Alarms' -> Faults -> Control Temperature Fault (ManualsLib p.84); ED 15112 Table 40 value 244",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Emergency Stop Fault",
+      "meaning": "Fault (alarm value 250, 'Emergency Stop Fault'). 'An Emergency Stop Fault will occur if either of the following conditions is true' - the emergency stop digital input (24 VAC expected on the E-stop input; field smoke/fire/duct-high-temperature devices are wired in series) opens, or the network emergency stop command is received. Unit shut down until the input is restored and the alarm manually cleared.",
+      "likelyCauses": [
+        "Field emergency-stop / fire-alarm relay contact open or missing factory jumper",
+        "Smoke detector, fire panel relay or duct high-temperature limit tripped",
+        "Broken field wiring / voltage drop through field devices so the input no longer sees a solid 24 VAC",
+        "BAS writing the network Emergency Override / Emergency Stop point"
+      ],
+      "checks": [
+        "Measure 24 VAC at the emergency-stop input terminals on the field terminal strip; jumper temporarily to prove the controller input (field practice)",
+        "Trace the field interlock chain (smoke detectors, fire alarm relay, shunt trip)",
+        "Check the BAS emergency-override/stop point value in ED 15112 before assuming a wiring fault"
+      ],
+      "severity": "shutdown",
+      "source": "OM 920 'Alarms' -> Faults -> Emergency Stop Fault ('will occur if either of the following conditions is true'); ED 15112 Table 40 value 250; HVAC-Talk 'Daikin DPS Microtech 3 emergency stop Fault' (24 VAC on the DI, corroboration only)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Freeze Fault",
+      "meaning": "Fault (alarm value 252, 'Freeze Fault'). Freeze protection (freezestat) input opened - unit shut down (Fault class, manual clear).",
+      "likelyCauses": [
+        "Low entering air temperature across a hot-water/steam coil with the valve closed or no flow",
+        "Freezestat capillary sensing a cold spot; loose capillary",
+        "Economizer/outside-air damper failed open in cold weather",
+        "Freezestat set too high"
+      ],
+      "checks": [
+        "Measure air temperature at the coil face and hot-water supply temperature; confirm valve stroke and pump/flow",
+        "Check the OA damper actuator drives closed on unit shutdown",
+        "Verify freezestat setting and continuity to the controller input"
+      ],
+      "severity": "shutdown",
+      "source": "ED 15112 Table 40 value 252 'Freeze Fault'; OM 920 'Alarms' -> Faults; ED 15112 alarm point 'Freeze Fault'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Pressure Circuit 1 Problem",
+      "meaning": "Problem class. 'This alarm occurs on units equipped with compressorized cooling only. If the high pressure switch opens indicating a high refrigerant pressure situation, the High Pressure Circuit 1, 2, 3, 4, 5, 6 problem occurs.' The affected circuit's compressor(s) are disabled; the rest of the unit keeps running. Same alarm exists for circuits 2 through 6.",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil; condenser fan(s) not running or wrong rotation",
+        "Overcharge or non-condensables",
+        "Failed condenser fan motor / EC fan or fan VFD",
+        "HP switch failed or wiring open"
+      ],
+      "checks": [
+        "Compare discharge pressure to the HP switch trip point on the unit data plate; check condenser fan operation and rotation",
+        "Inspect condenser coil, clean if needed; check subcooling for overcharge",
+        "Ohm the HP switch and wiring to the expansion module input"
+      ],
+      "severity": "warning",
+      "source": "OM 920 'Alarms' -> Problems -> High Pressure Circuit 1..6 (ManualsLib p.81); ED 15112 alarm points 'High Pressure Circuit 1..4 Problem'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Low Pressure Circuit 1 Problem",
+      "meaning": "Problem class (ED 15112 Table 40 values 154-159 = Low Pressure circuits 1-6). Low pressure switch on the circuit opened; that circuit's compressor(s) are disabled while the unit keeps running. On MicroTech II the equivalent 'Lo Pres-Ckt1' is 'a notification that the low refrigerant pressure switch has tripped and the unit could be low on refrigerant'; if it occurs three times between 2:00 a.m. of one day and 2:00 a.m. of the next, the alarm does not automatically clear the third time but must be manually cleared through the unit keypad or via a network.",
+      "likelyCauses": [
+        "Low refrigerant charge / leak",
+        "Low airflow across the evaporator (dirty filters, iced coil, fan problem) or low load",
+        "Restricted filter-drier or TXV, closed liquid-line valve",
+        "Low ambient operation without low-ambient control; LP switch or wiring open"
+      ],
+      "checks": [
+        "Check suction pressure/temperature and superheat; look for ice on the evaporator",
+        "Leak-check and verify charge by subcooling (TXV) per the unit data plate",
+        "Verify airflow (filters, fan) and liquid-line restriction (temperature drop across drier)",
+        "Ohm the LP switch and wiring; check the reset count in the Alarm Log"
+      ],
+      "severity": "warning",
+      "source": "ED 15112 Table 40 values 154-159 'Low Pressure Circ 1..6'; OM 920 'Alarms' -> Problems (Low Pressure Problem); McQuay OM 137 MicroTech II 'Lo Pres-Ckt1' description (three-strikes manual clear)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Heat Fail Problem",
+      "meaning": "Problem class. Gas-furnace heating failure indicated by the flame safeguard (FSG) control on units with a CAV supply fan; 'the heat fail problem clears automatically when the FSG control is reset'. Unit continues to run; heating is unavailable until the FSG is reset.",
+      "likelyCauses": [
+        "Furnace ignition failure / flame loss (FSG lockout): dirty flame rod, weak spark, gas pressure, gas valve",
+        "Furnace safeties open (high limit, rollout, combustion air proving/pressure switch)",
+        "FSG control or its wiring to the controller failed"
+      ],
+      "checks": [
+        "Read the FSG (flame safeguard) status/LED at the furnace and reset it; observe an ignition cycle",
+        "Check gas supply/manifold pressure, flame signal, and the combustion-air pressure switch",
+        "Verify the furnace limit and rollout switches are closed; the Heat Fail problem clears on FSG reset"
+      ],
+      "severity": "warning",
+      "source": "OM 920 'Alarms' -> Problems -> Heat Fail Problem (ManualsLib p.81: 'clears automatically when the FSG control is reset'; occurs on units with a CAV supply fan)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "OAT Sensor Problem",
+      "meaning": "Problem class. Outdoor air temperature sensor open or shorted (sensor not present and reliable). 'When the alarm condition is no longer present, the OAT Sensor problem automatically clears.' Functions that depend on OAT (economizer, reset, low-ambient lockouts) are disabled or revert: 'reset reverts from OAT to None when an Outdoor Air Sensor opens or shorts'.",
+      "likelyCauses": [
+        "OAT thermistor open/shorted or wiring damaged (sensor is exposed in the outdoor hood/condenser section)",
+        "Sensor unplugged at the MCB analog input",
+        "Network OAT expected but not being written by the BAS"
+      ],
+      "checks": [
+        "Ohm the OAT sensor (10k NTC at 77 F) and wiring; compare the displayed OAT with actual ambient",
+        "Check the Network OAT / sensor source configuration",
+        "Problem clears automatically once the reading is valid"
+      ],
+      "severity": "warning",
+      "source": "OM 920 'Alarms' -> Problems -> OAT Sensor Problem (ManualsLib p.81); McQuay MicroTech III RAH OM 'Reset - Cooling' section",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Space Sensor Problem",
+      "meaning": "Problem class. 'The MicroTech III controller generates a Space Temperature Sensor Problem alarm if the Space Sensor Present setting is set to Yes' and the space sensor is not present and reliable (open/short). Control falls back where a return sensor is available; 'reset reverts from Space to None when a Space Sensor opens or shorts'. Clears automatically when the reading is valid.",
+      "likelyCauses": [
+        "Wall-mounted space sensor open/shorted or wiring damaged",
+        "Space Sensor Present = Yes but no sensor installed",
+        "Network space temperature not being written"
+      ],
+      "checks": [
+        "Ohm the space sensor (10k NTC) at the unit terminals; check for a valid Space Temp reading on the display",
+        "Set Space Sensor Present = No if no local sensor is fitted and control is by return/network",
+        "Verify BAS is writing the network space temperature point"
+      ],
+      "severity": "warning",
+      "source": "OM 920 'Alarms' -> Problems -> Space Sensor Problem; OM 920 'Space Sensor Present' setting description; McQuay MicroTech III RAH OM 'Reset - Cooling'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Hi DL Temp Problem",
+      "meaning": "Problem class (Rebel / variable-speed compressor units). 'If the variable speed compressor is operating and the discharge line temperature is greater than 250 F for 15 seconds, a High Discharge Line Compressor Problem alarm is generated'; normal compressor control is limited while the condition exists.",
+      "likelyCauses": [
+        "Low charge / high superheat starving the inverter compressor",
+        "High condensing pressure (dirty condenser coil, condenser fan/EC fan problem, high ambient)",
+        "EEV not opening (stuck/failed stepper, sensor error) or liquid-line restriction",
+        "Discharge line thermistor drifted"
+      ],
+      "checks": [
+        "Read discharge line temperature, discharge superheat, suction pressure and superheat on the MicroTech III refrigerant status screens (gauges not required)",
+        "Check condenser coil cleanliness and condenser fan operation",
+        "Verify EEV position vs. command and superheat control; check charge by subcooling",
+        "Ohm the discharge line thermistor (inverter code J3 is the inverter-board equivalent sensor fault)"
+      ],
+      "severity": "warning",
+      "source": "OM 920 'Alarms' -> Problems -> Hi DL Temp Problem (ManualsLib Daikin MicroTech III Operation Manuals p.81); Rebel IM 1125 / OM 1141 VFD compressor discharge-temperature limits",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Waterflow Sw Problem",
+      "meaning": "Problem class (ED 15112 Table 40 value 137, 'Waterflow Sw'). Self-contained (SWP/SWT) units: the water flow switch input indicates no condenser water flow; compressor operation is disabled while the unit continues to run.",
+      "likelyCauses": [
+        "Condenser water pump off / isolation valve closed / low flow",
+        "Flow switch paddle stuck or switch failed; wiring open",
+        "Strainer plugged"
+      ],
+      "checks": [
+        "Verify condenser water flow and pump status; check the water regulating valve position",
+        "Jumper the flow switch briefly to prove the input (field practice), then repair the switch/wiring",
+        "Clean strainers"
+      ],
+      "severity": "warning",
+      "source": "ED 15112 Table 40 value 137 'Waterflow Sw' (problem); OM 920 self-contained alarms (SWP/SWT)",
+      "evidence": "manufacturer_doc",
+      "notes": "Only the alarm name and class were visible in the sources seen; the description of what the switch monitors is standard self-contained practice, not quoted text."
+    },
+    {
+      "code": "Water Regulating Valve Problem",
+      "meaning": "Problem class (ED 15112 Table 40 value 140, 'Water Regulating Valve'). Self-contained (SWP/SWT) units: alarm on the head-pressure water regulating valve control (valve/actuator feedback).",
+      "likelyCauses": [
+        "Water regulating valve actuator failed or feedback out of range",
+        "Actuator wiring/power lost",
+        "Valve mechanically stuck"
+      ],
+      "checks": [
+        "Command the valve from Manual Control and watch position feedback",
+        "Check actuator power and signal wiring at the expansion module",
+        "Check condensing pressure against water flow"
+      ],
+      "severity": "warning",
+      "source": "ED 15112 Table 40 value 140 'Water Regulating Valve' (problem)",
+      "evidence": "manufacturer_doc",
+      "notes": "Only the alarm name and class were visible in the sources seen; causes/checks are field practice."
+    },
+    {
+      "code": "Dirty Filter Warning",
+      "meaning": "Warning (alarm value 24, 'Dirty Filter'). 'If the pressure drop across the filter section in the unit exceeds the setting of the differential pressure switch the Dirty Filter warning occurs. When the Dirty Filter warning occurs, unit operation is not affected. The Dirty Filter warning must be manually cleared through the unit keypad or via a network signal.'",
+      "likelyCauses": [
+        "Filters loaded",
+        "Filter differential pressure switch set too low for the filter type/airflow, or tubing reversed/disconnected",
+        "Switch failed closed"
+      ],
+      "checks": [
+        "Inspect/replace filters",
+        "Check the filter DP switch set point and tubing (high side upstream of filters); measure filter pressure drop with a manometer",
+        "Clear the warning manually after service"
+      ],
+      "severity": "info",
+      "source": "OM 920 'Alarms' -> Warnings -> Dirty Filter (ManualsLib Daikin DPS IOM p.73 / OM 920); ED 15112 Table 40 value 24",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Airflow Switch Warning",
+      "meaning": "Warning (alarm value 28, 'Airflow Sw'). The PC7 airflow switch indicates airflow when the fan is not commanded on (or fails to change state as expected); 'this normally indicates a problem with the PC7 airflow switch. When the Airflow Switch warning occurs, unit operation is not affected.' 'When the alarm condition is corrected, the Airflow Switch warning must be manually cleared through the unit.'",
+      "likelyCauses": [
+        "PC7 differential pressure switch stuck closed or set too low (closes from building/duct pressure with the fan off)",
+        "Switch tubing reversed",
+        "R63 relay contacts welded"
+      ],
+      "checks": [
+        "With the supply fan off, verify PC7 is open and DI1 is de-energized",
+        "Check PC7 set point and tubing; replace if stuck",
+        "Clear the warning manually after repair"
+      ],
+      "severity": "info",
+      "source": "OM 920 'Alarms' -> Warnings -> Airflow Switch (ManualsLib Daikin DPS IOM p.73); ED 15112 Table 40 value 28",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Conductivity Warning",
+      "meaning": "Warning (alarm value 32, 'Conductivity'). Self-contained (SWP/SWT) water-side warning; unit operation is not affected (Warning class).",
+      "likelyCauses": [
+        "Condensate/water conductivity sensor reading out of range",
+        "Sensor fouled or wiring open"
+      ],
+      "checks": [
+        "Inspect the conductivity sensor and wiring; clean the sensor",
+        "Clear the warning after service"
+      ],
+      "severity": "info",
+      "source": "ED 15112 Table 40 value 32 'Conductivity' (warning)",
+      "evidence": "manufacturer_doc",
+      "notes": "Only the alarm name and class were visible in the sources seen; verify the description against OM 920 self-contained section."
+    },
+    {
+      "code": "E5 (Rebel inverter)",
+      "meaning": "Inverter board fault code E5 - 'Inverter Compressor Motor Lock' (Rebel DPS variable-speed compressor drive).",
+      "likelyCauses": [
+        "Compressor mechanically locked / seized",
+        "Compressor winding fault or wiring (U-V-W) miswired/open",
+        "Inverter PCB output stage fault",
+        "Liquid flood-back or oil issue at start"
+      ],
+      "checks": [
+        "Check compressor winding resistance and insulation; verify U/V/W wiring and connector seating",
+        "Check for high back-pressure / liquid at start; verify crankcase and oil boost operation",
+        "Follow the IM 1125 / OM 1263 E5 troubleshooting flow before replacing the inverter PCB"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 Troubleshooting 'Inverter Board Fault Codes' - Error Code: E5 (ManualsLib Daikin MicroTech III DPS IOM p.76)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E7 (Rebel inverter)",
+      "meaning": "Inverter board fault code E7 - 'Malfunction of Outdoor Unit Fan Motor' (condenser fan motor / fan inverter).",
+      "likelyCauses": [
+        "Condenser (outdoor) fan motor locked, seized bearing, or obstructed",
+        "Fan motor winding / connector fault",
+        "Fan inverter (drive) fault"
+      ],
+      "checks": [
+        "Spin the condenser fan by hand; check for obstruction and bearing drag",
+        "Check fan motor winding resistance and connector; check fan drive output",
+        "Follow the E7 troubleshooting flow in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: E7 (ManualsLib Daikin MicroTech III DPS IOM p.78)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "H7 (Rebel inverter)",
+      "meaning": "Inverter board fault code H7 - 'Abnormal Outdoor Fan Motor Signal'.",
+      "likelyCauses": [
+        "Condenser fan motor position/rotation signal (Hall) faulty",
+        "Fan motor connector or wiring fault",
+        "Fan motor or drive PCB failure"
+      ],
+      "checks": [
+        "Check the fan motor signal connector and wiring",
+        "Check fan motor per IM 1125 / OM 1263 H7 procedure"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: H7 (ManualsLib Daikin MicroTech III DPS IOM)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L1 (Rebel inverter)",
+      "meaning": "Inverter board fault code L1 - 'Defective Inverter PC Board'.",
+      "likelyCauses": [
+        "Inverter PCB internal fault (IGBT, current sensor)",
+        "Compressor short causing PCB damage"
+      ],
+      "checks": [
+        "Check compressor windings for shorts before replacing the PCB",
+        "Check power supply and DC bus; follow the L1 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: L1 (ManualsLib Daikin MicroTech III DPS IOM)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L4 (Rebel inverter)",
+      "meaning": "Inverter board fault code L4 - 'Malfunction of Inverter Radiating Fin Temperature Rise' (inverter heat-sink over-temperature).",
+      "likelyCauses": [
+        "Inverter heat sink dirty / cooling airflow blocked",
+        "High ambient in the control compartment",
+        "Fin thermistor failed"
+      ],
+      "checks": [
+        "Clean the inverter heat sink and check cooling airflow across it",
+        "Check the fin thermistor resistance",
+        "Follow the L4 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: L4 (ManualsLib Daikin MicroTech III DPS IOM)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L5 (Rebel inverter)",
+      "meaning": "Inverter board fault code L5 - 'Momentary Overcurrent of Inverter Compressor' (instantaneous DC overcurrent).",
+      "likelyCauses": [
+        "Compressor winding short / ground fault",
+        "Compressor lock or sudden load (liquid slugging)",
+        "Inverter PCB fault"
+      ],
+      "checks": [
+        "Megger and ohm the compressor windings; check U/V/W wiring",
+        "Check for liquid return/flooded start",
+        "Follow the L5 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: L5 (ManualsLib Daikin DPS IOM p.140)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L8 (Rebel inverter)",
+      "meaning": "Inverter board fault code L8 - 'Momentary Overcurrent of Inverter Compressor' (electronic thermal / sustained overcurrent).",
+      "likelyCauses": [
+        "Compressor overload from high pressure / high load",
+        "Compressor winding or wiring fault",
+        "Low supply voltage"
+      ],
+      "checks": [
+        "Check compressor current vs. rating, discharge pressure and condenser operation",
+        "Check compressor windings and wiring; check supply voltage",
+        "Follow the L8 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: L8 (ManualsLib Daikin MicroTech III DPS IOM p.88)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U2 (Rebel inverter)",
+      "meaning": "Inverter board fault code U2 - 'Power Supply Insufficient or Instantaneous Failure' (DC bus under-voltage / momentary power loss).",
+      "likelyCauses": [
+        "Supply voltage sag, phase loss or momentary outage",
+        "Loose power wiring / contactor chatter",
+        "Inverter DC bus capacitor or PCB fault"
+      ],
+      "checks": [
+        "Check three-phase supply voltage and balance at the inverter under load",
+        "Inspect power wiring and terminals for looseness",
+        "Follow the U2 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' - Error Code: U2 (ManualsLib Daikin MicroTech III DPS IOM p.98)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L9 (Rebel inverter)",
+      "meaning": "Inverter board fault code L9 - 'Inverter Compressor Starting Failure'.",
+      "likelyCauses": [
+        "Compressor fails to start (locked, high differential pressure at start)",
+        "Compressor wiring/connector fault",
+        "Inverter PCB fault"
+      ],
+      "checks": [
+        "Check that pressures equalize before start; check compressor windings and wiring",
+        "Follow the L9 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "H9 (Rebel inverter)",
+      "meaning": "Inverter board fault code H9 - 'Outdoor Air Thermistor Short/Open'.",
+      "likelyCauses": [
+        "Inverter-side outdoor air thermistor open/shorted",
+        "Connector/wiring fault"
+      ],
+      "checks": [
+        "Ohm the thermistor and check its connector at the inverter PCB",
+        "Follow the H9 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "warning",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "J3 (Rebel inverter)",
+      "meaning": "Inverter board fault code J3 - 'Compressor Discharge Pipe Thermistor Short/Open/Misplaced'.",
+      "likelyCauses": [
+        "Discharge line thermistor open/shorted or fallen off the pipe",
+        "Connector/wiring fault"
+      ],
+      "checks": [
+        "Ohm the discharge thermistor; confirm it is strapped to the discharge line and insulated",
+        "Follow the J3 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "warning",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "J5 (Rebel inverter)",
+      "meaning": "Inverter board fault code J5 - 'Suction Pipe Thermistor Short/Open'.",
+      "likelyCauses": [
+        "Suction line thermistor open/shorted",
+        "Connector/wiring fault"
+      ],
+      "checks": [
+        "Ohm the suction thermistor and check its connector",
+        "Follow the J5 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "warning",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "J6 (Rebel inverter)",
+      "meaning": "Inverter board fault code J6 - 'Outdoor Heat Exchanger Thermistor Short/Open'.",
+      "likelyCauses": [
+        "Condenser coil thermistor open/shorted",
+        "Connector/wiring fault"
+      ],
+      "checks": [
+        "Ohm the coil thermistor and check its connector",
+        "Follow the J6 procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "warning",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "LC (Rebel inverter)",
+      "meaning": "Inverter board fault code LC - 'Communication Error between Outdoor Control PCB and Inverter PCB'.",
+      "likelyCauses": [
+        "Communication cable between the refrigerant control board and the inverter PCB loose/damaged",
+        "Inverter PCB or control PCB fault; power supply to the inverter PCB"
+      ],
+      "checks": [
+        "Check the communication harness and connectors between the boards; check inverter PCB power LED",
+        "Follow the LC procedure in IM 1125 / OM 1263"
+      ],
+      "severity": "lockout",
+      "source": "Rebel IM 1125 / OM 1263 'Inverter Board Fault Codes' (code list summarized from ManualsLib Daikin MicroTech III DPS IOM troubleshooting section)",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "Lo Pres-Ckt1 (MicroTech II)",
+      "meaning": "MicroTech II legacy Problem. 'Lo Pres-Ckt1 is a notification that the low refrigerant pressure switch has tripped and the unit could be low on refrigerant.' 'If the Lo Pres-Ckt1 problem occurs three times between 2:00 a.m. of one day and 2:00 a.m. of the next, the alarm does not automatically clear the third time but must be manually cleared through the unit keypad or via a network.' Same for Lo Pres-Ckt2.",
+      "likelyCauses": [
+        "Low refrigerant charge / leak",
+        "Low evaporator airflow or iced coil",
+        "Restriction (drier, TXV); LP switch/wiring open"
+      ],
+      "checks": [
+        "Check suction pressure and superheat; leak-check and verify charge",
+        "Check filters/airflow and liquid-line restriction",
+        "Count occurrences in the alarm log; manual clear after the third"
+      ],
+      "severity": "warning",
+      "source": "McQuay OM 137 / OM 138 MicroTech II Applied Rooftop Unit Controller 'Alarm Control' -> Problems (ManualsLib McQuay MicroTech II Operation Manual)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Frost-Ckt2 (MicroTech II)",
+      "meaning": "MicroTech II legacy Problem. Evaporator frost protection switch (FP2, opens at 30 F, closes at 45 F) tripped: 'When the Frost-Ckt2 problem occurs, the unit continues to operate but cooling circuit #2 is disabled.' Same for Frost-Ckt1 / FP1.",
+      "likelyCauses": [
+        "Low evaporator airflow (dirty filters, closed dampers, fan speed) or low load causing coil frosting",
+        "Low charge / low suction pressure",
+        "Frost protection switch failed or wiring open"
+      ],
+      "checks": [
+        "Check for ice on the evaporator; verify airflow and filters",
+        "Check suction pressure/superheat and charge",
+        "Ohm FP1/FP2 (return bends of the evaporator) and wiring to the circuit board input; check hot-gas-bypass operation if fitted"
+      ],
+      "severity": "warning",
+      "source": "McQuay OM 137 / OM 138 MicroTech II 'Alarm Control' -> Problems (Frost-Ckt2 text); RoofPak IM 893 component list (FP1, 2 frost protection switches open at 30 F, close at 45 F)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Hi Return Tmp (MicroTech II)",
+      "meaning": "MicroTech II legacy Fault. High return air temperature: the unit is shut down and remains shut down until the fault is manually cleared through the unit keypad or via a network signal (same shutdown/manual-clear text applies to the MicroTech II 'Space Sensor', 'Return Sensor' and 'Disch Sensor' faults).",
+      "likelyCauses": [
+        "Fire/overheat in the space or return plenum",
+        "Return sensor shorted or near a heat source"
+      ],
+      "checks": [
+        "Inspect for a fire/overheat condition first",
+        "Compare RAT display with a reference thermometer; ohm the sensor"
+      ],
+      "severity": "shutdown",
+      "source": "McQuay OM 137 MicroTech II Applied Rooftop Unit Controller 'Alarm Control' -> Faults (ManualsLib p.91)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "Communication module (BACnet MS/TP IM 917, BACnet IP IM 916, LonWorks) BSP LED - solid GREEN",
+      "meaning": "Normal: the module's board support package is running and communication is established between the communication module and the unit controller.",
+      "checks": [
+        "No action for the BSP LED; if the network is still down, look at the BUS LED"
+      ]
+    },
+    {
+      "pattern": "Communication module BSP LED - flashing RED",
+      "meaning": "Firmware error on the communication module ('if the BSP LED is flashing RED, then the firmware has an error').",
+      "checks": [
+        "Power-cycle the unit controller with the module seated; reload module firmware per OM 1085 / IM 917 if it persists; replace the module"
+      ]
+    },
+    {
+      "pattern": "Communication module BSP LED - solid RED",
+      "meaning": "Hardware error on the communication module ('if it is solid RED, then there is a hardware error').",
+      "checks": [
+        "Reseat the module on the MCB connector; check 24 VAC to the MCB; replace the module"
+      ]
+    },
+    {
+      "pattern": "Communication module BSP LED - YELLOW/orange, or alternating RED/GREEN",
+      "meaning": "Module not in normal application state (yellow = BSP running but application not running / upgrade mode; red-green alternation = BSP upgrade in progress). Listed in the IM 917 BSP LED table; exact wording not captured.",
+      "checks": [
+        "Wait for any firmware load to finish; power-cycle; consult the BSP LED table in IM 917/IM 916 for the exact state"
+      ]
+    },
+    {
+      "pattern": "Communication module BUS LED - solid GREEN",
+      "meaning": "Communication between the module and the BACnet/LON network is running (network OK).",
+      "checks": [
+        "No action"
+      ]
+    },
+    {
+      "pattern": "Communication module BUS LED - solid RED",
+      "meaning": "'The unit controller is not capable of communicating to the network' - no valid network communication (wrong MS/TP baud/MAC/address, wiring, or no BAS traffic).",
+      "checks": [
+        "Check MS/TP polarity, termination and shield; verify MAC address, baud rate and Device Instance under the BACnet setup menu; confirm the BAS is polling"
+      ]
+    },
+    {
+      "pattern": "Communication module BUS LED - YELLOW",
+      "meaning": "Module initialized but not yet seeing token/network traffic (start-up or idle state). Listed in the IM 917 BUS LED table; exact wording not captured.",
+      "checks": [
+        "Wait ~1 minute after power-up; if it stays yellow, check network wiring and BAS polling"
+      ]
+    }
+  ],
+  "diagnosticTips": [
+    "Display: 4-line LCD on the main control board (MCB) in the unit control compartment, navigated with the push-and-roll wheel (rotate to move, press to select). Main Menu -> Alarm Lists -> Active Alarms (priority order, highest first) and Alarm Log (history with time stamps). 'About This Unit' shows software version - note it before calling Daikin Applied technical support (800-432-1342).",
+    "Alarm classes (OM 920): Faults shut the unit down and must be cleared manually (keypad or network); Problems limit operation (e.g. one refrigerant circuit or heating disabled) while the unit keeps running - some clear automatically when the condition ends, some (e.g. third Low Pressure trip in a day) need a manual clear; Warnings are informational and do not affect operation (Dirty Filter and Airflow Switch warnings must be cleared manually).",
+    "Clearing: Alarm Lists -> Active Alarms -> Clear Alarms = Clear (or the BAS Clear Alarm point). Alarms clear only if the condition that caused them no longer exists; per OM 1141 alarms are also cleared when power is cycled. ED 15112 cautions against repeated network writes to the clear-alarm point.",
+    "BAS alarm numbering (ED 15112 Table 40 'Current Alarm'): 0 = No Active Alarms; Warnings 1-99 (24 Dirty Filter, 28 Airflow Sw, 32 Conductivity); Problems 100-199 (137 Waterflow Sw, 140 Water Regulating Valve, 154-159 Low Pressure Circ 1-6); Faults 200-255 (208 Airflow Fault, 212 Low Discharge Air Temp, 216 High Discharge Air Temp, 220 High Return Air Temp, 224 Duct High Limit, 228 Discharge Sensor Fail, 244 Control Temp Fault, 250 Emergency Stop Fault, 252 Freeze Fault). Use these when a BAS shows only the number.",
+    "Sensor faults have a Sensor Alarm Delay (default 30 s) before they trip. All temperature sensors are 10k NTC thermistors (about 10k ohms at 77 F) - the resistance table is in OM 920.",
+    "Key digital inputs to check with a meter: PC7 airflow switch (in series with fan-status relay R63) proves supply fan airflow on DI1 - the Airflow Fault is the most common shutdown; the Emergency Stop input expects a solid 24 VAC through the field smoke/fire/duct-high-temperature devices - a voltage drop through a field device is enough to trip it.",
+    "Manual / test operation: Commissioning -> Manual Control (later software) or Unit Status/Unit State screens let you command the supply fan, compressors, condenser fans, dampers and heating for testing; cooling and heating can be enabled/disabled under Commissioning. On Rebel (inverter compressor) units, refrigerant pressures, superheat and subcooling are read on the controller screens - gauges are not required at start-up.",
+    "Rebel DPS inverter compressor: the drive protects itself (discharge temp 275 F shutdown, discharge superheat limits, high-pressure switch 580 psig, oil boost) and reports 2-character inverter board fault codes (E5, E7, H7, L1, L4, L5, L8, U2 ...) - troubleshooting flowcharts for each are in IM 1125 / OM 1263 'Inverter Board Fault Codes'.",
+    "Network module LEDs: BSP LED = module-to-controller state (green normal, flashing red firmware error, solid red hardware error); BUS LED = module-to-network state (green OK, red not communicating). BACnet MS/TP settings (MAC, baud, Device Instance) are under the BACnet/LON setup menu; the unit must be power-cycled after changing them."
+  ],
+  "notes": [
+    "Coverage is partial: OM 920 'Alarms' chapter text was reached only through search snippets (WebFetch blocked), so the complete Warnings/Problems lists (e.g. Return Air Sensor, Mixed Air Sensor, Entering Fan Temp, Reheat/Dehumidification sensor warnings, Comp Fail, Frost problems on MicroTech III, ERV/energy-recovery alarms, VFD/Modbus 'SAF VFD' faults, Rebel 'Low Discharge Superheat' / 'Low Suction' alarms) were not transcribed. Verbatim description text was captured where shown; where only the alarm name/class was visible (Waterflow Sw, Water Regulating Valve, Conductivity, High Discharge Air Temp threshold) the entry says so.",
+    "Alarm names on the display are abbreviated versus ED 15112 point names (e.g. 'Hi DL Temp', 'Airflow: Fault'); the pack uses the fullest form seen and the BAS alarm value where known so both forms match.",
+    "The Rebel inverter codes L9, H9, J3, J5, J6 and LC were seen only in a search summary of the IM 1125/OM 1263 troubleshooting section (not as page titles) and are marked single_secondary; E5, E7, H7, L1, L4, L5, L8 and U2 were seen as ManualsLib page titles of that section.",
+    "MicroTech II (OM 137/OM 138, 1999-2009 RoofPak/RPS/RDT/RAH) uses shorter legacy names ('Lo Pres-Ckt1', 'Frost-Ckt2', 'Hi Return Tmp', 'Fan Fail', 'Disch Sensor'); the three legacy entries here carry the '(MicroTech II)' suffix so they do not collide with MicroTech III names.",
+    "Water-source-heat-pump MicroTech III boards (Enfinity/SmartSource, OM 931/OM 1149) have their own yellow/green/red LED fault annunciation table - that is a different board and is deliberately not included here."
+  ]
+}
