@@ -107,12 +107,113 @@ test("ptLookup flags transcritical conditions and reports bubble/dew ranges sepa
   const co2 = ptLookup(kb, "R-744", { tempF: 95 });
   assert.equal(co2.bubblePsig, undefined);
   assert.ok(co2.notes.some((n) => /above critical temperature — no saturation \(transcritical\)/.test(n)));
+  // R-407C at 470 psig: inside the bubble column, above the dew column (458.5 psig at 160 °F) but far below
+  // the 656.8 psig critical pressure → dew extrapolated, both ranges reported, no transcritical claim.
   const blend = ptLookup(kb, "R-407C", { psig: 470 });
-  assert.equal(blend.dewTempF, undefined);
-  assert.ok(blend.bubbleTempF !== undefined); // still inside the bubble range
+  assert.ok(blend.bubbleTempF !== undefined && blend.bubbleTempF < 160); // inside the bubble range
+  assert.ok(blend.dewTempF !== undefined && blend.dewTempF > 160 && blend.dewTempF < 166, `dew ${blend.dewTempF}`);
   assert.ok(blend.notes.some((n) => /bubble -?[\d.]+ to [\d.]+ psig, dew -?[\d.]+ to [\d.]+ psig/.test(n)));
+  assert.ok(blend.notes.some((n) => /EXTRAPOLATED/.test(n)));
+  assert.ok(!blend.notes.some((n) => /transcritical/.test(n)));
   const pure = ptLookup(kb, "R-22", { psig: 5000 });
-  assert.ok(pure.notes.some((n) => /transcritical/.test(n)));
+  assert.ok(pure.notes.some((n) => /above the critical pressure of R-22/.test(n) && /transcritical/.test(n)));
+  assert.equal(pure.bubbleTempF, undefined);
+  const below = ptLookup(kb, "R-407C", { psig: -12 });
+  assert.equal(below.bubbleTempF, undefined);
+  assert.ok(below.notes.some((n) => /outside the R-407C table: bubble/.test(n)));
+});
+
+// ---- above-table tail: transcritical only from the critical point on file (finding: R-22 at 450 psig
+// was reported as "transcritical" although R-22's critical point is 205 °F / 709 psig)
+
+test("ptLookup extrapolates above the 160 °F table top up to the critical point instead of claiming transcritical", () => {
+  // R-22 head pressure 450 psig ≈ 164 °F condensing (published ≈ 163.7 °F); critical 205.1 °F / 709 psig
+  const r = ptLookup(kb, "R-22", { psig: 450 });
+  assert.ok(r.bubbleTempF !== undefined && Math.abs(r.bubbleTempF - 164) < 1.5, `bubble ${r.bubbleTempF}`);
+  assert.equal(r.dewTempF, r.bubbleTempF);
+  assert.equal(r.midpointTempF, r.bubbleTempF);
+  assert.ok(!r.notes.some((n) => /transcritical/.test(n)), r.notes.join("\n"));
+  assert.ok(r.notes.some((n) => /above the R-22 table \(ends at 160 °F ≈ 430 psig/.test(n) && /EXTRAPOLATED/.test(n) && /high-pressure switch/.test(n)));
+  // temperature → pressure: R-22 at 170 °F ≈ 483 psig published
+  const t = ptLookup(kb, "R-22", { tempF: 170 });
+  assert.ok(t.bubblePsig !== undefined && Math.abs(t.bubblePsig - 483) < 4, `psig ${t.bubblePsig}`);
+  assert.ok(t.notes.some((n) => /EXTRAPOLATED/.test(n)) && !t.notes.some((n) => /transcritical/.test(n)));
+  // elevation correction still applies to the extrapolated tail
+  const high = ptLookup(kb, "R-22", { psig: 450, elevationFt: 5000 });
+  assert.ok(high.bubbleTempF! > r.bubbleTempF!);
+  // R-134a (critical 213.9 °F / 574 psig): 320 psig ≈ 165 °F, not transcritical
+  const r134 = ptLookup(kb, "R-134a", { psig: 320 });
+  assert.ok(r134.bubbleTempF !== undefined && r134.bubbleTempF > 160 && r134.bubbleTempF < 170, `${r134.bubbleTempF}`);
+  assert.ok(!r134.notes.some((n) => /transcritical/.test(n)));
+});
+
+test("ptLookup claims transcritical only from criticalPsig / criticalTempF", () => {
+  // above the critical pressure on file
+  const p = ptLookup(kb, "R-22", { psig: 720 });
+  assert.equal(p.bubbleTempF, undefined);
+  assert.ok(p.notes.some((n) => /above the critical pressure of R-22 \(critical ≈ 205.1 °F \/ 709 psig\)/.test(n) && /transcritical/.test(n)));
+  // above the critical temperature on file
+  const t = ptLookup(kb, "R-22", { tempF: 210 });
+  assert.equal(t.bubblePsig, undefined);
+  assert.ok(t.notes.some((n) => /above critical temperature — no saturation \(transcritical\) \(critical ≈ 205.1 °F/.test(n)));
+  // zeotrope with criticalTempF but no criticalPsig (R-454B, 172.3 °F; table ends at 150 °F ≈ 580 psig)
+  const ok = ptLookup(kb, "R-454B", { psig: 600 });
+  assert.ok(ok.bubbleTempF !== undefined && ok.bubbleTempF > 150 && ok.bubbleTempF < 158, `${ok.bubbleTempF}`);
+  assert.ok(ok.dewTempF !== undefined && ok.dewTempF > ok.bubbleTempF!); // glide preserved in the tail
+  assert.ok(!ok.notes.some((n) => /transcritical/.test(n)));
+  const beyond = ptLookup(kb, "R-454B", { psig: 900 });
+  assert.equal(beyond.bubbleTempF, undefined);
+  assert.ok(beyond.notes.some((n) => /above the R-454B critical temperature \(critical ≈ 172.3 °F\)/.test(n) && /transcritical/.test(n)));
+  // no critical data on file at all: no extrapolation and no transcritical claim, just "above the table"
+  const t22 = getTable(kb, "R-22")!;
+  const noMeta = { ...kb, refrigerants: { tables: new Map([["R-22", t22]]), meta: [] } };
+  const bare = ptLookup(noMeta, "R-22", { psig: 450 });
+  assert.equal(bare.bubbleTempF, undefined);
+  assert.ok(bare.notes.some((n) => /above the R-22 table/.test(n) && /no critical-point data/.test(n)));
+  assert.ok(!bare.notes.some((n) => /transcritical/.test(n)));
+  const bareT = ptLookup(noMeta, "R-22", { tempF: 170 });
+  assert.equal(bareT.bubblePsig, undefined);
+  assert.ok(bareT.notes.some((n) => /above the R-22 table range/.test(n)) && !bareT.notes.some((n) => /transcritical/.test(n)));
+});
+
+test("resolveSatTemps / resolveSatPressures report the range status", async () => {
+  const { resolveSatTemps, resolveSatPressures } = await import("./refrigerants.ts");
+  const t22 = getTable(kb, "R-22")!;
+  const meta = resolveRefrigerant(kb, "R-22");
+  assert.equal(resolveSatTemps(t22, meta, 68.6).status, "table");
+  assert.equal(resolveSatTemps(t22, meta, 450).status, "extrapolated");
+  assert.equal(resolveSatTemps(t22, meta, 710).status, "transcritical");
+  assert.equal(resolveSatTemps(t22, meta, -14).status, "below_table");
+  assert.equal(resolveSatTemps(t22, undefined, 450).status, "above_table");
+  assert.equal(resolveSatPressures(t22, meta, 40).status, "table");
+  assert.equal(resolveSatPressures(t22, meta, 180).status, "extrapolated");
+  assert.equal(resolveSatPressures(t22, meta, 206).status, "transcritical");
+  assert.equal(resolveSatPressures(t22, meta, -70).status, "below_table");
+  assert.equal(resolveSatPressures(t22, undefined, 180).status, "above_table");
+  // the plain table helpers stay strictly in-table
+  assert.equal(satTempsAtPressure(t22, 450), undefined);
+  assert.equal(satPressuresAtTemp(t22, 170), undefined);
+});
+
+test("superheatSubcooling keeps condensing sat / subcooling above the table top and flags the extrapolation", () => {
+  // Dirty R-22 condenser on a 105 °F day: 450 psig head, 150 °F liquid line
+  const r = superheatSubcooling(kb, { refrigerant: "R-22", suctionPsig: 75, suctionLineTempF: 60, liquidPsig: 450, liquidLineTempF: 150 });
+  assert.ok(r.condSatF !== undefined && Math.abs(r.condSatF - 164) < 1.5, `cond sat ${r.condSatF}`);
+  assert.ok(r.subcoolingF !== undefined && Math.abs(r.subcoolingF - 14) < 1.5, `SC ${r.subcoolingF}`);
+  assert.equal(r.extrapolated, true);
+  assert.ok(r.notes.some((n) => /High-side pressure 450 psig is above the R-22 table/.test(n) && /EXTRAPOLATED/.test(n) && /high-pressure switch/.test(n)));
+  assert.ok(!r.notes.some((n) => /transcritical/.test(n)));
+  // in-table readings are not flagged
+  const normal = superheatSubcooling(kb, { refrigerant: "R-22", suctionPsig: 70, suctionLineTempF: 55, liquidPsig: 260, liquidLineTempF: 105 });
+  assert.equal(normal.extrapolated, undefined);
+  // genuinely above the critical pressure: no sat temp, transcritical from the critical point on file
+  const beyond = superheatSubcooling(kb, { refrigerant: "R-22", liquidPsig: 720, liquidLineTempF: 150 });
+  assert.equal(beyond.condSatF, undefined);
+  assert.ok(beyond.notes.some((n) => /above the critical point of R-22/.test(n) && /transcritical/.test(n)));
+  // R-454B at 600 psig (critical 172 °F, no criticalPsig on file) is not transcritical either
+  const blend = superheatSubcooling(kb, { refrigerant: "R-454B", liquidPsig: 600, liquidLineTempF: 140 });
+  assert.ok(blend.condSatF !== undefined && blend.condSatF > 150);
+  assert.ok(!blend.notes.some((n) => /transcritical/.test(n)));
 });
 
 test("safety class and A2L reminder come from meta when present", () => {

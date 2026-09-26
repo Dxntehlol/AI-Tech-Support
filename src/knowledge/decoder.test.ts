@@ -674,11 +674,15 @@ describe("rankManufacturers", () => {
     assert.equal(tie[0]?.pack.id, "zeta");
   });
 
-  test("hint restricts the search to matching packs; unknown hint searches everything", () => {
-    const restricted = rankManufacturers(kb, { model: "Z060", manufacturer: "Acme", now: NOW });
-    assert.equal(restricted.length, 1);
-    assert.equal(restricted[0]?.pack.id, "acme");
-    assert.equal(restricted[0]?.score, 100);
+  test("a recognized hint ranks its pack first (+100) but does not hide other packs; unknown hint searches everything", () => {
+    const hinted = rankManufacturers(kb, { model: "Z060", manufacturer: "Acme", now: NOW });
+    assert.equal(hinted.length, 2);
+    assert.equal(hinted[0]?.pack.id, "acme");
+    assert.equal(hinted[0]?.score, 100);
+    assert.equal(hinted[1]?.pack.id, "zeta"); // the model really decodes as Zeta: still returned (score 40)
+    assert.equal(hinted[1]?.score, 40);
+    const hintOnly = rankManufacturers(kb, { model: "NOPE-123", manufacturer: "Acme", now: NOW });
+    assert.deepEqual(hintOnly.map((r) => r.pack.id), ["acme"]);
     const unknown = rankManufacturers(kb, { model: "Z060", manufacturer: "Bogus Brand", now: NOW });
     assert.equal(unknown[0]?.pack.id, "zeta");
     assert.equal(unknown[0]?.score, 40);
@@ -804,9 +808,9 @@ describe("decodeUnit", () => {
     assert.equal(r.model[0]?.formatId, "acme-rtu", "the truncated tail still matches the feature-string regex");
   });
 
-  test("manufacturer hint: restriction, unknown-hint warning, hint-only pack with unmatched model", () => {
+  test("manufacturer hint: hinted pack first, unknown-hint warning, hint-only pack with unmatched model", () => {
     const r = decodeUnit(kb, { model: "Z060", manufacturer: "Acme", now: NOW });
-    assert.deepEqual(r.manufacturerCandidates.map((c) => c.id), ["acme"]);
+    assert.deepEqual(r.manufacturerCandidates.map((c) => c.id), ["acme", "zeta"]);
     assert.ok(r.warnings.some((w) => /Model "Z060" did not match any Acme Air model format/.test(w)));
     assert.match(r.summary, /Acme Air \(model "Z060" not decoded\)/);
     assert.deepEqual(r.controls, []);
@@ -814,6 +818,22 @@ describe("decodeUnit", () => {
     assert.equal(unknown.manufacturerCandidates[0]?.id, "zeta");
     assert.ok(unknown.warnings.some((w) => /hint "Bogus" is not a known pack/.test(w)));
     assert.equal(unknown.input.manufacturer, "Bogus");
+  });
+
+  test("a wrong manufacturer hint does not hide the model decode from the right pack (finding: 48TC + hint Copeland)", () => {
+    // hint matches acme (+100) but the model is a Zeta format (+40): Zeta stays a candidate and its decode is returned
+    const r = decodeUnit(kb, { model: "Z060", manufacturer: "Acme", now: NOW });
+    assert.deepEqual(r.manufacturerCandidates.map((c) => [c.id, c.score]), [["acme", 100], ["zeta", 40]]);
+    assert.equal(r.model.length, 1);
+    assert.equal(r.model[0]?.formatId, "zeta-z");
+    assert.ok(r.warnings.some((w) => /Model "Z060" does match the Zeta .* format zeta-z/.test(w) && /hint "Acme" may be wrong/.test(w)), r.warnings.join("\n"));
+    // a correct hint produces no mismatch warning and no foreign candidates
+    const ok = decodeUnit(kb, { model: "AG036B3", manufacturer: "Acme", now: NOW });
+    assert.deepEqual(ok.manufacturerCandidates.map((c) => c.id), ["acme"]);
+    assert.ok(!ok.warnings.some((w) => /may be wrong/.test(w)));
+    // no hint: no mismatch warning even when the model matches nothing
+    const none = decodeUnit(kb, { model: "NOPE-123", now: NOW });
+    assert.ok(!none.warnings.some((w) => /may be wrong/.test(w)));
   });
 
   test("never throws on garbage input", () => {

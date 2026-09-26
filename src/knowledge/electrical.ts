@@ -900,59 +900,74 @@ const LIMIT = 5;
 
 /** Fuzzy lookup by component id/name/alias (also function text and failure modes at low weight). Best ≤ 5. */
 export function findComponent(kb: KnowledgeBase, query: string): ElectricalComponent[] {
-  const comps = kb?.electrical?.components ?? [];
+  const comps = entries(kb?.electrical?.components);
   if (typeof query !== "string") return [];
   return rank(
     comps,
     query,
     (c) => [
-      { text: c.id, weight: 3.5 },
-      { text: c.name, weight: 3 },
-      { text: (c.aliases ?? []).join(" "), weight: 2.5 },
-      { text: c.function, weight: 1 },
-      { text: c.failureModes.join(" "), weight: 0.75 },
-      { text: c.tests.map((t) => t.name).join(" "), weight: 0.75 },
-      { text: (c.notes ?? []).join(" "), weight: 0.4 },
+      { text: strOf(c.id), weight: 3.5 },
+      { text: strOf(c.name), weight: 3 },
+      { text: joinStrings(c.aliases), weight: 2.5 },
+      { text: strOf(c.function), weight: 1 },
+      { text: joinStrings(c.failureModes), weight: 0.75 },
+      { text: entries(c.tests).map((t) => strOf(t.name)).join(" "), weight: 0.75 },
+      { text: joinStrings(c.notes), weight: 0.4 },
     ],
-    (c) => [c.id, c.name, ...(c.aliases ?? [])],
+    (c) => [strOf(c.id), strOf(c.name), ...strings(c.aliases)],
     LIMIT,
   );
 }
 
 /** Fuzzy lookup by symptom text (id, symptom, aliases, appliesTo, common causes). Best ≤ 5. */
 export function findProcedure(kb: KnowledgeBase, query: string): ElectricalProcedure[] {
-  const procs = kb?.electrical?.procedures ?? [];
+  const procs = entries(kb?.electrical?.procedures);
   if (typeof query !== "string") return [];
   return rank(
     procs,
     query,
     (p) => [
-      { text: p.id, weight: 3.5 },
-      { text: p.symptom, weight: 3 },
-      { text: (p.aliases ?? []).join(" "), weight: 2.5 },
-      { text: (p.appliesTo ?? []).join(" "), weight: 1 },
-      { text: p.commonCauses.join(" "), weight: 0.6 },
-      { text: p.steps.map((s) => s.step).join(" "), weight: 0.3 },
+      { text: strOf(p.id), weight: 3.5 },
+      { text: strOf(p.symptom), weight: 3 },
+      { text: joinStrings(p.aliases), weight: 2.5 },
+      { text: joinStrings(p.appliesTo), weight: 1 },
+      { text: joinStrings(p.commonCauses), weight: 0.6 },
+      { text: entries(p.steps).map((s) => strOf(s.step)).join(" "), weight: 0.3 },
     ],
-    (p) => [p.id, p.symptom, ...(p.aliases ?? [])],
+    (p) => [strOf(p.id), strOf(p.symptom), ...strings(p.aliases)],
     LIMIT,
   );
 }
 
 /** Reference topics (voltage imbalance, motor nameplates, rotation...). Best ≤ 5. */
 export function findReference(kb: KnowledgeBase, query: string): { topic: string; content: string[] }[] {
-  const refs = kb?.electrical?.reference ?? [];
+  const refs = entries(kb?.electrical?.reference);
   if (typeof query !== "string") return [];
   return rank(
     refs,
     query,
     (r) => [
-      { text: r.topic, weight: 3 },
-      { text: r.content.join(" "), weight: 0.5 },
+      { text: strOf(r.topic), weight: 3 },
+      { text: joinStrings(r.content), weight: 0.5 },
     ],
-    (r) => [r.topic],
+    (r) => [strOf(r.topic)],
     LIMIT,
   );
+}
+
+// Defensive accessors: a non-strict load can hand us entries missing arrays or with the wrong types,
+// and DESIGN says lookups never throw.
+function entries<T>(v: T[] | undefined | null): T[] {
+  return Array.isArray(v) ? v.filter((x): x is T => x !== null && typeof x === "object") : [];
+}
+function strOf(v: unknown): string {
+  return typeof v === "string" ? v : "";
+}
+function strings(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((s): s is string => typeof s === "string") : [];
+}
+function joinStrings(v: unknown): string {
+  return strings(v).join(" ");
 }
 
 export type ElectricalLookupKind = "component" | "procedure" | "reference" | "any";

@@ -471,3 +471,20 @@ test("tokenize applies synonyms, stemming and stopwords", () => {
   assert.deepEqual(tokenize("Trips breakers"), ["trip", "breaker"]);
   assert.deepEqual(tokenize("A2L"), ["a2l", "rds", "refrigerant", "detection"]);
 });
+
+test("lookups never throw on entries missing arrays or with wrong types (non-strict loads)", () => {
+  const withComps = (components: unknown) => ({ ...kb, electrical: { ...kb.electrical, components: components as ElectricalComponent[] } });
+  const bad = withComps([{ id: "x", name: "x thing", function: "f" }, null, { id: 5, name: ["n"], aliases: "a", tests: "t", failureModes: 1 }, { id: "y", name: "y thing", function: "g", tests: [null, { name: 3 }], failureModes: ["ok"], safety: [] }]);
+  assert.equal(findComponent(bad, "x thing")[0]?.id, "x");
+  assert.equal(findComponent(bad, "y thing")[0]?.id, "y");
+  assert.ok(findComponent(bad, "thing").every((c) => c.id === "x" || c.id === "y")); // null / malformed entries are dropped
+  assert.deepEqual(findComponent(bad, "zzz"), []);
+  const badProcs = { ...kb, electrical: { ...kb.electrical, procedures: [{ id: "y", symptom: "unit dead" }, null, { id: "z", symptom: "no cooling", steps: [null, { step: 1 }], commonCauses: "x", aliases: 4 }] as unknown as ElectricalProcedure[] } };
+  assert.equal(findProcedure(badProcs, "unit dead")[0]?.id, "y");
+  assert.equal(findProcedure(badProcs, "no cooling")[0]?.id, "z");
+  const badRefs = { ...kb, electrical: { ...kb.electrical, reference: [{ topic: "z" }, null, { topic: 1, content: ["x"] }, { topic: "q", content: "not an array" }] as unknown as typeof kb.electrical.reference } };
+  assert.equal(findReference(badRefs, "z")[0]?.topic, "z");
+  assert.equal(findReference(badRefs, "q")[0]?.topic, "q");
+  const all = lookupElectrical({ ...bad, electrical: { ...bad.electrical, procedures: badProcs.electrical.procedures, reference: badRefs.electrical.reference } }, "x thing");
+  assert.equal(all.components[0]?.id, "x");
+});

@@ -712,6 +712,25 @@ function diagnoseInner(kb: KnowledgeBase, m: DxMeasurements): DxResult {
   const d = deriveMetrics(kb, m);
   const air = enteringAir(m);
 
+  // A saturation temperature above the PT table top came from the extrapolated tail: usable for the
+  // airflow / non-condensable rules but approximate, so say so.
+  if (table && !swapped && superheatSubcooling(kb, m).extrapolated) {
+    push(
+      {
+        ruleId: "pt_extrapolated",
+        condition: `Pressure above the ${refId} PT table — saturation temperature extrapolated (approximate)`,
+        severity: "info",
+        confidence: "medium",
+        explanation: `A reading is above the ${refId} table top (160 °F), so the saturation temperature was extrapolated from the table tail with a Clausius–Clapeyron fit; it is close but approximate. Do not make charge decisions from it. A head pressure this high is itself the finding.`,
+        nextChecks: [
+          "Verify the gauge on a known reference and confirm the refrigerant on the nameplate.",
+          "Check the high-pressure switch setting and why it has not tripped; check condenser airflow, coil cleanliness and non-condensables.",
+        ],
+      },
+      5,
+    );
+  }
+
   // Implausible saturation temps for the stated refrigerant (sanity gate, continued)
   if (table && !swapped) {
     const reasons: string[] = [];

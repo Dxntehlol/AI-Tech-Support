@@ -755,8 +755,9 @@ function evaluatePacks(kb: KnowledgeBase, input: DecodeInput, now: Date): { rank
     return { pack, score, reason: reasons.join("; ") || "no match", hintLabel, model, serial };
   });
   const hintRecognized = Boolean(hint) && evals.some((e) => e.hintLabel);
-  const pool = hintRecognized ? evals.filter((e) => e.hintLabel) : evals;
-  const ranked = pool
+  // A recognized hint is worth +100 and so wins the ranking, but it does not exclude the other packs:
+  // a model that decodes under a different manufacturer is still returned so a wrong hint can be caught.
+  const ranked = evals
     .map((e, i) => ({ e, i }))
     .filter((x) => x.e.score > 0)
     .sort((a, b) => b.e.score - a.e.score || a.i - b.i)
@@ -926,6 +927,13 @@ export function decodeUnit(kb: KnowledgeBase, input: DecodeInput): DecodeResult 
 
     if (model.value && !bestModel) {
       warnings.push(`Model "${model.value}" did not match any ${mfr} model format — attributes unknown; confirm the nomenclature in the IOM.`);
+      const other = ranked.find((e) => e !== best && e.model.results.length > 0);
+      if (other && best.hintLabel) {
+        const otherMfr = other.pack.manufacturer || other.pack.id;
+        warnings.push(
+          `Model "${model.value}" does match the ${otherMfr} format ${other.model.results[0]!.formatId} — the manufacturer hint "${hintRaw}" may be wrong; check the nameplate. The ${otherMfr} decode is included below.`,
+        );
+      }
     }
     if (serial.value && !bestSerial) {
       warnings.push(`Serial "${serial.value}" did not match any ${mfr} serial format — model-only match; manufacture date unknown. Read the serial from the unit nameplate (not a component tag).`);

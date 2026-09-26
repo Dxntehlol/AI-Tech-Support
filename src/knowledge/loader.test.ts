@@ -3,17 +3,23 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ChargingTargets, DxRuleSet, ManufacturerPack, RefrigerantMeta, RefrigerantTable } from "../types.ts";
+import type { ChargingTargets, DxRuleSet, ElectricalComponent, ElectricalProcedure, ManufacturerPack, RefrigerantMeta, RefrigerantTable } from "../types.ts";
 import {
   KnowledgeValidationError,
   METRIC_KEYS,
+  MIN_ELECTRICAL_COMPONENTS,
+  MIN_ELECTRICAL_PROCEDURES,
   NUMERIC_METRIC_KEYS,
   loadKnowledge,
   validateChargingTargets,
+  validateElectricalComponents,
+  validateElectricalProcedures,
+  validateElectricalReference,
   validateManufacturerPack,
   validateRefrigerantIndex,
   validateRuleSet,
 } from "./loader.ts";
+import { findComponent, findProcedure, findReference } from "./electrical.ts";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -178,6 +184,8 @@ interface KbFiles {
   tables?: RefrigerantTable[];
   rules?: unknown;
   charging?: unknown;
+  components?: unknown; // electrical/components.json (whole file)
+  procedures?: unknown; // electrical/procedures.json (whole file)
 }
 
 function writeKb(files: KbFiles): string {
@@ -191,7 +199,34 @@ function writeKb(files: KbFiles): string {
   for (const t of files.tables ?? []) writeFileSync(join(dir, "refrigerants", `${t.id}.json`), JSON.stringify(t));
   if (files.rules !== undefined) writeFileSync(join(dir, "diagnostics", "refrigeration-cycle.json"), JSON.stringify(files.rules));
   if (files.charging !== undefined) writeFileSync(join(dir, "diagnostics", "charging-targets.json"), JSON.stringify(files.charging));
+  if (files.components !== undefined || files.procedures !== undefined) mkdirSync(join(dir, "electrical"), { recursive: true });
+  if (files.components !== undefined) writeFileSync(join(dir, "electrical", "components.json"), JSON.stringify(files.components));
+  if (files.procedures !== undefined) writeFileSync(join(dir, "electrical", "procedures.json"), JSON.stringify(files.procedures));
   return dir;
+}
+
+function component(id: string, extra: Partial<ElectricalComponent> = {}): ElectricalComponent {
+  return {
+    id,
+    name: id.replace(/_/g, " "),
+    function: `what ${id} does`,
+    tests: [{ name: "ohm it", energized: false, steps: ["discharge", "measure"], expected: "within tolerance" }],
+    failureModes: ["open"],
+    safety: ["LOTO"],
+    ...extra,
+  };
+}
+
+function procedure(id: string, extra: Partial<ElectricalProcedure> = {}): ElectricalProcedure {
+  return { id, symptom: id.replace(/_/g, " "), safety: ["LOTO"], steps: [{ step: "check power", expect: "24 V" }], commonCauses: ["blown fuse"], ...extra };
+}
+
+function componentsFile(n = MIN_ELECTRICAL_COMPONENTS, reference: unknown = [{ topic: "voltage imbalance", content: ["NEMA MG-1"] }]): unknown {
+  return { version: "1", components: Array.from({ length: n }, (_, i) => component(`comp_${i}`)), reference };
+}
+
+function proceduresFile(n = MIN_ELECTRICAL_PROCEDURES): unknown {
+  return { version: "1", procedures: Array.from({ length: n }, (_, i) => procedure(`proc_${i}`)) };
 }
 
 function fullValid(): KbFiles {
@@ -535,5 +570,165 @@ describe("validateChargingTargets", () => {
     expectProblem(chargingProblems((c) => (c.targetDeltaT!.targetF = [[23, 19], [1, 2]])), /targetDeltaT: targetF has 2 rows, expected 1/);
     expectProblem(chargingProblems((c) => delete (c as { notes?: unknown }).notes), /notes\[\] required/);
     expectProblem(chargingProblems((c) => delete (c as { fixedOrificeSuperheat?: unknown }).fixedOrificeSuperheat), /fixedOrificeSuperheat required/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Electrical packs (finding: malformed components/procedures/reference passed strict loading and
+// then made findComponent/findProcedure/findReference throw)
+// ---------------------------------------------------------------------------
+
+describe("electrical validation", () => {
+  test("a complete electrical dir loads strictly and the lookups work", () => {
+    const kb = loadKnowledge(writeKb({ ...fullValid(), components: componentsFile(), procedures: proceduresFile() }), { strict: true });
+    assert.equal(kb.electrical.version, "1");
+    assert.equal(kb.electrical.components.length, MIN_ELECTRICAL_COMPONENTS);
+    assert.equal(kb.electrical.procedures.length, MIN_ELECTRICAL_PROCEDURES);
+    assert.equal(kb.electrical.reference.length, 1);
+    assert.equal(findComponent(kb, "comp 3")[0]?.id, "comp_3");
+    assert.equal(findProcedure(kb, "proc 2")[0]?.id, "proc_2");
+    assert.equal(findReference(kb, "voltage imbalance")[0]?.topic, "voltage imbalance");
+  });
+
+  test("strict loading rejects a component missing failureModes/tests (the scenario that used to throw in findComponent)", () => {
+    const files = { ...fullValid(), components: { version: "1", components: [{ id: "x", name: "x thing", function: "f" }] } };
+    assert.throws(
+      () => loadKnowledge(writeKb(files), { strict: true }),
+      (e: unknown) => {
+        assert.ok(e instanceof KnowledgeValidationError);
+        const ps = e.problems.join("\n");
+        assert.match(ps, /components\[0\]: failureModes must be a string array/);
+        assert.match(ps, /components\[0\]: tests\[\] required/);
+        assert.match(ps, /components\[0\]: safety must be a string array/);
+        assert.match(ps, /1 components, spec minimum is 22/);
+        return true;
+      },
+    );
+    // non-strict: the entry is kept and the lookup returns it without throwing
+    const kb = loadKnowledge(writeKb(files), { strict: false });
+    assert.equal(kb.electrical.components.length, 1);
+    assert.equal(findComponent(kb, "x thing")[0]?.id, "x");
+  });
+
+  test("strict loading rejects a procedure without steps/commonCauses and a reference topic without content", () => {
+    const files = {
+      ...fullValid(),
+      components: componentsFile(MIN_ELECTRICAL_COMPONENTS, [{ topic: "z" }]),
+      procedures: { version: "1", procedures: [{ id: "y", symptom: "unit dead" }] },
+    };
+    assert.throws(
+      () => loadKnowledge(writeKb(files), { strict: true }),
+      (e: unknown) => {
+        assert.ok(e instanceof KnowledgeValidationError);
+        const ps = e.problems.join("\n");
+        assert.match(ps, /reference\[0\]: content must be a string array/);
+        assert.match(ps, /procedures\[0\]: steps\[\] required/);
+        assert.match(ps, /procedures\[0\]: commonCauses must be a string array/);
+        assert.match(ps, /procedures\[0\]: safety must be a string array/);
+        assert.match(ps, /1 procedures, spec minimum is 16/);
+        return true;
+      },
+    );
+    const kb = loadKnowledge(writeKb(files), { strict: false });
+    assert.equal(findProcedure(kb, "unit dead")[0]?.id, "y");
+    assert.equal(findReference(kb, "z")[0]?.topic, "z");
+  });
+
+  test("spec minimums: ≥ 22 components and ≥ 16 procedures when the file is present; absent files still default", () => {
+    const short = { ...fullValid(), components: componentsFile(21), procedures: proceduresFile(15) };
+    assert.throws(
+      () => loadKnowledge(writeKb(short), { strict: true }),
+      (e: unknown) => {
+        assert.ok(e instanceof KnowledgeValidationError);
+        assert.equal(e.problems.length, 2, e.problems.join("\n"));
+        assert.match(e.problems[0]!, /21 components, spec minimum is 22/);
+        assert.match(e.problems[1]!, /15 procedures, spec minimum is 16/);
+        return true;
+      },
+    );
+    const none = loadKnowledge(writeKb(fullValid()), { strict: true });
+    assert.equal(none.electrical.components.length, 0);
+    assert.equal(none.electrical.procedures.length, 0);
+  });
+
+  test("validateElectricalComponents: field types, test shape, duplicate ids, non-objects", () => {
+    const problems: string[] = [];
+    validateElectricalComponents(
+      [
+        component("a", { aliases: "cap" as unknown as string[], tools: [1] as unknown as string[] }),
+        component("a", { tests: [{ name: "", energized: "yes" as unknown as boolean, steps: "x" as unknown as string[], expected: "" }, null as unknown as ElectricalComponent["tests"][number]] }),
+        null as unknown as ElectricalComponent,
+        { id: "", name: 3, function: "" } as unknown as ElectricalComponent,
+      ],
+      problems,
+      "c.json",
+    );
+    const ps = problems.join("\n");
+    assert.match(ps, /c.json: components\[0\]: aliases must be a string array/);
+    assert.match(ps, /components\[0\]: tools must be a string array/);
+    assert.match(ps, /components\[1\]: duplicate component id a/);
+    assert.match(ps, /components\[1\].tests\[0\]: name must be a non-empty string/);
+    assert.match(ps, /components\[1\].tests\[0\]: energized must be a boolean/);
+    assert.match(ps, /components\[1\].tests\[0\]: steps must be a string array/);
+    assert.match(ps, /components\[1\].tests\[0\]: expected must be a non-empty string/);
+    assert.match(ps, /components\[1\].tests\[1\]: not an object/);
+    assert.match(ps, /components\[2\]: not an object/);
+    assert.match(ps, /components\[3\]: id must be a non-empty string/);
+    assert.match(ps, /components\[3\]: name must be a non-empty string/);
+    assert.match(ps, /components\[3\]: function must be a non-empty string/);
+    const clean: string[] = [];
+    validateElectricalComponents([component("a"), component("b", { aliases: ["x"], tools: ["meter"], notes: ["n"] })], clean);
+    assert.deepEqual(clean, []);
+    const notArray: string[] = [];
+    validateElectricalComponents({ a: 1 }, notArray, "c.json");
+    assert.deepEqual(notArray, ["c.json: components[] required"]);
+  });
+
+  test("validateElectricalProcedures: field types, step shape, duplicate ids", () => {
+    const problems: string[] = [];
+    validateElectricalProcedures(
+      [
+        procedure("p", { appliesTo: "rtu" as unknown as string[], steps: [{ step: "", expect: 1 as unknown as string, ifNot: 2 as unknown as string }, 5 as unknown as ElectricalProcedure["steps"][number]] }),
+        procedure("p", { aliases: [1] as unknown as string[] }),
+        { symptom: "" } as unknown as ElectricalProcedure,
+      ],
+      problems,
+      "p.json",
+    );
+    const ps = problems.join("\n");
+    assert.match(ps, /p.json: procedures\[0\]: appliesTo must be a string array/);
+    assert.match(ps, /procedures\[0\].steps\[0\]: step must be a non-empty string/);
+    assert.match(ps, /procedures\[0\].steps\[0\]: expect must be a string/);
+    assert.match(ps, /procedures\[0\].steps\[0\]: ifNot must be a string/);
+    assert.match(ps, /procedures\[0\].steps\[1\]: not an object/);
+    assert.match(ps, /procedures\[1\]: duplicate procedure id p/);
+    assert.match(ps, /procedures\[1\]: aliases must be a string array/);
+    assert.match(ps, /procedures\[2\]: id must be a non-empty string/);
+    assert.match(ps, /procedures\[2\]: symptom must be a non-empty string/);
+    const clean: string[] = [];
+    validateElectricalProcedures([procedure("a"), procedure("b", { aliases: ["x"], appliesTo: ["rtu"] })], clean);
+    assert.deepEqual(clean, []);
+  });
+
+  test("validateElectricalReference: optional, must be an array of { topic, content[] }", () => {
+    const none: string[] = [];
+    validateElectricalReference(undefined, none);
+    assert.deepEqual(none, []);
+    const problems: string[] = [];
+    validateElectricalReference([{ topic: "ok", content: ["x"] }, { topic: "", content: "x" }, 7], problems, "r.json");
+    assert.deepEqual(problems, [
+      "r.json: reference[1]: topic must be a non-empty string",
+      "r.json: reference[1]: content must be a string array",
+      "r.json: reference[2]: not an object",
+    ]);
+    const notArray: string[] = [];
+    validateElectricalReference("x", notArray, "r.json");
+    assert.deepEqual(notArray, ["r.json: reference must be an array"]);
+  });
+
+  test("a components.json that is not an object is reported, not thrown", () => {
+    const kb = loadKnowledge(writeKb({ ...fullValid(), components: "nope", procedures: 42 }), { strict: false });
+    assert.equal(kb.electrical.components.length, 0);
+    assert.throws(() => loadKnowledge(writeKb({ ...fullValid(), components: "nope" }), { strict: true }), /not an object/);
   });
 });

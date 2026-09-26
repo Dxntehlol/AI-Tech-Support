@@ -727,3 +727,36 @@ test("fixed_chart_no_target does not fire when a nameplate superheat target is g
   const txv = diagnose(kb, { ...base, outdoorDbF: 100, indoorWbF: 58, suctionPsig: 118, suctionLineTempF: 55, liquidPsig: 340, liquidLineTempF: 100 });
   assert.ok(!ids(txv).includes("fixed_chart_no_target"));
 });
+
+test("R-22 dirty condenser at 450 psig head (above the 160 °F table top): cond sat / SC / split are derived and the airflow rule fires", () => {
+  // Finding: the high side used to be reported as "transcritical" (R-22 critical is 205 °F / 709 psig) and
+  // condSatF/subcoolingF/condenserSplitF were lost, so low_condenser_airflow_dirty_coil could not fire.
+  const m: DxMeasurements = {
+    refrigerant: "R-22",
+    meteringDevice: "txv",
+    mode: "ac_cooling",
+    suctionPsig: 75,
+    suctionLineTempF: 60,
+    liquidPsig: 450,
+    liquidLineTempF: 150,
+    outdoorDbF: 105,
+    indoorDbF: 78,
+    indoorWbF: 64,
+    supplyDbF: 62,
+  };
+  const d = deriveMetrics(kb, m);
+  assert.ok(d.condSatF !== undefined && Math.abs(d.condSatF - 164) < 1.5, `condSatF ${d.condSatF}`);
+  assert.ok(d.subcoolingF !== undefined && Math.abs(d.subcoolingF - 14) < 1.5, `subcoolingF ${d.subcoolingF}`);
+  assert.ok(d.condenserSplitF !== undefined && d.condenserSplitF > 55, `split ${d.condenserSplitF}`);
+  const r = diagnose(kb, m);
+  assert.ok(ids(r).includes("low_condenser_airflow_dirty_coil"), ids(r).join(","));
+  assert.ok(!ids(r).includes("wrong_refrigerant"));
+  const flag = r.findings.find((f) => f.ruleId === "pt_extrapolated");
+  assert.ok(flag, "pt_extrapolated info finding");
+  assert.equal(flag!.severity, "info");
+  assert.match(flag!.explanation, /extrapolated/);
+  assert.ok(flag!.nextChecks.some((n) => /high-pressure switch/.test(n)));
+  // in-table readings carry no extrapolation flag
+  const normal = diagnose(kb, { ...m, liquidPsig: 300, liquidLineTempF: 120 });
+  assert.ok(!ids(normal).includes("pt_extrapolated"));
+});

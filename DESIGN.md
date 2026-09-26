@@ -165,7 +165,9 @@ date stamps"); `evidenceSummary` names the evidence behind nomenclature and seri
 Manufacturer ranking: +100 hint matches manufacturer/brand/alias; +40 per modelFormat regex
 match (×0.5 if `low`); +30 per serialFormat match; +10 when the same pack matches both; ties by
 pack order; only packs with score > 0 are returned (empty → warning "no manufacturer matched;
-verify nameplate"). `twoDigitYear`: yy ≥ pivot → 1900+yy else 2000+yy (pivot default 70), then
+verify nameplate"). A recognized hint wins the ranking but does not exclude the other packs: when
+the hinted pack has no model match and another pack decodes the model, the result warns that the
+hint may be wrong and includes that pack's decode. `twoDigitYear`: yy ≥ pivot → 1900+yy else 2000+yy (pivot default 70), then
 clamp by era (out of era → drop candidate). `manufactureDate` is `YYYY-MM` when the month is
 known, `YYYY-Www` when only the week, else `YYYY`; `ageYears` = round((now − date)/365.25, 1).
 
@@ -176,7 +178,8 @@ model example per format unless `low`; letter maps in range; every control platf
 fault code; `refrigerants/index.json` exists and every entry has a table, an ASHRAE 34 safety
 class (A1, A2L, A2, A3, B1, B2L, B2, B3) and `gwp.ar4`; DxRuleSet `when[].metric` is a known
 MetricKey with numeric ops carrying `value` (and `value2` for `between`); ChargingTargets grids
-are the right shape. `src/knowledge/packs.test.ts` additionally runs every pack example through
+are the right shape; electrical components/procedures/reference entries have the documented shape
+(ids unique, tests/steps well-formed) and meet the spec minimums (≥ 22 components, ≥ 16 procedures). `src/knowledge/packs.test.ts` additionally runs every pack example through
 the decoder and asserts the expected year/month/week and attributes.
 
 Verification protocol (binding for builders and verifiers):
@@ -222,8 +225,11 @@ pressures are also reported in inHg vacuum (inHg = −psig × 2.036). Elevation:
 Patm(psia) = 14.696 × (1 − 6.8754e-6 × elevationFt)^5.2559; a field gauge reading is
 converted to sea-level basis with `psigSeaLevel = psig + (14.696 − Patm)` before table
 lookup (inverse for temp → psig); the note is quantitative ("at 5,000 ft your gauge reads
-~2.5 psi lower than the chart"). Above the critical temperature ptLookup says "above critical
-temperature — no saturation (transcritical)" (R-744 above 87.8 °F). Every PT answer carries the
+~2.5 psi lower than the chart"). Above the table top (160 °F) but below the critical point on
+file, saturation values come from a Clausius–Clapeyron fit to the table tail and are flagged
+EXTRAPOLATED (`ShScResult.extrapolated`, info finding `pt_extrapolated`; never for charge
+decisions). Transcritical ("no saturation") is claimed only from `criticalPsig`/`criticalTempF`
+(R-744 above 87.8 °F), never from the table top; a table with no critical data says so instead. Every PT answer carries the
 safety class and, for A2L/A3, a one-line handling reminder.
 
 ### Diagnostics rule set (`knowledge/diagnostics/refrigeration-cycle.json`, `DxRuleSet`)

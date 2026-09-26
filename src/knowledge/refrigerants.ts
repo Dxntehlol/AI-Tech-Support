@@ -161,6 +161,134 @@ function pressureRangeText(table: RefrigerantTable): string {
   return `bubble ${b0} to ${b1} psig, dew ${d0} to ${d1} psig`;
 }
 
+// ---------------------------------------------------------------------------
+// Above-table tail (the generated tables stop at 160 °F, well below the critical point of R-22,
+// R-134a, R-407C, R-290, R-717 ...). A Clausius–Clapeyron fit ln(P_abs) = A − B / T_abs to the top
+// ~10 °F of a column extends it up to the critical temperature on file; results are flagged.
+// ---------------------------------------------------------------------------
+
+const RANKINE_OFFSET = 459.67;
+const TAIL_FIT_SPAN = 10; // table points (°F) used for the fit
+
+interface TailFit {
+  a: number;
+  b: number;
+}
+
+function tailFit(tempF: number[], psig: number[]): TailFit | undefined {
+  const n = Math.min(tempF.length, psig.length);
+  if (n < 2) return undefined;
+  const i1 = n - 1;
+  const i0 = Math.max(0, n - 1 - TAIL_FIT_SPAN);
+  const t0 = tempF[i0]! + RANKINE_OFFSET;
+  const t1 = tempF[i1]! + RANKINE_OFFSET;
+  const p0 = psig[i0]! + SEA_LEVEL_PATM_PSIA;
+  const p1 = psig[i1]! + SEA_LEVEL_PATM_PSIA;
+  if (!(p0 > 0 && p1 > p0 && t1 > t0)) return undefined;
+  const b = (Math.log(p1) - Math.log(p0)) / (1 / t0 - 1 / t1);
+  const a = Math.log(p1) + b / t1;
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= 0) return undefined;
+  return { a, b };
+}
+
+function tailTempAtPressure(fit: TailFit, psig: number): number | undefined {
+  const pAbs = psig + SEA_LEVEL_PATM_PSIA;
+  if (!(pAbs > 0)) return undefined;
+  const denom = fit.a - Math.log(pAbs);
+  if (!(denom > 0)) return undefined; // pressure beyond what the fit can represent
+  const t = fit.b / denom - RANKINE_OFFSET;
+  return Number.isFinite(t) ? t : undefined;
+}
+
+function tailPressureAtTemp(fit: TailFit, tempF: number): number | undefined {
+  const p = Math.exp(fit.a - fit.b / (tempF + RANKINE_OFFSET)) - SEA_LEVEL_PATM_PSIA;
+  return Number.isFinite(p) ? p : undefined;
+}
+
+export type SatRangeStatus =
+  | "table" // inside the table
+  | "extrapolated" // above the table top, below the critical point: Clausius–Clapeyron tail (approximate)
+  | "transcritical" // above the critical pressure / temperature on file: no saturation
+  | "below_table" // below the table bottom
+  | "above_table"; // above the table top and no critical data on file to bound an extrapolation
+
+export interface SatTempsResolution {
+  bubbleF?: number;
+  dewF?: number;
+  status: SatRangeStatus;
+}
+
+export interface SatPressuresResolution {
+  bubblePsig?: number;
+  dewPsig?: number;
+  status: SatRangeStatus;
+}
+
+/**
+ * Pressure -> saturation temperatures with the above-table tail. Transcritical is claimed only from
+ * `meta.criticalPsig` (or a tail temperature beyond `meta.criticalTempF`), never from the table top.
+ */
+export function resolveSatTemps(table: RefrigerantTable, meta: RefrigerantMeta | undefined, psig: number): SatTempsResolution {
+  const bubble = interp(table.bubblePsig, table.tempF, psig);
+  const dew = interp(table.dewPsig, table.tempF, psig);
+  const out: SatTempsResolution = { status: "table" };
+  if (bubble !== undefined) out.bubbleF = round1(bubble);
+  if (dew !== undefined) out.dewF = round1(dew);
+  if (bubble !== undefined && dew !== undefined) return out;
+  const n = table.tempF.length;
+  const bottom = Math.min(table.bubblePsig[0] ?? Infinity, table.dewPsig[0] ?? Infinity);
+  if (n === 0 || psig < bottom) return { ...out, status: "below_table" };
+  const critP = meta?.criticalPsig;
+  if (critP !== undefined && Number.isFinite(critP) && psig > critP) return { status: "transcritical" };
+  const critT = meta?.criticalTempF;
+  if (critT === undefined || !Number.isFinite(critT)) return { ...out, status: "above_table" };
+  let bubbleF = bubble;
+  let dewF = dew;
+  if (bubbleF === undefined) {
+    const fit = tailFit(table.tempF, table.bubblePsig);
+    bubbleF = fit ? tailTempAtPressure(fit, psig) : undefined;
+  }
+  if (dewF === undefined) {
+    const fit = tailFit(table.tempF, table.dewPsig);
+    dewF = fit ? tailTempAtPressure(fit, psig) : undefined;
+  }
+  if (bubbleF === undefined || dewF === undefined) return { ...out, status: "above_table" };
+  if (Math.min(bubbleF, dewF) > critT) return { status: "transcritical" };
+  return { bubbleF: round1(bubbleF), dewF: round1(dewF), status: "extrapolated" };
+}
+
+/** Temperature -> saturation pressures with the above-table tail (bounded by `meta.criticalTempF`). */
+export function resolveSatPressures(table: RefrigerantTable, meta: RefrigerantMeta | undefined, tempF: number): SatPressuresResolution {
+  const p = satPressuresAtTemp(table, tempF);
+  if (p) return { ...p, status: "table" };
+  const n = table.tempF.length;
+  if (n === 0 || tempF < (table.tempF[0] ?? -Infinity)) return { status: "below_table" };
+  const critT = meta?.criticalTempF;
+  if (critT !== undefined && Number.isFinite(critT) && tempF > critT) return { status: "transcritical" };
+  if (critT === undefined || !Number.isFinite(critT)) return { status: "above_table" };
+  const bf = tailFit(table.tempF, table.bubblePsig);
+  const df = tailFit(table.tempF, table.dewPsig);
+  const bubblePsig = bf ? tailPressureAtTemp(bf, tempF) : undefined;
+  const dewPsig = df ? tailPressureAtTemp(df, tempF) : undefined;
+  if (bubblePsig === undefined || dewPsig === undefined) return { status: "above_table" };
+  return { bubblePsig: round1(bubblePsig), dewPsig: round1(dewPsig), status: "extrapolated" };
+}
+
+function tableTopText(table: RefrigerantTable): string {
+  const n = table.tempF.length;
+  const maxB = table.bubblePsig[n - 1] ?? 0;
+  return `ends at ${tableTopF(table)} °F ≈ ${Math.round(maxB)} psig`;
+}
+
+function criticalText(meta: RefrigerantMeta | undefined): string {
+  const parts: string[] = [];
+  if (meta?.criticalTempF !== undefined) parts.push(`${meta.criticalTempF} °F`);
+  if (meta?.criticalPsig !== undefined) parts.push(`${meta.criticalPsig} psig`);
+  return parts.length ? ` (critical ≈ ${parts.join(" / ")})` : "";
+}
+
+const HIGH_HEAD_CHECKS = "Head pressure this high is extreme — check the high-pressure switch, condenser airflow/cleanliness, non-condensables and the gauge.";
+
 /** Elevation note: quantitative above 1,000 ft, generic otherwise. */
 function elevationNote(elevationFt: number | undefined): string {
   if (elevationFt === undefined || !Number.isFinite(elevationFt) || elevationFt <= 0) {
@@ -202,8 +330,6 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
     notes.push("Safety class not on file — confirm the class on the cylinder label / SDS before service (A2L and A3 need rated equipment).");
   }
   if (glide !== undefined) result.glideF = glide;
-  const criticalTempF = meta?.criticalTempF;
-  const pureLike = (meta?.type ?? "pure") !== "zeotrope";
 
   if (query.psig !== undefined && Number.isFinite(query.psig)) {
     const fieldPsig = query.psig;
@@ -213,28 +339,41 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
       result.inHgVacuum = inHgVacuum(fieldPsig);
       notes.push(`${fieldPsig} psig is below atmospheric: ${result.inHgVacuum} inHg vacuum. Air leaks IN at any joint — pull-down and moisture risk.`);
     }
-    const bubbleF = interp(table.bubblePsig, table.tempF, psigSL);
-    const dewF = interp(table.dewPsig, table.tempF, psigSL);
-    if (bubbleF !== undefined) result.bubbleTempF = round1(bubbleF);
-    if (dewF !== undefined) result.dewTempF = round1(dewF);
-    if (bubbleF !== undefined && dewF !== undefined) {
-      result.midpointTempF = round1((bubbleF + dewF) / 2);
+    const sat = resolveSatTemps(table, meta, psigSL);
+    if (sat.bubbleF !== undefined) result.bubbleTempF = sat.bubbleF;
+    if (sat.dewF !== undefined) result.dewTempF = sat.dewF;
+    if (sat.bubbleF !== undefined && sat.dewF !== undefined) {
+      result.midpointTempF = round1((sat.bubbleF + sat.dewF) / 2);
     }
-    if (bubbleF === undefined || dewF === undefined) {
-      const basis = elevationFt !== undefined ? ` (${round1(psigSL)} psig sea-level basis)` : "";
-      const maxB = table.bubblePsig[table.bubblePsig.length - 1] ?? 0;
-      const critP = meta?.criticalPsig;
-      if ((critP !== undefined && psigSL > critP) || (psigSL > maxB && pureLike)) {
-        notes.push(`${fieldPsig} psig${basis} is above the critical pressure of ${id} — above critical temperature — no saturation (transcritical).`);
-      } else {
+    const basis = elevationFt !== undefined ? ` (${round1(psigSL)} psig sea-level basis)` : "";
+    switch (sat.status) {
+      case "table":
+        break;
+      case "extrapolated":
+        notes.push(
+          `${fieldPsig} psig${basis} is above the ${id} table (${tableTopText(table)}; ${pressureRangeText(table)}): saturation temperature EXTRAPOLATED from the table tail — approximate, not for charge decisions. ${HIGH_HEAD_CHECKS}`,
+        );
+        break;
+      case "transcritical":
+        notes.push(
+          meta?.criticalPsig !== undefined && psigSL > meta.criticalPsig
+            ? `${fieldPsig} psig${basis} is above the critical pressure of ${id}${criticalText(meta)} — above critical temperature — no saturation (transcritical); verify the gauge and the refrigerant.`
+            : `${fieldPsig} psig${basis} corresponds to a saturation temperature above the ${id} critical temperature${criticalText(meta)} — no saturation (transcritical); verify the gauge and the refrigerant.`,
+        );
+        break;
+      case "above_table":
+        notes.push(`${fieldPsig} psig${basis} is above the ${id} table (${tableTopText(table)}; ${pressureRangeText(table)}) and no critical-point data is on file to extend it. ${HIGH_HEAD_CHECKS}`);
+        break;
+      case "below_table":
         notes.push(`${fieldPsig} psig${basis} is outside the ${id} table: ${pressureRangeText(table)}.`);
-      }
+        break;
     }
   }
   if (query.tempF !== undefined && Number.isFinite(query.tempF)) {
-    const p = satPressuresAtTemp(table, query.tempF);
+    const p = resolveSatPressures(table, meta, query.tempF);
     result.tempF = query.tempF;
-    if (p) {
+    const top = tableTopF(table);
+    if (p.bubblePsig !== undefined && p.dewPsig !== undefined) {
       const bubble = elevationFt !== undefined ? round1(seaLevelToFieldPsig(p.bubblePsig, elevationFt)) : p.bubblePsig;
       const dew = elevationFt !== undefined ? round1(seaLevelToFieldPsig(p.dewPsig, elevationFt)) : p.dewPsig;
       result.bubblePsig = bubble;
@@ -244,15 +383,15 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
         result.inHgVacuum = inHgVacuum(lowest);
         notes.push(`Saturation at ${query.tempF} °F is below atmospheric: ${result.inHgVacuum} inHg vacuum on the gauge (${lowest} psig).`);
       }
-    } else {
-      const top = tableTopF(table);
-      const aboveCritical = (criticalTempF !== undefined && query.tempF > criticalTempF) || (criticalTempF === undefined && pureLike && query.tempF > top);
-      if (aboveCritical || (pureLike && query.tempF > top)) {
-        const crit = criticalTempF !== undefined ? ` (critical ≈ ${criticalTempF} °F)` : "";
-        notes.push(`${query.tempF} °F is above critical temperature — no saturation (transcritical)${crit}.`);
-      } else {
-        notes.push(`${query.tempF} °F is outside the ${id} table range (${table.tempF[0]} to ${top} °F).`);
+      if (p.status === "extrapolated") {
+        notes.push(`${query.tempF} °F is above the ${id} table (${tableTopText(table)}): saturation pressure EXTRAPOLATED from the table tail — approximate, not for charge decisions. ${HIGH_HEAD_CHECKS}`);
       }
+    } else if (p.status === "transcritical") {
+      notes.push(`${query.tempF} °F is above critical temperature — no saturation (transcritical)${criticalText(meta)}.`);
+    } else if (p.status === "above_table") {
+      notes.push(`${query.tempF} °F is above the ${id} table range (${table.tempF[0]} to ${top} °F) and no critical-point data is on file to extend it.`);
+    } else {
+      notes.push(`${query.tempF} °F is outside the ${id} table range (${table.tempF[0]} to ${top} °F).`);
     }
   }
   if (query.psig === undefined && query.tempF === undefined) {
@@ -264,6 +403,7 @@ export function ptLookup(kb: KnowledgeBase, refrigerant: string, query: { psig?:
 export interface ShScResult {
   refrigerant: string;
   approximate?: boolean; // table built with approximate mixing rules: not for charge decisions
+  extrapolated?: boolean; // a saturation temperature came from the above-table tail fit: approximate, not for charge decisions
   safetyClass?: string;
   patmPsia?: number;
   evapSatF?: number;
@@ -299,24 +439,43 @@ export function superheatSubcooling(
     const reminder = safetyReminder(meta.safetyClass);
     if (reminder) notes.push(reminder);
   }
+  /** Out-of-table note for one side; transcritical only when the critical point on file says so. */
+  const rangeNote = (label: string, psig: number, status: SatRangeStatus, tail: string): void => {
+    switch (status) {
+      case "extrapolated":
+        out.extrapolated = true;
+        notes.push(`${label} ${psig} psig is above the ${id} table (${tableTopText(table)}): saturation temperature EXTRAPOLATED from the table tail — approximate, not for charge decisions. ${tail}`);
+        break;
+      case "transcritical":
+        notes.push(`${label} ${psig} psig is above the critical point of ${id}${criticalText(meta)} — no saturation (transcritical); verify the gauge and the refrigerant.`);
+        break;
+      case "above_table":
+        notes.push(`${label} ${psig} psig is above the ${id} table (${tableTopText(table)}) and no critical-point data is on file to extend it. ${tail}`);
+        break;
+      case "below_table":
+        notes.push(`${label} ${psig} psig is outside the ${id} table (${pressureRangeText(table)}).`);
+        break;
+      case "table":
+        break;
+    }
+  };
   if (m.suctionPsig !== undefined && Number.isFinite(m.suctionPsig)) {
     const psigSL = elevationFt !== undefined ? fieldToSeaLevelPsig(m.suctionPsig, elevationFt) : m.suctionPsig;
-    const t = satTempsAtPressure(table, psigSL);
-    if (t) {
+    const t = resolveSatTemps(table, meta, psigSL);
+    if (t.dewF !== undefined) {
       out.evapSatF = t.dewF;
       if (m.suctionLineTempF !== undefined && Number.isFinite(m.suctionLineTempF)) {
         out.superheatF = round1(m.suctionLineTempF - t.dewF);
         if (out.superheatF < 0) notes.push("Negative superheat: check the line temperature probe placement and the gauge; liquid may be returning to the compressor.");
       }
-    } else {
-      notes.push(`Suction pressure ${m.suctionPsig} psig is outside the ${id} table (${pressureRangeText(table)}).`);
     }
+    rangeNote("Suction pressure", m.suctionPsig, t.status, "A suction pressure this high means the gauge is on the wrong port or the system is off and equalized.");
   }
   const highSide = m.liquidPsig ?? m.dischargePsig;
   if (highSide !== undefined && Number.isFinite(highSide)) {
     const psigSL = elevationFt !== undefined ? fieldToSeaLevelPsig(highSide, elevationFt) : highSide;
-    const t = satTempsAtPressure(table, psigSL);
-    if (t) {
+    const t = resolveSatTemps(table, meta, psigSL);
+    if (t.bubbleF !== undefined) {
       out.condSatF = t.bubbleF;
       if (m.liquidLineTempF !== undefined && Number.isFinite(m.liquidLineTempF)) {
         out.subcoolingF = round1(t.bubbleF - m.liquidLineTempF);
@@ -325,14 +484,8 @@ export function superheatSubcooling(
       if (m.liquidPsig === undefined && m.dischargePsig !== undefined) {
         notes.push("Subcooling computed from discharge pressure; liquid-line pressure is slightly lower (condenser pressure drop), so true subcooling is a little less.");
       }
-    } else {
-      const maxB = table.bubblePsig[table.bubblePsig.length - 1] ?? 0;
-      if (psigSL > maxB) {
-        notes.push(`High-side pressure ${highSide} psig is above the ${id} table top (${maxB} psig) — above critical temperature — no saturation (transcritical); verify the gauge and refrigerant.`);
-      } else {
-        notes.push(`High-side pressure ${highSide} psig is outside the ${id} table (${pressureRangeText(table)}).`);
-      }
     }
+    rangeNote("High-side pressure", highSide, t.status, HIGH_HEAD_CHECKS);
   }
   if ((meta?.glideF ?? 0) >= 0.5) {
     notes.push(`${id} glide ≈ ${meta?.glideF} °F: superheat uses dew point, subcooling uses bubble point.`);

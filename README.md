@@ -144,6 +144,8 @@ Then:
   table was transcribed.
 - Refrigerant tables come from CoolProp. Blends that CoolProp does not ship as predefined
   mixtures are built from their mass fractions; a few legacy blends are marked approximate.
+- PT tables run to 160 °F. Above that the saturation temperature is extrapolated from the table
+  tail and flagged as approximate; a head pressure that high is itself the finding.
 - Charge diagnosis is for DX systems. For VRF, mini-splits and chillers the assistant reads
   codes and guides procedure but does not judge charge from gauges.
 

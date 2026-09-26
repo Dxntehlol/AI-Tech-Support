@@ -3,7 +3,9 @@ import { join } from "node:path";
 import type {
   ChargingTargets,
   DxRuleSet,
+  ElectricalComponent,
   ElectricalKnowledge,
+  ElectricalProcedure,
   KnowledgeBase,
   ManufacturerPack,
   RefrigerantMeta,
@@ -595,6 +597,127 @@ export function validateChargingTargets(ct: ChargingTargets, problems: string[])
 }
 
 // ---------------------------------------------------------------------------
+// Electrical (components.json / procedures.json)
+// ---------------------------------------------------------------------------
+
+/** Spec minimums (DESIGN.md "Electrical"): enforced when the file is present. */
+export const MIN_ELECTRICAL_COMPONENTS = 22;
+export const MIN_ELECTRICAL_PROCEDURES = 16;
+
+function isStringArray(v: unknown): boolean {
+  return Array.isArray(v) && v.every((s) => typeof s === "string");
+}
+
+function checkString(where: string, label: string, v: unknown, problems: string[]): void {
+  if (typeof v !== "string" || v.trim().length === 0) problems.push(`${where}: ${label} must be a non-empty string`);
+}
+
+function checkStringArray(where: string, label: string, v: unknown, problems: string[], required = true): void {
+  if (v === undefined && !required) return;
+  if (!isStringArray(v)) problems.push(`${where}: ${label} must be a string array`);
+}
+
+/** Shape checks for ElectricalComponent[]: id/name/function strings; tests[] (name, energized, steps[], expected); failureModes[]; safety[]. */
+export function validateElectricalComponents(components: unknown, problems: string[], where = "electrical/components.json"): void {
+  if (!Array.isArray(components)) {
+    problems.push(`${where}: components[] required`);
+    return;
+  }
+  const seen = new Set<string>();
+  components.forEach((c: Partial<ElectricalComponent> | null, i) => {
+    const w = `${where}: components[${i}]`;
+    if (!c || typeof c !== "object") {
+      problems.push(`${w}: not an object`);
+      return;
+    }
+    checkString(w, "id", c.id, problems);
+    checkString(w, "name", c.name, problems);
+    checkString(w, "function", c.function, problems);
+    if (typeof c.id === "string") {
+      if (seen.has(c.id)) problems.push(`${w}: duplicate component id ${c.id}`);
+      seen.add(c.id);
+    }
+    checkStringArray(w, "aliases", c.aliases, problems, false);
+    checkStringArray(w, "failureModes", c.failureModes, problems);
+    checkStringArray(w, "safety", c.safety, problems);
+    checkStringArray(w, "tools", c.tools, problems, false);
+    checkStringArray(w, "notes", c.notes, problems, false);
+    if (!Array.isArray(c.tests)) problems.push(`${w}: tests[] required`);
+    else {
+      c.tests.forEach((t: Partial<ElectricalComponent["tests"][number]> | null, j) => {
+        const tw = `${w}.tests[${j}]`;
+        if (!t || typeof t !== "object") {
+          problems.push(`${tw}: not an object`);
+          return;
+        }
+        checkString(tw, "name", t.name, problems);
+        if (typeof t.energized !== "boolean") problems.push(`${tw}: energized must be a boolean`);
+        checkStringArray(tw, "steps", t.steps, problems);
+        checkString(tw, "expected", t.expected, problems);
+        if (t.tolerance !== undefined && typeof t.tolerance !== "string") problems.push(`${tw}: tolerance must be a string`);
+      });
+    }
+  });
+}
+
+/** Shape checks for ElectricalProcedure[]: id/symptom strings; safety[]; steps[] with step strings; commonCauses[]. */
+export function validateElectricalProcedures(procedures: unknown, problems: string[], where = "electrical/procedures.json"): void {
+  if (!Array.isArray(procedures)) {
+    problems.push(`${where}: procedures[] required`);
+    return;
+  }
+  const seen = new Set<string>();
+  procedures.forEach((p: Partial<ElectricalProcedure> | null, i) => {
+    const w = `${where}: procedures[${i}]`;
+    if (!p || typeof p !== "object") {
+      problems.push(`${w}: not an object`);
+      return;
+    }
+    checkString(w, "id", p.id, problems);
+    checkString(w, "symptom", p.symptom, problems);
+    if (typeof p.id === "string") {
+      if (seen.has(p.id)) problems.push(`${w}: duplicate procedure id ${p.id}`);
+      seen.add(p.id);
+    }
+    checkStringArray(w, "aliases", p.aliases, problems, false);
+    checkStringArray(w, "appliesTo", p.appliesTo, problems, false);
+    checkStringArray(w, "safety", p.safety, problems);
+    checkStringArray(w, "commonCauses", p.commonCauses, problems);
+    if (!Array.isArray(p.steps)) problems.push(`${w}: steps[] required`);
+    else {
+      p.steps.forEach((s: Partial<ElectricalProcedure["steps"][number]> | null, j) => {
+        const sw = `${w}.steps[${j}]`;
+        if (!s || typeof s !== "object") {
+          problems.push(`${sw}: not an object`);
+          return;
+        }
+        checkString(sw, "step", s.step, problems);
+        if (s.expect !== undefined && typeof s.expect !== "string") problems.push(`${sw}: expect must be a string`);
+        if (s.ifNot !== undefined && typeof s.ifNot !== "string") problems.push(`${sw}: ifNot must be a string`);
+      });
+    }
+  });
+}
+
+/** Shape checks for reference topics: { topic, content[] }. */
+export function validateElectricalReference(reference: unknown, problems: string[], where = "electrical/components.json"): void {
+  if (reference === undefined) return; // optional
+  if (!Array.isArray(reference)) {
+    problems.push(`${where}: reference must be an array`);
+    return;
+  }
+  reference.forEach((r: Partial<ElectricalKnowledge["reference"][number]> | null, i) => {
+    const w = `${where}: reference[${i}]`;
+    if (!r || typeof r !== "object") {
+      problems.push(`${w}: not an object`);
+      return;
+    }
+    checkString(w, "topic", r.topic, problems);
+    checkStringArray(w, "content", r.content, problems);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Loader
 // ---------------------------------------------------------------------------
 
@@ -690,10 +813,15 @@ export function loadKnowledge(dir: string, opts: LoadOptions = {}): KnowledgeBas
   if (existsSync(compPath)) {
     try {
       const raw = readJson<Partial<ElectricalKnowledge>>(compPath);
+      if (!raw || typeof raw !== "object") throw new Error("not an object");
       electrical.version = raw.version ?? "0";
       electrical.components = Array.isArray(raw.components) ? raw.components : [];
       electrical.reference = Array.isArray(raw.reference) ? raw.reference : [];
-      if (!Array.isArray(raw.components)) problems.push(`${compPath}: components[] required`);
+      validateElectricalComponents(raw.components, problems, compPath);
+      validateElectricalReference(raw.reference, problems, compPath);
+      if (Array.isArray(raw.components) && raw.components.length < MIN_ELECTRICAL_COMPONENTS) {
+        problems.push(`${compPath}: ${raw.components.length} components, spec minimum is ${MIN_ELECTRICAL_COMPONENTS}`);
+      }
     } catch (e) {
       problems.push(`${compPath}: ${(e as Error).message}`);
     }
@@ -701,9 +829,14 @@ export function loadKnowledge(dir: string, opts: LoadOptions = {}): KnowledgeBas
   if (existsSync(procPath)) {
     try {
       const raw = readJson<Partial<ElectricalKnowledge>>(procPath);
+      if (!raw || typeof raw !== "object") throw new Error("not an object");
       electrical.procedures = Array.isArray(raw.procedures) ? raw.procedures : [];
-      if (!Array.isArray(raw.procedures)) problems.push(`${procPath}: procedures[] required`);
-      if (raw.reference?.length) electrical.reference = [...electrical.reference, ...raw.reference];
+      validateElectricalProcedures(raw.procedures, problems, procPath);
+      validateElectricalReference(raw.reference, problems, procPath);
+      if (Array.isArray(raw.procedures) && raw.procedures.length < MIN_ELECTRICAL_PROCEDURES) {
+        problems.push(`${procPath}: ${raw.procedures.length} procedures, spec minimum is ${MIN_ELECTRICAL_PROCEDURES}`);
+      }
+      if (Array.isArray(raw.reference) && raw.reference.length) electrical.reference = [...electrical.reference, ...raw.reference];
     } catch (e) {
       problems.push(`${procPath}: ${(e as Error).message}`);
     }
