@@ -1,0 +1,2284 @@
+{
+  "id": "compressors",
+  "manufacturer": "Compressor manufacturers (Copeland, Danfoss, Bristol, Tecumseh, Bitzer, GMCC)",
+  "brands": [
+    "Copeland",
+    "Emerson Climate Technologies",
+    "Copeland Scroll",
+    "Copeland Discus",
+    "Danfoss",
+    "Danfoss Performer",
+    "Maneurop",
+    "Bristol",
+    "Bristol Compressors",
+    "Tecumseh",
+    "Bitzer",
+    "GMCC"
+  ],
+  "aliases": [
+    "compressor",
+    "scroll compressor",
+    "hermetic compressor",
+    "semi-hermetic",
+    "Emerson",
+    "Copelametic",
+    "Discus",
+    "CoreSense",
+    "Comfort Alert",
+    "ZP",
+    "ZR",
+    "ZB",
+    "ZF",
+    "ZPD",
+    "ZPS",
+    "ZPV",
+    "CR",
+    "Performer",
+    "SM",
+    "SZ",
+    "SH",
+    "VZH",
+    "MTZ",
+    "MLZ",
+    "Ecoline",
+    "Octagon",
+    "Midea rotary"
+  ],
+  "serialFormats": [
+    {
+      "id": "copeland-yy-month-letter",
+      "description": "Copeland compressor serial (8-9 characters): two-digit year, then a month letter A-L (A=Jan ... L=Dec, no letters skipped), then plant/sequence characters. Applies to scroll, CR recip and Discus semi-hermetic nameplates.",
+      "eraStart": 1980,
+      "eraEnd": 2027,
+      "regex": "^(\\d{2})([A-L])([A-Z0-9]{5,6})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 1,
+        "pivot": 70,
+        "monthGroup": 2,
+        "monthLetterMap": {
+          "A": 1,
+          "B": 2,
+          "C": 3,
+          "D": 4,
+          "E": 5,
+          "F": 6,
+          "G": 7,
+          "H": 8,
+          "I": 9,
+          "J": 10,
+          "K": 11,
+          "L": 12
+        }
+      },
+      "examples": [
+        {
+          "serial": "01D1020HL",
+          "expect": {
+            "year": 2001,
+            "month": 4
+          }
+        },
+        {
+          "serial": "07F16543",
+          "expect": {
+            "year": 2007,
+            "month": 6
+          }
+        },
+        {
+          "serial": "03C05821",
+          "expect": {
+            "year": 2003,
+            "month": 3
+          }
+        },
+        {
+          "serial": "15C41207R",
+          "expect": {
+            "year": 2015,
+            "month": 3
+          }
+        }
+      ],
+      "confidence": "high",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Copeland Application Engineering Knowledge Center, answer 4983 'Determine compressor's date of manufacture using the serial number' (copeland.custhelp.com/app/answers/detail/a_id/4983)",
+        "electrical-forensics.com 'HVAC Compressor Date Codes' (example ZR40KC-PFV-230 S/N 01D1020HL = April 2001)",
+        "building-center.org 'Copeland HVAC age'"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Rule verified against the Copeland KB (year = first two digits, third character = month letter where the letter's alphabet position is the month number: F = June). Two independent secondary decoders (electrical-forensics, building-center) agree.",
+        "Example 01D1020HL is a real nameplate transcribed by electrical-forensics (April 2001). Examples 07F16543 and 03C05821 use the year/month characters exactly as stated in the Copeland KB (June 2007, March 2003); their trailing sequence characters are illustrative, not a real unit. 15C41207R is a typical modern 9-character form (year 2015, March) - trailing characters illustrative.",
+        "Two-digit year with pivot 70: '80'-'99' -> 1980-1999, '00'-'69' -> 2000-2069. Copeland scrolls did not exist before 1987 and ZP (R-410A) not before ~2000, so a ZP compressor with '9x' year is misread - re-check the nameplate.",
+        "A serial whose FIRST year digit is the letter N (e.g. N5C...) marks a compressor sold without warranty or salvage value (Copeland KB 4983); see the separate 'copeland-n-prefix' format.",
+        "Do not confuse the compressor serial with the condensing-unit or rooftop-unit serial: on a packaged unit the compressor nameplate is on the compressor shell inside the compressor compartment, and its date is usually a few weeks to months before the unit's build date - useful for cross-checking an ambiguous unit serial."
+      ]
+    },
+    {
+      "id": "copeland-n-prefix",
+      "description": "Copeland serial with 'N' in place of the first year digit: compressor sold without warranty/salvage value (reclaimed or non-warranty stock). Month letter still readable; year decade is not encoded.",
+      "eraStart": 1990,
+      "eraEnd": 2027,
+      "regex": "^N(\\d)([A-L])([A-Z0-9]{5,6})$",
+      "date": {
+        "method": "manual",
+        "note": "Only the last digit of the year and the month letter (A-L) are readable; the decade is not encoded. Confirm the year from the unit's nameplate or installation records."
+      },
+      "examples": [
+        {
+          "serial": "N5C41207R",
+          "expect": {}
+        },
+        {
+          "serial": "N9F1020HL",
+          "expect": {}
+        }
+      ],
+      "confidence": "low",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Copeland Application Engineering Knowledge Center, answer 4983 (statement that an 'N' replacing the first year digit denotes a compressor sold without warranty or salvage value)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "The existence of the N prefix is from the Copeland KB; the exact character layout after N is inferred from the standard format (low confidence). Examples are illustrative pattern tests only - no dated source.",
+        "Field meaning: no Copeland warranty applies; treat as a reclaimed/refurbished compressor when advising on replacement vs. repair."
+      ]
+    },
+    {
+      "id": "bristol-julian-yy",
+      "description": "Bristol reciprocating compressor serial (11 digits): digits 1-3 Julian day of manufacture, digits 4-5 two-digit year, digit 6 manufacturing location (0 or 2 = Bristol, VA), digits 7-11 sequence within the week.",
+      "eraStart": 1980,
+      "eraEnd": 2018,
+      "regex": "^(\\d{3})(\\d{2})(\\d)(\\d{5})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 2,
+        "pivot": 70,
+        "dayOfYearGroup": 1
+      },
+      "plant": {
+        "group": 3,
+        "map": {
+          "0": "Bristol, VA",
+          "2": "Bristol, VA"
+        }
+      },
+      "examples": [
+        {
+          "serial": "10598212345",
+          "expect": {
+            "year": 1998,
+            "dayOfYear": 105
+          }
+        },
+        {
+          "serial": "24107000871",
+          "expect": {
+            "year": 2007,
+            "dayOfYear": 241
+          }
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "electrical-forensics.com 'HVAC Compressor Date Codes' - Bristol section (Julian date / year / location / sequence layout)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW confidence: layout from one secondary source (electrical-forensics); no manufacturer document or dated nameplate photo was available. Examples are constructed to exercise the rule, not real units.",
+        "Bristol Compressors (Bristol, VA) ceased production in 2018; any Bristol serial decoding to 2019+ is a misread.",
+        "Julian day 001-366 must be plausible; an 11-digit all-numeric serial starting with 367-999 is not this format.",
+        "Collision: an 11-digit numeric serial is also common on other equipment; only use this rule when the nameplate says Bristol (model starting with H followed by digits)."
+      ]
+    },
+    {
+      "id": "tecumseh-date-code",
+      "description": "Tecumseh compressor DATE CODE (stamped on the nameplate separately from the serial number): month letter, two-digit day of month, two-digit year (H2995 = 29 August 1995).",
+      "eraStart": 1980,
+      "eraEnd": 2027,
+      "regex": "^([A-L])(\\d{2})(\\d{2})$",
+      "date": {
+        "method": "twoDigitYear",
+        "yearGroup": 3,
+        "pivot": 70,
+        "monthGroup": 1,
+        "monthLetterMap": {
+          "A": 1,
+          "B": 2,
+          "C": 3,
+          "D": 4,
+          "E": 5,
+          "F": 6,
+          "G": 7,
+          "H": 8,
+          "I": 9,
+          "J": 10,
+          "K": 11,
+          "L": 12
+        }
+      },
+      "examples": [
+        {
+          "serial": "H2995",
+          "expect": {
+            "year": 1995,
+            "month": 8
+          }
+        },
+        {
+          "serial": "C1508",
+          "expect": {
+            "year": 2008,
+            "month": 3
+          }
+        }
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "electrical-forensics.com 'HVAC Compressor Date Codes' - Tecumseh section (month letter + day + year; example H2995 = August 29, 1995)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "LOW confidence: one secondary source. The month-letter table was not reproduced by the source; A-L in alphabet order is consistent with the source's own example (H = August) but letters beyond L, or a skipped letter, cannot be excluded - confirm with Tecumseh (tecumseh.com) if a date matters for warranty.",
+        "Example C1508 is constructed (illustrative); H2995 is the source's stated example.",
+        "This 5-character code is the date code, not the serial. Tecumseh nameplates carry both; the serial number does not decode to a date with this rule.",
+        "Day of month (group 2) is not returned by the decoder; read it by hand (positions 2-3)."
+      ]
+    }
+  ],
+  "modelFormats": [
+    {
+      "id": "copeland-scroll",
+      "family": "Copeland Scroll hermetic compressors (ZP / ZR / ZB / ZF / ZS / ZH and digital ZPD/ZRD/ZBD/ZFD, two-stage ZPS)",
+      "description": "Model = family letters + nominal capacity (kBtu/h, first digits) + K (x1000) + model variation + optional E (POE oil) - motor code - bill of material. Example ZP54K5E-TF5-830.",
+      "productType": "compressor",
+      "eraStart": 1987,
+      "eraEnd": 2027,
+      "regex": "^(ZP[DST]?|ZR[DT]?|ZB[DT]?|ZF[DT]?|ZST?|ZH)(\\d{2,3})K([0-9A-Z])(E?)-(PF[A-Z0-9]|TF[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Family / application",
+          "attribute": "series",
+          "map": {
+            "ZP": "Copeland Scroll, R-410A air conditioning/heat pump",
+            "ZPD": "Copeland Scroll Digital (modulating), R-410A",
+            "ZPS": "Copeland Scroll UltraTech two-stage, R-410A",
+            "ZPT": "Copeland Scroll tandem, R-410A",
+            "ZR": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)",
+            "ZRD": "Copeland Scroll Digital, R-22/R-407C",
+            "ZRT": "Copeland Scroll tandem, R-22",
+            "ZB": "Copeland Scroll refrigeration, medium temperature",
+            "ZBD": "Copeland Scroll Digital refrigeration, medium temperature",
+            "ZBT": "Copeland Scroll refrigeration tandem",
+            "ZF": "Copeland Scroll refrigeration, low temperature (vapor injection on ZF*K4E/KVE)",
+            "ZFD": "Copeland Scroll Digital refrigeration, low temperature",
+            "ZS": "Copeland Scroll refrigeration (medium/high temperature, older series)",
+            "ZH": "Copeland Scroll heat pump / heating (ZH K4E)"
+          },
+          "notes": "Family meanings from Copeland catalog/brochure titles found in research (ZP R-410A, ZR R-22, ZB/ZF refrigeration, ZPD/ZRD digital, ZPS two-stage). ZPV variable-speed uses a different layout (ZPV0382E-7E9-...) and is not decoded by this pattern."
+        },
+        {
+          "group": 2,
+          "name": "Nominal capacity (kBtu/h at 60 Hz, ARI/AHRI rating point)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "capacityBasis": "kBtu/h at the 60 Hz AHRI rating point (first digits of capacity; e.g. 54 = 54,000 Btu/h ≈ 4.5 tons). The letter K following the digits is the x1,000 multiplier.",
+          "unit": "kbtuh",
+          "notes": "Refrigeration families (ZB/ZF/ZS) use the same digits but the rating condition differs (medium/low temp), so 'tons' is only meaningful for A/C families."
+        },
+        {
+          "group": 3,
+          "name": "Model variation / generation",
+          "attribute": "revision",
+          "notes": "Digit or letter after K (K5 = 5th-generation A/C scroll, KC = earlier ZR generation, K4/K6/KA/KW etc.). Raw code returned; no complete map published."
+        },
+        {
+          "group": 4,
+          "name": "Lubricant",
+          "attribute": "options",
+          "map": {
+            "E": "POE (polyol ester) oil - required for R-410A / R-407C / HFC service",
+            "": "no E suffix: mineral oil (older ZR R-22 models)"
+          },
+          "notes": "Copeland catalogs list the E suffix as POE oil (e.g. CR/ZR '...E' = R-407C capable)."
+        },
+        {
+          "group": 5,
+          "name": "Motor code (volts-phase-Hz)",
+          "attribute": "voltage",
+          "map": {
+            "PFV": "208/230-1-60",
+            "PFJ": "265-1-60",
+            "TF5": "200/230-3-60",
+            "TFD": "460-3-60",
+            "TFE": "575-3-60"
+          },
+          "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'."
+        },
+        {
+          "group": 6,
+          "name": "Bill of material (BOM)",
+          "attribute": "options",
+          "map": {
+            "800": "service compressor kit: compressor + 42 in. molded-plug wiring harness, mounting parts and instructions (ZP K5 service BOM per Copeland cross-reference guide)",
+            "830": "standard OEM/service BOM for K5E scrolls (as sold: ZP54K5E-TF5-830)"
+          },
+          "notes": "BOM codes describe accessories/packaging (plug type, sight glass, protection module, mounting kit). Map is partial - see Copeland 'Scroll compressors Bill of Material (BOM) overview' technical information for the full list."
+        }
+      ],
+      "refrigerant": "R-410A (ZP/ZPD/ZPS/ZPT); R-22 or R-407C (ZR/ZRD); refrigeration families per nameplate (R-404A/R-407A/R-448A/R-449A/R-134a)",
+      "controlPlatformIds": [
+        "coresense-diagnostics-ac-scroll",
+        "coresense-communications-1ph",
+        "coresense-diagnostics-k5-3ph"
+      ],
+      "examples": [
+        {
+          "model": "ZP54K5E-TF5-830",
+          "expect": {
+            "series": "Copeland Scroll, R-410A air conditioning/heat pump",
+            "tonnage": "4.5",
+            "revision": "5",
+            "voltage": "200/230-3-60",
+            "family": "Copeland Scroll hermetic compressors (ZP / ZR / ZB / ZF / ZS / ZH and digital ZPD/ZRD/ZBD/ZFD, two-stage ZPS)"
+          }
+        },
+        {
+          "model": "ZR40KC-PFV-230",
+          "expect": {
+            "series": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)",
+            "tonnage": "3.3",
+            "revision": "C",
+            "voltage": "208/230-1-60"
+          }
+        },
+        {
+          "model": "ZP25K5E-PFV-800",
+          "expect": {
+            "tonnage": "2.1",
+            "voltage": "208/230-1-60",
+            "revision": "5"
+          }
+        },
+        {
+          "model": "ZR54KA-TF5-130",
+          "expect": {
+            "tonnage": "4.5",
+            "voltage": "200/230-3-60",
+            "revision": "A"
+          }
+        },
+        {
+          "model": "ZP42K5E-TF5-830",
+          "expect": {
+            "tonnage": "3.5",
+            "voltage": "200/230-3-60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: the compressor model is the line beginning with Z (e.g. ZP54K5E-TF5-830); the OEM (Carrier/Trane/Lennox) often prints its own part number (e.g. Carrier 'P031-...', Lennox '100...') on a second sticker - decode the Copeland line, not the OEM part number.",
+        "Capacity digits are Btu/h thousands, not tons: ZP54 ≈ 4.5 t, ZP61 ≈ 5 t, ZP83 ≈ 7 t, ZP91 ≈ 7.5 t, ZP103 ≈ 8.5 t, ZP120 ≈ 10 t, ZP137 ≈ 11.5 t, ZP182 ≈ 15 t (rounded per Copeland cross-reference practice).",
+        "Voltage code confirmed in Copeland brochure: PFV 60-1-208/230, PFJ 60-1-265, TF5 60-3-200/230, TFD 60-3-460; TFE = 575-3-60.",
+        "Replacement: Copeland cross-reference guides map obsolete ZR K3/KC and ZP K3/K4 models to current K5/K6 service models; match refrigerant, capacity, motor code and check the BOM (plug vs. spade terminals)."
+      ],
+      "confidence": "high",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Copeland (Emerson Climate) scroll brochure motor-code table: 'Code Hz-Phase-Volts PFV 60-1-208/230 PFJ 60-1-265 TF5 60-3-200/230 TFD 60-3-460' (Emerson Electric brochure 00018_2_9_13_14)",
+        "Copeland Scroll ZPK5 R-410A Compressor Cross Reference Guide (Sid Harvey UNI-01350) - 800 BOM service kit description",
+        "ZP54K5E-TF5-830 technical specification sheet (acpro.com) - 'HFC, R-410A, 60Hz, 3-Phase, 200/230 V'",
+        "Copeland Scroll Compressors BOM overview, Technical Information TI_Scroll_BOM_EN (copeland.com)",
+        "Copeland ZPD & ZRD Digital Scroll Compressor Ranges catalogue; '1.5 to 5 ton ZPS K4/K5 Copeland Scroll two-stage compressors' bulletin (emerson.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "copeland-cr-recip",
+      "family": "Copeland CR series hermetic reciprocating compressors (CR K6/K7/K8, R-22 / R-407C air conditioning)",
+      "description": "CR + first two digits of nominal capacity (Btu/h at 60 Hz) + K (x1,000) + family variation 6/7/8 + optional E (POE oil, R-407C) - motor code - BOM. Example CR37K6E-PFV.",
+      "productType": "compressor",
+      "eraStart": 1985,
+      "eraEnd": 2027,
+      "regex": "^(CR)(\\d{2})K([678])(E?)-(PF[A-Z0-9]|TF[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Series",
+          "attribute": "series",
+          "map": {
+            "CR": "Copeland CR hermetic reciprocating, medium/high temperature (A/C and heat pump)"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Nominal capacity, first two digits of Btu/h at 60 Hz",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "capacityBasis": "first two digits of nominal capacity in Btu/h at 60 Hz (K = x1,000): CR37 = 37,000 Btu/h",
+          "unit": "kbtuh"
+        },
+        {
+          "group": 3,
+          "name": "Product family variation",
+          "attribute": "revision",
+          "map": {
+            "6": "K6 family",
+            "7": "K7 family",
+            "8": "K8 family"
+          },
+          "notes": "Copeland CR catalog: variations 6, 7, 8."
+        },
+        {
+          "group": 4,
+          "name": "Lubricant",
+          "attribute": "options",
+          "map": {
+            "E": "POE oil (R-407C capable)",
+            "": "mineral oil (R-22)"
+          }
+        },
+        {
+          "group": 5,
+          "name": "Motor code (volts-phase-Hz)",
+          "attribute": "voltage",
+          "map": {
+            "PFV": "208/230-1-60",
+            "PFJ": "265-1-60",
+            "TF5": "200/230-3-60",
+            "TFD": "460-3-60",
+            "TFE": "575-3-60"
+          },
+          "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'."
+        },
+        {
+          "group": 6,
+          "name": "Bill of material",
+          "attribute": "options",
+          "notes": "e.g. 875 = service BOM in the CR cross-reference guide; map not published here."
+        }
+      ],
+      "refrigerant": "R-22 (no E suffix); R-407C/R-22 (E suffix, POE)",
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "CR37K6E-PFV",
+          "expect": {
+            "series": "Copeland CR hermetic reciprocating, medium/high temperature (A/C and heat pump)",
+            "tonnage": "3.1",
+            "revision": "K6 family",
+            "voltage": "208/230-1-60"
+          }
+        },
+        {
+          "model": "CR18K6-PFV-875",
+          "expect": {
+            "tonnage": "1.5",
+            "revision": "K6 family",
+            "voltage": "208/230-1-60"
+          }
+        }
+      ],
+      "notes": [
+        "Nameplate: line starting CRxxK. Older Copeland recips (CRxx K1-K5, 'Copelametic' CF/CS) are not covered by this pattern.",
+        "Internal line-break overload is standard on single-phase CR; three-phase CR K6 use an internal line-break or pilot-duty protector per BOM."
+      ],
+      "confidence": "high",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Copeland CR series Product Catalog, March 2025 (media.copeland.com) - nomenclature: 'CR' = series, 'XX' = first two digits of nominal capacity Btu/h @ 60 Hz, 'K' = x1,000, '6, 7, 8' = product family variations",
+        "Copeland Service CR Compressor Cross Reference Guide (CR18K6-PFV-875 catalog, rogerssupply.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "copeland-discus-semihermetic",
+      "family": "Copeland Discus / Copelametic semi-hermetic reciprocating compressors (2D, 3D, 4D, 6D, and reed-valve 2R/3R/4R/6R)",
+      "description": "Cylinder count + valve design (D = Discus, R = reed) + body/displacement letter + generation digit, then either the older '-1500'-style horsepower code or the newer 'R17ME'-style capacity/motor/oil code, then -motor code -BOM. Examples 3DS3-1500-TFC and 3DS3R17ME-TFC.",
+      "productType": "compressor",
+      "eraStart": 1985,
+      "eraEnd": 2027,
+      "regex": "^(\\d)(D|R|A)([A-Z])(\\d)?(?:-(\\d{3,4})|([A-Z]\\d{2,3}[A-Z]{1,2}))-([PT][A-Z0-9]{2})(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Number of cylinders",
+          "attribute": "other",
+          "notes": "2, 3, 4, 6 cylinders (2D/3D/4D/6D bodies)."
+        },
+        {
+          "group": 2,
+          "name": "Valve design",
+          "attribute": "compressor_type",
+          "map": {
+            "D": "Discus valve plate (semi-hermetic)",
+            "R": "reed valve plate (Copelametic semi-hermetic)",
+            "A": "Discus, later body designation (e.g. 3DA)"
+          },
+          "notes": "Per Copeland Discus replacement guide: Discus models are laid out like the reed models with 'D' in place of 'R'."
+        },
+        {
+          "group": 3,
+          "name": "Body / displacement size letter",
+          "attribute": "other",
+          "notes": "S, A, B, C, F, T, ... body size within the cylinder family (partial knowledge; raw code returned)."
+        },
+        {
+          "group": 4,
+          "name": "Generation",
+          "attribute": "revision"
+        },
+        {
+          "group": 5,
+          "name": "Legacy horsepower code (e.g. 1500 = 15 hp)",
+          "attribute": "other",
+          "notes": "Older nomenclature: -0500 = 5 hp, -1000 = 10 hp, -1500 = 15 hp (hp x100). Not converted to tons (rating condition varies with application)."
+        },
+        {
+          "group": 6,
+          "name": "Newer capacity/motor/oil code (e.g. R17ME)",
+          "attribute": "other",
+          "notes": "Layout per Copeland Discus nomenclature chart '3 D S 3 R 17 M E - T F C XXX': application/refrigerant letter, nominal hp digits, motor letter, E = POE oil. Positions not individually decoded (low confidence)."
+        },
+        {
+          "group": 7,
+          "name": "Motor code (volts-phase-Hz)",
+          "attribute": "voltage",
+          "map": {
+            "PFV": "208/230-1-60",
+            "PFJ": "265-1-60",
+            "TF5": "200/230-3-60",
+            "TFD": "460-3-60",
+            "TFE": "575-3-60"
+          },
+          "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'. On semi-hermetics TFC is common and is a dual-voltage 3-phase 60 Hz motor - read the nameplate VOLTS line."
+        },
+        {
+          "group": 8,
+          "name": "Bill of material",
+          "attribute": "options"
+        }
+      ],
+      "refrigerant": "per nameplate: R-404A / R-407A / R-448A / R-449A (low/medium temp), R-22, R-134a; POE oil when the E suffix is present",
+      "controlPlatformIds": [
+        "coresense-discus"
+      ],
+      "examples": [
+        {
+          "model": "3DS3-1500-TFC",
+          "expect": {
+            "compressor_type": "Discus valve plate (semi-hermetic)",
+            "revision": "3"
+          }
+        },
+        {
+          "model": "3DS3R17ME-TFC",
+          "expect": {
+            "compressor_type": "Discus valve plate (semi-hermetic)",
+            "revision": "3"
+          }
+        },
+        {
+          "model": "4DA3F33ME-TSK",
+          "expect": {
+            "compressor_type": "Discus valve plate (semi-hermetic)"
+          }
+        }
+      ],
+      "notes": [
+        "MEDIUM/LOW: family layout (cylinders, D vs R, hp code, motor code) is from Copeland's Discus replacement guide and nomenclature chart titles; the individual meaning of the letters in the newer 'R17ME' block was not confirmed from the chart text.",
+        "Nameplate: the Discus model is on the compressor body plate; the condensing unit (e.g. Copeland/Heatcraft rack) has its own model. Old-to-new cross references (e.g. 3DS3-1500-TFC -> 3DS3R17ME-TFC) are in Copeland's Discus Model No. Cross (Old to New) list.",
+        "Example 4DA3F33ME-TSK is a pattern test of the 4-cylinder 'A' body with a non-standard motor code; it is not verified against a catalog."
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Discus Compressor Replacement Guide 2020ECT-42 (media.copeland.com)",
+        "'3 D S 3 R 17 M E - T F C XXX: Copeland Discus Nomenclature Chart' (scribd transcription of Copeland chart)",
+        "Copelametic compressor model number nomenclature (webapps.copeland.com nommetic.pdf)",
+        "Discus Model No. Cross Old to New 11072012 (cmpcorp.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "danfoss-performer-scroll",
+      "family": "Danfoss Performer / Danfoss scroll compressors (SM, SY, SZ, SH, DSH; VZH inverter)",
+      "description": "Family letters + nominal capacity (kBtu/h) + version letter + motor/voltage code digit + option letters. Examples SM185S4RC, SH184A4ALC, code-number form SM185-4RM.",
+      "productType": "compressor",
+      "eraStart": 1995,
+      "eraEnd": 2027,
+      "regex": "^(D?S[MYZH]|VZH)(\\d{3})-?([A-Z])?(\\d)([A-Z]{1,3})?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Family / refrigerant",
+          "attribute": "series",
+          "map": {
+            "SM": "Danfoss Performer scroll, R-22 (air conditioning)",
+            "SY": "Danfoss Performer scroll, R-22 (large sizes, older)",
+            "SZ": "Danfoss Performer scroll, R-407C / R-134a",
+            "SH": "Danfoss scroll, R-410A",
+            "DSH": "Danfoss scroll, R-410A (DSH series)",
+            "VZH": "Danfoss inverter (variable speed) scroll, R-410A"
+          },
+          "notes": "SM/SY/SZ from the Danfoss 'Performer scroll compressors SM / SY / SZ / SH' datasheet family; SH = R-410A per the SH090-SH485 application guideline title. Refrigerant assignment for SM vs SZ from memory - verify on nameplate."
+        },
+        {
+          "group": 2,
+          "name": "Nominal capacity (kBtu/h)",
+          "attribute": "tonnage",
+          "transform": "mbh_to_tons",
+          "capacityBasis": "nominal cooling capacity in kBtu/h at the Danfoss/ARI rating point (SH184 ≈ 15 tons)",
+          "unit": "kbtuh",
+          "notes": "Capacity basis from memory of Danfoss datasheets (not confirmed by the search summaries)."
+        },
+        {
+          "group": 3,
+          "name": "Version / generation letter",
+          "attribute": "revision"
+        },
+        {
+          "group": 4,
+          "name": "Motor voltage code",
+          "attribute": "voltage",
+          "map": {
+            "4": "380-415/3/50 & 460/3/60"
+          },
+          "notes": "Code 4 confirmed from the Danfoss store page for SH184A4ALC (380-415 V/3/50 Hz and 460 V/3/60 Hz). Other codes (3 = 200-230/3/60, 6 = 230/1/50, 9 = 380/3/60 from memory) are NOT mapped - raw digit returned."
+        },
+        {
+          "group": 5,
+          "name": "Option letters (protection / connection / packaging)",
+          "attribute": "options",
+          "notes": "e.g. RC, ALC, RM, CAM, CAI - encode motor protection type, connection (brazed/rotolock), and packaging (single/industrial pack). Not decoded (low confidence)."
+        }
+      ],
+      "refrigerant": "R-22 (SM/SY), R-407C or R-134a (SZ), R-410A (SH/DSH/VZH)",
+      "controlPlatformIds": [
+        "danfoss-cds303-drive"
+      ],
+      "examples": [
+        {
+          "model": "SM185S4RC",
+          "expect": {
+            "series": "Danfoss Performer scroll, R-22 (air conditioning)",
+            "tonnage": "15.4",
+            "revision": "S",
+            "voltage": "380-415/3/50 & 460/3/60"
+          }
+        },
+        {
+          "model": "SH184A4ALC",
+          "expect": {
+            "series": "Danfoss scroll, R-410A",
+            "tonnage": "15.3",
+            "revision": "A",
+            "voltage": "380-415/3/50 & 460/3/60"
+          }
+        },
+        {
+          "model": "SM185-4RM",
+          "expect": {
+            "series": "Danfoss Performer scroll, R-22 (air conditioning)",
+            "tonnage": "15.4",
+            "voltage": "380-415/3/50 & 460/3/60"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence overall: only the family letters and the voltage-code-4 meaning were confirmed from Danfoss pages; position meanings otherwise from memory. Danfoss publishes the nomenclature in each family's Application Guidelines (e.g. 'Danfoss scroll compressors SH090 to SH485 - single 50/60 Hz - R410A', AB243586442172) - confirm there.",
+        "Danfoss nameplate shows both the 'code number' (e.g. 120H0361) and the model; decode the model (SH184A4ALC). The code number is the ordering part number.",
+        "Tonnage from kBtu/h is approximate (SH184 is sold as a 15-ton compressor)."
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Danfoss Global Product Store, 'Scroll compressor, SH184A4ALC' (code 120H0361/120H0362) - rated 380-415V/3/50Hz and 460V/3/60Hz",
+        "Danfoss Performer scroll compressors SM / SY / SZ / SH datasheets (SM185-4, danfoss.com/odsg)",
+        "Danfoss scroll compressors SH090 to SH485 - single 50 Hz - 60 Hz - R410A, application guidelines AB243586442172en-US1301"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "bristol-hermetic-recip",
+      "family": "Bristol hermetic reciprocating compressors (H2x/H7x families, e.g. H23A423DBEA)",
+      "description": "H + family digits + letter + 3-digit capacity code (first two digits followed by N zeros of Btu/h: 423 = 42,000; 244 = 240,000) + generation + refrigerant/electrical/motor letters.",
+      "productType": "compressor",
+      "eraStart": 1980,
+      "eraEnd": 2018,
+      "regex": "^(H)(\\d)([0-9A-Z])([A-Z])(\\d{3})([A-Z])([A-Z])([A-Z])([A-Z])?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Hermetic reciprocating",
+          "attribute": "unit_type",
+          "map": {
+            "H": "Bristol hermetic reciprocating compressor"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Family (2 = H2 series, 7 = H7 series)",
+          "attribute": "series",
+          "map": {
+            "2": "Bristol H2 family (single/two-stage recips, R-22/R-410A era)",
+            "7": "Bristol H7 family (large recips)"
+          },
+          "notes": "Family digit meaning inferred from catalog groupings (H2x, H7x); not confirmed from the model-number-system sheet text."
+        },
+        {
+          "group": 3,
+          "name": "Sub-family / body",
+          "attribute": "other"
+        },
+        {
+          "group": 4,
+          "name": "Design letter",
+          "attribute": "other"
+        },
+        {
+          "group": 5,
+          "name": "Nominal capacity code (first two digits followed by N zeros, Btu/h)",
+          "attribute": "tonnage",
+          "transform": "map_tons",
+          "map": {
+            "104": "8.3",
+            "114": "9.2",
+            "123": "1",
+            "124": "10",
+            "133": "1.1",
+            "134": "10.8",
+            "143": "1.2",
+            "144": "11.7",
+            "153": "1.3",
+            "154": "12.5",
+            "163": "1.3",
+            "164": "13.3",
+            "173": "1.4",
+            "174": "14.2",
+            "183": "1.5",
+            "184": "15",
+            "193": "1.6",
+            "194": "15.8",
+            "203": "1.7",
+            "204": "16.7",
+            "213": "1.8",
+            "214": "17.5",
+            "223": "1.8",
+            "224": "18.3",
+            "233": "1.9",
+            "234": "19.2",
+            "243": "2",
+            "244": "20",
+            "253": "2.1",
+            "254": "20.8",
+            "263": "2.2",
+            "264": "21.7",
+            "273": "2.3",
+            "274": "22.5",
+            "283": "2.3",
+            "284": "23.3",
+            "293": "2.4",
+            "294": "24.2",
+            "303": "2.5",
+            "304": "25",
+            "313": "2.6",
+            "314": "25.8",
+            "323": "2.7",
+            "324": "26.7",
+            "333": "2.8",
+            "334": "27.5",
+            "343": "2.8",
+            "344": "28.3",
+            "353": "2.9",
+            "354": "29.2",
+            "363": "3",
+            "364": "30",
+            "373": "3.1",
+            "374": "30.8",
+            "383": "3.2",
+            "384": "31.7",
+            "393": "3.3",
+            "394": "32.5",
+            "403": "3.3",
+            "404": "33.3",
+            "413": "3.4",
+            "414": "34.2",
+            "423": "3.5",
+            "424": "35",
+            "433": "3.6",
+            "434": "35.8",
+            "443": "3.7",
+            "444": "36.7",
+            "453": "3.8",
+            "454": "37.5",
+            "463": "3.8",
+            "464": "38.3",
+            "473": "3.9",
+            "474": "39.2",
+            "483": "4",
+            "484": "40",
+            "493": "4.1",
+            "494": "40.8",
+            "503": "4.2",
+            "504": "41.7",
+            "513": "4.3",
+            "514": "42.5",
+            "523": "4.3",
+            "524": "43.3",
+            "533": "4.4",
+            "534": "44.2",
+            "543": "4.5",
+            "544": "45",
+            "553": "4.6",
+            "554": "45.8",
+            "563": "4.7",
+            "564": "46.7",
+            "573": "4.8",
+            "574": "47.5",
+            "583": "4.8",
+            "584": "48.3",
+            "593": "4.9",
+            "594": "49.2",
+            "603": "5",
+            "604": "50",
+            "613": "5.1",
+            "623": "5.2",
+            "633": "5.3",
+            "643": "5.3",
+            "653": "5.4",
+            "663": "5.5",
+            "673": "5.6",
+            "683": "5.7",
+            "693": "5.8",
+            "703": "5.8",
+            "713": "5.9",
+            "723": "6",
+            "733": "6.1",
+            "743": "6.2",
+            "753": "6.3",
+            "763": "6.3",
+            "773": "6.4",
+            "783": "6.5",
+            "793": "6.6",
+            "803": "6.7",
+            "813": "6.8",
+            "823": "6.8",
+            "833": "6.9",
+            "843": "7",
+            "853": "7.1",
+            "863": "7.2",
+            "873": "7.3",
+            "883": "7.3",
+            "893": "7.4",
+            "903": "7.5",
+            "913": "7.6",
+            "923": "7.7",
+            "933": "7.8",
+            "943": "7.8",
+            "953": "7.9",
+            "963": "8",
+            "973": "8.1",
+            "983": "8.2",
+            "993": "8.3"
+          },
+          "capacityBasis": "Btu/h nominal at Bristol rating conditions (423 = 42,000 Btu/h ≈ 3.5 t). Map generated from the documented rule: 193 = 19 + 000 = 19,000; 244 = 24 + 0,000 = 240,000."
+        },
+        {
+          "group": 6,
+          "name": "Generation",
+          "attribute": "revision",
+          "map": {
+            "B": "second generation - no PRV (except G series)",
+            "D": "dual compressor application (single and interconnected)"
+          },
+          "notes": "Only B and D confirmed from the Bristol model number system sheet; other letters returned raw."
+        },
+        {
+          "group": 7,
+          "name": "Refrigerant / application",
+          "attribute": "other",
+          "notes": "Refrigerant code in Bristol system is numeric on some models (1 = R-12) and letters on others; not decoded."
+        },
+        {
+          "group": 8,
+          "name": "Electrical / motor code",
+          "attribute": "other"
+        },
+        {
+          "group": 9,
+          "name": "Motor / options",
+          "attribute": "other"
+        }
+      ],
+      "refrigerant": "per nameplate (R-22 on most A/C models; R-410A on later H2x)",
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "H23A423DBEA",
+          "expect": {
+            "unit_type": "Bristol hermetic reciprocating compressor",
+            "series": "Bristol H2 family (single/two-stage recips, R-22/R-410A era)",
+            "tonnage": "3.5",
+            "revision": "dual compressor application (single and interconnected)"
+          }
+        },
+        {
+          "model": "H23A423ABC",
+          "expect": {
+            "tonnage": "3.5",
+            "revision": "A"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence: the capacity-code rule and the B/D generation codes come from the Bristol 'Compressor Model Number System' sheet as summarized by Neuco/Bristol literature; the remaining positions are placeholders (raw code returned).",
+        "H23A423DBEA catalog data: 42,100 Btu/h at 45/130 F, RLA 5.7 (460 V), LRA 39, MCC 9.5 (Bristol catalog).",
+        "Bristol Compressors ceased production in 2018 - replacements are cross-referenced to Copeland ZR/ZP or Danfoss scrolls; match capacity, refrigerant and voltage."
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Bristol Compressors 'Compressor Model Number System' (literature.neuco.com/ybristol.pdf; bristol-model-number-system.pdf)",
+        "Bristol Compressors Catalog / Product Information & Specifications (bristol-compressors.com) - H23A423DBEA data",
+        "bristol-compressors.com model page H23A423ABC"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "tecumseh-recip",
+      "family": "Tecumseh hermetic reciprocating compressors (AE, AJ, AK, AV, AW, AG, AH, AN families)",
+      "description": "Two-letter family + release-variant letter + application digit + 3-digit capacity/performance code + refrigerant letter + 2-letter voltage code. Example AWA7514ZXN.",
+      "productType": "compressor",
+      "eraStart": 1980,
+      "eraEnd": 2027,
+      "regex": "^(A[A-Z])([A-Z])(\\d)(\\d{3})([A-Z])([A-Z]{2})(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Compressor family",
+          "attribute": "series",
+          "map": {
+            "AE": "AE family (fractional hp)",
+            "AG": "AG family",
+            "AH": "AH family",
+            "AJ": "AJ family",
+            "AK": "AK family",
+            "AN": "AN family",
+            "AV": "AV family",
+            "AW": "AW family"
+          },
+          "notes": "Family letters confirmed by the Tecumseh AH5540E service handbook model-number-code page; hp ranges per family not transcribed."
+        },
+        {
+          "group": 2,
+          "name": "Release variant (generation)",
+          "attribute": "revision"
+        },
+        {
+          "group": 3,
+          "name": "Application (evaporating temperature range / starting torque)",
+          "attribute": "other",
+          "notes": "Tecumseh application digit ranges 1 (low temp -10 F, normal torque) through 9 (commercial); intermediate values not transcribed."
+        },
+        {
+          "group": 4,
+          "name": "Capacity / performance code",
+          "attribute": "other",
+          "notes": "Not converted: the Tecumseh code is not a simple Btu/h figure across families. Use Tecumseh's product page (tproduct.tecumseh.com) for rated capacity."
+        },
+        {
+          "group": 5,
+          "name": "Refrigerant",
+          "attribute": "refrigerant",
+          "map": {
+            "Z": "R-404A / R-507"
+          },
+          "notes": "Only Z confirmed (Tecumseh AWA7515ZXD product page). Other letters (e.g. Y, E, X) not mapped."
+        },
+        {
+          "group": 6,
+          "name": "Voltage code",
+          "attribute": "voltage",
+          "map": {
+            "XN": "208-230/1/60 (200-220/1/50)"
+          },
+          "notes": "Only XN confirmed from Tecumseh cross-reference literature; XD, XT etc. not mapped."
+        }
+      ],
+      "refrigerant": "per refrigerant letter (Z = R-404A/R-507); otherwise per nameplate",
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "AWA7514ZXN",
+          "expect": {
+            "series": "AW family",
+            "revision": "A",
+            "refrigerant": "R-404A / R-507",
+            "voltage": "208-230/1/60 (200-220/1/50)"
+          }
+        },
+        {
+          "model": "AWA7512ZXD",
+          "expect": {
+            "series": "AW family",
+            "refrigerant": "R-404A / R-507"
+          }
+        },
+        {
+          "model": "AVA7524ZXT",
+          "expect": {
+            "series": "AV family",
+            "refrigerant": "R-404A / R-507"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence: structure (family, variant, application, refrigerant, voltage) from the Tecumseh service handbook summary and cross-reference guides; capacity code not decoded. Tecumseh says to contact Tecumseh for explanation of family codes.",
+        "Tecumseh nameplates carry model, serial, and a separate 5-character date code (see serial format tecumseh-date-code)."
+      ],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": [
+        "Tecumseh AH5540E Service Handbook, 'Compressor Model Number Codes' (manualslib page 18)",
+        "Tecumseh to Tecumseh Cross Reference, Wholesale Distribution North America (UNI-194395)",
+        "Tecumseh product pages AWA7515ZXD / AWA7512ZXD / AVA7524ZXT (tecumseh.com, tproduct.tecumseh.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "bitzer-ecoline-semihermetic",
+      "family": "Bitzer semi-hermetic reciprocating compressors (ECOLINE and Octagon, e.g. 4EES-6Y, 4EC-6.2Y)",
+      "description": "Cylinders + bore/stroke letter + series letter (E = ECOLINE, C = Octagon) + optional S + motor size (hp code) + Y (ester oil) + optional motor code (-40S).",
+      "productType": "compressor",
+      "eraStart": 1995,
+      "eraEnd": 2027,
+      "regex": "^(\\d)([A-Z])([A-Z])([A-Z]?)-(\\d{1,2}(?:\\.\\d)?)(Y?)(?:-(\\d{2}[A-Z]))?(?:[-A-Z0-9/]*)?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Number of cylinders",
+          "attribute": "other"
+        },
+        {
+          "group": 2,
+          "name": "Bore x stroke identification letter",
+          "attribute": "other"
+        },
+        {
+          "group": 3,
+          "name": "Series identification letter",
+          "attribute": "series",
+          "map": {
+            "E": "Bitzer ECOLINE series",
+            "C": "Bitzer Octagon series (older)"
+          },
+          "notes": "E confirmed by Bitzer 'Explanation of model designations'; C = Octagon per the old->new cross reference (4EC-6.2Y -> 4EES-6Y)."
+        },
+        {
+          "group": 4,
+          "name": "Lubrication code",
+          "attribute": "other",
+          "map": {
+            "S": "centrifugal lubrication"
+          }
+        },
+        {
+          "group": 5,
+          "name": "Motor size code (≈ nominal hp)",
+          "attribute": "other",
+          "notes": "6 = 6 hp on 4EES-6Y (Bitzer product listings); not converted to tons."
+        },
+        {
+          "group": 6,
+          "name": "Oil charge",
+          "attribute": "options",
+          "map": {
+            "Y": "ester (POE) oil charge - HFC refrigerants",
+            "": "mineral oil"
+          }
+        },
+        {
+          "group": 7,
+          "name": "Motor code",
+          "attribute": "voltage",
+          "notes": "e.g. 40S; not mapped (Bitzer motor code table not transcribed)."
+        }
+      ],
+      "refrigerant": "R-134a / R-404A / R-507A / R-407C / R-22 (universal ECOLINE; per nameplate); R-744 on transcritical CO2 versions",
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "4EES-6Y",
+          "expect": {
+            "series": "Bitzer ECOLINE series",
+            "options": "ester (POE) oil charge - HFC refrigerants"
+          }
+        },
+        {
+          "model": "4EES-6Y-40S",
+          "expect": {
+            "series": "Bitzer ECOLINE series",
+            "options": "ester (POE) oil charge - HFC refrigerants"
+          }
+        },
+        {
+          "model": "4EC-6.2Y",
+          "expect": {
+            "series": "Bitzer Octagon series (older)"
+          }
+        }
+      ],
+      "notes": [
+        "MEDIUM: position list from Bitzer's 'Explanation of model designations' page (bitzer.de) as summarized; the 'S' = centrifugal lubrication and 'Y' = ester oil meanings are from that page. Bitzer motor codes and 'bore x stroke' letters not transcribed.",
+        "Nameplate: Bitzer plate shows model (Typ), serial (Nr.), and motor data; the model is the string like 4EES-6Y-40S."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "Bitzer 'Explanation of model designations' (bitzer.de/shared_media/html/at-310/en-GB/375533451375550219.html)",
+        "Bitzer ECOLINE series product pages (bitzer.de/us/us/reciprocating-compressors/ecoline/)",
+        "Bitzer 4EES-6Y-40S specification (Bitzer Software v6.17.6, hosbv.com)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "gmcc-rotary",
+      "family": "GMCC (Midea) rotary compressors (PA/PH series, e.g. PA145X1C-4FTL)",
+      "description": "P + series letter + displacement digits + type letters - motor/version code. Nomenclature only; low confidence.",
+      "productType": "compressor",
+      "eraStart": 2005,
+      "eraEnd": 2027,
+      "regex": "^(P[A-Z])(\\d{3})([A-Z]\\d?[A-Z]?)(?:-([A-Z0-9]{2,5}))?$",
+      "segments": [
+        {
+          "group": 1,
+          "name": "Rotary compressor series",
+          "attribute": "series",
+          "map": {
+            "PA": "GMCC rotary, PA series",
+            "PH": "GMCC rotary, PH series"
+          }
+        },
+        {
+          "group": 2,
+          "name": "Displacement code (cm3 x10)",
+          "attribute": "other",
+          "notes": "e.g. 145 -> 14.5 cm3/rev (memory only)."
+        },
+        {
+          "group": 3,
+          "name": "Type / rotor count / version letters",
+          "attribute": "other"
+        },
+        {
+          "group": 4,
+          "name": "Motor / voltage code",
+          "attribute": "other"
+        }
+      ],
+      "refrigerant": "R-410A, R-22 or R-32 per nameplate",
+      "controlPlatformIds": [],
+      "examples": [
+        {
+          "model": "PA145X1C-4FTL",
+          "expect": {
+            "series": "GMCC rotary, PA series"
+          }
+        },
+        {
+          "model": "PH290X2C-4KU",
+          "expect": {
+            "series": "GMCC rotary, PH series"
+          }
+        }
+      ],
+      "notes": [
+        "LOW confidence - memory only, no source located within the research budget. Included so the pack recognises a GMCC rotary nameplate; do not rely on segment meanings. LG and Highly rotary nomenclatures were not covered (unresolved)."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [],
+      "lastVerified": "2026-09-26"
+    }
+  ],
+  "controls": [
+    {
+      "id": "coresense-diagnostics-ac-scroll",
+      "name": "Copeland CoreSense Diagnostics module for air-conditioning scroll compressors (3-phase ZP/ZR with motor thermistor, e.g. ZP K5/K6 7.5-15 t)",
+      "description": "Module mounted in the compressor terminal box; two-colour LED (green = warning, red = alert/trip) flashes a count. Red codes result in a trip and, if enabled, a lockout. Reset via power cycle / control-circuit interruption per Copeland KB 2070.",
+      "appliesTo": [
+        "copeland-scroll"
+      ],
+      "faultCodes": [
+        {
+          "code": "Green 1 flash",
+          "meaning": "Warning: Loss of Communication",
+          "likelyCauses": [
+            "Communication wiring between module and system controller open or miswired",
+            "Controller not present (stand-alone use)"
+          ],
+          "checks": [
+            "Verify RS-485/communication wiring polarity and continuity",
+            "If no network is used, warning is informational"
+          ],
+          "severity": "info",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Green 3 flashes",
+          "meaning": "Warning: Short Cycling",
+          "likelyCauses": [
+            "Thermostat/controller cycling the compressor on and off rapidly",
+            "Pressure-switch cycling (LPS/HPS)",
+            "Low charge causing LPS trips"
+          ],
+          "checks": [
+            "Log run/off times; confirm minimum run and off timers in the controller",
+            "Check pressure switch operation and system charge"
+          ],
+          "severity": "warning",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Red 1 flash",
+          "meaning": "Alert: Motor High Temperature",
+          "likelyCauses": [
+            "Motor overheating from low suction gas flow (low charge, restriction, low airflow on evaporator)",
+            "High superheat / return-gas temperature",
+            "Low voltage or unbalanced 3-phase voltage",
+            "Failed contactor contact / single-phasing"
+          ],
+          "checks": [
+            "Measure suction superheat at the compressor (expect ~10-20 F at design)",
+            "Measure line-to-line voltage under load and phase imbalance (< 2 %)",
+            "Compare running amps per phase to nameplate RLA",
+            "Check condenser fan and head pressure"
+          ],
+          "severity": "lockout",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Red 2 flashes",
+          "meaning": "Alert: Open/Shorted Motor Thermistor",
+          "likelyCauses": [
+            "Thermistor leads open or shorted at the module or Fusite",
+            "Failed internal motor thermistor",
+            "Wrong compressor/module combination"
+          ],
+          "checks": [
+            "Ohm the thermistor circuit at the module terminals against the value in the Copeland bulletin for the module version",
+            "Inspect thermistor plug and wiring for damage"
+          ],
+          "severity": "lockout",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Red 3 flashes",
+          "meaning": "Alert: Short Cycling lockout",
+          "likelyCauses": [
+            "Repeated short cycles beyond the module's threshold",
+            "Pressure-switch cycling, controller demand chatter"
+          ],
+          "checks": [
+            "Same as Green 3; module locks out after repeated short cycles - find the cycling cause before resetting"
+          ],
+          "severity": "lockout",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Red 4 flashes",
+          "meaning": "Alert: Scroll High Temperature lockout",
+          "likelyCauses": [
+            "High discharge temperature: low charge, high compression ratio (dirty condenser, high head pressure), loss of condenser fan, running with an open TXV bulb / high superheat",
+            "Low suction pressure operation"
+          ],
+          "checks": [
+            "Measure discharge line temperature 6 in. from the compressor (Copeland limit is 225 F)",
+            "Check condenser airflow/cleanliness and head pressure",
+            "Verify charge and superheat"
+          ],
+          "severity": "lockout",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Red 6 flashes",
+          "meaning": "Alert: Missing Phase",
+          "likelyCauses": [
+            "Open phase upstream (blown fuse, failed contactor pole, loose lug)",
+            "Utility single-phasing"
+          ],
+          "checks": [
+            "Measure all three line-to-line voltages at the contactor load side while calling for cooling",
+            "Inspect fuses, disconnect and contactor contacts"
+          ],
+          "severity": "shutdown",
+          "source": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "Solid green",
+          "meaning": "Power on, no fault (normal operation)"
+        },
+        {
+          "pattern": "Green flashing N times, pause, repeat",
+          "meaning": "Warning code N (no trip or lockout)"
+        },
+        {
+          "pattern": "Red flashing N times, pause, repeat",
+          "meaning": "Alert code N - the compressor has tripped and may be locked out"
+        }
+      ],
+      "diagnosticTips": [
+        "Count the flashes between pauses to read the code; codes repeat until cleared.",
+        "Reset: remove and restore power to the module/control circuit (Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'). Fix the cause first; a locked-out compressor is protecting itself.",
+        "Codes 5, 7, 8 and 9 exist on this platform (locked rotor, reverse phase, welded contactor, low voltage on comparable Copeland modules) but were not confirmed from the manual in this review - read them from AE 1379 R2 / KB 1818 before acting."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+          "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1818"
+        },
+        {
+          "title": "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
+          "url": "https://media.copeland.com/93ff8d35-7621-461a-9809-b16b0108c7ad/AE%201379%20R2%20CoreSense%20Diagnostics%20for%20Copeland%20Scroll%20Air%20Conditioning%20Compressors.pdf"
+        },
+        {
+          "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'",
+          "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+        "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'"
+      ]
+    },
+    {
+      "id": "coresense-communications-1ph",
+      "name": "Copeland CoreSense Communications / Comfort Alert diagnostics module (single-phase residential and light-commercial scrolls)",
+      "description": "Current-sensing module wired in the compressor common lead with Y and 24 V inputs; flashes a numbered ALERT code (yellow/red LED) for system faults inferred from compressor current and thermostat demand.",
+      "appliesTo": [
+        "copeland-scroll",
+        "copeland-cr-recip"
+      ],
+      "faultCodes": [
+        {
+          "code": "Flash 1",
+          "meaning": "Long Run Time",
+          "likelyCauses": [
+            "Low refrigerant charge",
+            "Evaporator/condenser airflow restriction",
+            "Undersized or heavily loaded system",
+            "Thermostat calling continuously"
+          ],
+          "checks": [
+            "Measure superheat/subcooling and compare to the unit charging chart",
+            "Check filters, coil cleanliness, blower and condenser fan operation"
+          ],
+          "severity": "info",
+          "source": "CoreSense Communications flash-event table as reproduced in the Daikin/Goodman service manual RS6200301 and Copeland module literature",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 2",
+          "meaning": "Compressor (Pressure) Trip / System Pressure Trip",
+          "likelyCauses": [
+            "High-pressure switch trip (dirty condenser, fan failure, overcharge, non-condensables)",
+            "Low-pressure switch trip (low charge, restriction, low airflow)"
+          ],
+          "checks": [
+            "Read head and suction pressure at the trip",
+            "Check HPS/LPS settings and condenser fan"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 3",
+          "meaning": "Short Cycling / Pressure Switch Cycling",
+          "likelyCauses": [
+            "Pressure switch cycling",
+            "Thermostat chatter or loose Y wiring",
+            "Low charge"
+          ],
+          "checks": [
+            "Verify thermostat demand is stable (Y voltage)",
+            "Check LPS/HPS cycling and charge"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 4",
+          "meaning": "Locked Rotor",
+          "likelyCauses": [
+            "Compressor mechanically seized or attempting to start against unequalized pressure",
+            "Failed run capacitor / start components",
+            "Low voltage at compressor terminals"
+          ],
+          "checks": [
+            "Measure voltage at compressor terminals during start (should stay above nameplate minimum)",
+            "Test run capacitor microfarads",
+            "Confirm LRA draw and immediate overload trip; check for pressure equalization time"
+          ],
+          "severity": "lockout",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 5",
+          "meaning": "Compressor (Mod Run) Trip / Open Circuit",
+          "likelyCauses": [
+            "Compressor internal overload open (hot compressor)",
+            "Open contactor, fuse, or wiring to compressor",
+            "Open winding"
+          ],
+          "checks": [
+            "Check for 24 V at Y with no compressor current",
+            "Ohm C-S-R windings after the compressor cools",
+            "Inspect contactor and wiring"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 6",
+          "meaning": "Open Start Circuit",
+          "likelyCauses": [
+            "Open start winding",
+            "Failed start capacitor / start relay, open start-circuit wiring"
+          ],
+          "checks": [
+            "Ohm C-S; compare with C-R (start winding resistance normally higher than run)",
+            "Check start capacitor and relay if fitted"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 7",
+          "meaning": "Open Run Circuit",
+          "likelyCauses": [
+            "Open run winding",
+            "Failed run capacitor or open run-circuit wiring"
+          ],
+          "checks": [
+            "Ohm C-R",
+            "Test run capacitor"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        },
+        {
+          "code": "Flash 8",
+          "meaning": "Welded Contactor",
+          "likelyCauses": [
+            "Contactor contacts welded closed - compressor runs with no Y demand",
+            "Miswired or bypassed contactor"
+          ],
+          "checks": [
+            "Compressor current present with Y de-energized",
+            "Inspect and replace the contactor"
+          ],
+          "severity": "warning",
+          "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
+          "evidence": "single_secondary"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "Green LED on",
+          "meaning": "Module powered (24 V present)"
+        },
+        {
+          "pattern": "Yellow/red LED flashing N times, pause",
+          "meaning": "ALERT code N (see fault codes); the module does not itself shut the compressor down on most codes - it reports what the protector/controls did"
+        }
+      ],
+      "diagnosticTips": [
+        "The module learns the compressor's current profile; power-cycling 24 V clears the displayed code (fix the cause first).",
+        "Because the module infers faults from current, a wrong current-sensor lead (common lead not passed through the sensor) gives false open-circuit codes - verify installation before condemning a compressor.",
+        "Code 9 (low voltage) is on the full Copeland table but was not confirmed in this review; see the Copeland AE bulletin for the module (Comfort Alert / CoreSense Communications) for the complete table."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Daikin/Goodman 'Service and Troubleshooting' RS6200301 (reproduces Copeland CoreSense Communications flash-event table)",
+          "url": "https://daikincomfort.com/docs/default-source/amst/sm-rs6200301.pdf"
+        },
+        {
+          "title": "Copeland CoreSense Technology page and AE bulletins index",
+          "url": "https://www.copeland.com/en-us/products/refrigeration/commercial-refrigeration/electronics/coresense-technology"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Daikin/Goodman service manual RS6200301 (CoreSense Communications table)",
+        "Copeland CoreSense Diagnostics alert code summaries (Beacon 'CoreSense Diagnostics: Alert Codes')"
+      ]
+    },
+    {
+      "id": "coresense-diagnostics-k5-3ph",
+      "name": "Copeland CoreSense Diagnostics for ZP K5 three-phase scrolls (AE4-1383 Table 7 module)",
+      "description": "Terminal-box module for 3-phase ZP*K5 (and ZPS K5) compressors; LED flash codes per AE4-1383 Table 7; lockout is not enabled from the factory except for code 7.",
+      "appliesTo": [
+        "copeland-scroll"
+      ],
+      "faultCodes": [
+        {
+          "code": "Code 1",
+          "meaning": "High Discharge Temperature",
+          "likelyCauses": [
+            "Low charge / high superheat",
+            "High compression ratio: dirty condenser, condenser fan failure, high head pressure",
+            "Loss of scroll cooling from low suction density"
+          ],
+          "checks": [
+            "Discharge line temperature within 6 in. of compressor (Copeland limit 225 F)",
+            "Head pressure, condenser airflow, charge and superheat"
+          ],
+          "severity": "lockout",
+          "source": "Copeland AE4-1383 R5 'Copeland Scroll K5 series', Table 7 CoreSense Diagnostics Fault Codes",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "LED flashes N times then pauses",
+          "meaning": "Fault code N per AE4-1383 Table 7"
+        }
+      ],
+      "diagnosticTips": [
+        "AE4-1383 states the lockout feature is not enabled from the factory except on code 7 - a compressor with a non-7 code will auto-restart after the condition clears, so check the module's fault history.",
+        "Only code 1 was transcribed in this review; Table 7 (codes 2-9) and the Table 3 troubleshooting tips live in AE4-1383 R5 (webapps2.copeland.com/ci/k5/K5-AE.pdf)."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Copeland Application Engineering Bulletin AE4-1383 R5 - Copeland Scroll K5 series (Table 7 CoreSense Diagnostics fault codes)",
+          "url": "https://webapps2.copeland.com/ci/k5/K5-AE.pdf"
+        },
+        {
+          "title": "Copeland KB 3615 'CoreSense Diagnostic Module for Scroll K5 compressors'",
+          "url": "https://copeland.custhelp.com/app/answers/detail/a_id/3615"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Copeland AE4-1383 R5, Table 7"
+      ]
+    },
+    {
+      "id": "coresense-discus",
+      "name": "Copeland CoreSense Diagnostics v2.11 / CoreSense Protection for Discus semi-hermetic compressors",
+      "description": "Compressor-mounted module (CoreSense Diagnostics has a 2-line LCD in 5 languages plus a tri-colour LED; CoreSense Protection is LED-only). Standard protection on every Discus with CoreSense: low oil pressure, excessive discharge temperature, high discharge pressure and low suction pressure; also motor overheat and locked-rotor protection.",
+      "appliesTo": [
+        "copeland-discus-semihermetic"
+      ],
+      "faultCodes": [
+        {
+          "code": "LED yellow flashing",
+          "meaning": "System trip (auto-reset): the module has tripped the compressor on a protective condition and will restart automatically once the trip condition clears",
+          "likelyCauses": [
+            "Low oil pressure (see LCD text)",
+            "High discharge temperature",
+            "High discharge pressure / low suction pressure",
+            "Motor temperature"
+          ],
+          "checks": [
+            "Read the LCD text / fault history for the tripped protection",
+            "Check oil level and oil pressure differential, discharge temperature, head and suction pressures"
+          ],
+          "severity": "warning",
+          "source": "Copeland CoreSense Diagnostics v2.11 for Copeland Discus Compressors (AE8-1368 R2) / CoreSense Protection for Discus Compressors AE bulletin Aug 2018 - LED colour description",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "LED red flashing",
+          "meaning": "Lockout: manual reset required at the compressor",
+          "likelyCauses": [
+            "Repeated trips of one protection (e.g. low oil pressure lockout)",
+            "Locked rotor / motor overheat lockout"
+          ],
+          "checks": [
+            "Identify the locked-out protection on the LCD or by flash count, fix the cause, then reset per the bulletin (cycle control power to the module)"
+          ],
+          "severity": "lockout",
+          "source": "CoreSense Diagnostics v2.11 / CoreSense Protection for Discus - LED colour description",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "LED green",
+          "meaning": "Normal operation - no fault",
+          "severity": "info",
+          "source": "CoreSense Diagnostics v2.11 / CoreSense Protection for Discus - LED colour description",
+          "evidence": "manufacturer_doc"
+        }
+      ],
+      "ledPatterns": [
+        {
+          "pattern": "Green",
+          "meaning": "All OK"
+        },
+        {
+          "pattern": "Yellow flashing N times",
+          "meaning": "Auto-reset trip, code N (flash count = code number; pause between repeats)"
+        },
+        {
+          "pattern": "Red flashing N times",
+          "meaning": "Lockout, code N - manual reset at the compressor"
+        },
+        {
+          "pattern": "Solid red",
+          "meaning": "See Copeland KB 2411 'Solid Red LED on CoreSense Diagnostics V2.11' (module/power problem, not a compressor fault code)"
+        }
+      ],
+      "diagnosticTips": [
+        "The flash code number is the number of LED flashes followed by a pause; the numbered code table (oil pressure, discharge temperature, motor temperature, phase loss/reversal, locked rotor, short cycling, etc.) was not transcribed in this review - it is in AE8-1368 R2/R3 Section 'Module LED description / Module operation-code description'.",
+        "Identify which module is fitted before reading codes: KB 5386 explains how to tell CoreSense Protection from CoreSense Diagnostics by part number (e.g. 571-0065-xx, 943-0128-00, 971-0067-00).",
+        "Oil-pressure protection replaces the mechanical oil safety switch: a low-oil trip needs the oil level, oil return and suction-line sizing checked, not just a reset."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Copeland AE Bulletin AE8-1368 R2 - CoreSense Diagnostics v2.11 for Copeland Discus Compressors",
+          "url": "https://media.copeland.com/5d72b599-4203-47cf-92fd-b16b01075eb9/AE%20Bulletin%20AE8-1368%20R2%20CoreSense%20Diagnostics%20v2.11%20for%20Copeland%20Discus%20Compressors.pdf"
+        },
+        {
+          "title": "Copeland AE Bulletin - CoreSense Protection for Discus Compressors (Aug 2018)",
+          "url": "https://media.copeland.com/dbb52baf-edcd-4204-bda4-b16b01075c06/AE%20Bulletin%20-%20CoreSense%20Protection%20for%20Discus%20Compressors%20-%20Aug%202018.pdf"
+        },
+        {
+          "title": "Copeland KB 5386 - Discus compressor with CoreSense Protection or CoreSense Diagnostics part number",
+          "url": "https://copeland.custhelp.com/app/answers/detail/a_id/5386"
+        },
+        {
+          "title": "Copeland KB 2411 - Solid Red LED on CoreSense Diagnostics V2.11",
+          "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2411"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Copeland AE8-1368 R2",
+        "Copeland CoreSense Protection for Discus Compressors AE bulletin (Aug 2018)",
+        "copeland.com CoreSense Technology for Refrigeration page"
+      ]
+    },
+    {
+      "id": "danfoss-cds303-drive",
+      "name": "Danfoss VLT CDS303 / CDS803 refrigeration drive (used with VZH inverter scrolls)",
+      "description": "VLT-family variable-frequency drive matched to Danfoss VZH inverter scroll compressors (7.5-22 kW). Alarms are read on the LCP keypad and stored in the alarm log; the high-pressure switch is wired to the Safe Stop input so an HP trip appears as a Safe Stop alarm.",
+      "appliesTo": [
+        "danfoss-performer-scroll"
+      ],
+      "faultCodes": [
+        {
+          "code": "Alarm 13",
+          "meaning": "Over Current",
+          "likelyCauses": [
+            "Compressor mechanical overload / seizing",
+            "Liquid floodback or slugging at start",
+            "Motor short or wrong motor data in drive parameters",
+            "Ramp time too short"
+          ],
+          "checks": [
+            "Compare motor current on the LCP to compressor RLA",
+            "Verify motor parameters (nameplate) in the drive",
+            "Check for liquid return / oil level and start-up ramp settings"
+          ],
+          "severity": "shutdown",
+          "source": "Danfoss VLT CDS303 Operating Instructions MG34M302, section 7.1.1 Warnings/Alarm Messages; CDS303/803 Quick troubleshooting guide AX404427814471",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Alarm 14",
+          "meaning": "Earth Fault",
+          "likelyCauses": [
+            "Compressor winding grounded (burnout)",
+            "Damaged motor cable insulation, moisture in the terminal box"
+          ],
+          "checks": [
+            "Megger the compressor and cable to ground with the drive output disconnected",
+            "Inspect the Fusite/terminal plate for carbon tracking"
+          ],
+          "severity": "shutdown",
+          "source": "Danfoss VLT CDS303 Operating Instructions MG34M302, section 7.1.1",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Alarm 16",
+          "meaning": "Short Circuit",
+          "likelyCauses": [
+            "Phase-to-phase short in motor cable or compressor windings",
+            "Failed drive output stage"
+          ],
+          "checks": [
+            "Ohm the compressor T1-T2-T3 phase-to-phase for balance",
+            "Inspect cable and terminal box"
+          ],
+          "severity": "shutdown",
+          "source": "Danfoss VLT CDS303 Operating Instructions MG34M302, section 7.1.1",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "Safe Stop activated (Alarm 68 on VLT family)",
+          "meaning": "Safe Stop input opened - on VZH applications the high-pressure switch is wired to Safe Stop, so this indicates an HP switch trip",
+          "likelyCauses": [
+            "High discharge pressure (dirty condenser, fan failure, overcharge, non-condensables)",
+            "Open HP switch wiring"
+          ],
+          "checks": [
+            "Check head pressure and condenser",
+            "Verify HP switch continuity and terminal 37 wiring"
+          ],
+          "severity": "shutdown",
+          "source": "CDS303/803 Quick troubleshooting guide AX404427814471 ('safe stop activation by high pressure switch trip'); VZH application guide AB372721754643",
+          "evidence": "manufacturer_doc",
+          "notes": "Alarm number 68 for Safe Stop is the VLT-family number and was not confirmed specifically for CDS303 in this review."
+        }
+      ],
+      "diagnosticTips": [
+        "Read alarms on the LCP and use the Alarm Log (fault history) before resetting; Danfoss asks for the alarm history when escalating.",
+        "Only three alarm numbers were confirmed here; the complete list (over 90 warnings/alarms) is in MG34M302 section 7.1.1 and the CDS303/803 Quick troubleshooting guide.",
+        "Danfoss fixed-speed scrolls (SM/SY/SZ/SH) use internal motor protection or an electronic module (e.g. on SY/SZ 240-380) rather than this drive; those module codes were not covered in this review."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        {
+          "title": "Danfoss VLT CDS303 Operating Instructions MG34M302",
+          "url": "http://files.danfoss.com/download/Drives/MG34M302.pdf"
+        },
+        {
+          "title": "Danfoss Service Guide CDS303/803 Quick troubleshooting guide AX404427814471",
+          "url": "https://assets.danfoss.com/documents/latest/200779/AX404427814471en-000101.pdf"
+        },
+        {
+          "title": "Danfoss Application Guide Scroll Compressors VZH088-117-170 Gen3 AB372721754643",
+          "url": "https://assets.danfoss.com/documents/latest/437986/AB372721754643en-000502.pdf"
+        }
+      ],
+      "confidence": "medium",
+      "sources": [
+        "Danfoss MG34M302",
+        "Danfoss AX404427814471",
+        "Danfoss AB372721754643"
+      ]
+    }
+  ],
+  "electrical": [
+    {
+      "familyRegex": "generic-single-phase",
+      "familyLabel": "Generic single-phase hermetic compressor (CSR / PSC): Copeland ZP/ZR PFV, CR PFV, Bristol, Tecumseh, rotary",
+      "controlVoltage": "24 VAC from the unit transformer (TRAN) to the contactor coil; line voltage 208/230-1-60 (PFV) or 265-1-60 (PFJ) to the compressor",
+      "components": [
+        {
+          "designator": "C",
+          "name": "Common terminal of the compressor motor (line side through the contactor)",
+          "notes": "Internal line-break overload is in series with C on most hermetics; an open C-S and open C-R with continuity S-R means the overload is open (hot compressor) - let it cool before condemning."
+        },
+        {
+          "designator": "S",
+          "name": "Start terminal (start/auxiliary winding)"
+        },
+        {
+          "designator": "R",
+          "name": "Run terminal (main winding)"
+        },
+        {
+          "designator": "CONT / CC",
+          "name": "Compressor contactor (24 V coil)"
+        },
+        {
+          "designator": "RC",
+          "name": "Run capacitor (between S and R; dual capacitors also feed the condenser fan)",
+          "notes": "Test microfarads under rating tolerance (-5/+10 % typical); a weak run capacitor causes high amps and hard starts."
+        },
+        {
+          "designator": "SC / SR",
+          "name": "Start capacitor and potential (start) relay (hard-start kit) when fitted"
+        },
+        {
+          "designator": "OL / IOL",
+          "name": "Internal line-break overload (inside the shell)"
+        },
+        {
+          "designator": "CH",
+          "name": "Crankcase heater (where fitted)"
+        }
+      ],
+      "safetyDevices": [
+        "Internal line-break overload (thermal, in series with C)",
+        "High-pressure switch (HPS) and low-pressure switch (LPS) in the 24 V contactor coil circuit on most units",
+        "Internal pressure relief valve on scrolls",
+        "Discharge temperature thermostat on some 'K' models"
+      ],
+      "terminalLabels": {
+        "C": "common",
+        "S": "start",
+        "R": "run",
+        "T1/T2": "contactor load-side terminals feeding C and R (with capacitor between R and S)"
+      },
+      "sequenceOfOperation": [
+        "Cooling: thermostat Y closes 24 V to the contactor coil through the HPS/LPS safety string; contactor pulls in and applies line voltage to C and R; the run capacitor between R and S provides phase shift for the start winding (PSC); if a hard-start kit is fitted, the start capacitor is switched out by the potential relay as the motor comes up to speed.",
+        "Winding check (power off, discharged): C-R = run winding, C-S = start winding, S-R = C-R + C-S; start winding resistance is normally the higher of the two on recips, and close to the run winding on many single-phase scrolls.",
+        "Nameplate: RLA (rated load amps) is the maximum continuous current for protector/wire sizing, not the expected running current - normal running amps are usually 60-90 % of RLA; LRA is the locked-rotor inrush used to check start components and voltage drop."
+      ],
+      "notes": [
+        "Copeland: winding resistance should be measured with a low-ohm meter at the terminals after the compressor cools; compare to the resistance table in the Copeland online product information for the exact model (values are in tenths of an ohm on large scrolls).",
+        "Low voltage at the compressor terminals (>10 % below nameplate during start) is the most common cause of nuisance overload trips and locked-rotor codes - measure at the compressor terminals, not the disconnect."
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Copeland Scroll assembly instructions (ZP25K6E-PFV-830 article) - C/S/R terminal designations",
+        "Copeland Technical Information 'Start assist components for Copeland single-phase scroll compressors'",
+        "York Central Tech Talk 'Compressor Electrical Diagnostics'",
+        "refricompressor.com 'How to identify and connect compressor terminals'"
+      ]
+    },
+    {
+      "familyRegex": "generic-three-phase",
+      "familyLabel": "Generic three-phase hermetic and semi-hermetic compressor (Copeland TF5/TFD/TFE scrolls, Discus, Danfoss SM/SZ/SH, Bitzer)",
+      "controlVoltage": "24 VAC (packaged units) or 120/230 VAC (refrigeration racks/condensing units) to the contactor coil; line voltage 200/230, 460 or 575 V 3-phase 60 Hz to T1/T2/T3",
+      "components": [
+        {
+          "designator": "T1 / T2 / T3",
+          "name": "Compressor motor terminals (three-phase)",
+          "notes": "No start components; direction of rotation depends on phase sequence (scrolls and screws are direction-sensitive, recips are not)."
+        },
+        {
+          "designator": "CC / CONT",
+          "name": "Compressor contactor (3-pole)"
+        },
+        {
+          "designator": "PM / PSM",
+          "name": "Phase monitor (phase sequence / loss / imbalance relay)",
+          "notes": "Fitted on most 3-phase scroll units so a reversed phase sequence opens the contactor circuit; not fitted on older recip units."
+        },
+        {
+          "designator": "OL",
+          "name": "Motor overload: internal line-break (smaller scrolls), internal pilot-duty thermostat, or external electronic module (Kriwan INT69, Copeland CoreSense) on Discus/Bitzer/large Danfoss"
+        },
+        {
+          "designator": "CH",
+          "name": "Crankcase heater (belly-band or insertion)",
+          "notes": "Required on most refrigeration and many A/C 3-phase applications; energized when the compressor is off."
+        },
+        {
+          "designator": "DTS / DLT",
+          "name": "Discharge line thermostat (external) where fitted"
+        },
+        {
+          "designator": "OPS",
+          "name": "Oil pressure safety control (mechanical) on older semi-hermetics; replaced by CoreSense on Discus"
+        },
+        {
+          "designator": "SV / UL",
+          "name": "Unloader solenoid(s) on capacity-controlled semi-hermetics; digital scroll solenoid on ZPD/ZRD"
+        }
+      ],
+      "safetyDevices": [
+        "HPS/LPS in the contactor coil circuit",
+        "Phase monitor (3-phase scrolls)",
+        "Motor protection module or internal protector",
+        "Oil pressure protection (semi-hermetic)",
+        "Discharge temperature protection (internal on 'K'-suffix-era Copeland scrolls, external DTS on many others)",
+        "Internal pressure relief valve (scroll)"
+      ],
+      "terminalLabels": {
+        "T1/T2/T3": "motor terminals (Fusite on hermetics, terminal plate on semi-hermetics)",
+        "L1/L2/L3": "contactor line side",
+        "M1/M2 (module)": "protection-module control contacts in the contactor coil circuit"
+      },
+      "sequenceOfOperation": [
+        "Cooling: demand closes the contactor coil circuit through the safety string (HPS, LPS, phase monitor contact, protection module contact M1-M2, oil pressure control); the contactor closes L1/L2/L3 to T1/T2/T3.",
+        "Scroll direction check on start: a correctly rotating scroll shows suction pressure drop and discharge rise within seconds; reverse rotation gives loud noise, no pressure change, and the internal protector trips after a few minutes - swap two line leads at the contactor (never at the compressor on a tandem/rack shared bus).",
+        "Winding check: T1-T2, T2-T3, T1-T3 should be equal within a few percent; any leg to ground must read infinite (megohmmeter > 20 Mohm on a warm compressor is typical; a few hundred kohm or less indicates a burnout in progress).",
+        "Current balance: phase currents within ~2 % under steady load; voltage imbalance above 2 % between phases derates the motor and causes overheating (NEMA).",
+        "Semi-hermetic oil pressure: net oil pressure = oil pump discharge minus crankcase (suction) pressure; Copeland Discus oil-pressure protection trips after a delay when net oil pressure is below the module threshold."
+      ],
+      "notes": [
+        "Copeland TFD (460-3-60) compressors will run on 480 V nominal systems; check the nameplate voltage range (e.g. 414-506 V).",
+        "Phase monitors on rooftop units are usually in the low-voltage safety string; a unit that will not start after a utility outage with a 'reversed' phase monitor LED needs two line leads swapped at the disconnect."
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Copeland ZB Copeland Scroll product manual - electrical wiring diagram (manualslib page 68)",
+        "York Central Tech Talk 'Compressor Electrical Diagnostics' (T1/T2/T3 designations)",
+        "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series"
+      ]
+    },
+    {
+      "familyRegex": "copeland-scroll",
+      "familyLabel": "Copeland Scroll (ZP / ZR / ZB / ZF) compressor-specific electrical notes",
+      "controlVoltage": "Line voltage per motor code (PFV 208/230-1, PFJ 265-1, TF5 200/230-3, TFD 460-3, TFE 575-3, 60 Hz); CoreSense modules take 24 VAC or 120/240 VAC per module BOM",
+      "components": [
+        {
+          "designator": "C / S / R",
+          "name": "Fusite terminals on single-phase scrolls"
+        },
+        {
+          "designator": "T1 / T2 / T3",
+          "name": "Fusite terminals on three-phase scrolls"
+        },
+        {
+          "designator": "IPR",
+          "name": "Internal pressure relief valve (opens at a fixed discharge-to-suction differential)"
+        },
+        {
+          "designator": "TOD / DTS",
+          "name": "Internal discharge-temperature protection (thermal disc) on K-models where fitted"
+        },
+        {
+          "designator": "CoreSense",
+          "name": "CoreSense Diagnostics / Communications module in the terminal box (see controls)"
+        },
+        {
+          "designator": "Molded plug",
+          "name": "Molded plug harness on 800-BOM service compressors (42 in. harness)"
+        }
+      ],
+      "safetyDevices": [
+        "Internal line-break overload (PFV/TF5 up to ~7.5 t) or internal motor thermistor + CoreSense module (larger 3-phase K5/K6)",
+        "Internal pressure relief valve",
+        "Discharge temperature protection (internal or external per BOM)"
+      ],
+      "terminalLabels": {
+        "C/S/R": "single-phase",
+        "T1/T2/T3": "three-phase",
+        "BOM 800/830": "plug vs spade/screw terminal configurations"
+      },
+      "sequenceOfOperation": [
+        "Start: scrolls start unloaded regardless of pressure equalization, so a hard-start kit is normally unnecessary; Copeland lists start-assist only for low-voltage or long-line applications.",
+        "Shutdown: a reverse-rotation 'puff' for a second or two on stop is normal (scroll unwinds); continuous reverse rotation on a 3-phase scroll is a phasing fault."
+      ],
+      "notes": [
+        "Copeland K5/K6 scrolls have POE oil (E suffix); no acid-neutral cleanup shortcuts - after a burnout install a suction-line filter drier and change it after 24-48 h.",
+        "Discharge temperature limit 225 F measured 6 in. from the discharge fitting; Copeland ZP low-condensing applications need the ZP*K*E 'ZP...K5E' envelope check."
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Scroll assembly instructions (ZP25K6E-PFV-830)",
+        "Copeland Scroll ZPK5 R-410A cross reference guide (800 BOM description)",
+        "Copeland Technical Information: start assist components for single-phase scrolls"
+      ]
+    }
+  ],
+  "commonIssues": [
+    {
+      "symptom": "Compressor hums but will not start; trips on overload after a few seconds (single-phase)",
+      "likelyCauses": [
+        "Failed or weak run capacitor",
+        "Low voltage at compressor terminals during start",
+        "Start relay/start capacitor failure on CSR recips",
+        "Compressor trying to start against unequalized pressure (recips) or with liquid in the shell",
+        "Seized compressor"
+      ],
+      "checks": [
+        "Measure run capacitor microfarads",
+        "Measure voltage at C-R during start (compare to nameplate minimum)",
+        "Ohm C-S, C-R, S-R and each to ground after cool-down",
+        "Check for liquid refrigerant in the shell (cold, sweating crankcase; crankcase heater failed)",
+        "Try a hard-start kit only after confirming windings and voltage are good"
+      ],
+      "appliesTo": "(?i)PFV|PFJ|^H\\d|^A[A-Z][A-Z]\\d",
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Copeland Technical Information: start assist components for single-phase scroll compressors",
+        "York Central Tech Talk 'Compressor Electrical Diagnostics'"
+      ]
+    },
+    {
+      "symptom": "Compressor trips internal overload repeatedly / runs hot (high amps)",
+      "likelyCauses": [
+        "High head pressure (dirty condenser, condenser fan failure, overcharge, non-condensables)",
+        "Low suction gas flow starving motor cooling (low charge, restriction, low evaporator airflow, high superheat)",
+        "Low or unbalanced voltage; single-phasing on 3-phase",
+        "Mechanical wear (high amps at normal pressures)",
+        "Wrong run capacitor"
+      ],
+      "checks": [
+        "Compare running amps to RLA and to the Copeland/OEM performance table at the measured pressures",
+        "Measure suction superheat at the compressor and discharge line temperature (limit 225 F)",
+        "Measure voltage and 3-phase imbalance under load",
+        "Check condenser and evaporator airflow"
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Copeland AE 1379 R2 CoreSense Diagnostics (motor high temperature / scroll high temperature alerts)",
+        "Copeland KB 1818"
+      ]
+    },
+    {
+      "symptom": "Compressor winding shorted to ground (megger low), breaker/fuse trips instantly",
+      "likelyCauses": [
+        "Motor burnout (insulation failure) - often preceded by overheating, floodback or contactor chatter",
+        "Moisture/acid in the system",
+        "Carbon tracking at the Fusite terminals"
+      ],
+      "checks": [
+        "Megger each terminal to ground with leads disconnected; any reading under ~1 Mohm on a warm compressor is a failing motor",
+        "Acid test the oil; check the liquid-line drier and filter for sludge",
+        "Inspect Fusite for burn marks (a burned terminal can short to shell without a winding failure)"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series (burnout cleanup)"
+      ]
+    },
+    {
+      "symptom": "Burnout cleanup after a compressor motor failure",
+      "likelyCauses": [
+        "Acidic oil and carbon debris distributed through the system"
+      ],
+      "checks": [
+        "Recover refrigerant, replace liquid-line filter drier, install a suction-line filter drier (with pressure taps) ahead of the new compressor",
+        "Flush or replace contaminated oil in accumulators/oil separators; on POE systems replace the oil rather than flushing",
+        "Run 24-48 h, check pressure drop across the suction filter (replace if > 3 psi on A/C), acid-test the oil, then replace the suction filter or remove its core",
+        "Replace contactor if pitted; verify cause of failure (floodback, overheating, voltage) before restarting"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series",
+        "Copeland Discus compressor replacement guide 2020ECT-42"
+      ]
+    },
+    {
+      "symptom": "Three-phase scroll is noisy, draws low amps and does not pump (no pressure differential) after installation or a power outage",
+      "likelyCauses": [
+        "Reverse rotation - phase sequence reversed at the disconnect, contactor or utility",
+        "Failed scroll set (no compression) if rotation is confirmed correct"
+      ],
+      "checks": [
+        "Watch suction and discharge gauges on start: no change within a few seconds plus loud noise = reverse rotation",
+        "Swap two line leads at the contactor (or at the disconnect if all 3-phase motors are affected)",
+        "Check the phase monitor status LED",
+        "If rotation is correct and pressures still equalize with the compressor running, the scroll set is failed (check for internal relief valve opening on high differential)"
+      ],
+      "appliesTo": "(?i)TF5|TFD|TFE|-TF|S[MZH]\\d{3}",
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "Copeland ZB Copeland Scroll product manual (reverse rotation section)",
+        "Copeland scroll application bulletins (three-phase scroll direction)"
+      ]
+    },
+    {
+      "symptom": "Scroll compressor runs but will not pump down / pressures equalize with compressor running (single- or three-phase)",
+      "likelyCauses": [
+        "Internal pressure relief valve stuck open after a high-differential event",
+        "Worn or damaged scroll set (after slugging, loss of oil, or running with low charge)",
+        "Reverse rotation (3-phase)",
+        "Failed discharge check valve (loud reverse spin on shutdown is normal for a second or two; prolonged is a check valve)"
+      ],
+      "checks": [
+        "Confirm rotation on 3-phase",
+        "Measure amps vs. table at the pressures seen: low amps with no differential = not compressing",
+        "Check oil level/sight glass on refrigeration scrolls",
+        "Replace compressor; find the root cause (floodback, restriction, charge)"
+      ],
+      "appliesTo": "(?i)^Z[PRBFSH]|S[MZH]\\d{3}",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Scroll application bulletins (internal pressure relief, scroll unwind on shutdown)"
+      ]
+    },
+    {
+      "symptom": "Liquid floodback / slugging evidence: sweating or frosted compressor shell, oil foaming in sight glass, knocking on start, low superheat, broken valves on recips",
+      "likelyCauses": [
+        "Overcharge",
+        "TXV bulb loose or hunting, oversized TXV, failed EEV",
+        "Low evaporator load / airflow (dirty filter, failed blower, iced coil) on A/C",
+        "Defrost termination too late; hot-gas defrost returning liquid (refrigeration)",
+        "No pump-down; liquid migrates to the compressor on the off cycle (crankcase heater failed or missing)"
+      ],
+      "checks": [
+        "Measure suction superheat at the compressor (Copeland minimum ~20 F on refrigeration, ~10 F on A/C)",
+        "Verify crankcase heater is warm at shutdown",
+        "Check TXV bulb mounting/insulation and evaporator airflow",
+        "On semi-hermetics remove the head and inspect valve plates if knocking persists"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series (liquid floodback)"
+      ]
+    },
+    {
+      "symptom": "Oil problems: low oil level in sight glass, oil pressure trips (Discus CoreSense low-oil), oil logging in evaporators",
+      "likelyCauses": [
+        "Oil trapped in the system (undersized/oversized suction risers, long horizontal runs without pitch, missing P-traps)",
+        "Short cycling preventing oil return",
+        "Oil separator return line plugged or float stuck",
+        "Refrigerant/oil mismatch after a retrofit (mineral oil with HFC)",
+        "Low refrigerant velocity at part load (digital/unloaded operation)"
+      ],
+      "checks": [
+        "Check oil level with the compressor running at steady state (sight glass 1/4-3/4 on most Copeland semi-hermetics)",
+        "Verify suction riser sizing and traps against the IOM",
+        "Check oil separator operation and return line temperature",
+        "Confirm oil type matches refrigerant (POE for HFC/HFO blends)"
+      ],
+      "appliesTo": "(?i)^\\dD|^\\d[A-Z]{2,3}-|^ZB|^ZF|^ZS",
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series (oil charge/return)",
+        "Copeland AE8-1368 CoreSense Diagnostics v2.11 (oil pressure protection)"
+      ]
+    },
+    {
+      "symptom": "Tandem / manifolded scroll set: one compressor runs hot or trips, oil level unequal between shells",
+      "likelyCauses": [
+        "Oil equalization line blocked or wrong elevation",
+        "One compressor's suction restricted or manifold tee unbalanced",
+        "Different model/BOM compressors mixed in a tandem (replacement mismatch)",
+        "Vibration-loosened tubing causing leaks at the equalizer"
+      ],
+      "checks": [
+        "Compare sight-glass levels with both compressors running and with each alone",
+        "Verify replacement compressor is the tandem-rated model (ZPT/ZRT or tandem BOM) with the correct oil equalizer fitting",
+        "Check suction/discharge temperatures per compressor for imbalance",
+        "Confirm both contactors and rotation"
+      ],
+      "appliesTo": "(?i)^Z[PRBF]T|^Z",
+      "confidence": "low",
+      "evidence": "inferred"
+    },
+    {
+      "symptom": "Contactor chatter / compressor cycling rapidly with contactor buzzing",
+      "likelyCauses": [
+        "Low 24 V control voltage (transformer overloaded, long thermostat wire, weak transformer)",
+        "Loose or corroded thermostat/safety wiring",
+        "Contactor coil failing or pitted contacts",
+        "Low-pressure switch cycling on low charge",
+        "Voltage drop on the line side during compressor inrush pulling the coil out"
+      ],
+      "checks": [
+        "Measure 24 V at the contactor coil during pull-in (should stay above ~19 V)",
+        "Measure line voltage at the contactor during compressor start",
+        "Inspect contacts for pitting; replace the contactor if welded or burned",
+        "Check LPS cycling and system charge"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Daikin/Goodman service manual RS6200301 (CoreSense Communications welded contactor / short cycling alerts)"
+      ]
+    },
+    {
+      "symptom": "Low voltage at the compressor terminals during start (locked-rotor codes, slow start, dimming lights)",
+      "likelyCauses": [
+        "Undersized or long branch circuit / voltage drop in the disconnect or contactor contacts",
+        "Utility low voltage",
+        "Loose lugs, corroded fuse clips",
+        "Failed run capacitor increasing inrush time"
+      ],
+      "checks": [
+        "Measure voltage at the compressor terminals (not the disconnect) during start; it should not drop more than ~10 % below nameplate",
+        "Voltage-drop test across each fuse, disconnect blade and contactor contact under load (> 1-2 V across a contact = replace)",
+        "Check the run capacitor"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Daikin/Goodman service manual RS6200301 (locked rotor / low voltage flash events)"
+      ]
+    },
+    {
+      "symptom": "Nameplate RLA/LRA confusion when judging 'high amps'",
+      "likelyCauses": [
+        "Technician comparing running amps to LRA or expecting amps at RLA",
+        "Different rating conditions (A/C vs refrigeration) for the same capacity digits"
+      ],
+      "checks": [
+        "Normal running amps are typically 60-90 % of RLA at design conditions; above RLA sustained means a problem (high head, low voltage, mechanical)",
+        "Use the Copeland Online Product Information performance table for the model at the measured pressures for the expected amps"
+      ],
+      "confidence": "medium",
+      "evidence": "single_secondary",
+      "sources": [
+        "Copeland Online Product Information (webapps.copeland.com/online-product-information)"
+      ]
+    },
+    {
+      "symptom": "Bristol recip compressor (H2x/H7x) noisy or failed - replacement availability",
+      "likelyCauses": [
+        "Bristol ceased production in 2018; exact replacements are unavailable",
+        "Two-stage Bristol TS models need a controls check before substituting a single-stage scroll"
+      ],
+      "checks": [
+        "Cross-reference to Copeland ZR/ZP or Danfoss scroll by capacity, refrigerant and motor voltage",
+        "Verify the unit's contactor, run capacitor and crankcase heater match the replacement's requirements"
+      ],
+      "appliesTo": "(?i)^H\\d",
+      "confidence": "low",
+      "evidence": "inferred"
+    }
+  ],
+  "support": {
+    "phone": "(833) 409-7505 (Copeland contractor/technician technical support; alternate (800) 284-2925)",
+    "url": "https://www.copeland.com/en-us/training-support/technical-support",
+    "literatureUrl": "https://webapps.copeland.com/online-product-information/",
+    "literatureSearchHint": "Copeland: enter the full model (e.g. ZP54K5E-TF5-830) in Online Product Information for performance tables, wiring/BOM and winding data; AE bulletins (AE4-1383 K5 scroll, AE8-1368 Discus CoreSense, AE 1379 AC CoreSense) at copeland.com > Documents, and the Knowledge Center at copeland.custhelp.com. Danfoss: search the model (SH184A4ALC) or code number (120H0361) at store.danfoss.com / designcenter.danfoss.com for the datasheet and the family 'Application guidelines' PDF. Bitzer: bitzer.de BITZER Software for the model. Tecumseh: tproduct.tecumseh.com model lookup. Bristol: legacy catalogs only (bristol-compressors.com).",
+    "notes": "Danfoss North America compressor technical support and Bitzer US phone numbers were not confirmed in this review - use the manufacturer web contact pages."
+  },
+  "notes": [
+    "This pack covers compressor nameplates (model + serial on the compressor shell), which are independent of the unit brand. Use it after the unit pack: a decoded compressor model confirms refrigerant, capacity and motor voltage, and the compressor date code cross-checks an ambiguous unit serial.",
+    "Serial date rules: Copeland is manufacturer-confirmed (high). Bristol and Tecumseh rules are from a single secondary source (low) and Danfoss was not resolved (see unresolved).",
+    "Fault codes are only those transcribed from Copeland/Danfoss documents or a service manual that reproduces them; every control platform is marked 'partial' and points to the bulletin holding the full table.",
+    "Nomenclature confidence: Copeland scroll and CR are high (manufacturer catalog/brochure); Copeland Discus and Bitzer medium; Danfoss, Bristol, Tecumseh and GMCC low."
+  ],
+  "sources": [
+    "Copeland Application Engineering Knowledge Center answer 4983 - Determine compressor's date of manufacture using the serial number",
+    "electrical-forensics.com - HVAC Compressor Date Codes (Copeland, Bristol, Tecumseh)",
+    "building-center.org - Copeland HVAC age",
+    "Emerson/Copeland scroll brochure motor code table (PFV/PFJ/TF5/TFD)",
+    "Copeland CR series Product Catalog, March 2025 (nomenclature)",
+    "Copeland Scroll ZPK5 R-410A Compressor Cross Reference Guide (UNI-01350)",
+    "Copeland Scroll compressors Bill of Material (BOM) overview, Technical Information",
+    "Copeland Discus Compressor Replacement Guide 2020ECT-42; Copeland Discus nomenclature chart",
+    "Copeland KB 1818 - Alert/Lock codes for CoreSense Diagnostics module for air-conditioning scroll compressors; AE 1379 R2",
+    "Copeland AE4-1383 R5 Copeland Scroll K5 series (Table 7)",
+    "Copeland AE8-1368 R2 CoreSense Diagnostics v2.11 for Discus; CoreSense Protection for Discus Compressors (Aug 2018)",
+    "Copeland KB 2070, 2411, 3615, 5386",
+    "Daikin/Goodman Service and Troubleshooting RS6200301 (CoreSense Communications flash events)",
+    "Danfoss VLT CDS303 Operating Instructions MG34M302; CDS303/803 Quick troubleshooting guide AX404427814471; VZH088-117-170 Application Guide AB372721754643",
+    "Danfoss Global Product Store - SH184A4ALC; Danfoss Performer SM/SY/SZ/SH datasheets",
+    "Bristol Compressors - Compressor Model Number System (Neuco ybristol.pdf); Bristol catalog data H23A423DBEA",
+    "Tecumseh AH5540E Service Handbook - Compressor Model Number Codes; Tecumseh cross reference UNI-194395; Tecumseh product pages",
+    "Bitzer - Explanation of model designations (at-310); Bitzer ECOLINE product pages",
+    "Copeland contractors and technicians technical support page (copeland.com)"
+  ],
+  "confidence": "medium",
+  "lastReviewed": "2026-09-26"
+}
