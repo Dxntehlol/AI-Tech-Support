@@ -99,6 +99,13 @@
       "year": 2015,
       "month": 3
      }
+    },
+    {
+     "serial": "82B11097",
+     "expect": {
+      "year": 1982,
+      "month": 2
+     }
     }
    ],
    "confidence": "high",
@@ -106,7 +113,8 @@
    "sources": [
     "Copeland Application Engineering Knowledge Center, answer 4983 'Determine compressor's date of manufacture using the serial number' (copeland.custhelp.com/app/answers/detail/a_id/4983)",
     "electrical-forensics.com 'HVAC Compressor Date Codes' (example ZR40KC-PFV-230 S/N 01D1020HL = April 2001)",
-    "building-center.org 'Copeland HVAC age'"
+    "building-center.org 'Copeland HVAC age'",
+    "hvac-talk.com thread 544012 'Copeland Compressor Age / Serial Number' (plate 'GTC 82B 11097')"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
@@ -114,7 +122,8 @@
     "Example 01D1020HL is a real nameplate transcribed by electrical-forensics (April 2001). Examples 07F16543 and 03C05821 use the year/month characters exactly as stated in the Copeland KB (June 2007, March 2003); their trailing sequence characters are illustrative, not a real unit. 15C41207R is a typical modern 9-character form (year 2015, March) - trailing characters illustrative.",
     "Two-digit year with pivot 70: '80'-'99' -> 1980-1999, '00'-'69' -> 2000-2069. Copeland scrolls did not exist before 1987 and ZP (R-410A) not before ~2000, so a ZP compressor with '9x' year is misread - re-check the nameplate.",
     "A serial whose FIRST year digit is the letter N (e.g. N5C...) marks a compressor sold without warranty or salvage value (Copeland KB 4983); see the separate 'copeland-n-prefix' format.",
-    "Do not confuse the compressor serial with the condensing-unit or rooftop-unit serial: on a packaged unit the compressor nameplate is on the compressor shell inside the compressor compartment, and its date is usually a few weeks to months before the unit's build date - useful for cross-checking an ambiguous unit serial."
+    "Do not confuse the compressor serial with the condensing-unit or rooftop-unit serial: on a packaged unit the compressor nameplate is on the compressor shell inside the compressor compartment, and its date is usually a few weeks to months before the unit's build date - useful for cross-checking an ambiguous unit serial.",
+    "Older plates may print a letter group (e.g. GTC) before the serial; enter only the 8-9 characters beginning with the two year digits (GTC 82B 11097 -> 82B11097 = Feb 1982; plate quoted in hvac-talk thread 544012 'Copeland Compressor Age / Serial Number'). Example 82B11097 is that real plate."
    ]
   },
   {
@@ -150,10 +159,10 @@
   },
   {
    "id": "bristol-julian-yy",
-   "description": "Bristol reciprocating compressor serial (11 digits): digits 1-3 Julian day of manufacture, digits 4-5 two-digit year, digit 6 manufacturing location (0 or 2 = Bristol, VA), digits 7-11 sequence within the week.",
+   "description": "Bristol reciprocating compressor serial (11 digits, optionally followed by a 1-2 character suffix such as '-S'): digits 1-3 Julian day of manufacture, digits 4-5 two-digit year, digit 6 manufacturing location (0 or 2 = Bristol, VA), digits 7-11 sequence within the week.",
    "eraStart": 1980,
    "eraEnd": 2018,
-   "regex": "^(\\d{3})(\\d{2})(\\d)(\\d{5})$",
+   "regex": "^(\\d{3})(\\d{2})(\\d)(\\d{5})(?:-[A-Z0-9]{1,2})?$",
    "date": {
     "method": "twoDigitYear",
     "yearGroup": 2,
@@ -169,10 +178,10 @@
    },
    "examples": [
     {
-     "serial": "10598212345",
+     "serial": "19597011199-S",
      "expect": {
-      "year": 1998,
-      "dayOfYear": 105
+      "year": 1997,
+      "dayOfYear": 195
      }
     },
     {
@@ -190,10 +199,56 @@
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence: layout from one secondary source (electrical-forensics); no manufacturer document or dated nameplate photo was available. Examples are constructed to exercise the rule, not real units.",
+    "LOW confidence: layout from one secondary source (electrical-forensics); no manufacturer document or dated nameplate photo was available. Example 19597011199-S is the real serial quoted by that source (day 195 of 1997; the '-S' suffix is kept by normalization and tolerated by the regex, location digit 0 = Bristol, VA). Example 24107000871 is constructed to exercise the rule.",
     "Bristol Compressors (Bristol, VA) ceased production in 2018; any Bristol serial decoding to 2019+ is a misread.",
     "Julian day 001-366 must be plausible; an 11-digit all-numeric serial starting with 367-999 is not this format.",
     "Collision: an 11-digit numeric serial is also common on other equipment; only use this rule when the nameplate says Bristol (model starting with H followed by digits)."
+   ]
+  },
+  {
+   "id": "scroll-technologies-s-week-yy",
+   "description": "Scroll Technologies (Bristol 'Millennium' scroll, sold under Bristol and, after the 2006 acquisition, Danfoss) serial: 'S' + two-digit week + two-digit year + plant letter (K = Arkansas) + five-digit sequence (S3497K05252 = week 34 of 1997).",
+   "eraStart": 1995,
+   "eraEnd": 2015,
+   "regex": "^S(\\d{2})(\\d{2})([A-Z])(\\d{5})$",
+   "date": {
+    "method": "twoDigitYear",
+    "yearGroup": 2,
+    "pivot": 70,
+    "weekGroup": 1
+   },
+   "plant": {
+    "group": 3,
+    "map": {
+     "K": "Arkansas"
+    }
+   },
+   "examples": [
+    {
+     "serial": "S3497K05252",
+     "expect": {
+      "year": 1997,
+      "week": 34
+     }
+    },
+    {
+     "serial": "S1203K01234",
+     "expect": {
+      "year": 2003,
+      "week": 12
+     }
+    }
+   ],
+   "confidence": "low",
+   "evidence": "single_secondary",
+   "sources": [
+    "electrical-forensics.com 'HVAC Compressor Date Codes' - Scroll Technologies section (S + week + year + state letter + sequence; example S3497K05252 = week 34 of 1997)"
+   ],
+   "lastVerified": "2026-09-26",
+   "notes": [
+    "LOW confidence: one secondary source; no manufacturer document. S3497K05252 is the source's stated example; S1203K01234 is constructed.",
+    "Scroll Technologies was the Bristol/Carrier scroll joint venture (Arkansas plant); Danfoss acquired it in 2006, so the same layout may appear on Danfoss-branded scrolls of that era. Danfoss Performer/Maneurop serials are NOT covered by this rule.",
+    "Week must be 01-53; a serial starting with S whose week digits exceed 53 is not this format."
    ]
   },
   {
@@ -256,11 +311,11 @@
   {
    "id": "copeland-scroll",
    "family": "Copeland Scroll hermetic compressors (ZP / ZR / ZB / ZF / ZS / ZH and digital ZPD/ZRD/ZBD/ZFD, two-stage ZPS)",
-   "description": "Model = family letters + nominal capacity (kBtu/h, first digits) + K (x1000) + model variation + optional E (POE oil) - motor code - bill of material. Example ZP54K5E-TF5-830.",
+   "description": "Model = family letters + nominal capacity (kBtu/h, first digits) + K (x1,000) + model variation + optional E (POE oil) or L (shipped less oil) - motor code - bill of material. Example ZP54K5E-TF5-830. Models whose capacity digits are followed by M (x10,000, e.g. ZR16M3E-TWD-961) are decoded by the separate 'copeland-scroll-m-multiplier' format.",
    "productType": "compressor",
    "eraStart": 1987,
    "eraEnd": 2027,
-   "regex": "^(ZP[DST]?|ZR[DT]?|ZB[DT]?|ZF[DT]?|ZST?|ZH)(\\d{2,3})K([0-9A-Z])(E?)-(PF[A-Z0-9]|TF[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+   "regex": "^(ZP[DST]?|ZR[DT]?|ZB[DT]?|ZF[DT]?|ZST?|ZH)(\\d{2,3})K([0-9A-Z])([EL]?)-(PF[A-Z0-9]|TF[A-Z0-9]|TW[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
    "segments": [
     {
      "group": 1,
@@ -274,22 +329,22 @@
       "ZR": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)",
       "ZRD": "Copeland Scroll Digital, R-22/R-407C",
       "ZRT": "Copeland Scroll tandem, R-22",
-      "ZB": "Copeland Scroll refrigeration, medium temperature",
-      "ZBD": "Copeland Scroll Digital refrigeration, medium temperature",
+      "ZB": "Copeland Scroll refrigeration, high/medium temperature (KB 992: B = high/medium temperature)",
+      "ZBD": "Copeland Scroll Digital refrigeration, high/medium temperature",
       "ZBT": "Copeland Scroll refrigeration tandem",
       "ZF": "Copeland Scroll refrigeration, low temperature (vapor injection on ZF*K4E/KVE)",
       "ZFD": "Copeland Scroll Digital refrigeration, low temperature",
-      "ZS": "Copeland Scroll refrigeration (medium/high temperature, older series)",
+      "ZS": "Copeland Scroll refrigeration, medium temperature (KB 992: S = medium temperature)",
       "ZH": "Copeland Scroll heat pump / heating (ZH K4E)"
      },
-     "notes": "Family meanings from Copeland catalog/brochure titles found in research (ZP R-410A, ZR R-22, ZB/ZF refrigeration, ZPD/ZRD digital, ZPS two-stage). ZPV variable-speed uses a different layout (ZPV0382E-7E9-...) and is not decoded by this pattern."
+     "notes": "Family meanings from Copeland catalog/brochure titles found in research (ZP R-410A, ZR R-22, ZPD/ZRD digital, ZPS two-stage) and Copeland KB answer 992 for the refrigeration application letter (B = high/medium temperature, S = medium temperature, F = low temperature). ZPV variable-speed uses a different layout (ZPV0382E-7E9-...) and is not decoded by this pattern."
     },
     {
      "group": 2,
      "name": "Nominal capacity (kBtu/h at 60 Hz, ARI/AHRI rating point)",
      "attribute": "tonnage",
      "transform": "mbh_to_tons",
-     "capacityBasis": "kBtu/h at the 60 Hz AHRI rating point (first digits of capacity; e.g. 54 = 54,000 Btu/h ≈ 4.5 tons). The letter K following the digits is the x1,000 multiplier.",
+     "capacityBasis": "kBtu/h at the 60 Hz AHRI rating point (first digits of capacity; e.g. 54 = 54,000 Btu/h ≈ 4.5 tons). The letter after the digits is the multiplier: K = x1,000 (this format); M = x10,000 (KB 992; see the 'copeland-scroll-m-multiplier' format); C = x100 (KB 992, small refrigeration models - not decoded).",
      "unit": "kbtuh",
      "notes": "Refrigeration families (ZB/ZF/ZS) use the same digits but the rating condition differs (medium/low temp), so 'tons' is only meaningful for A/C families."
     },
@@ -305,9 +360,10 @@
      "attribute": "options",
      "map": {
       "E": "POE (polyol ester) oil - required for R-410A / R-407C / HFC service",
+      "L": "shipped less oil (Copeland KB 992)",
       "": "no E suffix: mineral oil (older ZR R-22 models)"
      },
-     "notes": "Copeland catalogs list the E suffix as POE oil (e.g. CR/ZR '...E' = R-407C capable)."
+     "notes": "Copeland catalogs list the E suffix as POE oil (e.g. CR/ZR '...E' = R-407C capable). Copeland KB 992: position 7 is E (POE) or L (shipped less oil); no E = mineral oil, approved for R-22 only (KB 992)."
     },
     {
      "group": 5,
@@ -318,9 +374,11 @@
       "PFJ": "265-1-60",
       "TF5": "200/230-3-60",
       "TFD": "460-3-60",
-      "TFE": "575-3-60"
+      "TFE": "575-3-60",
+      "TF7": "380-3-60",
+      "TWD": "460-3-60 / 380-420-3-50 (dual-frequency motor; per vendor listing of ZR16M3E-TWD-961 - confirm on nameplate)"
      },
-     "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'."
+     "notes": "Map covers the 60 Hz North-American motor codes in the Copeland scroll brochure motor-code table (PFV, PFJ, TF5, TFD, TF7) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'. TWD is from a vendor listing (ptacsolutions: ZR16M3E-TWD sold as 460/60/3 and 380-420/50/3), not the brochure table. Other TW* codes are returned raw."
     },
     {
      "group": 6,
@@ -334,11 +392,7 @@
     }
    ],
    "refrigerant": "R-410A (ZP/ZPD/ZPS/ZPT); R-22 or R-407C (ZR/ZRD); refrigeration families per nameplate (R-404A/R-407A/R-448A/R-449A/R-134a)",
-   "controlPlatformIds": [
-    "coresense-diagnostics-ac-scroll",
-    "coresense-communications-1ph",
-    "coresense-diagnostics-k5-3ph"
-   ],
+   "controlPlatformIds": [],
    "examples": [
     {
      "model": "ZP54K5E-TF5-830",
@@ -381,13 +435,23 @@
       "tonnage": "3.5",
       "voltage": "200/230-3-60"
      }
+    },
+    {
+     "model": "ZR380KCE-TWD-522",
+     "expect": {
+      "tonnage": "31.7",
+      "revision": "C",
+      "series": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)"
+     }
     }
    ],
    "notes": [
     "Nameplate: the compressor model is the line beginning with Z (e.g. ZP54K5E-TF5-830); the OEM (Carrier/Trane/Lennox) often prints its own part number (e.g. Carrier 'P031-...', Lennox '100...') on a second sticker - decode the Copeland line, not the OEM part number.",
     "Capacity digits are Btu/h thousands, not tons: ZP54 ≈ 4.5 t, ZP61 ≈ 5 t, ZP83 ≈ 7 t, ZP91 ≈ 7.5 t, ZP103 ≈ 8.5 t, ZP120 ≈ 10 t, ZP137 ≈ 11.5 t, ZP182 ≈ 15 t (rounded per Copeland cross-reference practice).",
-    "Voltage code confirmed in Copeland brochure: PFV 60-1-208/230, PFJ 60-1-265, TF5 60-3-200/230, TFD 60-3-460; TFE = 575-3-60.",
-    "Replacement: Copeland cross-reference guides map obsolete ZR K3/KC and ZP K3/K4 models to current K5/K6 service models; match refrigerant, capacity, motor code and check the BOM (plug vs. spade terminals)."
+    "Voltage code confirmed in Copeland brochure: PFV 60-1-208/230, PFJ 60-1-265, TF5 60-3-200/230, TFD 60-3-460, TF7 60-3-380; TFE = 575-3-60.",
+    "Replacement: Copeland cross-reference guides map obsolete ZR K3/KC and ZP K3/K4 models to current K5/K6 service models; match refrigerant, capacity, motor code and check the BOM (plug vs. spade terminals).",
+    "Control platforms are not listed per family: CoreSense / Comfort Alert modules are selected by motor code (-PF = single-phase OEM panel modules AE8-1379 / Comfort Alert; -TF/-TW three-digit-capacity or M-multiplier models = terminal-box CoreSense Communications AE8-1408/AE8-1384; ZB/ZF K5 = AE4-1383 module). Confirm which module, if any, is actually fitted.",
+    "Example ZR380KCE-TWD-522 is a 20-40 ton range model listed in Copeland AE 1388; TWD motor code meaning from a vendor listing."
    ],
    "confidence": "high",
    "evidence": "manufacturer_doc",
@@ -396,18 +460,205 @@
     "Copeland Scroll ZPK5 R-410A Compressor Cross Reference Guide (Sid Harvey UNI-01350) - 800 BOM service kit description",
     "ZP54K5E-TF5-830 technical specification sheet (acpro.com) - 'HFC, R-410A, 60Hz, 3-Phase, 200/230 V'",
     "Copeland Scroll Compressors BOM overview, Technical Information TI_Scroll_BOM_EN (copeland.com)",
-    "Copeland ZPD & ZRD Digital Scroll Compressor Ranges catalogue; '1.5 to 5 ton ZPS K4/K5 Copeland Scroll two-stage compressors' bulletin (emerson.com)"
+    "Copeland ZPD & ZRD Digital Scroll Compressor Ranges catalogue; '1.5 to 5 ton ZPS K4/K5 Copeland Scroll two-stage compressors' bulletin (emerson.com)",
+    "Copeland Application Engineering KB answer 992 'Copeland Scroll Refrigeration Compressor Model Number and Refrigerant' (application letter B/S/F, two capacity digits, multiplier C/K/M, generation, E/L)",
+    "Copeland brochure motor-code table entry TF7 = 60-3-380 (same Emerson brochure)"
+   ],
+   "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "copeland-scroll-m-multiplier",
+   "family": "Copeland Scroll hermetic compressors with M (x10,000 Btu/h) capacity multiplier (ZR16M3E, ZR19M3E 13-16 ton class)",
+   "description": "Family letters + two capacity digits + M (x10,000 Btu/h, Copeland KB 992) + model variation + optional E (POE oil) - motor code - BOM. Example ZR16M3E-TWD-961 (16 x 10,000 = 160,000 Btu/h ≈ 13.3 tons, sold as 13 hp).",
+   "productType": "compressor",
+   "eraStart": 1995,
+   "eraEnd": 2027,
+   "regex": "^(ZR|ZP|ZB|ZF)(\\d{2})M([0-9A-Z])(E?)-(T[FW][A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Family / application",
+     "attribute": "series",
+     "map": {
+      "ZR": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)",
+      "ZP": "Copeland Scroll, R-410A air conditioning/heat pump",
+      "ZB": "Copeland Scroll refrigeration, high/medium temperature",
+      "ZF": "Copeland Scroll refrigeration, low temperature"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Nominal capacity, two digits x 10,000 Btu/h",
+     "attribute": "tonnage",
+     "transform": "map_tons",
+     "map": {
+      "10": "8.3",
+      "11": "9.2",
+      "12": "10",
+      "13": "10.8",
+      "14": "11.7",
+      "15": "12.5",
+      "16": "13.3",
+      "17": "14.2",
+      "18": "15",
+      "19": "15.8",
+      "20": "16.7",
+      "21": "17.5",
+      "22": "18.3",
+      "23": "19.2",
+      "24": "20",
+      "25": "20.8",
+      "26": "21.7",
+      "27": "22.5",
+      "28": "23.3",
+      "29": "24.2",
+      "30": "25",
+      "31": "25.8",
+      "32": "26.7",
+      "33": "27.5",
+      "34": "28.3",
+      "35": "29.2",
+      "36": "30",
+      "37": "30.8",
+      "38": "31.7",
+      "39": "32.5",
+      "40": "33.3",
+      "41": "34.2",
+      "42": "35",
+      "43": "35.8",
+      "44": "36.7",
+      "45": "37.5",
+      "46": "38.3",
+      "47": "39.2",
+      "48": "40",
+      "49": "40.8",
+      "50": "41.7",
+      "51": "42.5",
+      "52": "43.3",
+      "53": "44.2",
+      "54": "45",
+      "55": "45.8",
+      "56": "46.7",
+      "57": "47.5",
+      "58": "48.3",
+      "59": "49.2",
+      "60": "50",
+      "61": "50.8",
+      "62": "51.7",
+      "63": "52.5",
+      "64": "53.3",
+      "65": "54.2",
+      "66": "55",
+      "67": "55.8",
+      "68": "56.7",
+      "69": "57.5",
+      "70": "58.3",
+      "71": "59.2",
+      "72": "60",
+      "73": "60.8",
+      "74": "61.7",
+      "75": "62.5",
+      "76": "63.3",
+      "77": "64.2",
+      "78": "65",
+      "79": "65.8",
+      "80": "66.7",
+      "81": "67.5",
+      "82": "68.3",
+      "83": "69.2",
+      "84": "70",
+      "85": "70.8",
+      "86": "71.7",
+      "87": "72.5",
+      "88": "73.3",
+      "89": "74.2",
+      "90": "75",
+      "91": "75.8",
+      "92": "76.7",
+      "93": "77.5",
+      "94": "78.3",
+      "95": "79.2",
+      "96": "80",
+      "97": "80.8",
+      "98": "81.7",
+      "99": "82.5"
+     },
+     "capacityBasis": "n x 10,000 Btu/h at the 60 Hz rating point (KB 992: M = x10,000); tons = n x 10,000 / 12,000. Map generated from that rule for 10-99.",
+     "notes": "ZR16M3E = 160,000 Btu/h ≈ 13.3 t (sold as 13 hp); ZR19M3E = 190,000 Btu/h ≈ 15.8 t (sold as 16 ton)."
+    },
+    {
+     "group": 3,
+     "name": "Model variation / generation",
+     "attribute": "revision"
+    },
+    {
+     "group": 4,
+     "name": "Lubricant",
+     "attribute": "options",
+     "map": {
+      "E": "POE (polyol ester) oil",
+      "": "no E suffix: mineral oil"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Motor code (volts-phase-Hz)",
+     "attribute": "voltage",
+     "map": {
+      "TF5": "200/230-3-60",
+      "TFD": "460-3-60",
+      "TF7": "380-3-60",
+      "TFE": "575-3-60",
+      "TWD": "460-3-60 / 380-420-3-50 (dual-frequency motor; per vendor listing of ZR16M3E-TWD-961 - confirm on nameplate)"
+     },
+     "notes": "Map covers the 60 Hz North-American motor codes in the Copeland scroll brochure motor-code table (PFV, PFJ, TF5, TFD, TF7) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'. TWD meaning is from a vendor listing, not the brochure."
+    },
+    {
+     "group": 6,
+     "name": "Bill of material (BOM)",
+     "attribute": "options"
+    }
+   ],
+   "refrigerant": "R-22 or R-407C (ZR/ZR..E); R-410A (ZP); refrigeration families per nameplate",
+   "controlPlatformIds": [],
+   "examples": [
+    {
+     "model": "ZR16M3E-TWD-961",
+     "expect": {
+      "tonnage": "13.3",
+      "revision": "3",
+      "series": "Copeland Scroll, R-22 air conditioning (E-suffix models also rated R-407C)"
+     }
+    },
+    {
+     "model": "ZR19M3E-TWD-961",
+     "expect": {
+      "tonnage": "15.8",
+      "revision": "3"
+     }
+    }
+   ],
+   "notes": [
+    "MEDIUM: the M = x10,000 multiplier is from Copeland KB 992 (manufacturer); the two examples are real catalog models (ZR16M3E-TWD-961 13 hp 460/3, ZR19M3E-TWD-961 16 ton) from vendor pages. The 13-15 ton models carry the CoreSense Communications module (AE8-1408).",
+    "Tonnage from n x 10,000 Btu/h is nominal; vendors quote these as 13 hp / 16 ton."
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Copeland Application Engineering KB answer 992 'Copeland Scroll Refrigeration Compressor Model Number and Refrigerant' (capacity multiplier C = 100, K = 1,000, M = 10,000)",
+    "Copeland online shop / hvacdirect listing ZR16M3E-TWD-961 (13 hp, 460/3)",
+    "youngsupply listing ZR19M3E-TWD-961 (16 ton)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "copeland-cr-recip",
-   "family": "Copeland CR series hermetic reciprocating compressors (CR K6/K7/K8, R-22 / R-407C air conditioning)",
-   "description": "CR + first two digits of nominal capacity (Btu/h at 60 Hz) + K (x1,000) + family variation 6/7/8 + optional E (POE oil, R-407C) - motor code - BOM. Example CR37K6E-PFV.",
+   "family": "Copeland CR series hermetic reciprocating compressors (CR K6/K7/K8 and older CR KQ, R-22 / R-407C air conditioning)",
+   "description": "CR + first two digits of nominal capacity (Btu/h at 60 Hz) + K (x1,000) + family variation 6/7/8 (or Q on the older R-22 service line) + optional E (POE oil, R-407C) - motor code - BOM. Examples CR37K6E-PFV, CR32KQ-PFV.",
    "productType": "compressor",
    "eraStart": 1985,
    "eraEnd": 2027,
-   "regex": "^(CR)(\\d{2})K([678])(E?)-(PF[A-Z0-9]|TF[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+   "regex": "^(CR)(\\d{2})K([678Q])(E?)-(PF[A-Z0-9]|TF[A-Z0-9])(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
    "segments": [
     {
      "group": 1,
@@ -432,9 +683,10 @@
      "map": {
       "6": "K6 family",
       "7": "K7 family",
-      "8": "K8 family"
+      "8": "K8 family",
+      "Q": "KQ family (R-22 service line; KQE = POE oil / R-407C)"
      },
-     "notes": "Copeland CR catalog: variations 6, 7, 8."
+     "notes": "Copeland CR catalog (March 2025) lists variations 6, 7, 8 only; Q (CR32KQ-PFV, CR37KQ-PFV-966VD, CR37KQE-PFV-966VD) is the older R-22 service line seen in the Copeland CR cross-reference guide and distributor listings."
     },
     {
      "group": 4,
@@ -454,9 +706,10 @@
       "PFJ": "265-1-60",
       "TF5": "200/230-3-60",
       "TFD": "460-3-60",
-      "TFE": "575-3-60"
+      "TFE": "575-3-60",
+      "TF7": "380-3-60"
      },
-     "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'."
+     "notes": "Map covers the 60 Hz North-American motor codes in the Copeland scroll brochure motor-code table (PFV, PFJ, TF5, TFD, TF7) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'."
     },
     {
      "group": 6,
@@ -484,28 +737,47 @@
       "revision": "K6 family",
       "voltage": "208/230-1-60"
      }
+    },
+    {
+     "model": "CR32KQ-PFV",
+     "expect": {
+      "tonnage": "2.7",
+      "revision": "KQ family (R-22 service line; KQE = POE oil / R-407C)",
+      "voltage": "208/230-1-60"
+     }
+    },
+    {
+     "model": "CR37KQ-PFV-966VD",
+     "expect": {
+      "tonnage": "3.1",
+      "revision": "KQ family (R-22 service line; KQE = POE oil / R-407C)",
+      "voltage": "208/230-1-60"
+     }
     }
    ],
    "notes": [
     "Nameplate: line starting CRxxK. Older Copeland recips (CRxx K1-K5, 'Copelametic' CF/CS) are not covered by this pattern.",
-    "Internal line-break overload is standard on single-phase CR; three-phase CR K6 use an internal line-break or pilot-duty protector per BOM."
+    "Internal line-break overload is standard on single-phase CR; three-phase CR K6 use an internal line-break or pilot-duty protector per BOM.",
+    "CR32KQ-PFV is listed as 2.5 ton / 31,300 Btu/h R-22 in the Copeland CR cross-reference guide; the decoder's 2.7 t is the nominal 32,000/12,000 figure."
    ],
    "confidence": "high",
    "evidence": "manufacturer_doc",
    "sources": [
     "Copeland CR series Product Catalog, March 2025 (media.copeland.com) - nomenclature: 'CR' = series, 'XX' = first two digits of nominal capacity Btu/h @ 60 Hz, 'K' = x1,000, '6, 7, 8' = product family variations",
-    "Copeland Service CR Compressor Cross Reference Guide (CR18K6-PFV-875 catalog, rogerssupply.com)"
+    "Copeland Service CR Compressor Cross Reference Guide (CR18K6-PFV-875 catalog, rogerssupply.com)",
+    "Copeland CR cross-reference guide (CR32KQ-PFV 2.5 ton, 31,300 Btu/h, R-22)",
+    "Distributor listings CR37KQ-PFV-966VD / CR37KQE-PFV-966VD (northamericahvac) and CR37KQ-PFV-980WB (radwell)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "copeland-discus-semihermetic",
    "family": "Copeland Discus / Copelametic semi-hermetic reciprocating compressors (2D, 3D, 4D, 6D, and reed-valve 2R/3R/4R/6R)",
-   "description": "Cylinder count + valve design (D = Discus, R = reed) + body/displacement letter + generation digit, then either the older '-1500'-style horsepower code or the newer 'R17ME'-style capacity/motor/oil code, then -motor code -BOM. Examples 3DS3-1500-TFC and 3DS3R17ME-TFC.",
+   "description": "Cylinder count + valve design (D = Discus, R = reed) + body/displacement letter + generation digit, then either the older '-1500'-style horsepower code or the newer 'R17ME'-style rating-point/capacity/multiplier/oil code, then -motor code -BOM. Examples 3DS3-1500-TFC, 3DS3R17ME-TFC-800 and 3DA3F28KE-TFC-800.",
    "productType": "compressor",
    "eraStart": 1985,
    "eraEnd": 2027,
-   "regex": "^(\\d)(D|R|A)([A-Z])(\\d)?(?:-(\\d{3,4})|([A-Z]\\d{2,3}[A-Z]{1,2}))-([PT][A-Z0-9]{2})(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
+   "regex": "^(\\d)(D|R)([A-Z])(\\d)?(?:-(\\d{3,4})|([A-Z]\\d{2,3}[A-Z]{1,2}))-([PT][A-Z0-9]{2})(?:-(\\d{3}))?(?:[-A-Z0-9/]*)?$",
    "segments": [
     {
      "group": 1,
@@ -519,10 +791,9 @@
      "attribute": "compressor_type",
      "map": {
       "D": "Discus valve plate (semi-hermetic)",
-      "R": "reed valve plate (Copelametic semi-hermetic)",
-      "A": "Discus, later body designation (e.g. 3DA)"
+      "R": "reed valve plate (Copelametic semi-hermetic)"
      },
-     "notes": "Per Copeland Discus replacement guide: Discus models are laid out like the reed models with 'D' in place of 'R'."
+     "notes": "Per Copeland Discus replacement guide: Discus models are laid out like the reed models with 'D' in place of 'R'. The 'A' in 3DA/4DA is the body letter (group 3), not a valve design - every real Discus model found has D in this position."
     },
     {
      "group": 3,
@@ -543,9 +814,9 @@
     },
     {
      "group": 6,
-     "name": "Newer capacity/motor/oil code (e.g. R17ME)",
+     "name": "Newer rating-point / capacity / multiplier / oil code (e.g. R17ME)",
      "attribute": "other",
-     "notes": "Layout per Copeland Discus nomenclature chart '3 D S 3 R 17 M E - T F C XXX': application/refrigerant letter, nominal hp digits, motor letter, E = POE oil. Positions not individually decoded (low confidence)."
+     "notes": "Rating-point letter (R = ARI high temp 45/130 F, S = medium temp 20/120 F, F = low temp -25/105 F), two-digit capacity, multiplier (K = x1,000, M = x10,000), E = POE oil. 3DS3R17ME = 170,000 Btu/h at 45/130 (sold as 15 hp); 3DA3F28KE = 28,000 Btu/h at the low-temp point. Not converted to tons (rating point varies). Source: Copeland nommetic.pdf ('fifth character signifies the operating envelope and the rating point for the capacity designation'); Discus nomenclature chart."
     },
     {
      "group": 7,
@@ -556,9 +827,10 @@
       "PFJ": "265-1-60",
       "TF5": "200/230-3-60",
       "TFD": "460-3-60",
-      "TFE": "575-3-60"
+      "TFE": "575-3-60",
+      "TF7": "380-3-60"
      },
-     "notes": "Map covers the 60 Hz North-American motor codes confirmed in the Copeland scroll brochure (PFV, PFJ, TF5, TFD) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'. On semi-hermetics TFC is common and is a dual-voltage 3-phase 60 Hz motor - read the nameplate VOLTS line."
+     "notes": "Map covers the 60 Hz North-American motor codes in the Copeland scroll brochure motor-code table (PFV, PFJ, TF5, TFD, TF7) and TFE (575-3-60). 50 Hz codes (e.g. TFC, TFM, PFZ) and dual-voltage codes are NOT mapped - the raw code is returned; confirm volts/phase on the nameplate line 'VOLTS'. On semi-hermetics TFC is common and is a dual-voltage 3-phase 60 Hz motor - read the nameplate VOLTS line."
     },
     {
      "group": 8,
@@ -590,12 +862,20 @@
      "expect": {
       "compressor_type": "Discus valve plate (semi-hermetic)"
      }
+    },
+    {
+     "model": "3DA3F28KE-TFC-800",
+     "expect": {
+      "compressor_type": "Discus valve plate (semi-hermetic)",
+      "revision": "3"
+     }
     }
    ],
    "notes": [
-    "MEDIUM/LOW: family layout (cylinders, D vs R, hp code, motor code) is from Copeland's Discus replacement guide and nomenclature chart titles; the individual meaning of the letters in the newer 'R17ME' block was not confirmed from the chart text.",
+    "MEDIUM/LOW: family layout (cylinders, D vs R, hp code, motor code) is from Copeland's Discus replacement guide and nomenclature sheet; the 'R17ME' block is decoded per Copeland nommetic.pdf (rating-point letter, capacity digits, K/M multiplier, E = POE) but the segment returns the raw code.",
     "Nameplate: the Discus model is on the compressor body plate; the condensing unit (e.g. Copeland/Heatcraft rack) has its own model. Old-to-new cross references (e.g. 3DS3-1500-TFC -> 3DS3R17ME-TFC) are in Copeland's Discus Model No. Cross (Old to New) list.",
-    "Example 4DA3F33ME-TSK is a pattern test of the 4-cylinder 'A' body with a non-standard motor code; it is not verified against a catalog."
+    "Example 4DA3F33ME-TSK is a pattern test of the 4-cylinder 'A' body with a non-standard motor code; it is not verified against a catalog.",
+    "Example 3DA3F28KE-TFC-800 is from Copeland AE4-1336; 3DS3R17ME-TFC-800 is sold as a 15 hp, 194,000 Btu/h model (bakerdist)."
    ],
    "confidence": "medium",
    "evidence": "single_secondary",
@@ -603,14 +883,16 @@
     "Copeland Discus Compressor Replacement Guide 2020ECT-42 (media.copeland.com)",
     "'3 D S 3 R 17 M E - T F C XXX: Copeland Discus Nomenclature Chart' (scribd transcription of Copeland chart)",
     "Copelametic compressor model number nomenclature (webapps.copeland.com nommetic.pdf)",
-    "Discus Model No. Cross Old to New 11072012 (cmpcorp.com)"
+    "Discus Model No. Cross Old to New 11072012 (cmpcorp.com)",
+    "Copeland AE4-1336 (3DA3F28KE model reference)",
+    "bakerdist.com listing 3DS3R17ME-TFC-800 (15 hp, 194,000 Btu/h)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "danfoss-performer-scroll",
    "family": "Danfoss Performer / Danfoss scroll compressors (SM, SY, SZ, SH, DSH; VZH inverter)",
-   "description": "Family letters + nominal capacity (kBtu/h) + version letter + motor/voltage code digit + option letters. Examples SM185S4RC, SH184A4ALC, code-number form SM185-4RM.",
+   "description": "Family/lubricant letters + nominal capacity (kBtu/h) + approvals letter + motor/voltage code digit + version/evolution/option letters (Danfoss nomenclature order: family, capacity, approvals, voltage, version, evolution index). Examples SM185S4RC, SH184A4ALC, code-number form SM185-4RM.",
    "productType": "compressor",
    "eraStart": 1995,
    "eraEnd": 2027,
@@ -618,17 +900,17 @@
    "segments": [
     {
      "group": 1,
-     "name": "Family / refrigerant",
+     "name": "Family / lubricant / refrigerant",
      "attribute": "series",
      "map": {
-      "SM": "Danfoss Performer scroll, R-22 (air conditioning)",
-      "SY": "Danfoss Performer scroll, R-22 (large sizes, older)",
-      "SZ": "Danfoss Performer scroll, R-407C / R-134a",
+      "SM": "Danfoss scroll, mineral oil, R-22",
+      "SY": "Danfoss scroll, POE oil, R-22",
+      "SZ": "Danfoss scroll, POE oil, R-407C / R-134a / R-404A / R-507A",
       "SH": "Danfoss scroll, R-410A",
       "DSH": "Danfoss scroll, R-410A (DSH series)",
       "VZH": "Danfoss inverter (variable speed) scroll, R-410A"
      },
-     "notes": "SM/SY/SZ from the Danfoss 'Performer scroll compressors SM / SY / SZ / SH' datasheet family; SH = R-410A per the SH090-SH485 application guideline title. Refrigerant assignment for SM vs SZ from memory - verify on nameplate."
+     "notes": "Second letter = lubricant/refrigerant (Danfoss AB237986441643 'scroll compressors SM SY SZ' nomenclature: SM = scroll with mineral oil for R-22, SY = scroll with POE for R-22, SZ = scroll with POE for R-407C/R-134a; Compressors Unlimited adds R-404A/R-507A for SZ). SH = R-410A per the SH090-SH485 application guideline title."
     },
     {
      "group": 2,
@@ -641,8 +923,9 @@
     },
     {
      "group": 3,
-     "name": "Version / generation letter",
-     "attribute": "revision"
+     "name": "Approvals / design letter (position meaning not confirmed)",
+     "attribute": "other",
+     "notes": "Danfoss nomenclature places 'approvals' before the voltage digit and 'version' + 'evolution index' after it, so this letter is not the version; meaning not decoded (low confidence)."
     },
     {
      "group": 4,
@@ -655,12 +938,12 @@
     },
     {
      "group": 5,
-     "name": "Option letters (protection / connection / packaging)",
+     "name": "Version and evolution index (plus connection/packaging letters), not decoded",
      "attribute": "options",
-     "notes": "e.g. RC, ALC, RM, CAM, CAI - encode motor protection type, connection (brazed/rotolock), and packaging (single/industrial pack). Not decoded (low confidence)."
+     "notes": "Per Danfoss nomenclature the letters after the voltage digit are version, evolution index and option letters (e.g. RC, ALC, RM, CAM, CAI - motor protection, connection brazed/rotolock, packaging). Not decoded (low confidence)."
     }
    ],
-   "refrigerant": "R-22 (SM/SY), R-407C or R-134a (SZ), R-410A (SH/DSH/VZH)",
+   "refrigerant": "R-22 (SM mineral oil, SY POE), R-407C / R-134a / R-404A / R-507A (SZ, POE), R-410A (SH/DSH/VZH)",
    "controlPlatformIds": [
     "danfoss-cds303-drive"
    ],
@@ -668,9 +951,8 @@
     {
      "model": "SM185S4RC",
      "expect": {
-      "series": "Danfoss Performer scroll, R-22 (air conditioning)",
+      "series": "Danfoss scroll, mineral oil, R-22",
       "tonnage": "15.4",
-      "revision": "S",
       "voltage": "380-415/3/50 & 460/3/60"
      }
     },
@@ -679,21 +961,20 @@
      "expect": {
       "series": "Danfoss scroll, R-410A",
       "tonnage": "15.3",
-      "revision": "A",
       "voltage": "380-415/3/50 & 460/3/60"
      }
     },
     {
      "model": "SM185-4RM",
      "expect": {
-      "series": "Danfoss Performer scroll, R-22 (air conditioning)",
+      "series": "Danfoss scroll, mineral oil, R-22",
       "tonnage": "15.4",
       "voltage": "380-415/3/50 & 460/3/60"
      }
     }
    ],
    "notes": [
-    "LOW confidence overall: only the family letters and the voltage-code-4 meaning were confirmed from Danfoss pages; position meanings otherwise from memory. Danfoss publishes the nomenclature in each family's Application Guidelines (e.g. 'Danfoss scroll compressors SH090 to SH485 - single 50/60 Hz - R410A', AB243586442172) - confirm there.",
+    "LOW confidence overall: family/lubricant letters (Danfoss AB237986441643), the nomenclature field order and the voltage-code-4 meaning were confirmed from Danfoss pages; capacity basis and the individual approvals/version letters are not decoded. Danfoss publishes the nomenclature in each family's Application Guidelines (e.g. AB243586442172 for SH090-SH485) - confirm there.",
     "Danfoss nameplate shows both the 'code number' (e.g. 120H0361) and the model; decode the model (SH184A4ALC). The code number is the ordering part number.",
     "Tonnage from kBtu/h is approximate (SH184 is sold as a 15-ton compressor)."
    ],
@@ -702,14 +983,16 @@
    "sources": [
     "Danfoss Global Product Store, 'Scroll compressor, SH184A4ALC' (code 120H0361/120H0362) - rated 380-415V/3/50Hz and 460V/3/60Hz",
     "Danfoss Performer scroll compressors SM / SY / SZ / SH datasheets (SM185-4, danfoss.com/odsg)",
-    "Danfoss scroll compressors SH090 to SH485 - single 50 Hz - 60 Hz - R410A, application guidelines AB243586442172en-US1301"
+    "Danfoss scroll compressors SH090 to SH485 - single 50 Hz - 60 Hz - R410A, application guidelines AB243586442172en-US1301",
+    "Danfoss 'Scroll compressors SM SY SZ' nomenclature (assets.danfoss.com AB237986441643)",
+    "Compressors Unlimited Danfoss SM/SY/SZ comparison guide (SZ rated for R-134a, R-404A/R-507A, R-407C with POE oil)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "bristol-hermetic-recip",
-   "family": "Bristol hermetic reciprocating compressors (H2x/H7x families, e.g. H23A423DBEA)",
-   "description": "H + family digits + letter + 3-digit capacity code (first two digits followed by N zeros of Btu/h: 423 = 42,000; 244 = 240,000) + generation + refrigerant/electrical/motor letters.",
+   "family": "Bristol hermetic reciprocating compressors (H2x R-22, H7x Inertia, H8x R-410A families, e.g. H23A423DBEA, H82J403ABCA)",
+   "description": "H + family digit + sub-family + design letter + 3-digit capacity code (first two digits followed by N zeros of Btu/h: 423 = 42,000; 244 = 240,000) + application code + generation + electrical/motor letters.",
    "productType": "compressor",
    "eraStart": 1980,
    "eraEnd": 2018,
@@ -725,13 +1008,14 @@
     },
     {
      "group": 2,
-     "name": "Family (2 = H2 series, 7 = H7 series)",
+     "name": "Family / refrigerant series digit",
      "attribute": "series",
      "map": {
-      "2": "Bristol H2 family (single/two-stage recips, R-22/R-410A era)",
-      "7": "Bristol H7 family (large recips)"
+      "2": "Bristol H2 family (R-22; model-number-system refrigerant code 2 = R22)",
+      "7": "Bristol Inertia series, second-generation high-efficiency model (Bristol model number system)",
+      "8": "Bristol R-410A hermetic recip family (H81J/H82J/H83B/H84B)"
      },
-     "notes": "Family digit meaning inferred from catalog groupings (H2x, H7x); not confirmed from the model-number-system sheet text."
+     "notes": "Digit 2 groups models by refrigerant/series: 2 = R-22 (source: Bristol model number system refrigerant code 2 = R22), 7 = Inertia 2nd-gen HE (Bristol 'Compressor Model Number System'), 8 = R-410A (catalog models H82J403ABCA, H82J483ABCA, H84B223ABCA). Other digits returned raw."
     },
     {
      "group": 3,
@@ -893,19 +1177,22 @@
     },
     {
      "group": 6,
-     "name": "Generation",
-     "attribute": "revision",
+     "name": "Application code",
+     "attribute": "other",
      "map": {
-      "B": "second generation - no PRV (except G series)",
-      "D": "dual compressor application (single and interconnected)"
+      "D": "dual compressor application (single and interconnected)",
+      "E": "high efficiency"
      },
-     "notes": "Only B and D confirmed from the Bristol model number system sheet; other letters returned raw."
+     "notes": "Bristol model number system lists D and E under APPLICATION; every real model checked (H23A423DBEA, H23A423DBLA, H2NG244DPEF) has D here. Other letters returned raw."
     },
     {
      "group": 7,
-     "name": "Refrigerant / application",
-     "attribute": "other",
-     "notes": "Refrigerant code in Bristol system is numeric on some models (1 = R-12) and letters on others; not decoded."
+     "name": "Generation",
+     "attribute": "revision",
+     "notes": "Bristol model number system lists B under GENERATION; real models carry B in this position (H23A423DBEA, H82J403ABCA). Bristol's numeric refrigerant code (1 = R-12, 2 = R-22) appears in the family digit, not here.",
+     "map": {
+      "B": "second generation - no PRV (except G series)"
+     }
     },
     {
      "group": 8,
@@ -925,30 +1212,41 @@
      "model": "H23A423DBEA",
      "expect": {
       "unit_type": "Bristol hermetic reciprocating compressor",
-      "series": "Bristol H2 family (single/two-stage recips, R-22/R-410A era)",
+      "series": "Bristol H2 family (R-22; model-number-system refrigerant code 2 = R22)",
       "tonnage": "3.5",
-      "revision": "dual compressor application (single and interconnected)"
+      "revision": "second generation - no PRV (except G series)"
      }
     },
     {
      "model": "H23A423ABC",
      "expect": {
       "tonnage": "3.5",
-      "revision": "A"
+      "revision": "second generation - no PRV (except G series)"
+     }
+    },
+    {
+     "model": "H82J403ABCA",
+     "expect": {
+      "tonnage": "3.3",
+      "series": "Bristol R-410A hermetic recip family (H81J/H82J/H83B/H84B)",
+      "revision": "second generation - no PRV (except G series)"
      }
     }
    ],
    "notes": [
-    "LOW confidence: the capacity-code rule and the B/D generation codes come from the Bristol 'Compressor Model Number System' sheet as summarized by Neuco/Bristol literature; the remaining positions are placeholders (raw code returned).",
+    "LOW confidence: the capacity-code rule, the B generation code, the D/E application codes and the 7 = Inertia family digit come from the Bristol 'Compressor Model Number System' sheet as summarized by Neuco/Bristol literature; the 8 = R-410A family is from catalog models; the remaining positions are placeholders (raw code returned).",
     "H23A423DBEA catalog data: 42,100 Btu/h at 45/130 F, RLA 5.7 (460 V), LRA 39, MCC 9.5 (Bristol catalog).",
-    "Bristol Compressors ceased production in 2018 - replacements are cross-referenced to Copeland ZR/ZP or Danfoss scrolls; match capacity, refrigerant and voltage."
+    "Bristol Compressors ceased production in 2018 - replacements are cross-referenced to Copeland ZR/ZP or Danfoss scrolls; match capacity, refrigerant and voltage.",
+    "H82J403ABCA catalog data: 40,000 Btu/h, 3-1/2 hp, 230/1/60, R-410A (coldparts); H82J483ABCA 48,000 Btu/h; H84B223ABCA 22,000 Btu/h R-410A (siglers)."
    ],
    "confidence": "low",
    "evidence": "single_secondary",
    "sources": [
     "Bristol Compressors 'Compressor Model Number System' (literature.neuco.com/ybristol.pdf; bristol-model-number-system.pdf)",
     "Bristol Compressors Catalog / Product Information & Specifications (bristol-compressors.com) - H23A423DBEA data",
-    "bristol-compressors.com model page H23A423ABC"
+    "bristol-compressors.com model page H23A423ABC",
+    "coldparts.com listings H82J403ABCA / H82J483ABCA (R-410A)",
+    "siglers.com listing H84B223ABCA (R-410A)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -999,18 +1297,24 @@
      "name": "Refrigerant",
      "attribute": "refrigerant",
      "map": {
+      "E": "R-22",
+      "Y": "R-134a",
       "Z": "R-404A / R-507"
      },
-     "notes": "Only Z confirmed (Tecumseh AWA7515ZXD product page). Other letters (e.g. Y, E, X) not mapped."
+     "notes": "Z confirmed from the Tecumseh AWA7515ZXD product page; E = R22 and Y = R134a from the Tecumseh AH5540E Service Handbook model-number-code page (manualslib p.18) and the Tecumseh-to-Tecumseh cross reference UNI-194395 as returned by search (corroborated by a CAJ4476Y 'R134A' listing). Other letters (e.g. X) not mapped."
     },
     {
      "group": 6,
      "name": "Voltage code",
      "attribute": "voltage",
      "map": {
-      "XN": "208-230/1/60 (200-220/1/50)"
+      "XN": "208-230/1/60 (200-220/1/50)",
+      "XD": "208-230/1/60 (200/1/50)",
+      "XT": "200-230/3/60 (200-220/3/50)",
+      "XA": "115/1/60 (100/1/50)",
+      "XG": "460/3/60 (380-420/3/50)"
      },
-     "notes": "Only XN confirmed from Tecumseh cross-reference literature; XD, XT etc. not mapped."
+     "notes": "XN confirmed from Tecumseh cross-reference literature; XD, XT, XA, XG from the AH5540E Service Handbook model-number-code page and UNI-194395 as returned by search summaries (the handbook table itself was not read directly - confirm on the nameplate VOLTS line)."
     }
    ],
    "refrigerant": "per refrigerant letter (Z = R-404A/R-507); otherwise per nameplate",
@@ -1029,20 +1333,23 @@
      "model": "AWA7512ZXD",
      "expect": {
       "series": "AW family",
-      "refrigerant": "R-404A / R-507"
+      "refrigerant": "R-404A / R-507",
+      "voltage": "208-230/1/60 (200/1/50)"
      }
     },
     {
      "model": "AVA7524ZXT",
      "expect": {
       "series": "AV family",
-      "refrigerant": "R-404A / R-507"
+      "refrigerant": "R-404A / R-507",
+      "voltage": "200-230/3/60 (200-220/3/50)"
      }
     }
    ],
    "notes": [
     "LOW confidence: structure (family, variant, application, refrigerant, voltage) from the Tecumseh service handbook summary and cross-reference guides; capacity code not decoded. Tecumseh says to contact Tecumseh for explanation of family codes.",
-    "Tecumseh nameplates carry model, serial, and a separate 5-character date code (see serial format tecumseh-date-code)."
+    "Tecumseh nameplates carry model, serial, and a separate 5-character date code (see serial format tecumseh-date-code).",
+    "Older 7-character Tecumseh models (AE4440Y, AH5540E, AJ..., AK...) lack the variant letter and the voltage code and are not decoded by this pattern; see the 'tecumseh-recip-old-style' format, or read the refrigerant letter (last letter) by hand."
    ],
    "confidence": "low",
    "evidence": "single_secondary",
@@ -1050,6 +1357,82 @@
     "Tecumseh AH5540E Service Handbook, 'Compressor Model Number Codes' (manualslib page 18)",
     "Tecumseh to Tecumseh Cross Reference, Wholesale Distribution North America (UNI-194395)",
     "Tecumseh product pages AWA7515ZXD / AWA7512ZXD / AVA7524ZXT (tecumseh.com, tproduct.tecumseh.com)"
+   ],
+   "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "tecumseh-recip-old-style",
+   "family": "Tecumseh hermetic reciprocating compressors, older 7-character models (AE4440Y, AH5540E)",
+   "description": "Two-letter family + application digit + 3-digit capacity/performance code + refrigerant letter, optionally followed by a dash suffix (AE4440Y-AA1A). No variant letter or voltage code.",
+   "productType": "compressor",
+   "eraStart": 1970,
+   "eraEnd": 2010,
+   "regex": "^(A[A-Z])(\\d)(\\d{3})([A-Z])(?:-[A-Z0-9]+)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Compressor family",
+     "attribute": "series",
+     "map": {
+      "AE": "AE family (fractional hp)",
+      "AG": "AG family",
+      "AH": "AH family",
+      "AJ": "AJ family",
+      "AK": "AK family",
+      "AN": "AN family",
+      "AV": "AV family",
+      "AW": "AW family"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Application (evaporating temperature range / starting torque)",
+     "attribute": "other"
+    },
+    {
+     "group": 3,
+     "name": "Capacity / performance code",
+     "attribute": "other",
+     "notes": "Not converted; use Tecumseh's product page for rated capacity."
+    },
+    {
+     "group": 4,
+     "name": "Refrigerant",
+     "attribute": "refrigerant",
+     "map": {
+      "E": "R-22",
+      "Y": "R-134a",
+      "Z": "R-404A / R-507"
+     },
+     "notes": "E = R22 per the Tecumseh AH5540E Service Handbook (its own model AH5540E); Y = R134a (AE4440Y listing); Z per Tecumseh product pages."
+    }
+   ],
+   "refrigerant": "per refrigerant letter; otherwise per nameplate",
+   "controlPlatformIds": [],
+   "examples": [
+    {
+     "model": "AE4440Y-AA1A",
+     "expect": {
+      "series": "AE family (fractional hp)",
+      "refrigerant": "R-134a"
+     }
+    },
+    {
+     "model": "AH5540E",
+     "expect": {
+      "series": "AH family",
+      "refrigerant": "R-22"
+     }
+    }
+   ],
+   "notes": [
+    "LOW confidence: pattern inferred from the AH5540E Service Handbook's own model and an AE4440Y-AA1A listing; the application digit and capacity code are returned raw. Voltage is not encoded - read the nameplate."
+   ],
+   "confidence": "low",
+   "evidence": "single_secondary",
+   "sources": [
+    "Tecumseh AH5540E Service Handbook, 'Compressor Model Number Codes' (manualslib page 18)",
+    "eBay listing 'Tecumseh AE4440Y-AA1A' (R-134a)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1151,7 +1534,7 @@
   },
   {
    "id": "gmcc-rotary",
-   "family": "GMCC (Midea) rotary compressors (PA/PH series, e.g. PA145X1C-4FTL)",
+   "family": "GMCC (Midea) rotary compressors (PA/PH series, e.g. PA145G1C-4FT1)",
    "description": "P + series letter + displacement digits + type letters - motor/version code. Nomenclature only; low confidence.",
    "productType": "compressor",
    "eraStart": 2005,
@@ -1169,9 +1552,9 @@
     },
     {
      "group": 2,
-     "name": "Displacement code (cm3 x10)",
+     "name": "Displacement code",
      "attribute": "other",
-     "notes": "e.g. 145 -> 14.5 cm3/rev (memory only)."
+     "notes": "Displacement code; PA145G1C-4FT1 is listed at ~15.1 cm3/rev by one vendor, so the 'x10 = cm3' rule is unconfirmed."
     },
     {
      "group": 3,
@@ -1188,7 +1571,7 @@
    "controlPlatformIds": [],
    "examples": [
     {
-     "model": "PA145X1C-4FTL",
+     "model": "PA145G1C-4FT1",
      "expect": {
       "series": "GMCC rotary, PA series"
      }
@@ -1201,21 +1584,382 @@
     }
    ],
    "notes": [
-    "LOW confidence - memory only, no source located within the research budget. Included so the pack recognises a GMCC rotary nameplate; do not rely on segment meanings. LG and Highly rotary nomenclatures were not covered (unresolved)."
+    "LOW confidence: layout is memory-only except that the PA145G1C-4FT1 example (R-410A, 220-240 V/1/50 Hz, 12,625 Btu/h) is confirmed by vendor/catalog pages (FrigoPartners, qishanr, made-in-china) - the PA series map rests on that single secondary source; the other segment meanings are unverified. LG and Highly rotary nomenclatures were not covered (unresolved)."
    ],
    "confidence": "low",
    "evidence": "inferred",
-   "sources": [],
+   "sources": [
+    "FrigoPartners listing GMCC PA145G1C-4FT1 (R-410A, 220-240 V/50 Hz, 12,625 Btu/h)",
+    "qishanr.com / made-in-china listings GMCC PA145G1C-4FT1 (one lists 15.1 cm3 displacement)"
+   ],
    "lastVerified": "2026-09-26"
   }
  ],
  "controls": [
   {
-   "id": "coresense-diagnostics-ac-scroll",
-   "name": "Copeland CoreSense Diagnostics module for air-conditioning scroll compressors (3-phase ZP/ZR with motor thermistor, e.g. ZP K5/K6 7.5-15 t)",
-   "description": "Module mounted in the compressor terminal box; two-colour LED (green = warning, red = alert/trip) flashes a count. Red codes result in a trip and, if enabled, a lockout. Reset via power cycle / control-circuit interruption per Copeland KB 2070. Existing pack codes 'Green 1/3' and 'Red 1/2/3/4/6' are kept with the same code strings and meanings; this sidecar attributes them additionally to AE8-1408 R3 / AE8-1384, which is where the green-warning / red-alert scheme with motor and scroll thermistors is documented. KB 1818's title says 'CoreSense Diagnostics module', so the existing entry's naming is left as-is; verifiers should confirm KB 1818's body matches this scheme. AE8-1379 module codes are labelled '(AE 1379 module)' because the flash count collides with the 3-phase scheme (e.g. red 6 = Missing Phase on AE8-1408/1384 but Open Start Circuit on AE8-1379). Comfort Alert codes are labelled 'Comfort Alert code N'; code 6/7 differ between the residential single-phase modules (open start / open run circuit) and the commercial 3-phase module (missing phase / reverse phase) - both meanings are given in the same entry. AE8-1385 (UltraTech two-stage) uses the same yellow/red code set as AE8-1379 except that Over-Current Protection is Code 10 instead of Code 9; its full table was not transcribed. Discus: only the LED colour states and the protection descriptions from AE8-1368 were seen; the numbered flash-code tables (AE8-1367 R6/R8 Tables 3-5 for CoreSense Protection, AE8-1368 'Modu",
+   "id": "coresense-diagnostics-1ph-ae1379",
+   "name": "Copeland CoreSense Diagnostics single-phase module (AE8-1379; 571-0066-00 AC / 571-0067-00 HP, also fitted by Goodman/Amana)",
+   "description": "OEM panel-mounted current-sensing module for single-phase Copeland scrolls (two-wire AC 571-0066-00, three-wire heat-pump 571-0067-00; service parts 971-0066-00 / 971-0067-00 per KB 1819). Senses current in the R and S leads against the Y demand. Yellow ALERT LED flash count = alert; red TRIP/LOCK LED solid = trip, flashing = lockout. Goodman/Amana reproduce this table in service manual RS6200301 (their modules 571006600S/571006700S are the same part numbers).",
    "appliesTo": [
-    "copeland-scroll"
+    "^(Z[A-Z]{1,2}|CR)\\d.*-PF[A-Z0-9]"
+   ],
+   "faultCodes": [
+    {
+     "code": "Yellow 1 flash",
+     "meaning": "Code 1 - Long Run Time: the module flashes yellow one time when the compressor operates for longer than 18 continuous hours; alert only, the module will not lockout the compressor for this condition",
+     "likelyCauses": [
+      "Low refrigerant charge",
+      "Evaporator/condenser airflow restriction (dirty filter/coil, blower or condenser fan problem)",
+      "Undersized or heavily loaded system / extreme heat load",
+      "Thermostat calling continuously or miswired"
+     ],
+     "checks": [
+      "Measure superheat/subcooling against the unit charging chart",
+      "Check filters, coils, blower and condenser fan",
+      "Confirm the thermostat demand actually drops out"
+     ],
+     "severity": "info",
+     "source": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 2 flashes",
+     "meaning": "Code 2 - Compressor (Pressure) Trip: the module flashes yellow two times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting longer than 7 minutes",
+     "likelyCauses": [
+      "High-pressure switch trip: dirty condenser, condenser fan failure, overcharge, non-condensables",
+      "Low-pressure switch trip: low charge, restriction, low airflow",
+      "Compressor internal overload opening on a hot compressor"
+     ],
+     "checks": [
+      "Check condenser fan operation first; compare head pressure with outdoor ambient",
+      "Read suction pressure / superheat for a low-charge or restriction trip",
+      "Check HPS/LPS settings and wiring"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 2 flashes",
+     "meaning": "Lock code 2 - Pressure trip lockout: when four consecutive or ten total Code 2 events are recorded, the module will lockout the compressor and flash red two times",
+     "likelyCauses": [
+      "Repeated pressure-switch or overload trips (see Yellow 2)"
+     ],
+     "checks": [
+      "Correct the pressure/overload cause, then reset by cycling module power (disconnect the C terminal / 24 V) per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2082 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 3 flashes",
+     "meaning": "Code 3 - Pressure Switch Cycling (short cycling): the module flashes yellow three times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting between 35 seconds and 7 minutes",
+     "likelyCauses": [
+      "Low-pressure switch cycling on low charge or a restriction",
+      "High-pressure switch cycling (condenser fan intermittent, dirty coil)",
+      "Thermostat chatter or loose Y wiring"
+     ],
+     "checks": [
+      "Watch suction/head pressure through a cycle to see which switch opens",
+      "Verify the Y demand is steady (24 V at the module)",
+      "Check charge, airflow and condenser fan"
+     ],
+     "severity": "warning",
+     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 3 flashes",
+     "meaning": "Lock code 3 - Short-cycling lockout: when four consecutive or ten total Code 3 events are recorded, the module will lockout the compressor and flash red three times",
+     "likelyCauses": [
+      "Repeated pressure-switch cycling (see Yellow 3)"
+     ],
+     "checks": [
+      "Find and fix the cycling cause before resetting; reset by cycling module power per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 4 flashes",
+     "meaning": "Code 4 - Locked Rotor Trip: the module flashes yellow four times when the compressor trips within 12 seconds of operation and does not reset and start within 35 seconds",
+     "likelyCauses": [
+      "Compressor mechanically seized or starting against unequalized pressure",
+      "Failed run capacitor / start components (single-phase)",
+      "Low voltage at the compressor terminals during start",
+      "Miswired module current sensor (false locked rotor)"
+     ],
+     "checks": [
+      "Measure voltage at the compressor terminals during a start attempt",
+      "Test the run capacitor (uF) and start relay/capacitor if fitted",
+      "Confirm LRA draw followed by immediate overload trip; allow pressure equalisation time",
+      "Verify the compressor common lead passes through the module current sensor"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 4 flashes",
+     "meaning": "Lock code 4 - Locked rotor lockout: when ten consecutive Code 4 events are recorded, the module will lockout the compressor and flash red four times",
+     "likelyCauses": [
+      "Repeated locked-rotor starts (see Yellow 4)"
+     ],
+     "checks": [
+      "Do not keep resetting - each attempt heats the windings; diagnose start components/voltage, then reset per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 5 flashes",
+     "meaning": "Code 5 - Compressor (Moderate Run) Trip: the module flashes yellow five times when the compressor has operated between 15 minutes and 18 hours, followed by a compressor trip lasting longer than 7 minutes",
+     "likelyCauses": [
+      "Internal overload opening after a long run (hot compressor: low charge / high superheat, high head pressure, low voltage)",
+      "Pressure switch opening after a long run",
+      "Open contactor/fuse or wiring to the compressor while Y is still present"
+     ],
+     "checks": [
+      "Check for 24 V at Y with no compressor current during the trip",
+      "Measure discharge temperature, superheat and head pressure before the trip recurs",
+      "Ohm C-S-R windings after the compressor cools; inspect contactor and wiring"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 5 flashes",
+     "meaning": "Lock code 5 - Moderate-run trip lockout: when four consecutive Code 5 events occur, the module locks out and flashes red five times",
+     "likelyCauses": [
+      "Repeated overload/pressure trips after long runs (see Yellow 5)"
+     ],
+     "checks": [
+      "Correct the cause, then reset per KB 2070"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 1817 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 6 flashes",
+     "meaning": "Code 6 - Open Start Circuit: the module will lockout the compressor and flash red six times if it detects a demand signal on the Y terminal and current in the R (run) winding of the compressor, but no current in the S (start) winding for 2 seconds",
+     "likelyCauses": [
+      "Open start winding",
+      "Failed start capacitor / start relay, open start-circuit wiring or terminal",
+      "Module S-lead current sensor not installed around the start lead"
+     ],
+     "checks": [
+      "Ohm C-S and compare with C-R (start winding resistance is normally higher than run)",
+      "Check the start capacitor and potential relay if fitted",
+      "Verify module current-sensing lead routing before condemning the compressor (field practice)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 7 flashes",
+     "meaning": "Code 7 - Open Run Circuit: the module has detected Y or Y1 and current in the S winding of the compressor and no current in the R winding for 2 seconds",
+     "likelyCauses": [
+      "Open run winding",
+      "Failed run capacitor or open run-circuit wiring/terminal",
+      "Module R-lead current sensor not around the run lead"
+     ],
+     "checks": [
+      "Ohm C-R",
+      "Test the run capacitor (uF) and its wiring",
+      "Verify module current-sensing lead routing"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 7, as summarised in Copeland KB series 2072-2086)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 8 flashes",
+     "meaning": "Code 8 - Welded Contactor: the module has detected line currents in the R and S windings while Y or Y1 is at 0 VAC for 15 seconds",
+     "likelyCauses": [
+      "Contactor contacts welded closed - compressor runs with no thermostat demand",
+      "Contactor miswired / bypassed so the compressor is fed without Y"
+     ],
+     "checks": [
+      "Confirm compressor current with Y de-energised",
+      "Replace the contactor; check for the cause of welding (low voltage coil, high inrush, pitted contacts)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 8, as summarised in Copeland KB series 2072-2086)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Yellow 9 flashes",
+     "meaning": "Code 9 - Module Low Voltage supply: the module flashes yellow nine times if the module supply voltage drops below 17 VAC for 2 seconds",
+     "likelyCauses": [
+      "Undersized/overloaded 24 V transformer",
+      "Low line voltage, loose common/R wiring to the module",
+      "Excess load on the control circuit (accessory relays, long thermostat runs)"
+     ],
+     "checks": [
+      "Measure 24 V at the module under load with the contactor pulled in",
+      "Check transformer VA rating and secondary fuse/breaker",
+      "Check line voltage at the transformer primary"
+     ],
+     "severity": "warning",
+     "source": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red 9 flashes, yellow off",
+     "meaning": "Code 9 - Over-Current Protection: when the current at the PROT terminal is greater than 2 A for 40 ms the module flashes a Code 9; the red LED flashes 9 times with the yellow LED remaining off - the module is mis-wired or the contactor coil is shorted to ground (Code 9 is not printed on the module label)",
+     "likelyCauses": [
+      "PROT output miswired (e.g. PROT tied to common or to the wrong contactor coil terminal)",
+      "Contactor coil shorted to ground / failed coil"
+     ],
+     "checks": [
+      "Ohm the contactor coil to ground and coil resistance",
+      "Re-check the module wiring against the diagram in AE8-1379 (PROT in series with the contactor coil)",
+      "On the UltraTech (AE8-1385) two-stage module the same fault is Code 10"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 9 Over-Current Protection); same function is Code 10 in AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Red solid (TRIP)",
+     "meaning": "TRIP: the module detects the presence of a demand signal from the thermostat, however no current to the compressor is detected by the module - typically the compressor protector is open, or supply power to the compressor is missing",
+     "likelyCauses": [
+      "Internal overload open (hot compressor)",
+      "Open contactor, blown fuse, tripped breaker or open wiring to the compressor",
+      "Open winding"
+     ],
+     "checks": [
+      "Check line voltage at the contactor load side with Y present",
+      "Let the compressor cool and ohm C-S-R",
+      "Inspect the contactor coil and contacts"
+     ],
+     "severity": "shutdown",
+     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Module LED description: red TRIP LED)",
+     "evidence": "manufacturer_doc"
+    }
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "solid yellow",
+     "meaning": "Module powered and compressor/system running normally"
+    },
+    {
+     "pattern": "yellow ALERT LED flashes N times, pause, repeat",
+     "meaning": "ALERT code N - abnormal system condition (1 long run, 2 pressure trip, 3 pressure-switch cycling, 4 locked rotor trip, 5 moderate-run trip, 9 low module voltage)",
+     "checks": [
+      "Count consecutive flashes; the code repeats until cleared"
+     ]
+    },
+    {
+     "pattern": "solid red",
+     "meaning": "TRIP - thermostat demand present but no compressor current detected (protector open or no supply power)"
+    },
+    {
+     "pattern": "red TRIP/LOCK LED flashes N times, pause, repeat",
+     "meaning": "LOCK code N - compressor lockout active (2, 3, 4, 5 after repeated alerts; 6 open start circuit; 7 open run circuit; 8 welded contactor; 9 with yellow off = over-current on PROT)",
+     "checks": [
+      "Reset by cycling module power (disconnect the C terminal) per KB 2070 after the cause is fixed"
+     ]
+    }
+   ],
+   "diagnosticTips": [
+    "Identify the module first (KB 1819 / KB 1816): 571-0066-00 (service 971-0066-00) is the two-wire AC module and 571-0067-00 (971-0067-00) the three-wire heat-pump module covered by AE8-1379 (yellow ALERT / red TRIP-LOCK LEDs, current-sensing on R and S leads, installed in the unit electrical panel near the contactor). The 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) CoreSense Communications modules mount in the compressor terminal box, sense motor and scroll thermistors plus 3-phase supply, and use a green WARNING / red ALERT scheme with M1-M2 pilot-duty contacts and Modbus. Comfort Alert (543-/943-0032, -0033, -0038) is the older current-sensing module with green POWER, red TRIP and yellow ALERT LEDs. The same flash count means different things on each - always read the code against the right table.",
+    "Count the flashes between pauses to read the code; codes repeat until cleared.",
+    "Reset (KB 2070): cycle power to the module by disengaging the COMMON (C) terminal. This clears the present ALERT or TRIP/LOCK and allows normal operation but does not clear the seven-day operating history stored in the module. Fix the cause first - a locked-out compressor is protecting itself.",
+    "Current-sensing modules infer faults from compressor current versus Y demand: a common/run/start lead that does not pass through the module's sensor gives false open-circuit, locked-rotor or welded-contactor codes - verify the sensing-lead routing (KB 1809 installation guidelines) before condemning a compressor.",
+    "Module history: AE8-1379 and AE8-1385 modules store a seven-day operating history that can be downloaded with the CoreSense PC Communication Software (see the AE bulletin 'Module History Download' section).",
+    "AE8-1385 (UltraTech two-stage ZPS) uses the same yellow/red code set except that Over-Current Protection is Code 10 instead of Code 9; its full table was not transcribed."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
+     "url": "https://media.copeland.com/93ff8d35-7621-461a-9809-b16b0108c7ad/AE%201379%20R2%20CoreSense%20Diagnostics%20for%20Copeland%20Scroll%20Air%20Conditioning%20Compressors.pdf"
+    },
+    {
+     "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
+    },
+    {
+     "title": "Copeland AE8-1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' (Feb 2015)",
+     "docId": "AE8-1379 R2",
+     "url": "https://www.copeland.com/documents/ae-1379-r2-coresense-diagnostics-for-copeland-scroll-air-conditioning-compressors-en-5623056.pdf"
+    },
+    {
+     "title": "Copeland AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
+     "docId": "AE8-1385",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1385"
+    },
+    {
+     "title": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2086",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2086"
+    },
+    {
+     "title": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2082",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2082"
+    },
+    {
+     "title": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2078",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2078"
+    },
+    {
+     "title": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2079",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2079"
+    },
+    {
+     "title": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2072",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2072"
+    },
+    {
+     "title": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module'",
+     "docId": "KB 2075",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2075"
+    },
+    {
+     "title": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection'",
+     "docId": "KB 1817",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1817"
+    },
+    {
+     "title": "Copeland KB 1819 'Part Numbers for CoreSense Diagnostics Modules used in Air-conditioning Scroll Compressors'",
+     "docId": "KB 1819",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1819"
+    },
+    {
+     "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or TRIP/LOCKOUT'",
+     "docId": "KB 2070",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
+    },
+    {
+     "title": "Daikin/Goodman 'Service and Troubleshooting' RS6200301 (reproduces the single-phase CoreSense Diagnostics flash-code table for the 571-0066-00 / 571-0067-00 modules)",
+     "url": "https://daikincomfort.com/docs/default-source/amst/sm-rs6200301.pdf"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "Copeland AE8-1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
+    "Copeland KB 2086, 2082, 2078, 2079, 2072, 2075, 1817, 1819, 2070",
+    "Daikin/Goodman service manual RS6200301"
+   ]
+  },
+  {
+   "id": "coresense-communications-3ph",
+   "name": "Copeland CoreSense Communications module for 13-40 ton three-phase scroll compressors (AE8-1408 13-15 t, AE8-1384 20-40 t)",
+   "description": "Terminal-box module on 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) three-phase ZP/ZR scrolls: senses motor and scroll thermistors plus 3-phase supply, drives the M1-M2 pilot-duty contacts and talks Modbus. Two-colour LED: green flash count = warning (no trip), red flash count = alert (trip, some lock out). Not fitted on smaller three-phase scrolls unless the OEM adds it.",
+   "appliesTo": [
+    "^Z[PR][DST]?\\d{3}K[0-9A-Z][EL]?-T[FW]",
+    "^Z[PR]\\d{2}M[0-9A-Z][EL]?-T[FW]"
    ],
    "faultCodes": [
     {
@@ -1252,7 +1996,7 @@
     },
     {
      "code": "Red 1 flash",
-     "meaning": "Alert: Motor High Temperature",
+     "meaning": "Alert: Motor High Temperature (AE8-1408 R3: the module locks out after five consecutive Code 1 Alerts)",
      "likelyCauses": [
       "Motor overheating from low suction gas flow (low charge, restriction, low evaporator airflow)",
       "High superheat / return-gas temperature",
@@ -1281,9 +2025,10 @@
       "Ohm the thermistor circuit at the module terminals against the value in the Copeland bulletin for the module version",
       "Inspect thermistor plug and wiring for damage"
      ],
-     "severity": "lockout",
+     "severity": "shutdown",
      "source": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors' + AE8-1408 R3 / AE8-1384 (CoreSense Communications 13-15 t / 20-40 t) LED flash code table",
-     "evidence": "manufacturer_doc"
+     "evidence": "manufacturer_doc",
+     "notes": "Auto-resets after 30 minutes when the thermistor circuit is back in range (AE8-1408 R3: 'A Code 2 Alert will open the M2-M1 contacts. The Alert will reset after 30 minutes and the M2-M1 contacts will close if the resistance of the motor PTC circuit returns to acceptable levels')."
     },
     {
      "code": "Red 3 flashes",
@@ -1350,7 +2095,7 @@
     },
     {
      "code": "Red 5 flashes",
-     "meaning": "Alert: Locked Rotor - when four consecutive Code 5 events are recorded, the module will lockout the compressor and flash red five times",
+     "meaning": "Alert: Locked Rotor",
      "likelyCauses": [
       "Compressor mechanically seized or starting against unequalized pressure",
       "Single-phasing / phase problem at start (bulletin troubleshooting: check the contactor and the module phasing wires A-B-C)",
@@ -1363,7 +2108,8 @@
      ],
      "severity": "lockout",
      "source": "Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 5 Locked Rotor; lockout after four consecutive events)",
-     "evidence": "manufacturer_doc"
+     "evidence": "inferred",
+     "notes": "UNVERIFIED: the Code 5 wording and its lockout threshold were not found in the AE8-1384/AE8-1408 text returned by search (only Codes 1, 2, 3, 4, 6, 7, 9 were); read Table 6 of AE8-1384 before acting."
     },
     {
      "code": "Red 7 flashes",
@@ -1392,7 +2138,8 @@
      ],
      "severity": "info",
      "source": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' - LED flash code table (Warning codes / Alert codes) (Code 8 Reserved For Future Use) / Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 8 Future Use, N/A)",
-     "evidence": "manufacturer_doc"
+     "evidence": "inferred",
+     "notes": "UNVERIFIED: Code 8 was not found in the AE8-1384/AE8-1408 text returned by search; 'reserved' is the pack's assumption. The 'Code 8 displays for 24 hours' text belongs to the K5 refrigeration module (AE4-1383)."
     },
     {
      "code": "Red 9 flashes",
@@ -1410,246 +2157,153 @@
      "severity": "shutdown",
      "source": "Copeland KB 1765 'CoreSense Red Flash Code 9 for 20 to 40 Ton Copeland Scroll Air Conditioning' + Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors' - Table 6 LED flash code information (Code 9 Module Low Voltage)",
      "evidence": "manufacturer_doc"
+    }
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "solid green",
+     "meaning": "Power on, no fault"
     },
     {
-     "code": "Yellow 1 flash (AE 1379 module)",
-     "meaning": "Code 1 - Long Run Time: the module flashes yellow one time when the compressor operates for longer than 18 continuous hours; alert only, the module will not lockout the compressor for this condition",
-     "likelyCauses": [
-      "Low refrigerant charge",
-      "Evaporator/condenser airflow restriction (dirty filter/coil, blower or condenser fan problem)",
-      "Undersized or heavily loaded system / extreme heat load",
-      "Thermostat calling continuously or miswired"
-     ],
+     "pattern": "green flashing N times, pause, repeat",
+     "meaning": "Warning code N - no trip, no lockout (1 loss of communication, 3 short cycling, 4 open/shorted scroll thermistor)",
      "checks": [
-      "Measure superheat/subcooling against the unit charging chart",
-      "Check filters, coils, blower and condenser fan",
-      "Confirm the thermostat demand actually drops out"
-     ],
-     "severity": "info",
-     "source": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
-     "evidence": "manufacturer_doc"
+      "Count flashes between pauses"
+     ]
     },
     {
-     "code": "Yellow 2 flashes (AE 1379 module)",
-     "meaning": "Code 2 - Compressor (Pressure) Trip: the module flashes yellow two times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting longer than 7 minutes",
+     "pattern": "red flashing N times, pause, repeat",
+     "meaning": "Alert code N - compressor tripped via the M1-M2 contacts and possibly locked out",
+     "checks": [
+      "Codes 1 (after 5 consecutive), 3, 4, 5, 7 lock out; 2 resets after 30 min; 6 and 9 auto-reset; 8 reserved (unverified)"
+     ]
+    },
+    {
+     "pattern": "red flash N times, pause, solid red, pause, repeat",
+     "meaning": "Lockout condition (AE8-1408 R3: 'a lockout condition produces a red flash, followed by a pause, a solid red, a second pause, and then repeated')",
+     "checks": [
+      "Correct the cause, then cycle module power or send the Modbus reset command"
+     ]
+    }
+   ],
+   "diagnosticTips": [
+    "Identify the module first (KB 1819 / KB 1816): 571-0066-00 (service 971-0066-00) is the two-wire AC module and 571-0067-00 (971-0067-00) the three-wire heat-pump module covered by AE8-1379 (yellow ALERT / red TRIP-LOCK LEDs, current-sensing on R and S leads, installed in the unit electrical panel near the contactor). The 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) CoreSense Communications modules mount in the compressor terminal box, sense motor and scroll thermistors plus 3-phase supply, and use a green WARNING / red ALERT scheme with M1-M2 pilot-duty contacts and Modbus. Comfort Alert (543-/943-0032, -0033, -0038) is the older current-sensing module with green POWER, red TRIP and yellow ALERT LEDs. The same flash count means different things on each - always read the code against the right table.",
+    "Reading a code: count the consecutive flashes between pauses; the code repeats until cleared. A lockout is shown as red flashes, pause, solid red, pause, repeat (AE8-1408 R3).",
+    "Reset: cycle module power (T1-T2) or send the Modbus reset command; alerts 6 (missing phase) and 9 (module low voltage) clear automatically once the condition is normal (code 9 after 5 minutes); code 2 clears after 30 minutes when the thermistor circuit is back in range.",
+    "Codes 5 (Locked Rotor) and 8 are marked inferred: their wording was not returned from AE8-1384/AE8-1408 by search - read Table 6 of AE8-1384 before acting on them.",
+    "Selector note: this platform is attached to three-digit-capacity and M-multiplier -TF/-TW models; the module is only factory-fitted on 13-40 ton compressors, so confirm it is present in the terminal box."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1818"
+    },
+    {
+     "title": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
+     "docId": "KB 1818",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1818"
+    },
+    {
+     "title": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' (Aug 2024)",
+     "docId": "AE8-1408 R3",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=aeb&PDF=AE8-1408_R3.pdf"
+    },
+    {
+     "title": "Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors'",
+     "docId": "AE8-1384",
+     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1384"
+    },
+    {
+     "title": "Copeland KB 1769 'Green Flash Code 1 on CoreSense Module'",
+     "docId": "KB 1769",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1769"
+    },
+    {
+     "title": "Copeland KB 1768 'CoreSense Red Flash Code 3'",
+     "docId": "KB 1768",
+     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1768"
+    },
+    {
+     "title": "Copeland KB 1765 'CoreSense Red Flash Code 9 for 20 to 40 Ton Copeland Scroll Air Conditioning'",
+     "docId": "KB 1765",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1765"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors'",
+    "Copeland AE8-1384 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors'",
+    "Copeland KB 1818, 1769, 1768, 1765"
+   ]
+  },
+  {
+   "id": "coresense-diagnostics-k5-3ph",
+   "name": "Copeland CoreSense Diagnostics for ZB/ZF K5 refrigeration scrolls (7.5-15 HP, AE4-1383 Table 7 / AE8-1424)",
+   "description": "Module factory-installed in the electrical box of 7.5-15 HP ZB*K5 and ZF*K5 refrigeration scrolls (Copeland KB 3615; AE4-1383 'Application Guidelines for ZFK5E & ZBK5E Copeland Scroll Compressors', Table 7 CoreSense Diagnostics fault codes). LED flash codes; lockouts for high discharge temperature, missing phase and locked rotor are DIP-switch-6 selectable (default off = auto-restart); reverse phase always locks out.",
+   "appliesTo": [
+    "^Z[BF]\\d{2,3}K5"
+   ],
+   "faultCodes": [
+    {
+     "code": "Code 1",
+     "meaning": "High Discharge Temperature",
      "likelyCauses": [
-      "High-pressure switch trip: dirty condenser, condenser fan failure, overcharge, non-condensables",
-      "Low-pressure switch trip: low charge, restriction, low airflow",
-      "Compressor internal overload opening on a hot compressor"
+      "Low charge / high superheat",
+      "High compression ratio: dirty condenser, condenser fan failure, high head pressure",
+      "Loss of scroll cooling from low suction density"
      ],
      "checks": [
-      "Check condenser fan operation first; compare head pressure with outdoor ambient",
-      "Read suction pressure / superheat for a low-charge or restriction trip",
-      "Check HPS/LPS settings and wiring"
+      "Discharge line temperature within 6 in. of compressor (Copeland limit 225 F)",
+      "Head pressure, condenser airflow, charge and superheat"
      ],
      "severity": "shutdown",
-     "source": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
-     "evidence": "manufacturer_doc"
+     "source": "Copeland AE4-1383 R5 'Application Guidelines for ZFK5E & ZBK5E Copeland Scroll Compressors', Table 7 CoreSense Diagnostics Fault Codes",
+     "evidence": "manufacturer_doc",
+     "notes": "Auto-restart (Table 7 default 'No Lockout'); lockout only when DIP switch 6 is ON."
+    }
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "LED flashes N times then pauses",
+     "meaning": "Fault code N per AE4-1383 Table 7"
+    }
+   ],
+   "diagnosticTips": [
+    "Table 7 defaults are 'No Lockout': DIP switch 6 enables lockouts for high discharge temperature, missing phase and locked rotor; reverse phase is automatically a lockout. A compressor showing a non-lockout code will auto-restart after the condition clears, so check the module's fault history.",
+    "Only code 1 was transcribed in this review; Table 7 (codes 2-9) and the Table 3 troubleshooting tips live in AE4-1383 R5 (webapps2.copeland.com/ci/k5/K5-AE.pdf) and the module bulletin AE8-1424.",
+    "This module is not fitted to ZP/ZPS air-conditioning scrolls; those use the AE8-1379 single-phase or AE8-1408/AE8-1384 three-phase modules."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Copeland Application Engineering Bulletin AE4-1383 R5 - Application Guidelines for ZFK5E & ZBK5E Copeland Scroll Compressors (Table 7 CoreSense Diagnostics fault codes)",
+     "url": "https://webapps2.copeland.com/ci/k5/K5-AE.pdf"
     },
     {
-     "code": "Red 2 flashes (AE 1379 module)",
-     "meaning": "Lock code 2 - Pressure trip lockout: when four consecutive or ten total Code 2 events are recorded, the module will lockout the compressor and flash red two times",
-     "likelyCauses": [
-      "Repeated pressure-switch or overload trips (see Yellow 2)"
-     ],
-     "checks": [
-      "Correct the pressure/overload cause, then reset by cycling module power (disconnect the C terminal / 24 V) per KB 2070"
-     ],
-     "severity": "lockout",
-     "source": "Copeland KB 2082 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
-     "evidence": "manufacturer_doc"
+     "title": "Copeland KB 3615 'CoreSense Diagnostic Module for Scroll K5 compressors'",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/3615"
     },
     {
-     "code": "Yellow 3 flashes (AE 1379 module)",
-     "meaning": "Code 3 - Pressure Switch Cycling (short cycling): the module flashes yellow three times when the compressor operates from 12 seconds to 15 minutes followed by a trip condition lasting between 35 seconds and 7 minutes",
-     "likelyCauses": [
-      "Low-pressure switch cycling on low charge or a restriction",
-      "High-pressure switch cycling (condenser fan intermittent, dirty coil)",
-      "Thermostat chatter or loose Y wiring"
-     ],
-     "checks": [
-      "Watch suction/head pressure through a cycle to see which switch opens",
-      "Verify the Y demand is steady (24 V at the module)",
-      "Check charge, airflow and condenser fan"
-     ],
-     "severity": "warning",
-     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 3 flashes (AE 1379 module)",
-     "meaning": "Lock code 3 - Short-cycling lockout: when four consecutive or ten total Code 3 events are recorded, the module will lockout the compressor and flash red three times",
-     "likelyCauses": [
-      "Repeated pressure-switch cycling (see Yellow 3)"
-     ],
-     "checks": [
-      "Find and fix the cycling cause before resetting; reset by cycling module power per KB 2070"
-     ],
-     "severity": "lockout",
-     "source": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Yellow 4 flashes (AE 1379 module)",
-     "meaning": "Code 4 - Locked Rotor Trip: the module flashes yellow four times when the compressor trips within 12 seconds of operation and does not reset and start within 35 seconds",
-     "likelyCauses": [
-      "Compressor mechanically seized or starting against unequalized pressure",
-      "Failed run capacitor / start components (single-phase)",
-      "Low voltage at the compressor terminals during start",
-      "Miswired module current sensor (false locked rotor)"
-     ],
-     "checks": [
-      "Measure voltage at the compressor terminals during a start attempt",
-      "Test the run capacitor (uF) and start relay/capacitor if fitted",
-      "Confirm LRA draw followed by immediate overload trip; allow pressure equalisation time",
-      "Verify the compressor common lead passes through the module current sensor"
-     ],
-     "severity": "shutdown",
-     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 4 flashes (AE 1379 module)",
-     "meaning": "Lock code 4 - Locked rotor lockout: when ten consecutive Code 4 events are recorded, the module will lockout the compressor and flash red four times",
-     "likelyCauses": [
-      "Repeated locked-rotor starts (see Yellow 4)"
-     ],
-     "checks": [
-      "Do not keep resetting - each attempt heats the windings; diagnose start components/voltage, then reset per KB 2070"
-     ],
-     "severity": "lockout",
-     "source": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Yellow 5 flashes (AE 1379 module)",
-     "meaning": "Code 5 - Compressor (Moderate Run) Trip: the module flashes yellow five times when the compressor has operated between 15 minutes and 18 hours, followed by a compressor trip lasting longer than 7 minutes",
-     "likelyCauses": [
-      "Internal overload opening after a long run (hot compressor: low charge / high superheat, high head pressure, low voltage)",
-      "Pressure switch opening after a long run",
-      "Open contactor/fuse or wiring to the compressor while Y is still present"
-     ],
-     "checks": [
-      "Check for 24 V at Y with no compressor current during the trip",
-      "Measure discharge temperature, superheat and head pressure before the trip recurs",
-      "Ohm C-S-R windings after the compressor cools; inspect contactor and wiring"
-     ],
-     "severity": "shutdown",
-     "source": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection' + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 5 flashes (AE 1379 module)",
-     "meaning": "Lock code 5 - Moderate-run trip lockout: when four consecutive Code 5 events occur, the module locks out and flashes red five times",
-     "likelyCauses": [
-      "Repeated overload/pressure trips after long runs (see Yellow 5)"
-     ],
-     "checks": [
-      "Correct the cause, then reset per KB 2070"
-     ],
-     "severity": "lockout",
-     "source": "Copeland KB 1817 + Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 6 flashes (AE 1379 module)",
-     "meaning": "Code 6 - Open Start Circuit: the module will lockout the compressor and flash red six times if it detects a demand signal on the Y terminal and current in the R (run) winding of the compressor, but no current in the S (start) winding for 2 seconds",
-     "likelyCauses": [
-      "Open start winding",
-      "Failed start capacitor / start relay, open start-circuit wiring or terminal",
-      "Module S-lead current sensor not installed around the start lead"
-     ],
-     "checks": [
-      "Ohm C-S and compare with C-R (start winding resistance is normally higher than run)",
-      "Check the start capacitor and potential relay if fitted",
-      "Verify module current-sensing lead routing before condemning the compressor (field practice)"
-     ],
-     "severity": "lockout",
-     "source": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 7 flashes (AE 1379 module)",
-     "meaning": "Code 7 - Open Run Circuit: the module has detected Y or Y1 and current in the S winding of the compressor and no current in the R winding for 2 seconds",
-     "likelyCauses": [
-      "Open run winding",
-      "Failed run capacitor or open run-circuit wiring/terminal",
-      "Module R-lead current sensor not around the run lead"
-     ],
-     "checks": [
-      "Ohm C-R",
-      "Test the run capacitor (uF) and its wiring",
-      "Verify module current-sensing lead routing"
-     ],
-     "severity": "lockout",
-     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 7, as summarised in Copeland KB series 2072-2086)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 8 flashes (AE 1379 module)",
-     "meaning": "Code 8 - Welded Contactor: the module has detected line currents in the R and S windings while Y or Y1 is at 0 VAC for 15 seconds",
-     "likelyCauses": [
-      "Contactor contacts welded closed - compressor runs with no thermostat demand",
-      "Contactor miswired / bypassed so the compressor is fed without Y"
-     ],
-     "checks": [
-      "Confirm compressor current with Y de-energised",
-      "Replace the contactor; check for the cause of welding (low voltage coil, high inrush, pitted contacts)"
-     ],
-     "severity": "lockout",
-     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 8, as summarised in Copeland KB series 2072-2086)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Yellow 9 flashes (AE 1379 module)",
-     "meaning": "Code 9 - Module Low Voltage supply: the module flashes yellow nine times if the module supply voltage drops below 17 VAC for 2 seconds",
-     "likelyCauses": [
-      "Undersized/overloaded 24 V transformer",
-      "Low line voltage, loose common/R wiring to the module",
-      "Excess load on the control circuit (accessory relays, long thermostat runs)"
-     ],
-     "checks": [
-      "Measure 24 V at the module under load with the contactor pulled in",
-      "Check transformer VA rating and secondary fuse/breaker",
-      "Check line voltage at the transformer primary"
-     ],
-     "severity": "warning",
-     "source": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module' (reproduces AE8-1379 R2 table row)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red 9 flashes, yellow off (AE 1379 module)",
-     "meaning": "Code 9 - Over-Current Protection: when the current at the PROT terminal is greater than 2 A for 40 ms the module flashes a Code 9; the red LED flashes 9 times with the yellow LED remaining off - the module is mis-wired or the contactor coil is shorted to ground (Code 9 is not printed on the module label)",
-     "likelyCauses": [
-      "PROT output miswired (e.g. PROT tied to common or to the wrong contactor coil terminal)",
-      "Contactor coil shorted to ground / failed coil"
-     ],
-     "checks": [
-      "Ohm the contactor coil to ground and coil resistance",
-      "Re-check the module wiring against the diagram in AE8-1379 (PROT in series with the contactor coil)",
-      "On the UltraTech (AE8-1385) two-stage module the same fault is Code 10"
-     ],
-     "severity": "lockout",
-     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Code 9 Over-Current Protection); same function is Code 10 in AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Red solid (TRIP) (AE 1379 module)",
-     "meaning": "TRIP: the module detects the presence of a demand signal from the thermostat, however no current to the compressor is detected by the module - typically the compressor protector is open, or supply power to the compressor is missing",
-     "likelyCauses": [
-      "Internal overload open (hot compressor)",
-      "Open contactor, blown fuse, tripped breaker or open wiring to the compressor",
-      "Open winding"
-     ],
-     "checks": [
-      "Check line voltage at the contactor load side with Y present",
-      "Let the compressor cool and ohm C-S-R",
-      "Inspect the contactor coil and contacts"
-     ],
-     "severity": "shutdown",
-     "source": "Copeland AE8-1379 R2 (Feb 2015) 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' - LED Troubleshooting Information table (Module LED description: red TRIP LED)",
-     "evidence": "manufacturer_doc"
-    },
+     "title": "Copeland AE8-1424 - CoreSense Diagnostics module for ZB/ZF K5 refrigeration scrolls (module bulletin referenced by AE4-1383; not read directly)",
+     "docId": "AE8-1424"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "Copeland AE4-1383 R5, Table 7",
+    "Copeland KB 3615",
+    "Copeland AE8-1424"
+   ]
+  },
+  {
+   "id": "comfort-alert",
+   "name": "Copeland/Emerson Comfort Alert diagnostics module (543-/943-0032, -0033, -0038; commercial 3-phase 2005ECT-191)",
+   "description": "Older OEM panel-mounted current-sensing module with green POWER, red TRIP and yellow ALERT LEDs; flashes a numbered ALERT code inferred from compressor current versus thermostat demand. Codes 6/7 differ between the residential single-phase modules (open start / open run circuit) and the commercial 3-phase module (missing phase / reverse phase) - both meanings are given in the same entry. Selector: Copeland scroll and CR nameplates only (OEM panel module; not fitted to Discus semi-hermetics).",
+   "appliesTo": [
+    "^(Z[A-Z]{1,2}|CR)\\d.*-[PT]F[A-Z0-9]"
+   ],
+   "faultCodes": [
     {
      "code": "Comfort Alert code 1",
      "meaning": "Long Run Time - Compressor is running extremely long run cycles",
@@ -1828,10 +2482,77 @@
      "severity": "warning",
      "source": "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00 - 'Flash Code' table (also reproduced in ICP N4H3 installation instructions p.19 and Rheem RRNL IOM p.107) - LED description",
      "evidence": "manufacturer_doc"
+    }
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "green POWER LED on",
+     "meaning": "Module has power; supply voltage present at the module terminals"
     },
     {
-     "code": "Discus LED flashing green",
-     "meaning": "Alert (warning) condition on the CoreSense Diagnostics v2.11 module - the compressor keeps running",
+     "pattern": "red TRIP LED on",
+     "meaning": "Demand signal from the thermostat but no current to the compressor detected (protector open or missing supply power)"
+    },
+    {
+     "pattern": "yellow ALERT LED flashes N times, pause, repeat",
+     "meaning": "ALERT flash code N (see 'Comfort Alert code N'); on power-up the last ALERT code before shutdown is displayed for one minute",
+     "checks": [
+      "Reset by removing 24 VAC from the module (cycle power)"
+     ]
+    },
+    {
+     "pattern": "TRIP and ALERT flashing at the same time",
+     "meaning": "Control circuit voltage too low for operation"
+    }
+   ],
+   "diagnosticTips": [
+    "Identify the module first (KB 1819 / KB 1816): 571-0066-00 (service 971-0066-00) is the two-wire AC module and 571-0067-00 (971-0067-00) the three-wire heat-pump module covered by AE8-1379 (yellow ALERT / red TRIP-LOCK LEDs, current-sensing on R and S leads, installed in the unit electrical panel near the contactor). The 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) CoreSense Communications modules mount in the compressor terminal box, sense motor and scroll thermistors plus 3-phase supply, and use a green WARNING / red ALERT scheme with M1-M2 pilot-duty contacts and Modbus. Comfort Alert (543-/943-0032, -0033, -0038) is the older current-sensing module with green POWER, red TRIP and yellow ALERT LEDs. The same flash count means different things on each - always read the code against the right table.",
+    "Count the flashes between pauses to read the code; codes repeat until cleared.",
+    "Reset: remove 24 VAC from the module. On every power-up the module displays the last ALERT code for one minute - use this to read a code the customer saw earlier.",
+    "Current-sensing modules infer faults from compressor current versus Y demand: a lead that does not pass through the module's sensor gives false open-circuit, locked-rotor or welded-contactor codes - verify the sensing-lead routing before condemning a compressor."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Copeland/Emerson Comfort Alert Diagnostics User's Manual (543-0032-00 / 943-0032-00; also 543-0033-00, 543-0038-00)",
+     "docId": "Comfort Alert User's Manual",
+     "url": "https://pimmedia.winsupplyinc.com/pim/INTA/112017/INTERNATIONAL-COMFORT-PRODUCTS_1177402_ICP001177402_INTA.pdf"
+    },
+    {
+     "title": "Copeland 'Comfort Alert for Commercial Applications' User's Manual 2005ECT-191 R6 (543-0038-01/-02, 543-0071-00, 943-0038-01/-02)",
+     "docId": "2005ECT-191 R6",
+     "url": "https://media.copeland.com/43e676a7-68e7-4255-af1c-b16b00f91f73/2005ECT-191%20R6%20User%20Manual%20Comfort%20Alert%20for%20Commercial%20Applications.pdf"
+    },
+    {
+     "title": "Copeland 'Comfort Alert diagnostics for commercial applications' brochure (943-0033-00)",
+     "docId": "Comfort Alert commercial brochure",
+     "url": "http://s3.supplyhouse.com/product_files/Copeland-943-0033-00-Brochure.pdf"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "Copeland/Emerson Comfort Alert Diagnostics User's Manual 543-0032-00 / 543-0033-00 / 543-0038-00",
+    "Copeland 'Comfort Alert for Commercial Applications' User's Manual 2005ECT-191 R6; brochure 943-0033-00"
+   ]
+  },
+  {
+   "id": "coresense-discus",
+   "name": "Copeland CoreSense Diagnostics v2.11 / CoreSense Protection for Discus semi-hermetic compressors",
+   "description": "Compressor-mounted module (CoreSense Diagnostics has a 2-line LCD in 5 languages plus a tri-colour LED; CoreSense Protection is LED-only). Standard protection on every Discus with CoreSense: low oil pressure, excessive discharge temperature, high discharge pressure and low suction pressure; also motor overheat and locked-rotor protection.",
+   "appliesTo": [
+    "copeland-discus-semihermetic"
+   ],
+   "faultCodes": [
+    {
+     "code": "LED steady green",
+     "meaning": "Normal operation - no fault",
+     "severity": "info",
+     "source": "Copeland AE8-1368 R2 - LED description ('Normal conditions ... steady green')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LED flashing green",
+     "meaning": "Alert (warning) condition that does not interfere with the ability of the compressor to run - the compressor keeps running (AE8-1368 R2)",
      "likelyCauses": [
       "Oil-pressure warning (differential below 7-9 psid / 0.48-0.62 bar for 4 s, before the 120 s lockout)",
       "Other warning-level condition shown as text on the LCD"
@@ -1845,7 +2566,23 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "Discus LED steady red",
+     "code": "LED red flashing",
+     "meaning": "Trip or lockout: AE8-1368 R2 - 'A trip or lockout condition will result in a flashing red LED'; read the LCD text / flash count to tell an auto-reset trip from a lockout (lockout needs a manual reset at the compressor)",
+     "likelyCauses": [
+      "Auto-reset trip: low oil pressure warning stage, high discharge temperature, high discharge pressure / low suction pressure, motor temperature, phase loss",
+      "Lockout: repeated trips of one protection (e.g. low oil pressure 120 s lockout), locked rotor (10 consecutive trips) / motor overheat lockout"
+     ],
+     "checks": [
+      "Read the LCD text / fault history (alarm 1 = most recent) for the tripped or locked-out protection",
+      "Check oil level and oil pressure differential, discharge temperature, head and suction pressures, and all three phase voltages",
+      "Lockout: fix the cause, then reset per KB 4658 (reset button under the module)"
+     ],
+     "severity": "lockout",
+     "source": "Copeland AE8-1368 R2 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors' - LED description",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LED steady red",
      "meaning": "Control module has failed (steady red = module failure, not a compressor fault code)",
      "likelyCauses": [
       "Failed CoreSense Diagnostics v2.11 module or its power supply",
@@ -1860,7 +2597,7 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "Discus low oil pressure lockout",
+     "code": "low oil pressure lockout",
      "meaning": "Low oil pressure lockout: once the oil pressure differential falls below 0.48-0.62 bar (7-9 psid) for 2 minutes (120 s) the module shuts the compressor off and a 'low oil pressure lockout' is reported; a warning is issued after 4 seconds below the threshold",
      "likelyCauses": [
       "Low oil level / oil not returning (suction-line sizing, traps, long off-cycles)",
@@ -1877,7 +2614,7 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "Discus high discharge temperature trip",
+     "code": "high discharge temperature trip",
      "meaning": "Discharge temperature protection: an NTC sensor in the cylinder head (factory-installed) shuts the compressor off if discharge temperature exceeds 154 C (310 F) until it cools to an acceptable level",
      "likelyCauses": [
       "High compression ratio: dirty condenser, condenser fan failure, high head pressure",
@@ -1894,7 +2631,7 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "Discus locked rotor lockout",
+     "code": "locked rotor lockout",
      "meaning": "Locked rotor detection with trip and lockout alarms: 10 consecutive trip alarms result in a lockout alarm requiring manual reset",
      "likelyCauses": [
       "Mechanically seized compressor or start against unequalized pressure",
@@ -1909,7 +2646,7 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "Discus phase loss trip",
+     "code": "phase loss trip",
      "meaning": "Phase loss protection: if any phase voltage is less than 84 % of the maximum for 1 second the module trips; trip time is 5 minutes with automatic reset",
      "likelyCauses": [
       "Open phase upstream (fuse, contactor pole, loose lug)",
@@ -1926,551 +2663,30 @@
    ],
    "ledPatterns": [
     {
-     "pattern": "Solid green",
-     "meaning": "Power on, no fault (normal operation)"
+     "pattern": "Steady green",
+     "meaning": "Normal conditions, no fault"
     },
     {
-     "pattern": "Green flashing N times, pause, repeat",
-     "meaning": "Warning code N (no trip or lockout)"
+     "pattern": "Flashing green",
+     "meaning": "Alert/warning that does not stop the compressor (e.g. oil-pressure warning stage)"
     },
     {
-     "pattern": "Red flashing N times, pause, repeat",
-     "meaning": "Alert code N - the compressor has tripped and may be locked out"
-    },
-    {
-     "pattern": "3-phase CoreSense Communications module (AE8-1408 13-15 t / AE8-1384 20-40 t): solid green",
-     "meaning": "Power on, no fault"
-    },
-    {
-     "pattern": "3-phase module: green flashing N times, pause, repeat",
-     "meaning": "Warning code N - no trip, no lockout (1 loss of communication, 3 short cycling, 4 open/shorted scroll thermistor)",
-     "checks": [
-      "Count flashes between pauses"
-     ]
-    },
-    {
-     "pattern": "3-phase module: red flashing N times, pause, repeat",
-     "meaning": "Alert code N - compressor tripped via the M1-M2 contacts and possibly locked out",
-     "checks": [
-      "Codes 1, 2, 3, 4, 5, 7 lock out; 6 and 9 auto-reset when the condition clears; 8 reserved"
-     ]
-    },
-    {
-     "pattern": "3-phase module: red flash N times, pause, solid red, pause, repeat",
-     "meaning": "Lockout condition (AE8-1408 R3: 'a lockout condition produces a red flash, followed by a pause, a solid red, a second pause, and then repeated')",
-     "checks": [
-      "Correct the cause, then cycle module power or send the Modbus reset command"
-     ]
-    },
-    {
-     "pattern": "AE8-1379 single-phase/light-commercial module (571-0066-00 AC / 571-0067-00 HP): solid yellow",
-     "meaning": "Module powered and compressor/system running normally"
-    },
-    {
-     "pattern": "AE8-1379 module: yellow ALERT LED flashes N times, pause, repeat",
-     "meaning": "ALERT code N - abnormal system condition (1 long run, 2 pressure trip, 3 pressure-switch cycling, 4 locked rotor trip, 5 moderate-run trip, 9 low module voltage)",
-     "checks": [
-      "Count consecutive flashes; the code repeats until cleared"
-     ]
-    },
-    {
-     "pattern": "AE8-1379 module: solid red",
-     "meaning": "TRIP - thermostat demand present but no compressor current detected (protector open or no supply power)"
-    },
-    {
-     "pattern": "AE8-1379 module: red TRIP/LOCK LED flashes N times, pause, repeat",
-     "meaning": "LOCK code N - compressor lockout active (2, 3, 4, 5 after repeated alerts; 6 open start circuit; 7 open run circuit; 8 welded contactor; 9 with yellow off = over-current on PROT)",
-     "checks": [
-      "Reset by cycling module power (disconnect the C terminal) per KB 2070 after the cause is fixed"
-     ]
-    },
-    {
-     "pattern": "Comfort Alert module: green POWER LED on",
-     "meaning": "Module has power; supply voltage present at the module terminals"
-    },
-    {
-     "pattern": "Comfort Alert module: red TRIP LED on",
-     "meaning": "Demand signal from the thermostat but no current to the compressor detected (protector open or missing supply power)"
-    },
-    {
-     "pattern": "Comfort Alert module: yellow ALERT LED flashes N times, pause, repeat",
-     "meaning": "ALERT flash code N (see 'Comfort Alert code N'); on power-up the last ALERT code before shutdown is displayed for one minute",
-     "checks": [
-      "Reset by removing 24 VAC from the module (cycle power)"
-     ]
-    },
-    {
-     "pattern": "Comfort Alert module: TRIP and ALERT flashing at the same time",
-     "meaning": "Control circuit voltage too low for operation"
-    },
-    {
-     "pattern": "Discus CoreSense Diagnostics v2.11: steady green / flashing green / flashing orange (yellow) / flashing red / steady red",
-     "meaning": "Normal, no fault / alert (warning) / compressor tripped, auto-reset / lockout (manual reset) / control module failed",
+     "pattern": "Flashing red",
+     "meaning": "Trip or lockout - read the LCD text / fault history to tell which; lockouts need a manual reset at the compressor",
      "checks": [
       "Read the fault text on the 2-line LCD; last ten alarms are stored, alarm 1 = most recent"
      ]
+    },
+    {
+     "pattern": "Steady red",
+     "meaning": "Control module has failed - see Copeland KB 2411 'Solid Red LED on CoreSense Diagnostics V2.11' and KB 4655 (FAILSAFE mode) before replacing"
     }
    ],
    "diagnosticTips": [
-    "Count the flashes between pauses to read the code; codes repeat until cleared.",
-    "Reset: remove and restore power to the module/control circuit (Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'). Fix the cause first; a locked-out compressor is protecting itself.",
-    "Codes 5, 7, 8 and 9 exist on this platform (locked rotor, reverse phase, welded contactor, low voltage on comparable Copeland modules) but were not confirmed from the manual in this review - read them from AE 1379 R2 / KB 1818 before acting.",
-    "Identify the module first (KB 1819 / KB 1816): 571-0066-00 (service 971-0066-00) is the two-wire AC module and 571-0067-00 (971-0067-00) the three-wire heat-pump module covered by AE8-1379 (yellow ALERT / red TRIP-LOCK LEDs, current-sensing on R and S leads, installed in the unit electrical panel near the contactor). The 13-15 ton (AE8-1408) and 20-40 ton (AE8-1384) CoreSense Communications modules mount in the compressor terminal box, sense motor and scroll thermistors plus 3-phase supply, and use a green WARNING / red ALERT scheme with M1-M2 pilot-duty contacts and Modbus. Comfort Alert (543-/943-0032, -0033, -0038) is the older current-sensing module with green POWER, red TRIP and yellow ALERT LEDs. The same flash count means different things on each - always read the code against the right table.",
-    "Reading a code: count the consecutive flashes between pauses; the code repeats until cleared. On AE8-1408/1384 modules a lockout is shown as red flashes, pause, solid red, pause, repeat.",
-    "Reset (AE8-1379 module, KB 2070): cycle power to the module by disengaging the COMMON (C) terminal. This clears the present ALERT or TRIP/LOCK and allows normal operation but does not clear the seven-day operating history stored in the module. Fix the cause first - a locked-out compressor is protecting itself.",
-    "Reset (13-40 ton CoreSense Communications): cycle module power (T1-T2) or send the Modbus reset command; alerts 6 (missing phase) and 9 (module low voltage) clear automatically once the condition is normal (code 9 after 5 minutes).",
-    "Reset (Comfort Alert): remove 24 VAC from the module. On every power-up the module displays the last ALERT code for one minute - use this to read a code the customer saw earlier.",
-    "Reset (Discus CoreSense Diagnostics v2.11): reset button below the control module, or per KB 4658; a FAILSAFE-mode module is reset per KB 4655. Lockouts require a manual reset at the compressor.",
-    "Current-sensing modules (AE8-1379, Comfort Alert) infer faults from compressor current versus Y demand: a common/run/start lead that does not pass through the module's sensor gives false open-circuit, locked-rotor or welded-contactor codes - verify the sensing-lead routing (KB 1809 installation guidelines) before condemning a compressor.",
-    "Module history: AE8-1379 and AE8-1385 modules store a seven-day operating history that can be downloaded with the CoreSense PC Communication Software (see the AE bulletin 'Module History Download' section)."
-   ],
-   "coverage": "partial",
-   "sourceDocs": [
-    {
-     "title": "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1818"
-    },
-    {
-     "title": "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
-     "url": "https://media.copeland.com/93ff8d35-7621-461a-9809-b16b0108c7ad/AE%201379%20R2%20CoreSense%20Diagnostics%20for%20Copeland%20Scroll%20Air%20Conditioning%20Compressors.pdf"
-    },
-    {
-     "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or trip/lockout'",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
-    },
-    {
-     "title": "Copeland KB 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
-     "docId": "KB 1818",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1818"
-    },
-    {
-     "title": "Copeland AE8-1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors' (Feb 2015)",
-     "docId": "AE8-1379 R2",
-     "url": "https://www.copeland.com/documents/ae-1379-r2-coresense-diagnostics-for-copeland-scroll-air-conditioning-compressors-en-5623056.pdf"
-    },
-    {
-     "title": "Copeland AE8-1408 R3 'CoreSense Communications for 13 to 15 Ton Copeland Scroll Air Conditioning Compressors' (Aug 2024)",
-     "docId": "AE8-1408 R3",
-     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=aeb&PDF=AE8-1408_R3.pdf"
-    },
-    {
-     "title": "Copeland AE8-1384 R5/R9 'CoreSense Communications for 20 to 40 Ton Copeland Scroll Air Conditioning Compressors'",
-     "docId": "AE8-1384",
-     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1384"
-    },
-    {
-     "title": "Copeland AE8-1385 'CoreSense Diagnostics for Copeland Scroll UltraTech Air Conditioning Compressors'",
-     "docId": "AE8-1385",
-     "url": "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1385"
-    },
-    {
-     "title": "Copeland KB 2086 'Yellow LED display in an Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2086",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2086"
-    },
-    {
-     "title": "Copeland KB 2082 'Alarm Code 2 Yellow Flash 2 in the Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2082",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2082"
-    },
-    {
-     "title": "Copeland KB 2078 'Yellow flash 3 in the Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2078",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2078"
-    },
-    {
-     "title": "Copeland KB 2079 'Yellow flash 4 in the Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2079",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2079"
-    },
-    {
-     "title": "Copeland KB 2072 'Yellow flash 9 in the Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2072",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2072"
-    },
-    {
-     "title": "Copeland KB 2075 'Red flash 6 in the Air Conditioning CoreSense Diagnostics module'",
-     "docId": "KB 2075",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2075"
-    },
-    {
-     "title": "Copeland KB 1817 'CoreSense Diagnostics Module for Air-conditioning Scroll Compressors and System Protection'",
-     "docId": "KB 1817",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1817"
-    },
-    {
-     "title": "Copeland KB 1819 'Part Numbers for CoreSense Diagnostics Modules used in Air-conditioning Scroll Compressors'",
-     "docId": "KB 1819",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1819"
-    },
-    {
-     "title": "Copeland KB 2070 'Reset the Air Conditioning CoreSense Diagnostics module alarm or TRIP/LOCKOUT'",
-     "docId": "KB 2070",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2070"
-    },
-    {
-     "title": "Copeland KB 1769 'Green Flash Code 1 on CoreSense Module'",
-     "docId": "KB 1769",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1769"
-    },
-    {
-     "title": "Copeland KB 1768 'CoreSense Red Flash Code 3'",
-     "docId": "KB 1768",
-     "url": "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1768"
-    },
-    {
-     "title": "Copeland KB 1765 'CoreSense Red Flash Code 9 for 20 to 40 Ton Copeland Scroll Air Conditioning'",
-     "docId": "KB 1765",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/1765"
-    },
-    {
-     "title": "Copeland/Emerson Comfort Alert Diagnostics User's Manual (543-0032-00 / 943-0032-00; also 543-0033-00, 543-0038-00)",
-     "docId": "Comfort Alert User's Manual",
-     "url": "https://pimmedia.winsupplyinc.com/pim/INTA/112017/INTERNATIONAL-COMFORT-PRODUCTS_1177402_ICP001177402_INTA.pdf"
-    },
-    {
-     "title": "Copeland 'Comfort Alert for Commercial Applications' User's Manual 2005ECT-191 R6 (543-0038-01/-02, 543-0071-00, 943-0038-01/-02)",
-     "docId": "2005ECT-191 R6",
-     "url": "https://media.copeland.com/43e676a7-68e7-4255-af1c-b16b00f91f73/2005ECT-191%20R6%20User%20Manual%20Comfort%20Alert%20for%20Commercial%20Applications.pdf"
-    },
-    {
-     "title": "Copeland 'Comfort Alert diagnostics for commercial applications' brochure (943-0033-00)",
-     "docId": "Comfort Alert commercial brochure",
-     "url": "http://s3.supplyhouse.com/product_files/Copeland-943-0033-00-Brochure.pdf"
-    },
-    {
-     "title": "Copeland AE8-1368 R2 'CoreSense Diagnostics v2.11 for Copeland Discus Compressors'",
-     "docId": "AE8-1368 R2",
-     "url": "https://www.copeland.com/documents/ae-bulletin-ae8-1368-r2-coresense-diagnostics-v2-11-for-copeland-discus-compressors-en-us-5245888.pdf"
-    },
-    {
-     "title": "Copeland AE8-1367 R6/R8 'CoreSense Protection for Copeland Discus Compressors' (Tables 3-5 LED flash codes - not transcribed)",
-     "docId": "AE8-1367",
-     "url": "https://www.copeland.com/documents/ae-bulletin-coresense-protection-for-discus-compressors-ae8-1367-r6-aug-2018-en-us-5245870.pdf"
-    },
-    {
-     "title": "Copeland KB 4658 'Reset a lockout on CoreSense Diagnostics V2.11'",
-     "docId": "KB 4658",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/4658"
-    }
-   ],
-   "confidence": "medium",
-   "sources": [
-    "Copeland Application Engineering Knowledge Center answer 1818 'Alert/Lock Codes for CoreSense Diagnostics module for Air-conditioning Scroll Compressors'",
-    "Copeland AE 1379 R2 'CoreSense Diagnostics for Copeland Scroll Air Conditioning Compressors'",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/1818",
-    "https://www.copeland.com/documents/ae-1379-r2-coresense-diagnostics-for-copeland-scroll-air-conditioning-compressors-en-5623056.pdf",
-    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=aeb&PDF=AE8-1408_R3.pdf",
-    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1384",
-    "https://webapps.copeland.com/online-product-information/Publication/LaunchPDF?Index=AEB&PDF=1385",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/2086",
-    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2082",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/2078",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/2079",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/2072",
-    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/2075",
-    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1817",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/1819",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/2070",
-    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1769",
-    "https://emersonclimate.custhelp.com/app/answers/detail/a_id/1768",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/1765",
-    "https://pimmedia.winsupplyinc.com/pim/INTA/112017/INTERNATIONAL-COMFORT-PRODUCTS_1177402_ICP001177402_INTA.pdf",
-    "https://media.copeland.com/43e676a7-68e7-4255-af1c-b16b00f91f73/2005ECT-191%20R6%20User%20Manual%20Comfort%20Alert%20for%20Commercial%20Applications.pdf",
-    "http://s3.supplyhouse.com/product_files/Copeland-943-0033-00-Brochure.pdf",
-    "https://www.copeland.com/documents/ae-bulletin-ae8-1368-r2-coresense-diagnostics-v2-11-for-copeland-discus-compressors-en-us-5245888.pdf",
-    "https://www.copeland.com/documents/ae-bulletin-coresense-protection-for-discus-compressors-ae8-1367-r6-aug-2018-en-us-5245870.pdf",
-    "https://copeland.custhelp.com/app/answers/detail/a_id/4658"
-   ]
-  },
-  {
-   "id": "coresense-communications-1ph",
-   "name": "Copeland CoreSense Communications / Comfort Alert diagnostics module (single-phase residential and light-commercial scrolls)",
-   "description": "Current-sensing module wired in the compressor common lead with Y and 24 V inputs; flashes a numbered ALERT code (yellow/red LED) for system faults inferred from compressor current and thermostat demand.",
-   "appliesTo": [
-    "copeland-scroll",
-    "copeland-cr-recip"
-   ],
-   "faultCodes": [
-    {
-     "code": "Flash 1",
-     "meaning": "Long Run Time",
-     "likelyCauses": [
-      "Low refrigerant charge",
-      "Evaporator/condenser airflow restriction",
-      "Undersized or heavily loaded system",
-      "Thermostat calling continuously"
-     ],
-     "checks": [
-      "Measure superheat/subcooling and compare to the unit charging chart",
-      "Check filters, coil cleanliness, blower and condenser fan operation"
-     ],
-     "severity": "info",
-     "source": "CoreSense Communications flash-event table as reproduced in the Daikin/Goodman service manual RS6200301 and Copeland module literature",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 2",
-     "meaning": "Compressor (Pressure) Trip / System Pressure Trip",
-     "likelyCauses": [
-      "High-pressure switch trip (dirty condenser, fan failure, overcharge, non-condensables)",
-      "Low-pressure switch trip (low charge, restriction, low airflow)"
-     ],
-     "checks": [
-      "Read head and suction pressure at the trip",
-      "Check HPS/LPS settings and condenser fan"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 3",
-     "meaning": "Short Cycling / Pressure Switch Cycling",
-     "likelyCauses": [
-      "Pressure switch cycling",
-      "Thermostat chatter or loose Y wiring",
-      "Low charge"
-     ],
-     "checks": [
-      "Verify thermostat demand is stable (Y voltage)",
-      "Check LPS/HPS cycling and charge"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 4",
-     "meaning": "Locked Rotor",
-     "likelyCauses": [
-      "Compressor mechanically seized or attempting to start against unequalized pressure",
-      "Failed run capacitor / start components",
-      "Low voltage at compressor terminals"
-     ],
-     "checks": [
-      "Measure voltage at compressor terminals during start (should stay above nameplate minimum)",
-      "Test run capacitor microfarads",
-      "Confirm LRA draw and immediate overload trip; check for pressure equalization time"
-     ],
-     "severity": "lockout",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 5",
-     "meaning": "Compressor (Mod Run) Trip / Open Circuit",
-     "likelyCauses": [
-      "Compressor internal overload open (hot compressor)",
-      "Open contactor, fuse, or wiring to compressor",
-      "Open winding"
-     ],
-     "checks": [
-      "Check for 24 V at Y with no compressor current",
-      "Ohm C-S-R windings after the compressor cools",
-      "Inspect contactor and wiring"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 6",
-     "meaning": "Open Start Circuit",
-     "likelyCauses": [
-      "Open start winding",
-      "Failed start capacitor / start relay, open start-circuit wiring"
-     ],
-     "checks": [
-      "Ohm C-S; compare with C-R (start winding resistance normally higher than run)",
-      "Check start capacitor and relay if fitted"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 7",
-     "meaning": "Open Run Circuit",
-     "likelyCauses": [
-      "Open run winding",
-      "Failed run capacitor or open run-circuit wiring"
-     ],
-     "checks": [
-      "Ohm C-R",
-      "Test run capacitor"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    },
-    {
-     "code": "Flash 8",
-     "meaning": "Welded Contactor",
-     "likelyCauses": [
-      "Contactor contacts welded closed - compressor runs with no Y demand",
-      "Miswired or bypassed contactor"
-     ],
-     "checks": [
-      "Compressor current present with Y de-energized",
-      "Inspect and replace the contactor"
-     ],
-     "severity": "warning",
-     "source": "CoreSense Communications flash-event table (RS6200301 / Copeland)",
-     "evidence": "single_secondary"
-    }
-   ],
-   "ledPatterns": [
-    {
-     "pattern": "Green LED on",
-     "meaning": "Module powered (24 V present)"
-    },
-    {
-     "pattern": "Yellow/red LED flashing N times, pause",
-     "meaning": "ALERT code N (see fault codes); the module does not itself shut the compressor down on most codes - it reports what the protector/controls did"
-    }
-   ],
-   "diagnosticTips": [
-    "The module learns the compressor's current profile; power-cycling 24 V clears the displayed code (fix the cause first).",
-    "Because the module infers faults from current, a wrong current-sensor lead (common lead not passed through the sensor) gives false open-circuit codes - verify installation before condemning a compressor.",
-    "Code 9 (low voltage) is on the full Copeland table but was not confirmed in this review; see the Copeland AE bulletin for the module (Comfort Alert / CoreSense Communications) for the complete table."
-   ],
-   "coverage": "partial",
-   "sourceDocs": [
-    {
-     "title": "Daikin/Goodman 'Service and Troubleshooting' RS6200301 (reproduces Copeland CoreSense Communications flash-event table)",
-     "url": "https://daikincomfort.com/docs/default-source/amst/sm-rs6200301.pdf"
-    },
-    {
-     "title": "Copeland CoreSense Technology page and AE bulletins index",
-     "url": "https://www.copeland.com/en-us/products/refrigeration/commercial-refrigeration/electronics/coresense-technology"
-    }
-   ],
-   "confidence": "medium",
-   "sources": [
-    "Daikin/Goodman service manual RS6200301 (CoreSense Communications table)",
-    "Copeland CoreSense Diagnostics alert code summaries (Beacon 'CoreSense Diagnostics: Alert Codes')"
-   ]
-  },
-  {
-   "id": "coresense-diagnostics-k5-3ph",
-   "name": "Copeland CoreSense Diagnostics for ZP K5 three-phase scrolls (AE4-1383 Table 7 module)",
-   "description": "Terminal-box module for 3-phase ZP*K5 (and ZPS K5) compressors; LED flash codes per AE4-1383 Table 7; lockout is not enabled from the factory except for code 7.",
-   "appliesTo": [
-    "copeland-scroll"
-   ],
-   "faultCodes": [
-    {
-     "code": "Code 1",
-     "meaning": "High Discharge Temperature",
-     "likelyCauses": [
-      "Low charge / high superheat",
-      "High compression ratio: dirty condenser, condenser fan failure, high head pressure",
-      "Loss of scroll cooling from low suction density"
-     ],
-     "checks": [
-      "Discharge line temperature within 6 in. of compressor (Copeland limit 225 F)",
-      "Head pressure, condenser airflow, charge and superheat"
-     ],
-     "severity": "lockout",
-     "source": "Copeland AE4-1383 R5 'Copeland Scroll K5 series', Table 7 CoreSense Diagnostics Fault Codes",
-     "evidence": "manufacturer_doc"
-    }
-   ],
-   "ledPatterns": [
-    {
-     "pattern": "LED flashes N times then pauses",
-     "meaning": "Fault code N per AE4-1383 Table 7"
-    }
-   ],
-   "diagnosticTips": [
-    "AE4-1383 states the lockout feature is not enabled from the factory except on code 7 - a compressor with a non-7 code will auto-restart after the condition clears, so check the module's fault history.",
-    "Only code 1 was transcribed in this review; Table 7 (codes 2-9) and the Table 3 troubleshooting tips live in AE4-1383 R5 (webapps2.copeland.com/ci/k5/K5-AE.pdf)."
-   ],
-   "coverage": "partial",
-   "sourceDocs": [
-    {
-     "title": "Copeland Application Engineering Bulletin AE4-1383 R5 - Copeland Scroll K5 series (Table 7 CoreSense Diagnostics fault codes)",
-     "url": "https://webapps2.copeland.com/ci/k5/K5-AE.pdf"
-    },
-    {
-     "title": "Copeland KB 3615 'CoreSense Diagnostic Module for Scroll K5 compressors'",
-     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/3615"
-    }
-   ],
-   "confidence": "medium",
-   "sources": [
-    "Copeland AE4-1383 R5, Table 7"
-   ]
-  },
-  {
-   "id": "coresense-discus",
-   "name": "Copeland CoreSense Diagnostics v2.11 / CoreSense Protection for Discus semi-hermetic compressors",
-   "description": "Compressor-mounted module (CoreSense Diagnostics has a 2-line LCD in 5 languages plus a tri-colour LED; CoreSense Protection is LED-only). Standard protection on every Discus with CoreSense: low oil pressure, excessive discharge temperature, high discharge pressure and low suction pressure; also motor overheat and locked-rotor protection.",
-   "appliesTo": [
-    "copeland-discus-semihermetic"
-   ],
-   "faultCodes": [
-    {
-     "code": "LED yellow flashing",
-     "meaning": "System trip (auto-reset): the module has tripped the compressor on a protective condition and will restart automatically once the trip condition clears",
-     "likelyCauses": [
-      "Low oil pressure (see LCD text)",
-      "High discharge temperature",
-      "High discharge pressure / low suction pressure",
-      "Motor temperature"
-     ],
-     "checks": [
-      "Read the LCD text / fault history for the tripped protection",
-      "Check oil level and oil pressure differential, discharge temperature, head and suction pressures"
-     ],
-     "severity": "warning",
-     "source": "Copeland CoreSense Diagnostics v2.11 for Copeland Discus Compressors (AE8-1368 R2) / CoreSense Protection for Discus Compressors AE bulletin Aug 2018 - LED colour description",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LED red flashing",
-     "meaning": "Lockout: manual reset required at the compressor",
-     "likelyCauses": [
-      "Repeated trips of one protection (e.g. low oil pressure lockout)",
-      "Locked rotor / motor overheat lockout"
-     ],
-     "checks": [
-      "Identify the locked-out protection on the LCD or by flash count, fix the cause, then reset per the bulletin (cycle control power to the module)"
-     ],
-     "severity": "lockout",
-     "source": "CoreSense Diagnostics v2.11 / CoreSense Protection for Discus - LED colour description",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LED green",
-     "meaning": "Normal operation - no fault",
-     "severity": "info",
-     "source": "CoreSense Diagnostics v2.11 / CoreSense Protection for Discus - LED colour description",
-     "evidence": "manufacturer_doc"
-    }
-   ],
-   "ledPatterns": [
-    {
-     "pattern": "Green",
-     "meaning": "All OK"
-    },
-    {
-     "pattern": "Yellow flashing N times",
-     "meaning": "Auto-reset trip, code N (flash count = code number; pause between repeats)"
-    },
-    {
-     "pattern": "Red flashing N times",
-     "meaning": "Lockout, code N - manual reset at the compressor"
-    },
-    {
-     "pattern": "Solid red",
-     "meaning": "See Copeland KB 2411 'Solid Red LED on CoreSense Diagnostics V2.11' (module/power problem, not a compressor fault code)"
-    }
-   ],
-   "diagnosticTips": [
-    "The flash code number is the number of LED flashes followed by a pause; the numbered code table (oil pressure, discharge temperature, motor temperature, phase loss/reversal, locked rotor, short cycling, etc.) was not transcribed in this review - it is in AE8-1368 R2/R3 Section 'Module LED description / Module operation-code description'.",
-    "Identify which module is fitted before reading codes: KB 5386 explains how to tell CoreSense Protection from CoreSense Diagnostics by part number (e.g. 571-0065-xx, 943-0128-00, 971-0067-00).",
+    "The numbered flash-code table (oil pressure, discharge temperature, motor temperature, phase loss/reversal, locked rotor, short cycling, etc.) was not transcribed in this review - it is in AE8-1368 R2/R3 'Module LED description / Module operation-code description' and, for CoreSense Protection, AE8-1367 R6/R8 Tables 3-5.",
+    "Identify which module is fitted before reading codes (KB 5386): CoreSense Diagnostics Discus units have a BOM starting with 'A'; the CoreSense Protection kit is 943-0128-00 (AE8-1367).",
+    "AE8-1368 R2 describes no yellow/orange LED state for the Discus module: steady green = normal, flashing green = warning, flashing red = trip or lockout, steady red = module failure. A yellow ALERT LED belongs to the AE8-1379 / Comfort Alert single-phase modules.",
+    "Reset: reset button below the control module, or per KB 4658; a FAILSAFE-mode module is reset per KB 4655. Lockouts require a manual reset at the compressor.",
     "Oil-pressure protection replaces the mechanical oil safety switch: a low-oil trip needs the oil level, oil return and suction-line sizing checked, not just a reset."
    ],
    "coverage": "partial",
@@ -2490,6 +2706,20 @@
     {
      "title": "Copeland KB 2411 - Solid Red LED on CoreSense Diagnostics V2.11",
      "url": "https://copeland.custhelp.com/app/answers/detail/a_id/2411"
+    },
+    {
+     "title": "Copeland AE8-1367 R6/R8 'CoreSense Protection for Copeland Discus Compressors' (Tables 3-5 LED flash codes - not transcribed)",
+     "docId": "AE8-1367",
+     "url": "https://www.copeland.com/documents/ae-bulletin-coresense-protection-for-discus-compressors-ae8-1367-r6-aug-2018-en-us-5245870.pdf"
+    },
+    {
+     "title": "Copeland KB 4658 'Reset a lockout on CoreSense Diagnostics V2.11'",
+     "docId": "KB 4658",
+     "url": "https://copeland.custhelp.com/app/answers/detail/a_id/4658"
+    },
+    {
+     "title": "Copeland KB 4655 'FAILSAFE mode on CoreSense Diagnostics V2.11'",
+     "docId": "KB 4655"
     }
    ],
    "confidence": "medium",
@@ -2602,7 +2832,7 @@
  ],
  "electrical": [
   {
-   "familyRegex": "generic-single-phase",
+   "familyRegex": "-PF[A-Z0-9]|^H\\d|^A[A-Z][A-Z]\\d{4}[A-Z]X[ADN]|^A[A-Z]\\d{4}[A-Z]|^P[AH]\\d{3}",
    "familyLabel": "Generic single-phase hermetic compressor (CSR / PSC): Copeland ZP/ZR PFV, CR PFV, Bristol, Tecumseh, rotary",
    "controlVoltage": "24 VAC from the unit transformer (TRAN) to the contactor coil; line voltage 208/230-1-60 (PFV) or 265-1-60 (PFJ) to the compressor",
    "components": [
@@ -2655,12 +2885,13 @@
    },
    "sequenceOfOperation": [
     "Cooling: thermostat Y closes 24 V to the contactor coil through the HPS/LPS safety string; contactor pulls in and applies line voltage to C and R; the run capacitor between R and S provides phase shift for the start winding (PSC); if a hard-start kit is fitted, the start capacitor is switched out by the potential relay as the motor comes up to speed.",
-    "Winding check (power off, discharged): C-R = run winding, C-S = start winding, S-R = C-R + C-S; start winding resistance is normally the higher of the two on recips, and close to the run winding on many single-phase scrolls.",
-    "Nameplate: RLA (rated load amps) is the maximum continuous current for protector/wire sizing, not the expected running current - normal running amps are usually 60-90 % of RLA; LRA is the locked-rotor inrush used to check start components and voltage drop."
+    "Winding check (power off, discharged): C-R = run winding, C-S = start winding, S-R = C-S + C-R; C-S is normally 3-5x C-R on single-phase Copeland scrolls and recips (Copeland winding-resistance guidance); an open C-S and open C-R with continuity S-R means the internal overload is open.",
+    "Nameplate: MCC = maximum continuous current (overload trip point); RLA = MCC/1.4 (contactor selection) or MCC/1.56 (wire/OCP sizing per NEC 440) - a sizing reference, not expected running amps (Copeland KB 5342 / KB 3678); normal running amps depend on the operating pressures (use the Copeland performance table); LRA is the locked-rotor inrush used to check start components and voltage drop."
    ],
    "notes": [
     "Copeland: winding resistance should be measured with a low-ohm meter at the terminals after the compressor cools; compare to the resistance table in the Copeland online product information for the exact model (values are in tenths of an ohm on large scrolls).",
-    "Low voltage at the compressor terminals (>10 % below nameplate during start) is the most common cause of nuisance overload trips and locked-rotor codes - measure at the compressor terminals, not the disconnect."
+    "Low voltage at the compressor terminals (>10 % below nameplate during start) is the most common cause of nuisance overload trips and locked-rotor codes - measure at the compressor terminals, not the disconnect.",
+    "Selector: -PF motor codes, Bristol H models, Tecumseh single-phase voltage codes (XA/XD/XN) and old-style AE/AH models, GMCC rotary. Bristol H2x models with a 460 V motor code are three-phase despite matching here - check the nameplate."
    ],
    "confidence": "medium",
    "evidence": "multi_secondary",
@@ -2668,11 +2899,13 @@
     "Copeland Scroll assembly instructions (ZP25K6E-PFV-830 article) - C/S/R terminal designations",
     "Copeland Technical Information 'Start assist components for Copeland single-phase scroll compressors'",
     "York Central Tech Talk 'Compressor Electrical Diagnostics'",
-    "refricompressor.com 'How to identify and connect compressor terminals'"
+    "refricompressor.com 'How to identify and connect compressor terminals'",
+    "Copeland KB 5342 'Difference between RLA, MOC, LRA and MCC'; Copeland KB 3678",
+    "Copeland ZR/ZP application guideline / KB 5046 (winding resistance: S-C three to five times R-C)"
    ]
   },
   {
-   "familyRegex": "generic-three-phase",
+   "familyRegex": "-T[FW][A-Z0-9]|-TS[A-Z]|^\\d[DR][A-Z]|^D?S[MYZH]\\d{3}|^VZH|^\\d[A-Z]{2,3}-|^A[A-Z][A-Z]\\d{4}[A-Z]X[TG]",
    "familyLabel": "Generic three-phase hermetic and semi-hermetic compressor (Copeland TF5/TFD/TFE scrolls, Discus, Danfoss SM/SZ/SH, Bitzer)",
    "controlVoltage": "24 VAC (packaged units) or 120/230 VAC (refrigeration racks/condensing units) to the contactor coil; line voltage 200/230, 460 or 575 V 3-phase 60 Hz to T1/T2/T3",
    "components": [
@@ -2733,8 +2966,9 @@
     "Semi-hermetic oil pressure: net oil pressure = oil pump discharge minus crankcase (suction) pressure; Copeland Discus oil-pressure protection trips after a delay when net oil pressure is below the module threshold."
    ],
    "notes": [
-    "Copeland TFD (460-3-60) compressors will run on 480 V nominal systems; check the nameplate voltage range (e.g. 414-506 V).",
-    "Phase monitors on rooftop units are usually in the low-voltage safety string; a unit that will not start after a utility outage with a 'reversed' phase monitor LED needs two line leads swapped at the disconnect."
+    "Copeland TFD (460-3-60) compressors will run on 480 V nominal systems; check the voltage range on the nameplate (no Copeland source for a specific TFD range was found in this review).",
+    "Phase monitors on rooftop units are usually in the low-voltage safety string; a unit that will not start after a utility outage with a 'reversed' phase monitor LED needs two line leads swapped at the disconnect.",
+    "Selector: -TF/-TW/-TS motor codes, Discus/Copelametic and Bitzer semi-hermetics, Danfoss SM/SY/SZ/SH/VZH, Tecumseh three-phase voltage codes (XT/XG)."
    ],
    "confidence": "medium",
    "evidence": "multi_secondary",
@@ -2935,7 +3169,7 @@
     "No pump-down; liquid migrates to the compressor on the off cycle (crankcase heater failed or missing)"
    ],
    "checks": [
-    "Measure suction superheat at the compressor (Copeland minimum ~20 F on refrigeration, ~10 F on A/C)",
+    "Measure suction superheat at the compressor: Copeland minimum 20 F (11 K) measured 6 in. from the suction valve (KB 3134); OEM charging charts govern the A/C target superheat",
     "Verify crankcase heater is warm at shutdown",
     "Check TXV bulb mounting/insulation and evaporator airflow",
     "On semi-hermetics remove the head and inspect valve plates if knocking persists"
@@ -2943,7 +3177,8 @@
    "confidence": "medium",
    "evidence": "single_secondary",
    "sources": [
-    "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series (liquid floodback)"
+    "Copeland Application Guidelines Semi-Hermetic Compressors Discus, K, L & S-Series (liquid floodback)",
+    "Copeland KB 3134 (minimum 20 F / 11 K suction superheat at the compressor)"
    ]
   },
   {
@@ -2983,7 +3218,7 @@
     "Check suction/discharge temperatures per compressor for imbalance",
     "Confirm both contactors and rotation"
    ],
-   "appliesTo": "^Z[PRBF]T|^Z",
+   "appliesTo": "^Z[PRBF]T",
    "confidence": "low",
    "evidence": "inferred"
   },
@@ -3034,13 +3269,14 @@
     "Different rating conditions (A/C vs refrigeration) for the same capacity digits"
    ],
    "checks": [
-    "Normal running amps are typically 60-90 % of RLA at design conditions; above RLA sustained means a problem (high head, low voltage, mechanical)",
+    "MCC = maximum continuous current (overload trip); RLA = MCC/1.4 (contactor) or MCC/1.56 (wire/OCP) - a sizing reference, not expected running amps (Copeland KB 5342); sustained amps above MCC trip the protector - look for high head, low voltage or mechanical problems",
     "Use the Copeland Online Product Information performance table for the model at the measured pressures for the expected amps"
    ],
    "confidence": "medium",
    "evidence": "single_secondary",
    "sources": [
-    "Copeland Online Product Information (webapps.copeland.com/online-product-information)"
+    "Copeland Online Product Information (webapps.copeland.com/online-product-information)",
+    "Copeland KB 5342 'Difference between RLA, MOC, LRA and MCC'"
    ]
   },
   {
@@ -3062,14 +3298,14 @@
   "phone": "(833) 409-7505 (Copeland contractor/technician technical support; alternate (800) 284-2925)",
   "url": "https://www.copeland.com/en-us/training-support/technical-support",
   "literatureUrl": "https://webapps.copeland.com/online-product-information/",
-  "literatureSearchHint": "Copeland: enter the full model (e.g. ZP54K5E-TF5-830) in Online Product Information for performance tables, wiring/BOM and winding data; AE bulletins (AE4-1383 K5 scroll, AE8-1368 Discus CoreSense, AE 1379 AC CoreSense) at copeland.com > Documents, and the Knowledge Center at copeland.custhelp.com. Danfoss: search the model (SH184A4ALC) or code number (120H0361) at store.danfoss.com / designcenter.danfoss.com for the datasheet and the family 'Application guidelines' PDF. Bitzer: bitzer.de BITZER Software for the model. Tecumseh: tproduct.tecumseh.com model lookup. Bristol: legacy catalogs only (bristol-compressors.com).",
+  "literatureSearchHint": "Copeland: enter the full model (e.g. ZP54K5E-TF5-830) in Online Product Information for performance tables, wiring/BOM and winding data; AE bulletins (AE4-1383 ZB/ZF K5 refrigeration scroll, AE8-1368 Discus CoreSense, AE 1379 AC CoreSense) at copeland.com > Documents, and the Knowledge Center at copeland.custhelp.com. Danfoss: search the model (SH184A4ALC) or code number (120H0361) at store.danfoss.com / designcenter.danfoss.com for the datasheet and the family 'Application guidelines' PDF. Bitzer: bitzer.de BITZER Software for the model. Tecumseh: tproduct.tecumseh.com model lookup. Bristol: legacy catalogs only (bristol-compressors.com).",
   "notes": "Danfoss North America compressor technical support and Bitzer US phone numbers were not confirmed in this review - use the manufacturer web contact pages."
  },
  "notes": [
   "This pack covers compressor nameplates (model + serial on the compressor shell), which are independent of the unit brand. Use it after the unit pack: a decoded compressor model confirms refrigerant, capacity and motor voltage, and the compressor date code cross-checks an ambiguous unit serial.",
-  "Serial date rules: Copeland is manufacturer-confirmed (high). Bristol and Tecumseh rules are from a single secondary source (low) and Danfoss was not resolved (see unresolved).",
-  "Fault codes are only those transcribed from Copeland/Danfoss documents or a service manual that reproduces them; every control platform is marked 'partial' and points to the bulletin holding the full table.",
-  "Nomenclature confidence: Copeland scroll and CR are high (manufacturer catalog/brochure); Copeland Discus and Bitzer medium; Danfoss, Bristol, Tecumseh and GMCC low."
+  "Serial date rules: Copeland is manufacturer-confirmed (high). Bristol, Scroll Technologies and Tecumseh rules are from a single secondary source (low). Danfoss/Maneurop scroll and MT/MTZ serial date rules were not found; the Danfoss date-code document found (week/year/day/hour, e.g. 051D11) applies to Danfoss Compressors GmbH household compressors (now Secop), not to Performer scrolls. Scroll Technologies (Bristol scroll, Danfoss from 2006) serials are covered by the S+week+year format.",
+  "Fault codes are only those transcribed from Copeland/Danfoss documents or a service manual that reproduces them; every control platform is marked 'partial' and points to the bulletin holding the full table. Copeland modules are split by product (AE8-1379 single-phase, AE8-1408/1384 three-phase Communications, Comfort Alert, ZB/ZF K5, Discus) because the same flash count means different things on each; platforms are selected by motor code / family regex, not listed per model format.",
+  "Nomenclature confidence: Copeland scroll and CR are high (manufacturer catalog/brochure); Copeland scroll M-multiplier, Discus and Bitzer medium; Danfoss, Bristol, Tecumseh (both styles) and GMCC low."
  ],
  "sources": [
   "Copeland Application Engineering Knowledge Center answer 4983 - Determine compressor's date of manufacture using the serial number",
@@ -3081,7 +3317,7 @@
   "Copeland Scroll compressors Bill of Material (BOM) overview, Technical Information",
   "Copeland Discus Compressor Replacement Guide 2020ECT-42; Copeland Discus nomenclature chart",
   "Copeland KB 1818 - Alert/Lock codes for CoreSense Diagnostics module for air-conditioning scroll compressors; AE 1379 R2",
-  "Copeland AE4-1383 R5 Copeland Scroll K5 series (Table 7)",
+  "Copeland AE4-1383 R5 Application Guidelines for ZFK5E & ZBK5E Copeland Scroll Compressors (Table 7); AE8-1424",
   "Copeland AE8-1368 R2 CoreSense Diagnostics v2.11 for Discus; CoreSense Protection for Discus Compressors (Aug 2018)",
   "Copeland KB 2070, 2411, 3615, 5386",
   "Daikin/Goodman Service and Troubleshooting RS6200301 (CoreSense Communications flash events)",
@@ -3090,7 +3326,11 @@
   "Bristol Compressors - Compressor Model Number System (Neuco ybristol.pdf); Bristol catalog data H23A423DBEA",
   "Tecumseh AH5540E Service Handbook - Compressor Model Number Codes; Tecumseh cross reference UNI-194395; Tecumseh product pages",
   "Bitzer - Explanation of model designations (at-310); Bitzer ECOLINE product pages",
-  "Copeland contractors and technicians technical support page (copeland.com)"
+  "Copeland contractors and technicians technical support page (copeland.com)",
+  "Copeland KB 992 - Copeland Scroll Refrigeration Compressor Model Number and Refrigerant",
+  "Copeland KB 5342 / KB 3678 (RLA, MCC, LRA); KB 3134 (minimum superheat)",
+  "Danfoss AB237986441643 - Scroll compressors SM SY SZ nomenclature",
+  "Copeland AE8-1408 R3 / AE8-1384 CoreSense Communications; AE8-1379 R2 CoreSense Diagnostics; Comfort Alert user's manuals"
  ],
  "confidence": "medium",
  "lastReviewed": "2026-09-26"
