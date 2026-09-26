@@ -36,6 +36,13 @@ PURE = {
     "R-23": "R23",
 }
 KIND = {"R-410A": "zeotrope", "R-407C": "zeotrope", "R-404A": "zeotrope", "R-507A": "azeotrope"}
+# ASHRAE 34: 400-series = zeotrope, 500-series = azeotrope (type is by designation, not by measured glide)
+BLEND_TCRIT_F = {  # published critical temperatures, °F (manufacturer / ASHRAE data)
+    "R-454B": 172.3, "R-448A": 181.6, "R-449A": 180.0, "R-407A": 180.1, "R-407F": 180.1, "R-452A": 167.2,
+    "R-513A": 205.5, "R-422D": 174.9, "R-438A": 183.9, "R-417A": 191.5, "R-421A": 180.3, "R-422B": 183.0,
+    "R-427A": 186.8, "R-434A": 175.1, "R-454A": 189.5, "R-454C": 187.9, "R-455A": 185.4, "R-450A": 220.5,
+    "R-515B": 226.4, "R-502": 179.9, "R-500": 221.9, "R-408A": 182.5, "R-402A": 167.2, "R-401A": 226.0, "R-409A": 224.4,
+}
 
 # Blends built from mass fractions (ASHRAE 34 nominal compositions)
 BLENDS = {
@@ -124,6 +131,42 @@ def prepare_blend(name, comp):
     return fluid, approx
 
 
+def _sat_point(fluid, tf, guess_pb=None, guess_pd=None):
+    """Bubble/dew psig at tf (°F). Tries T,Q first; on failure for mixtures, bisects on pressure with P,Q → T."""
+    T = f_to_k(tf)
+    try:
+        pb = pa_to_psig(CP.PropsSI("P", "T", T, "Q", 0, fluid))
+        pd = pa_to_psig(CP.PropsSI("P", "T", T, "Q", 1, fluid))
+        if math.isfinite(pb) and math.isfinite(pd):
+            return pb, pd
+    except Exception:
+        pass
+    if guess_pb is None:
+        return None
+
+    def solve(q, guess):
+        lo, hi = guess * 0.98, guess * 1.15
+        try:
+            for _ in range(60):
+                mid = 0.5 * (lo + hi)
+                t = k_to_f(CP.PropsSI("T", "P", (mid + ATM_PSI) / PSI_PER_PA, "Q", q, fluid))
+                if abs(t - tf) < 0.01:
+                    return mid
+                if t < tf:
+                    lo = mid
+                else:
+                    hi = mid
+            return 0.5 * (lo + hi)
+        except Exception:
+            return None
+
+    pb = solve(0, guess_pb)
+    pd = solve(1, guess_pd)
+    if pb is None or pd is None:
+        return None
+    return pb, pd
+
+
 def sat_table(fluid, is_blend):
     tcrit_f = None
     tmax = T_MAX_F
@@ -131,25 +174,40 @@ def sat_table(fluid, is_blend):
         tcrit_f = k_to_f(CP.PropsSI("Tcrit", fluid))
         tmax = min(T_MAX_F, math.floor(tcrit_f) - 1)
     temps, bub, dew = [], [], []
+    extrapolated_above = None
     for tf in range(T_MIN_F, tmax + 1):
-        T = f_to_k(tf)
-        try:
-            pb = pa_to_psig(CP.PropsSI("P", "T", T, "Q", 0, fluid))
-            pd = pa_to_psig(CP.PropsSI("P", "T", T, "Q", 1, fluid))
-        except Exception:
-            if temps and tf > 100:
-                break  # approaching critical region for a blend
-            continue
-        if not (math.isfinite(pb) and math.isfinite(pd)) or pb < pd - 0.05:
+        pt = _sat_point(fluid, tf, bub[-1] if bub else None, dew[-1] if dew else None)
+        if pt is None:
             if temps and tf > 100:
                 break
             continue
-        if temps and (pb <= bub[-1] or pd <= dew[-1]):
-            break  # pressure must rise monotonically with temperature
+        pb, pd = pt
+        if pb < pd - 0.05 or (temps and (pb <= bub[-1] or pd <= dew[-1])):
+            if temps and tf > 100:
+                break
+            continue
         temps.append(tf)
         bub.append(round(pb, 2))
         dew.append(round(pd, 2))
-    return temps, bub, dew, tcrit_f
+    # Extrapolate blends that stopped short of 150 F with a Clausius-Clapeyron fit (ln P vs 1/T) of the last 10 points.
+    if is_blend and temps and temps[-1] < 150:
+        extrapolated_above = temps[-1]
+        n = min(10, len(temps))
+        xs = [1.0 / f_to_k(t) for t in temps[-n:]]
+        for col in (bub, dew):
+            ys = [math.log(p + ATM_PSI) for p in col[-n:]]
+            mx, my = sum(xs) / n, sum(ys) / n
+            slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
+            col.append(slope)  # stash slope temporarily
+        sb, sd = bub.pop(), dew.pop()
+        ib = math.log(bub[-1] + ATM_PSI) - sb / f_to_k(temps[-1])
+        idd = math.log(dew[-1] + ATM_PSI) - sd / f_to_k(temps[-1])
+        for tf in range(temps[-1] + 1, 151):
+            invT = 1.0 / f_to_k(tf)
+            temps.append(tf)
+            bub.append(round(math.exp(sb * invT + ib) - ATM_PSI, 2))
+            dew.append(round(math.exp(sd * invT + idd) - ATM_PSI, 2))
+    return temps, bub, dew, tcrit_f, extrapolated_above
 
 
 def main():
@@ -162,10 +220,10 @@ def main():
         try:
             if comp is not None:
                 fluid, approx = prepare_blend(name, comp)
-                kind = "zeotrope"
+                kind = "azeotrope" if name.startswith("R-5") else "zeotrope"
             elif name in KIND:
                 kind = KIND[name]
-            temps, bub, dew, tcrit_f = sat_table(fluid, comp is not None)
+            temps, bub, dew, tcrit_f, extrapolated_above = sat_table(fluid, comp is not None)
         except Exception as e:
             print(f"SKIP {name}: {str(e)[:120]}", file=sys.stderr)
             continue
@@ -179,10 +237,10 @@ def main():
             pb = bub[i]
             Td = CP.PropsSI("T", "P", (pb + ATM_PSI) / PSI_PER_PA, "Q", 1, fluid)
             glide = round(k_to_f(Td) - 40.0, 1)
-            if abs(glide) < 0.25 and kind == "zeotrope" and comp is not None:
-                kind = "azeotrope" if glide < 0.15 else kind
         except Exception:
             pass
+        if tcrit_f is None and name in BLEND_TCRIT_F:
+            tcrit_f = BLEND_TCRIT_F[name]
         table = {"id": name, "tempF": temps, "bubblePsig": bub, "dewPsig": dew}
         fname = name.replace("(", "").replace(")", "").replace("/", "-") + ".json"
         with open(os.path.join(OUT, fname), "w") as fh:
@@ -201,6 +259,9 @@ def main():
         if approx:
             entry["approximate"] = True
             entry["approximatePairs"] = approx
+        if extrapolated_above is not None:
+            entry["extrapolatedAboveF"] = extrapolated_above
+        entry["tableSource"] = "coolprop_predefined" if comp is None else ("coolprop_mixture_approx" if approx else "coolprop_mixture")
         meta.append(entry)
         flag = " (approx)" if approx else ""
         print(f"{name}: {len(temps)} pts, 40F bubble {bub[temps.index(40)] if 40 in temps else '-'} psig, glide {glide}{flag}")

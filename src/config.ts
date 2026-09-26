@@ -40,6 +40,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     claudeFallbacks: (env.CLAUDE_FALLBACKS ?? "default").toLowerCase() === "off" ? "off" : "default",
     enableWebSearch: /^(1|true|yes)$/i.test(env.ENABLE_WEB_SEARCH ?? ""),
     maxToolIterations: Number.parseInt(env.MAX_TOOL_ITERATIONS ?? "12", 10) || 12,
+    replayImageWindow: Math.max(0, Number.parseInt(env.REPLAY_IMAGE_WINDOW ?? "10", 10) || 0),
     knowledgeDir: resolve(PROJECT_ROOT, "knowledge"),
     webDir: resolve(PROJECT_ROOT, "web"),
   };

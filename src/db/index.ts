@@ -14,6 +14,11 @@ export function newId(): string {
   throw new Error("not implemented");
 }
 
+/** Public ids are 16 lowercase hex chars. Routes reject anything else with 400. */
+export function isId(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-f]{16}$/.test(value);
+}
+
 export function nowIso(): string {
   return new Date().toISOString();
 }

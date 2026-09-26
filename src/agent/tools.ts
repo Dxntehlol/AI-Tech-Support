@@ -11,13 +11,15 @@ export interface ToolContext {
 }
 
 export interface ToolOutcome {
-  /** Text returned to the model as the tool_result content. */
+  /** Text returned to the model as the tool_result content (compact JSON, ≤ 8 kB). */
   content: string;
   isError?: boolean;
   /** Short human label for the UI chip, e.g. "PT: R-410A 118 psig → 40 °F". */
   summary: string;
-  /** Side effects the loop should apply (e.g. conversation now attached to a unit). */
+  /** Side effects the loop should apply. */
   attachUnitId?: string;
+  setTitle?: string;
+  setSummary?: string;
 }
 
 /** Tool definitions sent to the API (custom tools only; server tools are added by the loop). */
