@@ -1,3 +1,410 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>HVAC Field Assistant</title></head>
-<body><p>UI placeholder — built by the web module.</p></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#101214">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>HVAC Field Assistant</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="offline-banner" class="offline-banner" role="status" hidden>You're offline. Chat needs a connection; saved units are still readable.</div>
+
+  <div id="app" class="app">
+    <!-- Top bar (phones + small tablets) -->
+    <header class="topbar" role="banner">
+      <button id="btn-menu" class="icon-btn" type="button" aria-label="Open history and units" aria-controls="sidebar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="topbar-title">
+        <div id="topbar-title" class="topbar-title-text">HVAC Field Assistant</div>
+        <div id="topbar-sub" class="topbar-sub"></div>
+      </div>
+      <span id="demo-badge" class="chip chip-warn" hidden>Demo</span>
+      <button id="btn-theme" class="icon-btn" type="button" aria-label="Toggle light or dark theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.5 0-1-.1-1.4A5.5 5.5 0 0 1 13.4 3.1C13 3 12.5 3 12 3z"/></svg>
+      </button>
+      <button id="btn-unit" class="icon-btn" type="button" aria-label="Open unit panel" aria-controls="unitpanel" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+      </button>
+    </header>
+
+    <!-- Sidebar: search, conversations, units -->
+    <aside id="sidebar" class="sidebar" aria-label="History and units">
+      <div class="panel-head">
+        <h2 class="panel-title">History</h2>
+        <button id="btn-close-sidebar" class="icon-btn phone-only" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-scroll">
+        <label class="search-field">
+          <span class="sr-only">Search conversations, findings and units</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="Search history…" autocomplete="off" enterkeyhint="search">
+        </label>
+        <div id="search-results" class="list" role="list" hidden></div>
+
+        <button id="btn-new-conv" class="btn btn-primary btn-block" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          New conversation
+        </button>
+
+        <section class="side-section" aria-labelledby="units-heading">
+          <div class="side-section-head">
+            <h3 id="units-heading">Units</h3>
+            <button id="btn-units-refresh" class="text-btn" type="button">Refresh</button>
+          </div>
+          <div id="units-list" class="list" role="list"></div>
+        </section>
+
+        <section class="side-section" aria-labelledby="conv-heading">
+          <div class="side-section-head">
+            <h3 id="conv-heading">Conversations</h3>
+            <button id="btn-conv-filter-clear" class="text-btn" type="button" hidden>All</button>
+          </div>
+          <div id="conv-filter" class="filter-note" hidden></div>
+          <div id="conv-list" class="list" role="list"></div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Chat -->
+    <main id="chat" class="chat" aria-label="Chat">
+      <div class="chat-head desktop-only">
+        <div class="chat-head-text">
+          <div id="chat-title" class="chat-title">New conversation</div>
+          <div id="chat-unit" class="chat-unit"></div>
+        </div>
+        <button id="btn-conv-delete" class="icon-btn" type="button" aria-label="Delete this conversation" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+        </button>
+      </div>
+
+      <div id="banners" class="banners" aria-live="polite"></div>
+
+      <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions text">
+        <div id="empty-state" class="empty-state">
+          <div class="empty-title">Start a job</div>
+          <p class="empty-sub">Snap the nameplate, enter gauge readings, or describe the complaint. The assistant remembers every unit you attach.</p>
+        </div>
+      </div>
+
+      <div id="quick-chips" class="quick-chips" role="group" aria-label="Quick start">
+        <button class="chip-btn" type="button" data-quick="decode">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><rect x="8" y="9" width="8" height="6" rx="1"/></svg>
+          Decode a nameplate
+        </button>
+        <button class="chip-btn" type="button" data-quick="readings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13l3-4M12 5V3"/></svg>
+          Refrigeration cycle check
+        </button>
+        <button class="chip-btn" type="button" data-quick="dead">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+          Unit is dead — electrical
+        </button>
+        <button class="chip-btn" type="button" data-quick="fault">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17.5A2 2 0 0 0 4.2 20.5h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          Look up a fault code
+        </button>
+        <button class="chip-btn" type="button" data-quick="history">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v4l3 2"/></svg>
+          What did we do last time on this unit?
+        </button>
+      </div>
+
+      <div class="composer" id="composer">
+        <div id="image-previews" class="image-previews" hidden></div>
+        <div class="composer-row">
+          <button id="btn-attach" class="icon-btn" type="button" aria-label="Attach or take a photo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          </button>
+          <label class="sr-only" for="composer-input">Message</label>
+          <textarea id="composer-input" rows="1" placeholder="Message or readings…" enterkeyhint="send" autocapitalize="sentences"></textarea>
+          <button id="btn-send" class="icon-btn icon-btn-accent" type="button" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-5 16-3-6-8-2z"/></svg>
+          </button>
+          <button id="btn-stop" class="icon-btn icon-btn-danger" type="button" aria-label="Stop response" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          </button>
+        </div>
+        <input id="file-input" type="file" accept="image/*" capture="environment" multiple hidden>
+        <input id="file-camera" type="file" accept="image/*" capture="environment" hidden>
+      </div>
+    </main>
+
+    <!-- Unit panel -->
+    <aside id="unitpanel" class="unitpanel" aria-label="Unit">
+      <div class="panel-head">
+        <h2 class="panel-title">Unit</h2>
+        <button id="btn-close-unit" class="icon-btn phone-only" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="unit-scroll">
+        <div id="unit-header" class="unit-header" hidden></div>
+
+        <form id="unit-form" class="form" autocomplete="off" novalidate>
+          <div class="form-grid">
+            <label class="field"><span>Manufacturer (hint)</span><input name="manufacturer" id="u-manufacturer" type="text" placeholder="Carrier, Trane, Lennox…"></label>
+            <label class="field"><span>Model</span><input name="model" id="u-model" type="text" placeholder="48TCDD08A2A5" autocapitalize="characters" spellcheck="false"></label>
+            <label class="field"><span>Serial</span><input name="serial" id="u-serial" type="text" placeholder="1219C12345" autocapitalize="characters" spellcheck="false"></label>
+            <label class="field"><span>Unit tag</span><input name="unit_tag" id="u-tag" type="text" placeholder="RTU-7"></label>
+            <label class="field"><span>Nickname</span><input name="nickname" id="u-nickname" type="text" placeholder="Kitchen roof unit"></label>
+            <label class="field"><span>Site</span><input name="site" id="u-site" type="text" placeholder="Main St store"></label>
+            <label class="field"><span>Customer</span><input name="customer" id="u-customer" type="text"></label>
+            <label class="field"><span>Elevation (ft)</span><input name="elevation_ft" id="u-elevation" type="text" inputmode="decimal" placeholder="0"></label>
+          </div>
+          <div id="unit-form-error" class="field-error" role="alert" hidden></div>
+          <div class="btn-row">
+            <button id="btn-decode" class="btn btn-primary" type="submit">Decode</button>
+            <button id="btn-save-unit" class="btn" type="button">Save unit</button>
+            <button id="btn-clear-unit" class="btn btn-ghost" type="button">Clear</button>
+          </div>
+        </form>
+
+        <div id="decode-card" class="decode-card" hidden></div>
+
+        <div id="unit-actions" class="btn-row" hidden>
+          <button id="btn-attach-unit" class="btn btn-primary" type="button">Attach to conversation</button>
+          <button id="btn-new-conv-unit" class="btn" type="button">New conversation on this unit</button>
+          <button id="btn-archive-unit" class="btn btn-danger-ghost" type="button">Archive unit</button>
+        </div>
+
+        <section id="findings-section" class="unit-section" aria-labelledby="findings-heading" hidden>
+          <h3 id="findings-heading">Findings</h3>
+          <div id="findings-list" class="list" role="list"></div>
+        </section>
+
+        <section id="unit-convs-section" class="unit-section" aria-labelledby="unit-convs-heading" hidden>
+          <h3 id="unit-convs-heading">Conversations on this unit</h3>
+          <div id="unit-convs-list" class="list" role="list"></div>
+        </section>
+
+        <section class="unit-section" aria-labelledby="calc-heading">
+          <h3 id="calc-heading">Calculators</h3>
+          <div id="calculators" class="accordion">
+
+            <details class="calc" data-calc="pt">
+              <summary>PT lookup</summary>
+              <form class="form" novalidate>
+                <label class="field"><span>Refrigerant</span><select name="refrigerant" class="refrigerant-select"></select></label>
+                <div class="form-grid">
+                  <label class="field"><span>Pressure (psig)</span><input name="psig" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>or temperature (°F)</span><input name="temp_f" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Elevation (ft)</span><input name="elevation_ft" type="text" inputmode="decimal" class="elevation-input"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Look up</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="shsc">
+              <summary>Superheat / subcooling</summary>
+              <form class="form" novalidate>
+                <label class="field"><span>Refrigerant</span><select name="refrigerant" class="refrigerant-select"></select></label>
+                <div class="form-grid">
+                  <label class="field"><span>Suction (psig)</span><input name="suctionPsig" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Suction line (°F)</span><input name="suctionLineTempF" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Liquid (psig)</span><input name="liquidPsig" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Liquid line (°F)</span><input name="liquidLineTempF" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Elevation (ft)</span><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="voltage_imbalance">
+              <summary>Voltage imbalance</summary>
+              <form class="form" novalidate>
+                <div class="form-grid">
+                  <label class="field"><span>V A–B</span><input name="vab" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>V B–C</span><input name="vbc" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>V C–A</span><input name="vca" type="text" inputmode="decimal"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="capacitor_under_load">
+              <summary>Capacitor under load</summary>
+              <form class="form" novalidate>
+                <div class="form-grid">
+                  <label class="field"><span>Amps (cap lead)</span><input name="amps" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Volts across cap</span><input name="volts" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Rated µF</span><input name="ratedUf" type="text" inputmode="decimal"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="temp_rise_cfm">
+              <summary>Temp-rise CFM</summary>
+              <form class="form" novalidate>
+                <div class="form-grid">
+                  <label class="field"><span>Input BTUh</span><input name="inputBtuh" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Efficiency %</span><input name="efficiencyPercent" type="text" inputmode="decimal" value="80"></label>
+                  <label class="field"><span>Temp rise (°F)</span><input name="riseF" type="text" inputmode="decimal"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="winding_check">
+              <summary>Winding check</summary>
+              <form class="form" novalidate>
+                <label class="field"><span>Phase</span>
+                  <select name="phase"><option value="1">Single-phase (C–S, C–R, S–R)</option><option value="3">Three-phase (T1–T2, T2–T3, T3–T1)</option></select>
+                </label>
+                <div class="form-grid">
+                  <label class="field"><span>R1 (Ω)</span><input name="r1" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>R2 (Ω)</span><input name="r2" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>R3 (Ω)</span><input name="r3" type="text" inputmode="decimal"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+            <details class="calc" data-calc="psychrometrics">
+              <summary>Psychrometrics</summary>
+              <form class="form" novalidate>
+                <div class="form-grid">
+                  <label class="field"><span>Dry bulb (°F)</span><input name="dbF" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Wet bulb (°F)</span><input name="wbF" type="text" inputmode="decimal"></label>
+                  <label class="field"><span>Elevation (ft)</span><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"></label>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                <div class="calc-result" hidden></div>
+              </form>
+            </details>
+
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Bottom tab bar (phones) -->
+    <nav id="tabbar" class="tabbar" aria-label="Sections">
+      <button class="tab" type="button" data-tab="chat" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg><span>Chat</span>
+      </button>
+      <button class="tab" type="button" data-tab="units">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg><span>Units</span>
+      </button>
+      <button class="tab" type="button" data-tab="readings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13l3-4M12 5V3"/></svg><span>Readings</span>
+      </button>
+      <button class="tab" type="button" data-tab="history">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v4l3 2"/></svg><span>History</span>
+      </button>
+      <button class="tab" type="button" data-tab="settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="backdrop" class="backdrop" hidden></div>
+
+  <!-- Readings bottom sheet -->
+  <section id="sheet-readings" class="sheet" role="dialog" aria-modal="true" aria-labelledby="readings-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="readings-title">Refrigeration readings</h2>
+      <button id="btn-readings-close" class="icon-btn" type="button" aria-label="Close readings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <form id="readings-form" class="form" autocomplete="off" novalidate>
+        <div class="form-grid">
+          <label class="field"><span>Circuit</span><input name="circuit" type="text" placeholder="1"></label>
+          <label class="field"><span>Refrigerant</span><select name="refrigerant" class="refrigerant-select"></select></label>
+          <label class="field"><span>Metering device</span>
+            <select name="meteringDevice"><option value="txv">TXV</option><option value="fixed">Fixed orifice / piston</option><option value="eev">EEV</option><option value="unknown">Unknown</option></select>
+          </label>
+          <label class="field"><span>Mode</span>
+            <select name="mode"><option value="ac_cooling">AC cooling</option><option value="heat_pump_cooling">Heat pump — cooling</option><option value="heat_pump_heating">Heat pump — heating</option><option value="refrigeration">Refrigeration</option></select>
+          </label>
+        </div>
+        <h3 class="form-subhead">Refrigerant side</h3>
+        <div class="form-grid">
+          <label class="field"><span>Suction (psig)</span><input name="suctionPsig" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Suction line (°F)</span><input name="suctionLineTempF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Liquid (psig)</span><input name="liquidPsig" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Liquid line (°F)</span><input name="liquidLineTempF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Discharge line (°F)</span><input name="dischargeLineTempF" type="text" inputmode="decimal"></label>
+        </div>
+        <h3 class="form-subhead">Air side</h3>
+        <div class="form-grid">
+          <label class="field"><span>Outdoor DB (°F)</span><input name="outdoorDbF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Entering DB (°F)</span><input name="indoorDbF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Entering WB (°F)</span><input name="indoorWbF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Supply DB (°F)</span><input name="supplyDbF" type="text" inputmode="decimal"></label>
+          <label class="field"><span>ESP (in. wc)</span><input name="externalStaticInWc" type="text" inputmode="decimal"></label>
+        </div>
+        <h3 class="form-subhead">Electrical and status</h3>
+        <div class="form-grid">
+          <label class="field"><span>Amps L1</span><input name="compressorAmps" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Amps L2</span><input name="compressorAmpsL2" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Amps L3</span><input name="compressorAmpsL3" type="text" inputmode="decimal"></label>
+          <label class="field"><span>RLA</span><input name="compressorRla" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Capacity %</span><input name="capacityPercent" type="text" inputmode="decimal"></label>
+          <label class="field"><span>Economizer</span>
+            <select name="economizerPosition"><option value="">—</option><option value="closed">Closed</option><option value="minimum">Minimum</option><option value="open">Open</option><option value="unknown">Unknown</option></select>
+          </label>
+          <label class="field"><span>Elevation (ft)</span><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"></label>
+        </div>
+        <div id="readings-error" class="field-error" role="alert" hidden></div>
+        <div class="btn-row sticky-actions">
+          <button id="btn-diagnose" class="btn btn-primary" type="submit">Diagnose</button>
+          <button id="btn-readings-send" class="btn" type="button">Send to chat</button>
+        </div>
+      </form>
+      <div id="readings-result" class="dx-result" hidden></div>
+    </div>
+  </section>
+
+  <!-- Settings sheet -->
+  <section id="sheet-settings" class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="settings-title">Settings</h2>
+      <button id="btn-settings-close" class="icon-btn" type="button" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <form id="settings-form" class="form" novalidate>
+        <label class="field"><span>Theme</span>
+          <select name="theme" id="s-theme"><option value="auto">Follow system</option><option value="dark">Dark (low light)</option><option value="light">Light (sunlight)</option></select>
+        </label>
+        <label class="field"><span>API base URL</span><input name="apiBase" id="s-apibase" type="url" placeholder="Same origin (leave empty)" autocapitalize="off" spellcheck="false"></label>
+        <input type="text" name="username" value="hvac" autocomplete="username" class="sr-only" tabindex="-1" aria-hidden="true">
+        <label class="field"><span>Password (sent as Bearer token)</span><input name="token" id="s-token" type="password" autocomplete="current-password"></label>
+        <div id="settings-error" class="field-error" role="alert" hidden></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="submit">Save</button>
+          <a id="link-export" class="btn" href="/api/export" download="hvac-export.json">Export JSON</a>
+        </div>
+      </form>
+      <div id="health-info" class="health-info"></div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/marked.umd.js"></script>
+  <script src="vendor/purify.min.js"></script>
+  <script src="config.js" onerror="this.remove()"></script>
+  <script src="app.js"></script>
+</body>
+</html>
