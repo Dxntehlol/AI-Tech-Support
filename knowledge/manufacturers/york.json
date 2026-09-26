@@ -1,0 +1,539 @@
+{
+  "id": "york",
+  "manufacturer": "York (Johnson Controls Ducted Systems)",
+  "brands": ["York", "Coleman", "Luxaire", "Fraser-Johnston", "Champion", "Johnson Controls"],
+  "aliases": ["JCI", "Johnson Controls", "York International", "Unitary Products Group", "UPG", "Coleman Evcon", "Evcon", "Source 1"],
+  "serialFormats": [
+    {
+      "id": "york-legacy-letters-1971-1991",
+      "description": "Legacy 10-character York serial (1971 - Oct 2004): four letters + six-digit sequence. Letter 1 = plant, letter 2 = month, letter 3 = year, letter 4 = item type (M = mfg. basic unit, P = purchased basic unit, S/T = low-side item, Y/Z = accessory). Year letters cycle every 21 years; this entry is the FIRST cycle (A = 1971 ... Y = 1991).",
+      "eraStart": 1971,
+      "eraEnd": 1991,
+      "regex": "^([A-Z])([A-HK-N])([A-HJ-NPR-TV-Y])([A-Z])(\\d{6})$",
+      "date": {
+        "method": "letterYear",
+        "yearGroup": 3,
+        "map": {
+          "A": 1971, "B": 1972, "C": 1973, "D": 1974, "E": 1975, "F": 1976, "G": 1977, "H": 1978,
+          "J": 1979, "K": 1980, "L": 1981, "M": 1982, "N": 1983, "P": 1984, "R": 1985, "S": 1986,
+          "T": 1987, "V": 1988, "W": 1989, "X": 1990, "Y": 1991
+        },
+        "monthGroup": 2,
+        "monthLetterMap": { "A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "K": 9, "L": 10, "M": 11, "N": 12 }
+      },
+      "plant": {
+        "group": 1,
+        "map": {
+          "A": "Addison", "B": "Blackville", "C": "Canada", "D": "Medina", "E": "Elyria OH",
+          "M": "Madisonville (one source: Marysville)", "N": "Norman OK", "T": "Typhoon", "U": "Tutco",
+          "W": "Wichita KS", "X": "Monterrey MX", "Y": "York PA"
+        }
+      },
+      "examples": [
+        { "serial": "ADFM654321", "expect": { "year": 1976, "month": 4 } },
+        { "serial": "EKXM012345", "expect": { "year": 1990, "month": 9 } },
+        { "serial": "NBTS200100", "expect": { "year": 1987, "month": 2 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "York Serial Numbers ID - From History to October 2004 (York/UPG serial ID sheet, usair-eng.com/Serialnumber.pdf)",
+        "Parts Town - York Serial Number Lookup (partstown.com/cm/resource-center/guides/gd2/york-serial-number-lookup)",
+        "Building Intelligence Center - York HVAC age (building-center.org/york-hvac-age/)",
+        "PICKHVAC - York HVAC Age: Serial Number Decoding (pickhvac.com/hvac/age-serial-number/york/)",
+        "How To Look At A House - age of a York air conditioner or furnace from the serial number (2018)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "AMBIGUOUS BY DESIGN: the year letter repeats every 21 years (A = 1971 or 1992 ... N = 1983 or 2004). The decoder will also match the 1992-2004 entry and flag the result ambiguous; pick the cycle from the nameplate: R-22 units with an ANSI/AHRI standard year printed on the plate in the 1990s, a Simplicity board, or a 10 SEER/EER rating are the 1992-2004 cycle; units this old (1971-1991) are rarely still in service.",
+        "Months skip I and J (K = Sep, L = Oct, M = Nov, N = Dec). Year letters skip I, O, Q, U.",
+        "Only ADFM654321 is a source-stated example (Parts Town / InspectApedia state it decodes to April, 1976 or 1997). The other two examples are rule-derived fixtures, not nameplate photos - which is why confidence is medium, not high.",
+        "The item-type letter (position 4) is captured as [A-Z]; the York sheet lists M, P, S, T, Y, Z. Coleman (Wichita, W) and Luxaire/Fraser-Johnston products built by York used this same scheme."
+      ]
+    },
+    {
+      "id": "york-legacy-letters-1992-2004",
+      "description": "Legacy 10-character York serial (1971 - Oct 2004), SECOND letter cycle: year letter A = 1992 ... N = 2004. Same layout as the 1971-1991 entry: plant letter, month letter, year letter, item-type letter, six-digit sequence.",
+      "eraStart": 1992,
+      "eraEnd": 2004,
+      "regex": "^([A-Z])([A-HK-N])([A-HJ-N])([A-Z])(\\d{6})$",
+      "date": {
+        "method": "letterYear",
+        "yearGroup": 3,
+        "map": {
+          "A": 1992, "B": 1993, "C": 1994, "D": 1995, "E": 1996, "F": 1997, "G": 1998, "H": 1999,
+          "J": 2000, "K": 2001, "L": 2002, "M": 2003, "N": 2004
+        },
+        "monthGroup": 2,
+        "monthLetterMap": { "A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "K": 9, "L": 10, "M": 11, "N": 12 }
+      },
+      "plant": {
+        "group": 1,
+        "map": {
+          "A": "Addison", "B": "Blackville", "C": "Canada", "D": "Medina", "E": "Elyria OH",
+          "M": "Madisonville (one source: Marysville)", "N": "Norman OK", "T": "Typhoon", "U": "Tutco",
+          "W": "Wichita KS", "X": "Monterrey MX", "Y": "York PA"
+        }
+      },
+      "examples": [
+        { "serial": "ADFM654321", "expect": { "year": 1997, "month": 4 } },
+        { "serial": "NLNM123456", "expect": { "year": 2004, "month": 10 } },
+        { "serial": "WGJM000789", "expect": { "year": 2000, "month": 7 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "York Serial Numbers ID - From History to October 2004 (York/UPG serial ID sheet, usair-eng.com/Serialnumber.pdf)",
+        "Parts Town - York Serial Number Lookup",
+        "Building Intelligence Center - York HVAC age",
+        "PICKHVAC - York HVAC Age: Serial Number Decoding",
+        "How To Look At A House - age of a York heat pump from the serial number (2020): letter series repeated every 21 years"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Regex only admits year letters A-N (1992-2004); letters P-Y in position 3 can only be 1984-1991 and are handled by the 1971-1991 entry, so those serials decode unambiguously.",
+        "For A-N the 1971-1983 cycle also matches: disambiguate from the nameplate (R-22 Sunline 2000 / Predator D-series with a Simplicity board = this cycle). The format ended in October 2004 (last letter N = 2004).",
+        "ADFM654321 is the source-stated example (April 1997 in this cycle); NLNM123456 and WGJM000789 are rule-derived fixtures."
+      ]
+    },
+    {
+      "id": "york-jci-2004-present",
+      "description": "Current York / Coleman / Luxaire / Fraser-Johnston / Champion serial (October 2004 - present): letter, digit, letter, digit, six-digit sequence (e.g. W1G7123456). Position 1 = plant, positions 2 and 4 read together = year (1 + 7 = 2017), position 3 = month letter (A-H = Jan-Aug, K = Sep, L = Oct, M = Nov, N = Dec).",
+      "eraStart": 2004,
+      "regex": "^([A-Z])(\\d)([A-HK-N])(\\d)(\\d{6})$",
+      "date": {
+        "method": "decadeDigitYear",
+        "decadeGroup": 2,
+        "yearGroup": 4,
+        "monthGroup": 3,
+        "monthLetterMap": { "A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "K": 9, "L": 10, "M": 11, "N": 12 }
+      },
+      "plant": {
+        "group": 1,
+        "map": { "W": "Wichita KS", "N": "Norman OK", "A": "Apodaca (Monterrey) MX", "S": "Source 1 (JCI parts subsidiary)" }
+      },
+      "examples": [
+        { "serial": "W1G7123456", "expect": { "year": 2017, "month": 7 } },
+        { "serial": "W0E4298223", "expect": { "year": 2004, "month": 5 } },
+        { "serial": "W1E0298223", "expect": { "year": 2010, "month": 5 } },
+        { "serial": "N2K3456789", "expect": { "year": 2023, "month": 9 } }
+      ],
+      "confidence": "medium",
+      "evidence": "multi_secondary",
+      "sources": [
+        "PICKHVAC - York HVAC Age (example W1G7123456 = July 2017, Wichita)",
+        "Building Intelligence Center - York HVAC age (2nd and 4th positions = year, 3rd = month letter, used exclusively since 2004)",
+        "Parts Town - York Serial Number Lookup",
+        "Central Air Conditioner and Refrigeration - How to read York HVAC model and serial number (examples W0E4298223 = 2004, W1E0298223 = 2010)",
+        "How To Look At A House - York heat pump age (2020): W1D5... = 2015",
+        "York Central Tech Talk - How To Read York Serial Numbers (2011, distributor 'decoder ring' PDF)"
+      ],
+      "lastVerified": "2026-09-26",
+      "notes": [
+        "Year = (digit in position 2) x 10 + (digit in position 4), 2000-based: W1G7 = 2017, N2K3 = 2023, W0E4 = 2004. Pattern letter/digit/letter/digit cannot be confused with the four-letter legacy format.",
+        "Month letters skip I and J (K = Sep). Several third-party decoders describe this as 'A to N, skipping I and J' - the same map.",
+        "Nameplate: York/JCI plates print 'SERIAL NO.' directly under 'MODEL NO.'; Coleman, Luxaire, Fraser-Johnston and Champion plates use the identical scheme (all built by JCI Unitary Products).",
+        "Confidence is medium (many agreeing secondary decoders; the first three examples are source-stated, N2K3456789 is a rule-derived fixture). No manufacturer document or warranty lookup could be consulted in this session - a JCI warranty lookup on york.com would raise it to high.",
+        "Rumoured newer formats (e.g. 'S...E...' 2019+) could not be confirmed; 'S' as position 1 is the Source 1 parts plant code in this same format."
+      ]
+    }
+  ],
+  "modelFormats": [
+    {
+      "id": "york-z-series-rtu-r410a",
+      "family": "York Z-series R-410A single package rooftop (ZE/ZF/ZH/ZJ/ZR/ZT: Sunline / Predator / Sun Choice / Sun Pro / Sun Premier, 3-12.5 t)",
+      "description": "Position 1 'Z' = A/C single package, R-410A. Position 2 = product identifier (efficiency tier / series). Positions 3-5 = nominal cooling capacity in MBH. Remaining positions (heat type, heat input, voltage, cabinet/options, revision) are tolerated but not decoded here because the nomenclature page could not be transcribed in this session.",
+      "productType": "packaged_rtu",
+      "eraStart": 2009,
+      "regex": "^(Z)([EFHJRT])(036|042|048|060|072|078|090|102|120|150)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
+      "segments": [
+        { "group": 1, "name": "Product category", "attribute": "unit_type", "map": { "Z": "A/C single package, R-410A" }, "notes": "From the ZF036 installation manual product nomenclature (826081-XIM-C-0214 / 5188244-YIM-B-1016)." },
+        { "group": 2, "name": "Product identifier (series / efficiency)", "attribute": "series", "map": { "E": "ZE - 14 SEER standard-efficiency A/C, 3-6 t (Sunline / Sun Choice)", "F": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t)", "J": "ZJ - 6.5-12.5 t single package A/C (Sun Choice / Predator)", "R": "ZR - Z-series A/C, 3-6 t (efficiency tier not confirmed)", "H": "ZH - Z-series high-efficiency A/C (tier not confirmed)", "T": "ZT - Z-series A/C (tier not confirmed)" }, "notes": "Map is PARTIAL: only F (13 SEER / 11.0 EER) is transcribed from the manufacturer nomenclature; E and J from JCI installation-manual titles; R/H/T existence only from literature titles." },
+        { "group": 3, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "mbh", "notes": "036 = 3 t ... 150 = 12.5 t (manufacturer nomenclature)." },
+        { "group": 4, "name": "Heat type letter (not decoded)", "attribute": "other", "notes": "Nameplates carry a heat-type letter here (e.g. 'N' on gas units); the map was not verified in this session - read the IOM nomenclature page." },
+        { "group": 5, "name": "Heat input code (not decoded)", "attribute": "other", "notes": "Two-digit heating code follows the heat letter on the factory model number; not verified." }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": ["simplicity-ucb", "smart-equipment"],
+      "examples": [
+        { "model": "ZF036", "expect": { "unit_type": "A/C single package, R-410A", "series": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t)", "tonnage": "3" } },
+        { "model": "ZJ090", "expect": { "unit_type": "A/C single package, R-410A", "tonnage": "7.5" } },
+        { "model": "ZE048", "expect": { "tonnage": "4" } },
+        { "model": "ZF150", "expect": { "tonnage": "12.5" } }
+      ],
+      "notes": [
+        "Nameplate: the factory model number is the long string on the 'MODEL NO.' line (e.g. ZF036...); sales literature and submittals shorten it to the first five characters (ZF036, ZJ090). Decode from the first five characters.",
+        "Z-series ships with Simplicity LITE (ZE/ZF/ZJ/ZR 2009-2015), then Smart Equipment SE-SPU controls (2014+, standard on most 3-25 t units).",
+        "Coleman and Luxaire commercial rooftops are the same JCI product; whether their model prefixes differ from York's was not confirmed.",
+        "Tail after the tonnage is tolerated but not decoded (heat type/input, voltage, cabinet, revision) - transcribe from the nomenclature page in the family's technical guide before relying on it."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "York ZF036 Installation Manual, Product Nomenclature (826081-XIM-C-0214), via ManualsLib p.6",
+        "R-410A ZF Series 3-6 Ton Installation Manual 5188244-YIM-B-1016",
+        "JCI docs: Installation Manual ZE036 to ZE072 R-410A Single Package Rooftop Units 14 SEER (5188235-YIM-B-1016)",
+        "JCI docs: Installation Manual York ZJ 6-1/2 - 12-1/2 Ton R-410A Single Package Unit",
+        "Technical Guide R-410A ZH/ZJ/ZR Series (5167795-YTG-O-0120); Technical Guide R-410A ZF Series 7-1/2 thru 12-1/2 ton",
+        "Submittal Data Sheet YORK ZF ZH ZJ ZR ZT Series PREDATOR"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "york-x-series-hp-rtu-r410a",
+      "family": "York X-series R-410A single package heat pump rooftop (XN/XP, 3-5 t)",
+      "description": "Companion to the Z-series: 'X' = heat pump single package, R-410A (XN/XP appear alongside ZE/ZF/ZR in the 3-5 t technical guide). Positions 3-5 = nominal cooling capacity in MBH.",
+      "productType": "packaged_rtu",
+      "eraStart": 2009,
+      "regex": "^(X)([NP])(036|042|048|060)(?:[A-Z0-9/-]*)?$",
+      "segments": [
+        { "group": 1, "name": "Product category", "attribute": "unit_type", "map": { "X": "Heat pump single package, R-410A (inferred from Z = A/C single package)" }, "notes": "Category meaning inferred from the ZE/ZF/ZR/XN/XP technical guide grouping; not transcribed from a nomenclature page." },
+        { "group": 2, "name": "Product identifier", "attribute": "series", "map": { "N": "XN heat pump", "P": "XP heat pump" }, "notes": "Efficiency tiers not confirmed." },
+        { "group": 3, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "mbh" }
+      ],
+      "refrigerant": "R-410A",
+      "controlPlatformIds": ["simplicity-ucb", "smart-equipment"],
+      "examples": [
+        { "model": "XP036", "expect": { "tonnage": "3", "series": "XP heat pump" } },
+        { "model": "XN060", "expect": { "tonnage": "5" } }
+      ],
+      "notes": ["LOW confidence: only the tonnage rule is solid. Confirm 'X = heat pump' on the unit's nomenclature page (Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton)."],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": [
+        "Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton (manualzz 34526987)",
+        "TG York R-410A ZF/ZR/XP Series 3-5 Ton 60 Hz (251933-YTG-J-1009, 'Sunline XP')"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "york-d-series-sunline-predator-r22",
+      "family": "York Sunline 2000 / Predator D-series R-22 single package rooftop (DM/DJ/DF/DE 3-25 t)",
+      "description": "Position 1 'D' = A/C single package, R-22. Position 2 = product identifier (M = 9.0 EER A/C per the DM090 manual). Positions 3-5 = nominal cooling capacity in MBH (DM090 = 7.5 t, DM180/240/300 = 15/20/25 t).",
+      "productType": "packaged_rtu",
+      "eraStart": 1998,
+      "eraEnd": 2010,
+      "regex": "^(D)([MJFE])(036|048|060|072|078|090|102|120|150|180|210|240|300)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
+      "segments": [
+        { "group": 1, "name": "Product category", "attribute": "unit_type", "map": { "D": "A/C single package, R-22" }, "notes": "From the York DM090 installation manual nomenclature (ManualsLib 197965 p.7)." },
+        { "group": 2, "name": "Product identifier", "attribute": "series", "map": { "M": "DM - 9.0 EER A/C (Predator / Sunline 2000; DM180-300 = 15-25 t Sunline 2000 high-efficiency)", "J": "DJ - Sunline Magnum / Sunline 13.0-13.5 SEER (3-5 t) and DJ 210 (17.5 t)", "F": "DF - Sunline (e.g. DF072, 6 t)", "E": "DE - Sunline D-series (tier not confirmed)" }, "notes": "Map PARTIAL: only M (9.0 EER) is transcribed from the manufacturer nomenclature; J and F from literature titles; E unconfirmed." },
+        { "group": 3, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "mbh" },
+        { "group": 4, "name": "Heat type letter (not decoded)", "attribute": "other", "notes": "Nomenclature template shows a heat-type letter here (e.g. 'N10' on DM090 gas units); map not verified." },
+        { "group": 5, "name": "Heat input code (not decoded)", "attribute": "other" }
+      ],
+      "refrigerant": "R-22",
+      "controlPlatformIds": ["simplicity-ucb"],
+      "examples": [
+        { "model": "DM090", "expect": { "unit_type": "A/C single package, R-22", "series": "DM - 9.0 EER A/C (Predator / Sunline 2000; DM180-300 = 15-25 t Sunline 2000 high-efficiency)", "tonnage": "7.5" } },
+        { "model": "DJ036", "expect": { "tonnage": "3" } },
+        { "model": "DF072", "expect": { "tonnage": "6" } },
+        { "model": "DM180", "expect": { "tonnage": "15" } },
+        { "model": "DJ210", "expect": { "tonnage": "17.5" } },
+        { "model": "DM300", "expect": { "tonnage": "25" } }
+      ],
+      "notes": [
+        "Full DM090 nomenclature template in the manual reads 'D M 090 N10 A 7 A AA 3 0 1 2 4 A' - the positions after the tonnage (heat, voltage, options) were not transcribed with meanings and are not decoded.",
+        "These R-22 units (roughly 1998-2010) carry the original Simplicity control board; many had the board replaced under JCI service programs - check for a replacement-board label.",
+        "Later DM/DJ units built after 2004 carry the letter/digit/letter/digit serial; earlier ones the four-letter legacy serial."
+      ],
+      "confidence": "medium",
+      "evidence": "manufacturer_doc",
+      "sources": [
+        "York DM090 Installation Manual, Nomenclature (ManualsLib 197965 p.7)",
+        "York Technical Guide DM 180, 240 & 300 Sunline 2000 (036-21476-002-E-0904; 262259-YTG-G-1109)",
+        "HVAC Tech Support: Sunline DJ036-060 13.0 thru 13.5 SEER; Sunline DF072 technical guides",
+        "York DJ 210 Technical Manual, Product Nomenclature (ManualsLib 197961 p.3)"
+      ],
+      "lastVerified": "2026-09-26"
+    },
+    {
+      "id": "york-sunline2000-dxcg-legacy",
+      "family": "York Sunline 2000 legacy D#CG/D#CE single package rooftop (R-22, 1990s - mid 2000s)",
+      "description": "Older Sunline 2000 nomenclature: 'D' + one digit (series generation) + two letters (e.g. CG) + nominal cooling capacity in MBH, followed by heat type/input, voltage and option codes. Example family: D3CG090.",
+      "productType": "packaged_rtu",
+      "eraStart": 1990,
+      "eraEnd": 2006,
+      "regex": "^(D)(\\d)([A-Z]{2})(036|048|060|072|090|102|120|150|180|240|300)(?:[A-Z0-9/-]*)?$",
+      "segments": [
+        { "group": 1, "name": "Product category", "attribute": "unit_type", "map": { "D": "A/C single package, R-22" } },
+        { "group": 2, "name": "Series generation digit", "attribute": "series", "notes": "Meaning of the digit (1/2/3/7...) not verified." },
+        { "group": 3, "name": "Configuration letters (not decoded)", "attribute": "other", "notes": "e.g. 'CG' on gas-heat units; letter meanings not verified in this session." },
+        { "group": 4, "name": "Nominal cooling capacity (MBH)", "attribute": "tonnage", "transform": "mbh_to_tons", "unit": "mbh" }
+      ],
+      "refrigerant": "R-22",
+      "controlPlatformIds": ["simplicity-ucb"],
+      "examples": [
+        { "model": "D3CG090", "expect": { "unit_type": "A/C single package, R-22", "tonnage": "7.5" } },
+        { "model": "D3CG120", "expect": { "tonnage": "10" } }
+      ],
+      "notes": ["LOW confidence: only the existence of D3CG090 (JCI installation instructions) and the MBH tonnage convention are confirmed; D3CG120 is a rule-derived fixture. Read the nomenclature page in the unit's installation instructions."],
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": ["York D3CG090 Installation Instructions Manual, Nomenclature (ManualsLib 868452 p.2)"],
+      "lastVerified": "2026-09-26"
+    }
+  ],
+  "controls": [
+    {
+      "id": "simplicity-ucb",
+      "name": "York Simplicity / Simplicity LITE unit control board (UCB) LED flash codes",
+      "description": "Single-LED flash-code diagnostics on the York unit control board. Original Simplicity (Sunline 2000 / Predator D-series, ~1998-2009: LAST ERROR button, Modbus/BAS port, fault history) and Simplicity LITE (Z-series 3-12.5 t, ~2009-2015) use different flash tables; only states confirmed from a cited source are listed here.",
+      "appliesTo": ["york-z-series-rtu-r410a", "york-x-series-hp-rtu-r410a", "york-d-series-sunline-predator-r22", "york-sunline2000-dxcg-legacy"],
+      "faultCodes": [
+        {
+          "code": "LED steady ON",
+          "meaning": "Control failure - replace control",
+          "likelyCauses": ["Failed unit control board", "Board processor not running (check 24 VAC supply before condemning)"],
+          "checks": ["Verify 24 VAC at the board R-C terminals and the board fuse", "Cycle power once; if the LED stays steady with good supply, replace the UCB"],
+          "severity": "shutdown",
+          "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "LED heartbeat (slow blink)",
+          "meaning": "Normal operation",
+          "likelyCauses": [],
+          "checks": ["No fault stored; if the unit does not respond, check thermostat inputs (Y1/Y2/W1/W2/G) at the board"],
+          "severity": "info",
+          "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+          "evidence": "manufacturer_doc"
+        },
+        {
+          "code": "2 flashes",
+          "meaning": "Control waiting",
+          "likelyCauses": ["Anti-short-cycle / minimum off-time delay in progress", "Board waiting on a pending call (delay timers)"],
+          "checks": ["Wait out the delay (typically a few minutes) and confirm the compressor starts", "Verify the call is still present at the thermostat inputs"],
+          "severity": "info",
+          "source": "York ZE036 Installation Manual 5188235-YIM-B-1016, 'Simplicity Lite Unit Control Board Flash Codes' (p.66)",
+          "evidence": "manufacturer_doc",
+          "notes": "The manual's condition text for this code was not fully visible in the search summary; causes are interpretive."
+        },
+        {
+          "code": "10 flashes",
+          "meaning": "Compressors locked out because the low ambient switch is closed",
+          "likelyCauses": ["Outdoor ambient below the low-ambient switch setpoint (switch is normally open, closes at about 45 F, opens at about 55 F)", "Failed/shorted low ambient switch or wiring"],
+          "checks": ["Measure outdoor ambient; if above 55 F, ohm the low ambient switch - it should be open", "Check the switch wiring to the UCB for a short to common"],
+          "severity": "lockout",
+          "source": "JustAnswer HVAC thread on York rooftop flash code 10 (secondary; cites the York manual description)",
+          "evidence": "single_secondary",
+          "notes": "LOW confidence - from a secondary source only; confirm against the flash-code table printed on the unit's control-box label or IOM."
+        }
+      ],
+      "ledPatterns": [
+        { "pattern": "Steady ON", "meaning": "Control failure - replace control" },
+        { "pattern": "Heartbeat", "meaning": "Normal operation" }
+      ],
+      "diagnosticTips": [
+        "The flash-code LED is on the unit control board in the control compartment; codes are counted as flashes between pauses.",
+        "Original Simplicity boards: press and release the LAST ERROR button once (within 5 s) and the LED replays the last five stored fault codes, most recent first; history is also readable over the Modbus/BAS port.",
+        "The complete flash-code table (and the separate Ignition Control Board flash codes on gas units) is printed in the unit installation manual, e.g. ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes / Ignition Control Board Flash Codes', and on the label inside the control box.",
+        "Most lockouts clear by removing the thermostat call (or cycling 24 V control power) once the cause is corrected."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "York ZE036 Installation Manual 5188235-YIM-B-1016 - Simplicity Lite Unit Control Board Flash Codes", "docId": "5188235-YIM-B-1016" },
+        { "title": "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)", "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/" },
+        { "title": "York Simplicity Controls catalog page (UPGnet)", "url": "https://www.upgnet.com" }
+      ],
+      "confidence": "low",
+      "sources": [
+        "York ZE036 Installation Manual 5188235-YIM-B-1016 p.66 (ManualsLib 1468524)",
+        "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
+        "JustAnswer: York rooftop unit flash code 10 / flash code 9 threads (secondary)"
+      ]
+    },
+    {
+      "id": "smart-equipment",
+      "name": "Johnson Controls Smart Equipment (Simplicity SE) controller - SE-SPU1001/1002/1011/1012",
+      "description": "Microprocessor unit controller with on-board LCD and joystick (SE-SPU), optional SE-Mobile app / Verasys BAS; alarms are named text alarms (service and FDD alarms), not numeric codes. Fitted to York/Coleman/Luxaire Z-series and later rooftops from about 2014.",
+      "appliesTo": ["york-z-series-rtu-r410a", "york-x-series-hp-rtu-r410a"],
+      "faultCodes": [
+        {
+          "code": "Low Pressure fault (circuit 1 / 2)",
+          "meaning": "Low-pressure switch input open for the circuit; compressor locked out after repeated trips",
+          "likelyCauses": ["Low refrigerant charge / leak", "Low airflow or dirty filters causing coil freeze", "Failed LPS or open wiring"],
+          "checks": ["Gauge the circuit: suction pressure vs. LPS trip point", "Check evaporator airflow, filters, blower belt", "Ohm the LPS with the circuit equalized"],
+          "severity": "lockout",
+          "evidence": "inferred",
+          "notes": "LOW confidence: alarm name paraphrased from memory of the SE controls guide, not transcribed. Verbatim list: LIT-12011998 Smart Equipment Controls Technical Bulletin, Alarm appendix / Service alarms."
+        },
+        {
+          "code": "High Pressure fault (circuit 1 / 2)",
+          "meaning": "High-pressure switch input open for the circuit; compressor locked out after repeated trips",
+          "likelyCauses": ["Condenser fan failure or dirty condenser coil", "Overcharge or non-condensables", "Failed HPS"],
+          "checks": ["Verify condenser fan(s) run and coil is clean", "Gauge head pressure against outdoor ambient", "Check HPS continuity when pressure is normal"],
+          "severity": "lockout",
+          "evidence": "inferred",
+          "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+        },
+        {
+          "code": "Freeze fault",
+          "meaning": "Evaporator freeze sensor / freeze stat indicates coil freezing; compressor circuit locked out",
+          "likelyCauses": ["Low airflow (filters, belt, dampers)", "Low charge", "Failed freeze sensor"],
+          "checks": ["Measure evaporator airflow / static", "Check suction pressure and superheat", "Verify sensor resistance vs. temperature"],
+          "severity": "lockout",
+          "evidence": "inferred",
+          "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+        },
+        {
+          "code": "Supply Air Temperature sensor fault",
+          "meaning": "Supply-air temperature sensor reads open/shorted or out of range",
+          "likelyCauses": ["Unplugged or damaged SAT sensor", "Wrong sensor type / wiring to the SE-SPU"],
+          "checks": ["Ohm the sensor (10k NTC style) and compare with the resistance table in the SE technical guide", "Check the sensor plug on the SE-SPU"],
+          "severity": "warning",
+          "evidence": "inferred",
+          "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+        }
+      ],
+      "diagnosticTips": [
+        "Use the SE-SPU's LCD and joystick (Alarms menu) or the SE-Mobile app / Verasys UI to read active and historical alarms; the alarm names are text, not numeric codes.",
+        "The verbatim alarm tables are in the Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix: Service alarms and FDD alarms) and the Simplicity SE Controls Technical Guide (SE-SPU1001/1002/1011/1012); the 2-stage rooftop guide is 5127914-UTG-B-1116.",
+        "Verasys Alarms Summary Technical Bulletin (Smart Equipment RTU controller section) lists the same alarms as seen from the BAS.",
+        "Compressor lockouts are cleared from the Alarms / Details menu or by cycling power once the cause is corrected."
+      ],
+      "coverage": "partial",
+      "sourceDocs": [
+        { "title": "Simplicity SE (Smart Equipment) Controls Technical Guide (SE-SPU1001/1002/1011/1012)", "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content" },
+        { "title": "Smart Equipment Controls Technical Bulletin LIT-12011998 - Alarm appendix / Service alarms", "docId": "LIT-12011998", "url": "https://docs.johnsoncontrols.com/bas/r/Smart-Equipment-Controller/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Service-alarms" },
+        { "title": "Verasys Alarms Summary Technical Bulletin 4.0 - Smart Equipment Rooftop Unit (RTU) Controller", "url": "https://docs.johnsoncontrols.com/bas/r/Verasys/en-US/Verasys-Alarms-Summary-Technical-Bulletin/4.0/Smart-Equipment-Rooftop-Unit-RTU-Controller" },
+        { "title": "Smart Equipment Controls Technical Guide 2-Stage 5127914-UTG-B-1116", "docId": "5127914-UTG-B-1116" }
+      ],
+      "confidence": "low",
+      "sources": [
+        "docs.johnsoncontrols.com - Simplicity SE (Smart Equipment) Controls Technical Guide",
+        "docs.johnsoncontrols.com - Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix)",
+        "docs.johnsoncontrols.com - Verasys Alarms Summary Technical Bulletin 4.0"
+      ]
+    }
+  ],
+  "electrical": [
+    {
+      "familyRegex": "york-(z-series|x-series|d-series|sunline2000)",
+      "familyLabel": "York single package rooftops 3-25 t (Sunline 2000 / Predator / Z-series)",
+      "controlVoltage": "24 VAC from the unit control transformer (line voltage to 24 V), fused on the unit control board",
+      "components": [
+        { "designator": "UCB", "name": "Unit control board (Simplicity / Simplicity LITE) or SE-SPU (Smart Equipment)" },
+        { "designator": "1M / 2M", "name": "Compressor contactors, circuit 1 / 2", "notes": "York wiring legends label contactors 'M' (motor contactor); verify on the unit diagram." },
+        { "designator": "HPS", "name": "High pressure switch (per circuit)" },
+        { "designator": "LPS", "name": "Low pressure switch (per circuit)" },
+        { "designator": "FS", "name": "Freeze stat / freeze sensor on evaporator (per circuit)" },
+        { "designator": "IGC", "name": "Ignition control (gas heat)" },
+        { "designator": "GV", "name": "Gas valve" },
+        { "designator": "LS", "name": "Heat-exchanger limit switch" },
+        { "designator": "RS", "name": "Flame rollout switch (manual reset)" },
+        { "designator": "PS", "name": "Combustion-air (draft) pressure switch" },
+        { "designator": "TB", "name": "Terminal block (field power / low-voltage)" },
+        { "designator": "CB", "name": "Circuit breaker (electric heat / optional unit disconnect)" },
+        { "designator": "PM", "name": "Phase monitor (3-phase scroll units)", "notes": "Presence/standard-since year not confirmed for York; check the diagram." },
+        { "designator": "ECON", "name": "Economizer actuator / logic module" },
+        { "designator": "LAS", "name": "Low ambient switch (compressor lockout below ~45 F)", "notes": "Referenced by flash code 10 on Simplicity boards." }
+      ],
+      "safetyDevices": ["HPS (auto reset)", "LPS (auto reset, board lockout after repeated trips)", "Freeze stat/sensor", "Heat-exchanger limit switch", "Rollout switch (manual reset)", "Combustion-air pressure switch", "Compressor internal overload"],
+      "terminalLabels": {
+        "R": "24 VAC hot to thermostat",
+        "C": "24 VAC common",
+        "G": "Indoor blower call",
+        "Y1": "Cooling stage 1",
+        "Y2": "Cooling stage 2",
+        "W1": "Heat stage 1",
+        "W2": "Heat stage 2",
+        "OCC": "Occupied input (economizer / SE controller)"
+      },
+      "sequenceOfOperation": [
+        "Cooling: thermostat Y1 (and G) to the UCB -> after any anti-short-cycle delay the board energizes compressor contactor 1M and the condenser fan(s); the indoor blower runs on G (or after a short delay on the board). Y2 adds circuit 2 (2M). Economizer, when enabled and outdoor air suitable, is used as first-stage cooling before compressors.",
+        "Gas heating: W1 to the UCB -> ignition control (IGC) energizes the combustion-air motor, proves the pressure switch, runs the ignition trial, opens the gas valve; the indoor blower starts after the heat blower-on delay. W2 brings on high fire / second heat section. Limit or rollout opening drops the gas valve; rollout is manual reset.",
+        "Safety: an HPS/LPS/freeze-stat opening drops that circuit's contactor; repeated trips within one call cause a board lockout indicated by the LED flash code (Simplicity) or a named alarm (Smart Equipment)."
+      ],
+      "notes": [
+        "LOW confidence: designators and sequence are generic York packaged-unit practice from memory, NOT transcribed from an IOM wiring legend in this session. Use the legend on the unit's wiring diagram (inside the control-box door) as authoritative.",
+        "Smart Equipment units add SAT/RAT/OAT sensors, per-circuit pressure switch inputs and a BAS/Modbus/N2 port on the SE-SPU; thermostat inputs still land on R/C/G/Y1/Y2/W1/W2/OCC."
+      ],
+      "confidence": "low",
+      "evidence": "inferred",
+      "sources": ["Generic York rooftop wiring practice (memory) - to be replaced by the IOM wiring-diagram legend for ZF/ZJ/DM units"]
+    }
+  ],
+  "commonIssues": [
+    {
+      "symptom": "Unit dead or erratic - LED steady on / no heartbeat (Sunline 2000 / Predator with original Simplicity board)",
+      "likelyCauses": ["Failed original Simplicity control board (well-known field failure on 1998-2009 D-series units)", "Blown board fuse from a shorted 24 V field wire", "Transformer failure"],
+      "checks": ["Verify 24 VAC at R-C and the board fuse", "Check for a shorted thermostat cable or economizer wiring before replacing the board", "If steady-on LED persists with good supply, replace the UCB (retrofit kits exist)"],
+      "appliesTo": "york-(d-series|sunline2000)",
+      "confidence": "low",
+      "evidence": "inferred"
+    },
+    {
+      "symptom": "Compressors will not run in cool weather; flash code 10 on the board",
+      "likelyCauses": ["Low ambient switch closed (normal below ~45 F)", "Failed low ambient switch"],
+      "checks": ["Note outdoor ambient; above 55 F the switch should be open", "Ohm the LAS and its wiring to the UCB"],
+      "appliesTo": "york-(z-series|d-series)",
+      "confidence": "low",
+      "evidence": "single_secondary",
+      "sources": ["JustAnswer York rooftop flash code 10 thread"]
+    },
+    {
+      "symptom": "Gas heat lockout / no ignition on rooftop",
+      "likelyCauses": ["Combustion-air pressure switch not proving (blocked flue, failed inducer/combustion motor, cracked hose)", "Dirty flame sensor", "Rollout switch tripped (manual reset) from heat-exchanger or burner problems", "Gas valve or supply pressure problem"],
+      "checks": ["Read the IGC flash code (separate table from the UCB)", "Check inlet/manifold gas pressure", "Verify pressure switch closes when the combustion motor runs; inspect flue and hoses", "Clean the flame sensor and check the microamp signal", "Inspect the heat exchanger if rollout has tripped"],
+      "appliesTo": "york-(z-series|d-series|sunline2000)",
+      "confidence": "low",
+      "evidence": "inferred"
+    },
+    {
+      "symptom": "Low pressure / freeze lockouts on Z-series or SE-controlled units",
+      "likelyCauses": ["Dirty filters or slipping/broken blower belt (low airflow)", "Low charge / leak", "Economizer damper stuck open in cold weather"],
+      "checks": ["Filters, belt tension, blower wheel", "Suction pressure and superheat", "Economizer minimum position and actuator operation"],
+      "appliesTo": "york-(z-series|x-series)",
+      "confidence": "low",
+      "evidence": "inferred"
+    },
+    {
+      "symptom": "Smart Equipment unit runs but not to setpoint; sensor alarms on SE-SPU",
+      "likelyCauses": ["Failed or unplugged SAT/RAT/OAT sensors", "Controller configured for the wrong mode (thermostat vs. sensor/BAS control)", "Economizer or occupancy settings not commissioned"],
+      "checks": ["Read the SE-SPU Alarms menu", "Ohm sensors against the resistance table", "Review the controller Setup / Details menus (control mode, setpoints, economizer enable)"],
+      "appliesTo": "york-(z-series|x-series)",
+      "confidence": "low",
+      "evidence": "inferred"
+    },
+    {
+      "symptom": "Economizer not modulating / free cooling never used",
+      "likelyCauses": ["Failed actuator or economizer logic module", "Bad outdoor enthalpy/dry-bulb sensor or changeover setpoint", "Linkage disconnected"],
+      "checks": ["Command minimum position and observe damper travel", "Check 24 V and control signal at the actuator", "Check the OA sensor and changeover setting"],
+      "appliesTo": "york-(z-series|d-series|sunline2000)",
+      "confidence": "low",
+      "evidence": "inferred"
+    }
+  ],
+  "support": {
+    "phone": "877-874-7378 (YORK commercial technical support, Mon-Fri 8am-5pm CST); National Accounts tech services 800-481-9738 opt. 4",
+    "url": "https://www.york.com/commercial-equipment/technical-support",
+    "literatureUrl": "https://docs.johnsoncontrols.com/ductedsystems/",
+    "literatureSearchHint": "Search the JCI Ducted Systems documentation portal (docs.johnsoncontrols.com/ductedsystems) or UPGnet for '<first 5 characters of model> installation manual' or 'technical guide' (e.g. 'ZF036 installation manual', 'ZJ 6-1/2 - 12-1/2 ton'); the nomenclature page and wiring diagram are in the IOM. Older Sunline 2000 / D-series literature is on hvacnavigator.com and the UPGnet archive.",
+    "notes": "Consumer relations e-mail cg-upgconsumerrelations@jci.com. Coleman, Luxaire, Fraser-Johnston and Champion literature uses the same document numbering (nnnnnnn-YIM/XIM/CIM-...)."
+  },
+  "notes": [
+    "Coverage summary: serial rules are the strongest part of this pack (three formats, many agreeing decoders). Model formats decode category, series letter and tonnage only; the positions after the tonnage (heat type/input, voltage, options) were NOT transcribed from a nomenclature page in this session and are left undecoded rather than guessed.",
+    "Control platforms are partial: only the Simplicity LITE LED states confirmed from the ZE036 IOM plus one secondary flash code, and paraphrased Smart Equipment alarm names flagged low. Simplicity Elite (Millennium), original Simplicity full flash table, IGC flash codes, JCI IQ boards and Sun Premier 25-80 t fault tables are not included - see 'unresolved' in the build report.",
+    "Electrical and common-issue sections are generic field practice from memory and are marked low/inferred; treat the unit's wiring-diagram legend as authoritative.",
+    "Web-search budget was exhausted during authoring; a second pass with the JCI documentation portal should raise the model-format and control-platform coverage."
+  ],
+  "sources": [
+    "York Serial Numbers ID - From History to October 2004 (York/UPG serial ID sheet, usair-eng.com/Serialnumber.pdf)",
+    "Parts Town - York Serial Number Lookup (partstown.com)",
+    "Building Intelligence Center - York HVAC age (building-center.org/york-hvac-age/)",
+    "PICKHVAC - York HVAC Age: Serial Number Decoding (pickhvac.com/hvac/age-serial-number/york/)",
+    "How To Look At A House - York AC/furnace (2018) and York heat pump (2020) serial number articles",
+    "Central Air Conditioner and Refrigeration - How to read York HVAC model and serial number",
+    "York Central Tech Talk - How To Read York Serial Numbers (2011); Simplicity Diagnostics Flash Codes (2013)",
+    "York ZF036 Installation Manual 826081-XIM-C-0214 / 5188244-YIM-B-1016 (product nomenclature)",
+    "York ZE036 Installation Manual 5188235-YIM-B-1016 (Simplicity Lite UCB and IGC flash codes, p.66)",
+    "JCI docs: Installation Manual York ZJ 6-1/2 - 12-1/2 Ton R-410A Single Package Unit",
+    "York DM090 Installation Manual (nomenclature); York DM 180/240/300 Sunline 2000 Technical Guide 036-21476-002-E-0904",
+    "York DJ 210 Technical Manual (product nomenclature); York D3CG090 Installation Instructions",
+    "Technical Guide R-410A ZH/ZJ/ZR Series 5167795-YTG-O-0120; Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton",
+    "Simplicity SE (Smart Equipment) Controls Technical Guide; Smart Equipment Controls Technical Bulletin LIT-12011998; Verasys Alarms Summary Technical Bulletin 4.0",
+    "york.com - Technical Support Commercial / Contact pages (phone numbers)"
+  ],
+  "confidence": "medium",
+  "lastReviewed": "2026-09-26"
+}
