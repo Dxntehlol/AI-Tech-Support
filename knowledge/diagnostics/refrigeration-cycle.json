@@ -1,0 +1,2261 @@
+{
+  "version": "2026-09",
+  "defaults": {
+    "targetSubcoolingTxvF": 10,
+    "condenserSplitNormalF": {
+      "min": 15,
+      "max": 30
+    },
+    "evapTdNormalF": {
+      "min": 30,
+      "max": 40
+    },
+    "deltaTNormalF": {
+      "min": 16,
+      "max": 22
+    },
+    "dischargeTempWarnF": 225,
+    "dischargeTempCriticalF": 250,
+    "compressionRatioAdvisory": 3.5,
+    "compressionRatioWarn": 4.5,
+    "lowAmbientMinOutdoorDbF": 65,
+    "byMode": {
+      "refrigeration": {
+        "compressionRatioAdvisory": 8,
+        "compressionRatioWarn": 12,
+        "evapTdNormalF": {
+          "min": 8,
+          "max": 12
+        },
+        "condenserSplitNormalF": {
+          "min": 20,
+          "max": 30
+        }
+      },
+      "heat_pump_heating": {
+        "compressionRatioAdvisory": 5,
+        "compressionRatioWarn": 6.5,
+        "evapTdNormalF": {
+          "min": 15,
+          "max": 30
+        },
+        "condenserSplitNormalF": {
+          "min": 25,
+          "max": 35
+        },
+        "deltaTNormalF": {
+          "min": 20,
+          "max": 35
+        }
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "undercharge_txv",
+      "condition": "Undercharge (high SH, low SC) — TXV/EEV",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 90,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv",
+          "eev"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": ">=",
+          "value": 14
+        },
+        {
+          "metric": "subcoolingDelta",
+          "op": "<",
+          "value": -4
+        }
+      ],
+      "explanation": "Superheat is high and subcooling is more than 4 F under target: the condenser is short on liquid and the TXV is running out of refrigerant at the evaporator. Suction and head are usually both low and amps a little low. On a TXV system this is the low-charge signature — but a restriction shows high SH with HIGH subcooling, so check that first. Follows the Carrier six-parameter cooling-cycle troubleshooting chart (subcooling method).",
+      "nextChecks": [
+        "Measure liquid line temperature and pressure at the liquid service valve; expect subcooling within 3 F of the nameplate target (default 10 F).",
+        "Check the sight glass (if fitted) after 10+ min of run time; expect clear — bubbles with low SC confirm low charge.",
+        "Leak check before adding: electronic detector at the evaporator coil, Schrader cores, line-set joints, drier flare fittings; expect no hit.",
+        "Add refrigerant as liquid in small steps at the suction side (throttled), wait 10 min, re-read SC; stop at target SC with SH 8-12 F at the evaporator outlet."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "A2L/A3 refrigerants: ventilate, no ignition sources, A2L-rated detector and recovery machine; never retrofit R-454B/R-32 into R-410A equipment.",
+        "Every gauge hookup loses charge and admits contaminants; use short hoses with low-loss fittings and only hook up when the non-invasive checks justify it."
+      ]
+    },
+    {
+      "id": "undercharge_fixed",
+      "condition": "Undercharge (SH above chart, low SC) — fixed orifice",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 90,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatDelta",
+          "op": ">",
+          "value": 5
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "<",
+          "value": 6
+        }
+      ],
+      "explanation": "Total superheat at the outdoor unit is more than 5 F above the chart target for this indoor WB / outdoor DB, and subcooling is low: the piston is starving and the condenser has little liquid. Suction is low, head is low, amps and delta-T are down. Follows the standard fixed-orifice superheat charging chart (Carrier/Goodman/Trane) and the six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Confirm indoor entering WB (sling or digital psychrometer at the return grille or mixed air) and outdoor DB at the condenser inlet; expect the chart target to move less than 3 F when re-read.",
+        "Measure suction line temperature 6 in. from the suction service valve, insulated probe; expect SH within +/-3-5 F of the chart target.",
+        "Leak check the whole circuit before adding; expect no hit at Schraders, coil U-bends, brazed joints.",
+        "Add refrigerant slowly (liquid, throttled into the suction side); wait 10-15 min between steps; expect SH to fall to the chart value and SC to land 5-15 F."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "A2L/A3 refrigerants: ventilate, no ignition sources, A2L-rated detector and recovery machine; never retrofit R-454B/R-32 into R-410A equipment.",
+        "Every gauge hookup loses charge and admits contaminants; use short hoses with low-loss fittings and only hook up when the non-invasive checks justify it."
+      ]
+    },
+    {
+      "id": "superheat_high_fixed_sc_unknown",
+      "condition": "Superheat above chart — subcooling not measured",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 60,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatDelta",
+          "op": ">",
+          "value": 5
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Superheat is more than 5 F above the fixed-orifice chart target. That is either low charge (low SC) or a liquid-line restriction (high SC); without a liquid line temperature the engine cannot tell them apart. Follows the fixed-orifice superheat charging chart and the six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Measure liquid line temperature at the liquid service valve and compute subcooling; expect 5-15 F. Under 5 F = low charge, over 15 F = restriction (check drier temperature drop)."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "superheat_low_fixed_sc_unknown",
+      "condition": "Superheat below chart — subcooling not measured",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 60,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatDelta",
+          "op": "<",
+          "value": -5
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Superheat is more than 5 F below the fixed-orifice chart target. Low superheat on a piston system is either overcharge (high SC, high head) or low evaporator airflow (normal SC, low suction); subcooling separates them. Follows the fixed-orifice superheat charging chart.",
+      "nextChecks": [
+        "Measure liquid line temperature and pressure and compute subcooling; expect 5-15 F. Over 15 F with high head = overcharge; normal SC = airflow problem (filters, blower, coil, ESP)."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "subcooling_low_txv_sh_unknown",
+      "condition": "Low subcooling — superheat not measured",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 60,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv",
+          "eev"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "subcoolingDelta",
+          "op": "<",
+          "value": -4
+        },
+        {
+          "metric": "superheatF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Subcooling is more than 4 F below target, which usually means low charge on a TXV system, but a TXV overfeeding (low SH) or a flooded evaporator can also pull the liquid out of the condenser. Superheat decides it. Follows the Carrier subcooling charging method.",
+      "nextChecks": [
+        "Measure suction line temperature at the outdoor unit and compute superheat; expect 10-25 F total. High SH + low SC = undercharge; low SH + low SC = TXV overfeeding/bulb problem."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "subcooling_high_txv_sh_unknown",
+      "condition": "High subcooling — superheat not measured",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 60,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv",
+          "eev"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "subcoolingDelta",
+          "op": ">",
+          "value": 6
+        },
+        {
+          "metric": "superheatF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Subcooling is more than 6 F above target: overcharge, a liquid-line restriction, or non-condensables. Superheat and the drier temperature drop sort them out. Follows the Carrier subcooling charging method.",
+      "nextChecks": [
+        "Measure suction line temperature and compute superheat: normal/low SH with high SC = overcharge; high SH with high SC = restriction. Feel/measure across the filter drier; expect under 3 F."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "overcharge_txv",
+      "condition": "Overcharge (high SC, high head, normal-to-low SH) — TXV/EEV",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 85,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv",
+          "eev"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "subcoolingDelta",
+          "op": ">",
+          "value": 6
+        },
+        {
+          "metric": "superheatF",
+          "op": "<=",
+          "value": 12
+        },
+        {
+          "metric": "headPressureControl",
+          "op": "<",
+          "value": 3
+        }
+      ],
+      "explanation": "Subcooling is more than 6 F above target with superheat normal or low: liquid is backing up in the condenser, raising head pressure and amps. A TXV holds evaporator superheat, so on a TXV system high SC with normal SH is the overcharge signature (a restriction would show high SH). Non-condensables look the same at the gauges — a standing-pressure test tells them apart. Follows the Carrier six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Verify the condenser coil is clean and the fan is at full speed; expect split (condSat - outdoor DB) 15-30 F.",
+        "Confirm the nameplate subcooling target and that the liquid line temperature is taken at the service valve, not after the drier.",
+        "If the unit was recently serviced/charged, recover in small amounts (0.5 lb steps), wait 10 min, re-read SC; expect it to settle at target.",
+        "If SC will not respond to charge, do the standing-pressure test for non-condensables: unit off 30+ min, standing psig vs saturation at ambient; expect within 5 psi."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "overcharge_fixed",
+      "condition": "Overcharge (SH below chart, high SC, high head) — fixed orifice",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 85,
+      "chargeRelated": true,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatDelta",
+          "op": "<",
+          "value": -4
+        },
+        {
+          "metric": "subcoolingF",
+          "op": ">",
+          "value": 14
+        },
+        {
+          "metric": "headPressureControl",
+          "op": "<",
+          "value": 3
+        }
+      ],
+      "explanation": "Superheat is more than 4 F below the chart target and subcooling is above 14 F: the piston is being fed too much liquid and the condenser is stacked. Head pressure and amps are high; the compressor may see liquid at low load. Follows the fixed-orifice superheat charging chart and the six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Re-check indoor WB and outdoor DB; expect the chart target to be stable within 3 F.",
+        "Recover in 0.25-0.5 lb steps, wait 10-15 min each; expect SH to rise to the chart target and SC to fall to 5-15 F.",
+        "Rule out a dirty condenser / recirculation first (split over 30 F points there, not at charge)."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "liquid_line_restriction",
+      "condition": "Liquid-line restriction (high SH + high SC + low suction)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 88,
+      "chargeRelated": true,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": ">=",
+          "value": 15
+        },
+        {
+          "metric": "subcoolingF",
+          "op": ">=",
+          "value": 14
+        }
+      ],
+      "explanation": "High superheat with high subcooling: the condenser is full of liquid but not enough is reaching the evaporator — a restriction between the condenser outlet and the coil (plugged filter drier, TXV inlet screen, kinked line, partially closed service valve, iced/plugged distributor). Suction is low, head normal-to-high, amps low. Adding refrigerant here only raises SC further. Follows the Carrier six-parameter cooling-cycle chart and Sporlan TXV troubleshooting bulletin 10-9.",
+      "nextChecks": [
+        "Measure temperature in and out of the filter drier; expect under 3 F drop. Frost or sweat at the drier = plugged.",
+        "Feel the liquid line from the service valve to the TXV for a cold spot or frost; expect uniform temperature.",
+        "Check the TXV inlet screen and, on a system with a solenoid or ball valve, that it is fully open.",
+        "Confirm the liquid service valve is fully back-seated open; expect no temperature step across it."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing."
+      ]
+    },
+    {
+      "id": "drier_restriction",
+      "condition": "Filter drier restriction (temperature drop > 3 F)",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 92,
+      "when": [
+        {
+          "metric": "drierTempDropF",
+          "op": ">",
+          "value": 3
+        }
+      ],
+      "explanation": "More than 3 F drop across the filter drier means it is plugging — the pressure drop flashes liquid and the outlet runs colder (frost or sweat in bad cases). Replace it; do not clean or bypass. If the drier is plugging repeatedly, look for the source of the debris/moisture (burnout, brazing scale, wet system). Follows Sporlan filter-drier application guidance (bulletin 40-10).",
+      "nextChecks": [
+        "Confirm both probes are strapped and insulated on the drier shell inlet/outlet; expect under 3 F on a healthy drier.",
+        "Check the moisture indicator; expect dry. Wet = evacuate to 500 microns with a decay test after the drier change.",
+        "After replacement, re-read SH/SC; expect SH to fall and SC to normalize."
+      ],
+      "safety": [
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing.",
+        "Recover before opening the circuit; purge nitrogen while brazing the new drier."
+      ]
+    },
+    {
+      "id": "low_evap_airflow_fixed",
+      "condition": "Low evaporator airflow (low suction, low SH, normal SC) — fixed orifice",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 80,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatDelta",
+          "op": "<",
+          "value": -4
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "between",
+          "value": 4,
+          "value2": 14
+        }
+      ],
+      "explanation": "Superheat is under the chart target but subcooling is normal: the charge is fine, the coil just is not getting enough air to boil off what the piston feeds it. Suction runs low, the coil may frost, delta-T reads low or erratic, amps a little low. Fix airflow before touching the charge — charging to a low-airflow superheat overcharges the unit. Follows the fixed-orifice superheat charging chart and the six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Check filters, blower wheel, belt tension/slip, coil face and closed dampers; expect a clean coil and rated belt tension.",
+        "Measure external static pressure across the unit; expect at or below the nameplate rated ESP (typically 0.5-1.0 in. wc on RTUs).",
+        "Measure delta-T (entering DB - supply DB); compare to the chart target for the entering DB/WB; expect within +/-3 F.",
+        "Re-read superheat after restoring airflow; expect it to rise to the chart target."
+      ]
+    },
+    {
+      "id": "low_evap_airflow_txv",
+      "condition": "Low evaporator airflow (low suction, normal SH/SC) — TXV/EEV",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 80,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv",
+          "eev"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": ">",
+          "value": 40
+        },
+        {
+          "metric": "superheatF",
+          "op": "between",
+          "value": 6,
+          "value2": 14
+        },
+        {
+          "metric": "subcoolingDelta",
+          "op": "between",
+          "value": -4,
+          "value2": 6
+        }
+      ],
+      "explanation": "Evaporator TD (entering DB - evap sat) is above 40 F with superheat and subcooling both normal: the TXV is holding superheat, the charge is right, and the coil is running cold because too little air crosses it. Delta-T runs high, suction low. Follows the Carrier six-parameter cooling-cycle chart (low indoor airflow column).",
+      "nextChecks": [
+        "Check filters, blower, belts, coil, dampers and VFD speed command; expect rated airflow (about 350-450 CFM/ton).",
+        "Measure ESP and compare to nameplate; expect within rated.",
+        "Measure supply DB and compute delta-T; expect the chart target for the entering DB/WB (about 16-22 F) — above 24 F confirms low airflow."
+      ]
+    },
+    {
+      "id": "evap_td_high",
+      "condition": "Evaporator running cold (TD > 40 F)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": ">",
+          "value": 40
+        }
+      ],
+      "explanation": "Entering air minus evaporating saturation is over 40 F (normal 30-40 F): either the coil is starved of air (low airflow) or of refrigerant (low charge, restriction, TXV underfeeding). Superheat and subcooling decide which. Follows the Carrier six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Get superheat and subcooling: normal SH/SC = airflow; high SH + low SC = charge; high SH + high SC = restriction.",
+        "Check the coil for frost; expect none while running."
+      ]
+    },
+    {
+      "id": "high_load_or_airflow",
+      "condition": "High load / high airflow (high suction, low evaporator TD)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": "<",
+          "value": 24
+        },
+        {
+          "metric": "evapSatF",
+          "op": ">",
+          "value": 48
+        }
+      ],
+      "explanation": "Evaporating temperature is above 48 F and the coil TD is under 24 F: the coil is seeing more heat than it is designed for — high return/mixed-air temperature or humidity (economizer open, doors open, start-up pull-down), or airflow well above rated. Superheat may read high on a fixed orifice and this is NOT low charge. Follows the Carrier six-parameter cooling-cycle chart (high load column).",
+      "nextChecks": [
+        "Check the economizer damper position and mixed-air temperature; expect the damper closed/minimum when charging.",
+        "Wait for the space to pull down (10-15 min after start) and re-read; expect evap sat to drop toward 40-45 F.",
+        "Measure ESP and blower speed; expect rated airflow, not above."
+      ]
+    },
+    {
+      "id": "low_condenser_airflow_dirty_coil",
+      "condition": "Low condenser airflow / dirty coil / recirculation (high split)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 82,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "condenserSplitF",
+          "op": ">",
+          "value": 30
+        },
+        {
+          "metric": "outdoorDbF",
+          "op": ">=",
+          "value": 65
+        }
+      ],
+      "explanation": "Condensing saturation is more than 30 F above outdoor DB (normal 15-30 F; 10-20 F on high-efficiency/microchannel coils) with the ambient at 65 F or more (below that, head-pressure control raises the split by design). The condenser cannot reject heat: dirty or fin-damaged coil, condenser fan slow/backwards/dead, blocked discharge (recirculation into the inlet, wall too close), or a very hot roof. Head pressure and amps run high; if SC is also high suspect overcharge or non-condensables instead. Follows the Carrier six-parameter cooling-cycle chart (dirty condenser column).",
+      "nextChecks": [
+        "Inspect and clean the condenser coil (both sides of a two-row coil); expect light through the fins.",
+        "Check condenser fan RPM/rotation and amps vs FLA; expect full speed, correct rotation, amps under FLA.",
+        "Measure air temperature entering the coil vs ambient; expect within 2-3 F (higher = recirculation).",
+        "Re-read head pressure after cleaning; expect split back to 15-30 F."
+      ],
+      "safety": [
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety.",
+        "LOTO per NFPA 70E with live-dead-live meter proof before touching wiring; CAT III/IV meter on 480/575 V; arc-flash PPE."
+      ]
+    },
+    {
+      "id": "non_condensables",
+      "condition": "Possible non-condensables (high head + high SC not responding to charge)",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 70,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "condenserSplitF",
+          "op": ">",
+          "value": 30
+        },
+        {
+          "metric": "outdoorDbF",
+          "op": ">=",
+          "value": 65
+        },
+        {
+          "metric": "subcoolingF",
+          "op": ">",
+          "value": 18
+        },
+        {
+          "metric": "superheatF",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "explanation": "High split plus high subcooling with superheat normal: air or nitrogen in the system takes up condenser space and raises head pressure beyond what the charge explains. It mimics overcharge; the difference is that recovering charge drops SC but head stays high, and the standing pressure with the unit off exceeds saturation at ambient. Follows the Copeland/RSES non-condensables standing-pressure test.",
+      "nextChecks": [
+        "Standing-pressure test: unit off 30+ min so it equalizes to ambient; compare standing psig to the PT chart at ambient; expect within 5 psi (more = non-condensables).",
+        "Clean the condenser and re-read before condemning the charge; expect split 15-30 F on a clean coil.",
+        "If confirmed: recover, evacuate to 500 microns with a decay test, replace the drier, weigh in the nameplate charge."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing."
+      ]
+    },
+    {
+      "id": "non_condensables_standing",
+      "condition": "Non-condensables confirmed (standing pressure > sat at ambient by > 5 psi)",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 95,
+      "when": [
+        {
+          "metric": "standingExcessPsi",
+          "op": ">",
+          "value": 5
+        }
+      ],
+      "explanation": "With the unit off and equalized, the standing pressure is more than 5 psi above the PT-chart pressure at ambient. Refrigerant alone cannot do that: there is air or nitrogen in the system. Running it means high head, high amps, high discharge temperature and acid formation. Follows the Copeland/RSES standing-pressure test for non-condensables.",
+      "nextChecks": [
+        "Confirm the ambient probe is at the condenser coil and the unit has been off 30+ min; expect an equalized reading that does not drift.",
+        "Recover the charge, evacuate to 500 microns with a 10-min decay under 1,000 microns, install a new liquid-line drier, weigh in the nameplate charge.",
+        "Find how air got in: leak on the low side (running in vacuum), poor evacuation at the last service, cracked Schrader."
+      ],
+      "safety": [
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing.",
+        "Recovered refrigerant contaminated with air must be sent for reclaim, not reused."
+      ]
+    },
+    {
+      "id": "wrong_refrigerant",
+      "condition": "Saturation temperatures impossible for the stated refrigerant — verify refrigerant and gauges",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 65,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "condenserSplitF",
+          "op": "<",
+          "value": 2
+        }
+      ],
+      "explanation": "Condensing saturation is at or below the outdoor air temperature while the unit is running — a condenser cannot reject heat to air warmer than itself, so either the refrigerant on the gauge/app is not what is in the system (retrofit blend, mislabeled recovery, mixed charge), the gauge is off, the unit is not actually running, or the pressure was read at the wrong port. The same logic applies when evaporating saturation is above the entering air. Follows the PT-chart sanity check in the Carrier/RSES troubleshooting guidance.",
+      "nextChecks": [
+        "Read the nameplate and any retrofit sticker on the unit and the compressor; expect the refrigerant to match what the gauges/app are set to.",
+        "Check gauge calibration against a known reference (recovery cylinder at ambient: pressure should match the PT chart for that refrigerant within 2-3 psi).",
+        "Confirm the compressor is actually running (amps) and the readings were taken at the right ports.",
+        "If a mixed or unknown refrigerant is suspected, use a refrigerant identifier before recovery; expect purity above 98 %."
+      ],
+      "safety": [
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing.",
+        "A2L/A3 refrigerants: ventilate, no ignition sources, A2L-rated detector and recovery machine; never retrofit R-454B/R-32 into R-410A equipment.",
+        "Mixed or unknown refrigerant must be recovered into a dedicated cylinder and sent for destruction/reclaim; never top off an unknown charge."
+      ]
+    },
+    {
+      "id": "txv_overfeeding",
+      "condition": "TXV overfeeding (low SH, normal SC)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 75,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": "<",
+          "value": 7
+        },
+        {
+          "metric": "subcoolingDelta",
+          "op": "between",
+          "value": -3,
+          "value2": 8
+        }
+      ],
+      "explanation": "Superheat under 7 F with subcooling near target: the charge is right but the valve is passing too much — bulb loose, uninsulated or on the wrong spot (bottom of the line, in a trap), valve stuck open, wrong valve/oversized, or external equalizer plugged. Under 5 F liquid is reaching the compressor. Follows Sporlan TXV troubleshooting bulletin 10-9 (low superheat).",
+      "nextChecks": [
+        "Inspect the bulb: strapped tight at 10 or 2 o'clock on a horizontal suction line, insulated, downstream of the equalizer tap; expect firm contact and insulation.",
+        "Warm the bulb in your hand; expect suction pressure to rise and superheat to climb within 1-2 min (a valve that does not respond is stuck).",
+        "Check the equalizer line for kinks/plugs; expect open.",
+        "Confirm evaporator airflow is rated (low airflow also drops SH on a sluggish valve)."
+      ],
+      "safety": [
+        "Liquid returning to the compressor washes out the oil and slugs the valves/scroll: stop the compressor and correct the cause before any more run time."
+      ]
+    },
+    {
+      "id": "txv_starving",
+      "condition": "TXV underfeeding / starving (high SH, normal SC)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 75,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": ">",
+          "value": 20
+        },
+        {
+          "metric": "subcoolingDelta",
+          "op": "between",
+          "value": -3,
+          "value2": 6
+        }
+      ],
+      "explanation": "Superheat over 20 F while subcooling is at target: the condenser has liquid, so the valve is not passing it — lost power-head charge, plugged inlet screen, bulb in a warm spot or not sensing, valve adjusted too far in, or a restricted liquid line just ahead of it. Do not blame the TXV until subcooling is right (it is here) and airflow is verified. Follows Sporlan TXV troubleshooting bulletin 10-9 (high superheat) and the Carrier subcooling method.",
+      "nextChecks": [
+        "Measure temperature across the TXV inlet screen/strainer and the drier; expect under 3 F drop.",
+        "Remove the bulb and warm it; expect suction to rise. No response = lost element charge — replace the power head/valve.",
+        "Check the bulb location and insulation; expect it on the suction line right after the coil, insulated.",
+        "Confirm liquid line pressure at the valve inlet is close to the condenser pressure (no upstream restriction)."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "metering_fixed_guidance",
+      "condition": "Fixed orifice: charge by total superheat at the outdoor unit",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 20,
+      "appliesTo": {
+        "meteringDevice": [
+          "fixed"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        }
+      ],
+      "explanation": "Piston/capillary systems have no valve holding superheat, so superheat IS the charge indicator: total superheat measured at the outdoor unit (suction service valve) vs the indoor WB / outdoor DB chart, tolerance +/-3-5 F. Subcooling on a fixed orifice is only a sanity check (5-15 F typical). Manufacturer charging chart on the unit or in the IOM takes precedence over the generic chart. Follows the standard fixed-orifice superheat charging chart (Carrier/Goodman/Trane).",
+      "nextChecks": [
+        "Read the unit's own charging chart/label first; expect it to match the generic chart within a few degrees.",
+        "Take indoor WB at the return/mixed air and outdoor DB at the coil inlet, then SH at the suction service valve after 10-15 min of stable running."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "metering_txv_guidance",
+      "condition": "TXV: charge by subcooling; TXV holds superheat",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 20,
+      "appliesTo": {
+        "meteringDevice": [
+          "txv"
+        ],
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        }
+      ],
+      "explanation": "On a TXV system charge by subcooling to the nameplate target (default 10 F if unknown, tolerance +/-3 F). Expect evaporator superheat 8-12 F at the coil outlet and total superheat 10-25 F at the compressor; the valve controls SH, so SH mainly tells you about the valve, airflow and load. Never condemn the TXV until subcooling is at target and airflow is verified. Follows the Carrier subcooling charging method and Sporlan bulletin 10-9.",
+      "nextChecks": [
+        "Find the nameplate/IOM subcooling target; expect 8-15 F on most RTUs.",
+        "After SC is at target, read SH at the coil outlet (8-12 F) and at the compressor (10-25 F)."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "metering_eev_guidance",
+      "condition": "EEV: superheat is controller-set; abnormal SH points to sensors/board/drive",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 20,
+      "appliesTo": {
+        "meteringDevice": [
+          "eev"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        }
+      ],
+      "explanation": "An electronic expansion valve drives to the superheat setpoint programmed in the controller (often 8-12 F). If SH is off target the usual causes are the suction pressure transducer or line temperature thermistor reading wrong, the stepper/driver/cable, the valve stuck or losing steps after a power blip, or the setpoint itself — not the charge, unless subcooling is also off. Charge by subcooling / manufacturer chart or weigh-in. Follows Sporlan/Emerson EEV service guidance and manufacturer controller manuals.",
+      "nextChecks": [
+        "Read the controller's live SH, setpoint and valve % open; expect live SH within 2-3 F of setpoint and the valve not pinned at 0 or 100 %.",
+        "Compare the controller's suction pressure/temperature to your gauges/probe; expect within 2 psi / 2 F — replace the sensor if not.",
+        "Cycle power (per the manual) to re-home the stepper; expect the valve to drive closed then open."
+      ]
+    },
+    {
+      "id": "metering_unknown_guidance",
+      "condition": "Metering device unknown — identify it before charging",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 20,
+      "appliesTo": {
+        "meteringDevice": [
+          "unknown"
+        ]
+      },
+      "when": [
+        {
+          "metric": "refrigerant",
+          "op": "present"
+        }
+      ],
+      "explanation": "The charging method depends on the metering device: fixed orifice = total superheat vs chart; TXV/EEV = subcooling to nameplate. Charging a TXV system by superheat overcharges it; charging a piston by subcooling starves or floods it. Check the coil inlet: a piston sits in a brass distributor body with a nut; a TXV has a bulb strapped to the suction line and usually an equalizer line; an EEV has a stepper motor cable. The nameplate/IOM also states it. Follows the Carrier charging chart selection guidance.",
+      "nextChecks": [
+        "Look at the evaporator inlet and the nameplate/IOM; then re-run the diagnosis with meteringDevice set."
+      ]
+    },
+    {
+      "id": "inefficient_compressor",
+      "condition": "Inefficient compressor (low compression ratio, low amps)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 85,
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": "<",
+          "value": 2.2
+        },
+        {
+          "metric": "ampsPercentRla",
+          "op": "<",
+          "value": 55
+        }
+      ],
+      "explanation": "Compression ratio under 2.2 with amps under 55 % of RLA: the compressor is not pumping — suction high, head low, little capacity. Causes: leaking valves/reeds (recip), worn scroll set or a failed IPR/internal relief, a scroll running backwards on a 3-phase unit (loud, no pumping, low amps), a bypassing reversing valve on a heat pump, or an unloader/digital scroll stuck unloaded. Rule out hot-gas bypass and low load first. Follows the Carrier six-parameter cooling-cycle chart (inefficient compressor column) and Copeland AE4-1331 (scroll diagnostics).",
+      "nextChecks": [
+        "Pump-down test if the unit allows it: front-seat the liquid valve, expect suction to pull to 10-20 psig and hold; a compressor that will not pull down or rises quickly is bypassing.",
+        "3-phase scroll: check rotation (phase-rotation meter or swap two legs after LOTO); expect quiet running with rising head within seconds.",
+        "Heat pump: measure discharge superheat and the reversing valve suction-side tubes; expect over 30 F and under 3-4 F difference (reversing valve leak-by mimics a weak compressor).",
+        "Measure amps on all legs vs RLA; expect 60-90 % under normal load."
+      ],
+      "safety": [
+        "LOTO per NFPA 70E with live-dead-live meter proof before touching wiring; CAT III/IV meter on 480/575 V; arc-flash PPE.",
+        "Do not front-seat the suction valve with the compressor running; never run a compressor in a vacuum."
+      ]
+    },
+    {
+      "id": "inefficient_compressor_cr_only",
+      "condition": "Low compression ratio — amps not measured",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 40,
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": "<",
+          "value": 2
+        },
+        {
+          "metric": "ampsPercentRla",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Compression ratio under 2.0 (suction high, head low) is the weak-compressor / reversing-valve-leak / hot-gas-bypass pattern, but at start-up, high load or very low ambient it can be normal. Compressor amps vs RLA separate a loafing compressor from one that cannot pump. Follows the Carrier six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Measure compressor amps on each leg and compare to nameplate RLA; expect 60-90 %. Under 50 % with this ratio = not pumping."
+      ]
+    },
+    {
+      "id": "min_superheat_floodback",
+      "condition": "Superheat under 5 F at the compressor — floodback risk",
+      "severity": "critical",
+      "confidence": "high",
+      "priority": 100,
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": "<",
+          "value": 5
+        }
+      ],
+      "explanation": "Less than 5 F superheat means saturated vapor — and likely liquid — is entering the compressor. Liquid dilutes the oil, washes the bearings and slugs the valves; scrolls survive it for a while, recips do not. Causes: TXV overfeeding or bulb problem, low evaporator airflow, overcharge (fixed orifice), a stuck-open hot-gas or reversing valve, or a probe placed on a cold spot. Copeland requires at least 20 F total superheat at the compressor under all conditions on refrigeration (10 F minimum on AC). Follows Copeland AE4-1287 (floodback) and AE-1260 (compressor protection).",
+      "nextChecks": [
+        "Verify the probe: strapped and insulated on the suction line 6 in. from the compressor, not on the accumulator or a sweating fitting; expect a stable reading.",
+        "Check the suction line and compressor shell for frost/sweat back to the crankcase; expect the shell warm and dry below the suction inlet.",
+        "Fix the cause (TXV bulb/valve, airflow, charge) before running further; expect SH to recover to 10-25 F total."
+      ],
+      "safety": [
+        "Liquid returning to the compressor washes out the oil and slugs the valves/scroll: stop the compressor and correct the cause before any more run time.",
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "low_discharge_superheat",
+      "condition": "Discharge superheat under 30 F (wet compression / liquid migration)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 80,
+      "when": [
+        {
+          "metric": "dischargeSuperheatF",
+          "op": "<",
+          "value": 30
+        }
+      ],
+      "explanation": "Discharge line temperature is less than 30 F above condensing saturation. A compressor doing real work adds 40-90 F of superheat; under 30-35 F says liquid is being carried through (floodback, flooded start after migration, overfeeding TXV), a bypassing reversing valve or discharge check valve, or the discharge probe is on the wrong tube. Follows Copeland AE4-1287 (discharge superheat as a floodback indicator).",
+      "nextChecks": [
+        "Confirm the probe is 6 in. from the compressor discharge on the line itself, insulated; expect over 30 F above condensing sat (normal 50-100 F).",
+        "Read suction superheat at the compressor; expect 10-25 F. Both low = floodback.",
+        "Check the crankcase heater is powered and warm on an off cycle; expect the shell warm to the touch.",
+        "Heat pump: check the reversing valve suction-side tube temperatures; expect under 3-4 F difference."
+      ],
+      "safety": [
+        "Liquid returning to the compressor washes out the oil and slugs the valves/scroll: stop the compressor and correct the cause before any more run time."
+      ]
+    },
+    {
+      "id": "high_discharge_superheat",
+      "condition": "Discharge superheat over 100 F with high suction SH (starving / overheating)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 70,
+      "when": [
+        {
+          "metric": "dischargeSuperheatF",
+          "op": ">",
+          "value": 100
+        },
+        {
+          "metric": "superheatF",
+          "op": ">",
+          "value": 15
+        }
+      ],
+      "explanation": "Discharge superheat above 100 F together with high suction superheat: the compressor is running hot on thin, hot suction gas — low charge, restriction, TXV starving, very high compression ratio, or a suction line picking up heat (uninsulated, long, in a hot attic). Oil breaks down above about 225-250 F discharge line temperature. Follows Copeland AE-1260 / AE4-1327 discharge temperature limits.",
+      "nextChecks": [
+        "Measure discharge line temperature 6 in. from the compressor; expect under 225 F.",
+        "Get subcooling to separate low charge (low SC) from restriction (high SC).",
+        "Check suction line insulation and routing; expect the suction line temperature at the compressor within 5-10 F of the coil outlet."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again.",
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "discharge_temp_warn",
+      "condition": "Discharge line temperature 225-250 F",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 90,
+      "when": [
+        {
+          "metric": "dischargeLineTempF",
+          "op": "between",
+          "value": 225,
+          "value2": 249.99
+        }
+      ],
+      "explanation": "Discharge line above 225 F (measured 6 in. from the compressor) means the discharge gas inside is near 275 F where oil starts to carbonize and valves/scrolls warp. Causes: high compression ratio (high head from a dirty condenser or low suction from low charge/restriction), low charge, high superheat, non-condensables, wrong refrigerant. R-32 and R-454B run 15-25 F hotter than R-410A at the same conditions, so watch them closely. Follows Copeland AE4-1327 / AE-1260 (maximum discharge temperature).",
+      "nextChecks": [
+        "Confirm the probe location (6 in. from the discharge port, insulated); expect under 225 F.",
+        "Compute compression ratio; expect under 3.5 on AC (dirty condenser and low suction are the usual drivers).",
+        "Check superheat; expect 10-25 F total — high SH means low charge/restriction/starving TXV."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "discharge_temp_critical",
+      "condition": "Discharge line temperature 250 F or more",
+      "severity": "critical",
+      "confidence": "high",
+      "priority": 100,
+      "when": [
+        {
+          "metric": "dischargeLineTempF",
+          "op": ">=",
+          "value": 250
+        }
+      ],
+      "explanation": "Discharge line at or above 250 F: the compressor is overheating right now — oil is breaking down, the discharge valves/scroll tips are being damaged, and a burnout is next. Shut it down, let it cool, and find the cause (high head, low suction/charge, restriction, non-condensables, wrong refrigerant, failed fan) before running it again. Follows Copeland AE4-1327 / AE-1260 (maximum discharge temperature).",
+      "nextChecks": [
+        "Stop the compressor; expect the discharge line to cool before any further testing.",
+        "Check condenser fan and coil, compression ratio, superheat and subcooling once restarted briefly; expect CR under 3.5, SH 10-25 F, discharge under 225 F.",
+        "Pull an oil sample / acid test if it has been running like this; expect no acid."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety.",
+        "Burnout/acid handling: suction-line drier, oil change, acid test; wear gloves and eye protection."
+      ]
+    },
+    {
+      "id": "compression_ratio_advisory",
+      "condition": "Compression ratio 3.5-4.5 (AC advisory)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": "between",
+          "value": 3.5,
+          "value2": 4.5
+        }
+      ],
+      "explanation": "Absolute compression ratio (head + Patm)/(suction + Patm) is between 3.5 and 4.5; comfort cooling normally runs 2.5-3.5. Either head is high (dirty condenser, overcharge, non-condensables, hot ambient) or suction is low (low charge, low airflow, restriction). Efficiency and discharge temperature suffer. Follows Copeland compression-ratio guidance (AE-1260) and the Carrier cooling-cycle chart.",
+      "nextChecks": [
+        "Check the split (expect 15-30 F) and the evaporator TD (expect 30-40 F) to see which side is off."
+      ]
+    },
+    {
+      "id": "compression_ratio_warn",
+      "condition": "Compression ratio over 4.5 (AC warning)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 70,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": ">",
+          "value": 4.5
+        }
+      ],
+      "explanation": "Compression ratio above 4.5 on a comfort-cooling system: the compressor is working far outside its map — discharge temperature climbs, oil thins, capacity drops. High head (dirty/blocked condenser, dead fan, overcharge, non-condensables) or very low suction (low charge, frozen coil, restriction, closed valve). Follows Copeland compression-ratio guidance (AE-1260) and the Carrier cooling-cycle chart.",
+      "nextChecks": [
+        "Measure the split and condenser fan operation; expect 15-30 F and full fan speed.",
+        "Measure evaporator TD and superheat; expect 30-40 F and 10-25 F.",
+        "Measure discharge line temperature; expect under 225 F."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "compression_ratio_advisory_refrigeration",
+      "condition": "Compression ratio 8-12 (refrigeration advisory)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": "between",
+          "value": 8,
+          "value2": 12
+        }
+      ],
+      "explanation": "Compression ratio between 8 and 12: normal for a low-temperature (freezer) single-stage system, but high for medium temp (normal 4-8). On a medium-temp box this says low suction (frosted coil, low charge, low load/short of product, TXV starving) or high head. Discharge temperature and oil life are the concern. Follows Copeland AE-1260 / refrigeration compressor application limits.",
+      "nextChecks": [
+        "Confirm the application (box temperature and design evap temperature); expect low-temp 8-12, medium-temp 4-8.",
+        "Measure discharge line temperature; expect under 225 F — above that consider liquid injection/demand cooling per the compressor manual."
+      ]
+    },
+    {
+      "id": "compression_ratio_warn_refrigeration",
+      "condition": "Compression ratio over 12 (refrigeration warning)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 70,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": ">",
+          "value": 12
+        }
+      ],
+      "explanation": "Compression ratio above 12: beyond the single-stage limits of most compressors — discharge temperature and oil breakdown risk are severe. Look for a frosted/iced evaporator, failed defrost, low charge, a starving TXV or closed suction valve on the low side, and a dirty condenser or failed fan on the high side. Follows Copeland AE-1260 / refrigeration compressor application envelopes.",
+      "nextChecks": [
+        "Check the evaporator for ice and the defrost timer/termination; expect a clear coil after defrost.",
+        "Measure discharge line temperature; expect under 225 F.",
+        "Check the condenser split; expect 20-30 F."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again."
+      ]
+    },
+    {
+      "id": "compression_ratio_advisory_heating",
+      "condition": "Compression ratio 5-6.5 in heating (advisory)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": "between",
+          "value": 5,
+          "value2": 6.5
+        }
+      ],
+      "explanation": "Compression ratio between 5 and 6.5 in heat-pump heating: normal only at low outdoor temperatures (below about 25 F). At mild ambient it means the outdoor coil is starved (frost, low airflow, failed defrost, low charge) or the indoor side is holding high head (low indoor airflow, dirty filter). Follows Copeland heat-pump application guidance (AE-1260).",
+      "nextChecks": [
+        "Check the outdoor coil for frost and the defrost control; expect a clear coil between cycles.",
+        "Check indoor airflow/filter; expect indoor coil TD 25-35 F."
+      ]
+    },
+    {
+      "id": "compression_ratio_warn_heating",
+      "condition": "Compression ratio over 6.5 in heating (warning)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 70,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "compressionRatio",
+          "op": ">",
+          "value": 6.5
+        }
+      ],
+      "explanation": "Compression ratio above 6.5 in heating: the compressor is outside its envelope unless it is a low-ambient/vapor-injection design running near its limit. Iced outdoor coil, failed defrost, low charge, or very low indoor airflow. Discharge temperature will be high. Follows Copeland heat-pump application guidance (AE-1260).",
+      "nextChecks": [
+        "Measure discharge line temperature; expect under 225 F.",
+        "Check outdoor coil for ice and force a defrost per the board's test mode; expect a clear coil afterwards.",
+        "Check indoor airflow and filters; expect rated ESP."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again."
+      ]
+    },
+    {
+      "id": "amps_over_rla",
+      "condition": "Compressor amps over RLA",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 85,
+      "when": [
+        {
+          "metric": "ampsPercentRla",
+          "op": ">",
+          "value": 100
+        }
+      ],
+      "explanation": "Compressor current above the nameplate RLA: high head (dirty condenser, overcharge, non-condensables, fan failure), low voltage, voltage imbalance, a mechanical problem, or liquid floodback. It will trip the overload/CLO or fail the windings. Normal running current is 60-90 % of RLA. Follows the Copeland nameplate current guidance (RLA = MCC/1.56) and the Carrier cooling-cycle chart.",
+      "nextChecks": [
+        "Measure voltage at the contactor under load and imbalance across the three legs; expect within +/-10 % of nameplate and under 2 % imbalance.",
+        "Measure the split; expect 15-30 F — high head is the usual driver.",
+        "Check amps on each leg; expect within 10 % of each other."
+      ],
+      "safety": [
+        "LOTO per NFPA 70E with live-dead-live meter proof before touching wiring; CAT III/IV meter on 480/575 V; arc-flash PPE.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "amps_low",
+      "condition": "Compressor amps under 50 % RLA (low load / undercharge / not pumping)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 55,
+      "when": [
+        {
+          "metric": "ampsPercentRla",
+          "op": "<",
+          "value": 50
+        },
+        {
+          "metric": "hotGasBypass",
+          "op": "<",
+          "value": 1
+        }
+      ],
+      "explanation": "Compressor current under 50 % of RLA while running (normal 60-90 %): the compressor is doing little work — low load (cold return, low airflow, high evaporator TD), low charge, a restriction starving the evaporator, an unloaded/part-capacity compressor, or a compressor that is not pumping. Follows the Carrier six-parameter cooling-cycle chart.",
+      "nextChecks": [
+        "Check compression ratio and superheat; expect CR 2.5-3.5 and SH 10-25 F. Low CR + low amps = not pumping; high SH + low amps = low charge/restriction.",
+        "Confirm the unit is at full stage/capacity and 10+ min into the run."
+      ]
+    },
+    {
+      "id": "current_imbalance",
+      "condition": "Three-phase current imbalance over 10 %",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 80,
+      "when": [
+        {
+          "metric": "currentImbalancePercent",
+          "op": ">",
+          "value": 10
+        }
+      ],
+      "explanation": "Compressor leg currents differ by more than 10 % from the average. Expect current imbalance about 6-10 times the voltage imbalance, so 10 % current usually means 1-2 % voltage imbalance (bad contactor contacts, loose lug, utility) — or a winding going bad. Running like this overheats one winding. Follows NEMA MG-1 (voltage imbalance) and the Copeland current-imbalance guideline.",
+      "nextChecks": [
+        "Measure line-to-line voltage at the contactor line and load sides under load; expect under 1 % imbalance (investigate above 1 %, derate above 2 %, do not run above 5 %).",
+        "Check contactor contact voltage drop per pole under load; expect near 0 V (over 0.5-1 V = burned contacts).",
+        "Ohm the windings with power off; expect all three within +/-5 %."
+      ],
+      "safety": [
+        "LOTO per NFPA 70E with live-dead-live meter proof before touching wiring; CAT III/IV meter on 480/575 V; arc-flash PPE."
+      ]
+    },
+    {
+      "id": "sight_glass_bubbles_restriction",
+      "condition": "Bubbles in sight glass with normal/high subcooling — restriction upstream",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 60,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "sightGlass",
+          "op": "between",
+          "value": 1,
+          "value2": 2
+        },
+        {
+          "metric": "subcoolingF",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "explanation": "Bubbles or flash in the glass while subcooling at the condenser is 8 F or more: the liquid was solid leaving the condenser and flashed on the way — a pressure drop between the condenser and the glass (plugged drier, partly closed valve, undersized/long liquid line, vertical riser), or the liquid line picking up heat. Not a charge problem; adding refrigerant will overcharge it. Follows the Sporlan sight-glass / liquid-line application guidance.",
+      "nextChecks": [
+        "Measure the drier temperature drop; expect under 3 F.",
+        "Measure liquid line temperature at the condenser outlet vs at the glass; expect within 2-3 F."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "sight_glass_bubbles_undercharge",
+      "condition": "Bubbles in sight glass with low subcooling — undercharge",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 78,
+      "chargeRelated": true,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "sightGlass",
+          "op": "between",
+          "value": 1,
+          "value2": 2
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "<",
+          "value": 5
+        }
+      ],
+      "explanation": "Bubbles in the glass and subcooling under 5 F: the condenser is not making solid liquid — low charge (after ruling out low head at low ambient, which also bubbles the glass). Follows the RSES/Sporlan sight-glass charging guidance.",
+      "nextChecks": [
+        "Confirm condensing sat is at least 90-105 F (head-pressure control working at low ambient); expect a clear glass only with normal head.",
+        "Leak check, then add liquid in small steps until the glass clears AND subcooling is 8-15 F; expect the glass to clear before SC hits target on a receiver system."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "A2L/A3 refrigerants: ventilate, no ignition sources, A2L-rated detector and recovery machine; never retrofit R-454B/R-32 into R-410A equipment."
+      ]
+    },
+    {
+      "id": "sight_glass_bubbles_sc_unknown",
+      "condition": "Bubbles in sight glass — subcooling not measured",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 40,
+      "chargeRelated": true,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "sightGlass",
+          "op": "between",
+          "value": 1,
+          "value2": 2
+        },
+        {
+          "metric": "subcoolingF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "A bubbling sight glass alone does not mean low charge: low head at low ambient, a restriction upstream of the glass, or a receiver system between fan cycles all bubble the glass. Subcooling at the condenser outlet decides it. Follows the RSES/Sporlan sight-glass charging guidance.",
+      "nextChecks": [
+        "Measure liquid pressure and temperature at the condenser outlet and compute subcooling; expect 8-15 F. Under 5 F = low charge; 8 F or more = restriction/heat gain between the condenser and the glass."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "sight_glass_flashing",
+      "condition": "Sight glass flashing (intermittent vapor)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 55,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling",
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "sightGlass",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "explanation": "A flashing glass — clear then a burst of vapor — is typical of head-pressure control cycling the condenser fan at low ambient, a marginal charge on a receiver system, or a TXV hunting. Do not charge to a clear glass at low ambient; you will overcharge for summer. Follows the Sporlan head-pressure control and sight-glass guidance.",
+      "nextChecks": [
+        "Watch head pressure over 2-3 fan cycles; expect the glass to clear when condensing sat is 90-105 F.",
+        "Measure subcooling at the condenser outlet at full fan; expect 8-15 F."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "moisture_indicator_wet",
+      "condition": "Moisture indicator shows WET",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 80,
+      "when": [
+        {
+          "metric": "moistureIndicator",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "explanation": "The sight-glass moisture indicator reads wet: water in the system forms acid with the refrigerant and oil and freezes at the metering device (intermittent restriction). Replace the liquid-line drier (and a suction drier if there was a burnout), evacuate properly, and find the moisture source (leak on the low side, poor evacuation). Follows Sporlan drier/moisture indicator guidance (bulletin 40-10).",
+      "nextChecks": [
+        "Confirm the indicator is not just stale (colors take 12+ h to change) and the system has run 12-24 h since the last drier; expect dry.",
+        "Replace the drier; evacuate to 500 microns with a decay test; recheck the indicator after 24 h; expect dry.",
+        "Leak check the low side; expect no leak."
+      ],
+      "safety": [
+        "Never mix refrigerants. Never use refrigerant as a leak-test gas: pressure-test only with dry nitrogen through a regulator with relief, and purge nitrogen while brazing.",
+        "Recover before opening the circuit; a wet/acidic system calls for gloves and eye protection."
+      ]
+    },
+    {
+      "id": "low_ambient_head_control",
+      "condition": "Outdoor below 65 F without confirmed head-pressure control",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 88,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "outdoorDbF",
+          "op": "<",
+          "value": 65
+        },
+        {
+          "metric": "headPressureControl",
+          "op": "<=",
+          "value": 0
+        }
+      ],
+      "explanation": "Outdoor DB is under 65 F and no head-pressure control is confirmed. Below about 65 F head pressure falls, the TXV loses its pressure drop, superheat rises and subcooling falls — the low-charge signature — with the charge perfectly fine. Expect a fan-cycling switch, condenser fan VFD (Motormaster) or flooding valve to hold condensing saturation about 90-105 F; without one, gauge readings cannot be used to judge charge. Follows the Carrier low-ambient charging guidance and the hard rule: never diagnose charge below 65 F outdoor without confirmed head-pressure control.",
+      "nextChecks": [
+        "Identify the head-pressure control (fan cycling switch, fan speed control, flooding valve) from the IOM/wiring diagram and confirm it is working; expect condensing sat 90-105 F.",
+        "If none: block part of the condenser coil (temporarily, attended) to raise condensing sat to 90-105 F, then re-read SH/SC.",
+        "Otherwise wait for outdoor DB of 65 F or more, or charge by weigh-in."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "low_ambient_head_control_failed",
+      "condition": "Low ambient: head-pressure control not holding (condSat < 85 F, high SH)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 89,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "outdoorDbF",
+          "op": "<",
+          "value": 65
+        },
+        {
+          "metric": "condSatF",
+          "op": "<",
+          "value": 85
+        },
+        {
+          "metric": "superheatF",
+          "op": ">",
+          "value": 15
+        }
+      ],
+      "explanation": "Outdoor is below 65 F, condensing saturation is under 85 F and superheat is high: the head-pressure control is not holding head (fan cycling switch stuck, VFD at full speed, flooding valve not flooding) — or there is none. The TXV cannot feed with this little pressure drop, so SH goes up and SC down. This is a head-pressure problem, NOT undercharge; adding refrigerant now overcharges the unit for summer. Follows the Carrier low-ambient troubleshooting guidance and Sporlan head-pressure control bulletin 90-30.",
+      "nextChecks": [
+        "Check the condenser fan is cycling/slowing: fan cycling switch setpoints (typically cut-in ~ 250-300 psig on R-410A), VFD/Motormaster sensor and signal; expect the fan to slow or stop until condensing sat reaches 90-105 F.",
+        "Flooding valve systems: expect the receiver/condenser to hold back liquid and head to rise; check the valve setting and that the system has the winter charge.",
+        "Block the coil temporarily (attended) to bring condensing sat to 90-105 F and re-read SH/SC; expect them to return to normal if the charge is right."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "low_ambient_head_control_ok",
+      "condition": "Low ambient: head-pressure control holding (condSat 88-108 F)",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 30,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "outdoorDbF",
+          "op": "<",
+          "value": 65
+        },
+        {
+          "metric": "headPressureControl",
+          "op": ">=",
+          "value": 1
+        },
+        {
+          "metric": "condSatF",
+          "op": "between",
+          "value": 88,
+          "value2": 108
+        }
+      ],
+      "explanation": "Outdoor is below 65 F but head-pressure control is confirmed and condensing saturation is holding 88-108 F, so the TXV has its pressure drop and SH/SC readings are usable — with the caveat that split and compression ratio are artificially high and a flooding valve holds extra charge. Follows the Carrier low-ambient charging guidance.",
+      "nextChecks": [
+        "Read SH/SC over two fan cycles and use the readings at the top of the cycle; expect SC at target within 3 F."
+      ]
+    },
+    {
+      "id": "flooding_valve_suppress",
+      "condition": "Flooding-valve head-pressure control: high SC is not overcharge by itself",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 35,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "headPressureControl",
+          "op": ">=",
+          "value": 3
+        },
+        {
+          "metric": "subcoolingF",
+          "op": ">",
+          "value": 15
+        }
+      ],
+      "explanation": "This system uses a flooding (condenser holdback) valve for low-ambient head control, which floods the condenser with liquid to raise head — so subcooling reads high by design and the system needs extra 'winter charge' to do it. Overcharge rules from subcooling alone are suppressed; charge by the manufacturer's winter charge table or receiver level. Follows Sporlan head-pressure control bulletin 90-30.",
+      "nextChecks": [
+        "Find the manufacturer winter charge / receiver level spec; expect the receiver 20-80 % full at the sight glass or the charge on the nameplate winter table.",
+        "Judge overcharge only in warm ambient with the valve wide open."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "hot_gas_bypass",
+      "condition": "Hot-gas bypass active — suction held artificially",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 35,
+      "when": [
+        {
+          "metric": "hotGasBypass",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "explanation": "Hot-gas bypass is holding suction pressure up at low load, so low-load findings (low amps, low compression ratio, warm evaporator) are expected and suction-side readings do not reflect the charge or the load. To check the charge, verify the bypass valve is closed (load the unit or disable the bypass per the IOM) and re-read. Follows Sporlan hot-gas bypass bulletin 90-40.",
+      "nextChecks": [
+        "Feel the bypass line: hot = bypassing. Load the unit (full stage, warm return) or isolate the bypass per the manufacturer and re-read SH/SC; expect suction to drop to the normal evaporating range."
+      ]
+    },
+    {
+      "id": "readings_part_load",
+      "condition": "Part-load / reduced capacity commanded — readings not for charge",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 30,
+      "when": [
+        {
+          "metric": "capacityPercent",
+          "op": "<",
+          "value": 100
+        }
+      ],
+      "explanation": "The compressor is commanded below 100 % (digital, variable-speed or staged capacity). Suction, head, superheat, subcooling, amps and delta-T all shift with capacity, so the charging charts (built at full load) do not apply. Compare amps, evaporator TD and delta-T per running stage against the manufacturer's part-load data or force full capacity per the IOM test mode. Follows the Copeland digital/variable-speed charging guidance (AE4-1372) and manufacturer test-mode procedures.",
+      "nextChecks": [
+        "Force 100 % capacity (test/charging mode) and let it stabilize 10-15 min; expect readings usable for charge only then."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "readings_part_stage_tandem",
+      "condition": "Part stage on a multi-compressor circuit — compare per running compressor",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 30,
+      "when": [
+        {
+          "metric": "stageCommanded",
+          "op": "<=",
+          "value": 1
+        },
+        {
+          "metric": "compressorCount",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "explanation": "Only part of a tandem/multi-compressor circuit is running. Amps, evaporator TD and delta-T must be compared per running compressor and stage, and the charging chart applies only with all compressors on the circuit running. Check oil equalization between tandem compressors (sight glasses/oil line) after staging. Follows the Copeland tandem application bulletin (AE4-1414) and manufacturer staging tables.",
+      "nextChecks": [
+        "Command full stage on this circuit and wait 10-15 min; expect amps per compressor at 60-90 % RLA and oil levels equal in the sight glasses."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "readings_not_stable",
+      "condition": "Less than 10 minutes of run time — readings not stable",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 30,
+      "when": [
+        {
+          "metric": "runtimeMinutes",
+          "op": "<",
+          "value": 10
+        }
+      ],
+      "explanation": "The unit has been running under 10 minutes at this stage. Pressures, superheat and subcooling keep moving for 10-15 minutes after start (longer with a cold coil or after a defrost); readings taken sooner mislead the charge decision. Follows every manufacturer charging chart's 'run 10-15 min before charging' instruction.",
+      "nextChecks": [
+        "Wait until 10-15 min of continuous run at full capacity, then re-read; expect suction and head to hold within 2-3 psi over 2 min."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "economizer_open",
+      "condition": "Economizer open — entering air is mixed air",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 32,
+      "when": [
+        {
+          "metric": "economizerPosition",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "explanation": "The economizer damper is open, so the air entering the evaporator is mixed outdoor/return air, not the return. Use mixed-air DB/WB (measured after the mixing box, before the coil) for target superheat, TD and delta-T, and expect the load to be off-chart. For charging, drive the damper to minimum/closed (economizer test mode or disconnect the actuator per the IOM) and wait 10 min. Follows the Honeywell JADE / Carrier economizer service guidance and the charging chart conditions.",
+      "nextChecks": [
+        "Command the damper to minimum position and confirm mixed-air temperature approaches return temperature; expect within 2-3 F before charging."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "dehumid_reheat_active",
+      "condition": "Dehumidification / hot-gas reheat active — readings not for charge",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 30,
+      "when": [
+        {
+          "metric": "dehumidReheatActive",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "explanation": "Hot-gas or subcooled-liquid reheat is diverting refrigerant through the reheat coil, changing head pressure, subcooling and the supply temperature. The cooling charging chart does not apply while reheat is active. Disable the dehumidification call per the IOM, run 10-15 min in normal cooling, then re-read. Follows manufacturer dehumidification-mode service notes (Carrier Humidi-MiZer, Lennox Humiditrol).",
+      "nextChecks": [
+        "Turn off the dehumidification/reheat call and confirm the reheat valve has de-energized; expect supply temperature to drop and SC to settle before charging."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "defrost_active",
+      "condition": "Defrost active or just ended — readings invalid",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 32,
+      "when": [
+        {
+          "metric": "defrostActive",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "explanation": "During defrost a heat pump runs in cooling with the outdoor fan off (or a refrigeration coil is on electric/hot-gas defrost), so every pressure and temperature is off-chart, and it takes 10-15 minutes after termination to settle. Nothing here can be used for charge. Follows manufacturer defrost-board service guidance (Carrier/Lennox/Trane heat-pump service manuals).",
+      "nextChecks": [
+        "Wait for defrost to terminate and 10-15 min of normal running; expect frost cleared and pressures steady. If defrost repeats every cycle, check the defrost sensor/thermostat, board timing, and the outdoor coil for airflow/low charge."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "hp_ports_swapped",
+      "condition": "Heating: suction read at the vapor service valve (carries hot gas)",
+      "severity": "warning",
+      "confidence": "high",
+      "priority": 90,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionMeasuredAt",
+          "op": "between",
+          "value": 1,
+          "value2": 1
+        }
+      ],
+      "explanation": "In heating the reversing valve sends discharge gas out the large 'vapor' service valve to the indoor coil, so a gauge there reads HEAD pressure, not suction. Suction in heating is only available at the compressor suction / accumulator outlet port (many units have a dedicated port or a Schrader on the suction line inside the cabinet). The evaporating temperature and superheat computed from a vapor-valve reading in heating are meaningless. Follows the Carrier/Lennox heat-pump service manual gauge-connection instructions.",
+      "nextChecks": [
+        "Move the low-side gauge to the compressor suction / accumulator outlet port; expect a pressure well below the liquid pressure (e.g. R-410A 40-90 psig depending on outdoor temperature).",
+        "Re-run the diagnosis with suctionMeasuredAt = compressor_suction."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "hp_charge_by_chart",
+      "condition": "Heating mode: charge by the manufacturer heating check chart or weigh-in",
+      "severity": "advisory",
+      "confidence": "high",
+      "priority": 60,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        }
+      ],
+      "explanation": "Superheat/subcooling charging charts are for cooling; in heating the indoor coil condenses and the outdoor coil evaporates at whatever the weather gives it, so SH/SC targets do not exist in the same form. Verify charge with the manufacturer's heating check chart (discharge or liquid pressure vs outdoor and indoor DB, sometimes suction pressure vs outdoor DB) — or recover, evacuate and weigh in the nameplate charge plus line-set adder. Typical sanity numbers: indoor coil TD 25-35 F, outdoor coil TD 15-30 F, compressor superheat 5-15 F at the accumulator outlet. Follows the Carrier / Lennox / Trane heat-pump heating check chart procedure.",
+      "nextChecks": [
+        "Locate the heating check chart in the IOM or on the panel; expect discharge/liquid pressure within the chart band for the current outdoor DB / indoor DB.",
+        "If no chart is available, plan a weigh-in, or return in cooling weather (outdoor 65 F or more) to charge by subcooling."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "hp_outdoor_coil_td_high",
+      "condition": "Heating: outdoor coil TD over 30 F (frost / low airflow / low charge)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": ">",
+          "value": 30
+        }
+      ],
+      "explanation": "Outdoor DB minus evaporating saturation is more than 30 F (typical 15-30 F, shrinking as frost builds). The outdoor coil is not absorbing heat: frost/ice (defrost problem), dirty coil or blocked fins, outdoor fan slow/dead, low charge or a starving outdoor metering device. Follows the heat-pump heating troubleshooting tables in the Carrier/Lennox service manuals.",
+      "nextChecks": [
+        "Look at the outdoor coil; expect no ice buildup between defrosts. If iced, check the defrost sensor and board.",
+        "Check the outdoor fan and coil cleanliness; expect full speed and a clean coil.",
+        "Compare liquid pressure to the heating check chart; expect within band — low suggests low charge."
+      ]
+    },
+    {
+      "id": "hp_indoor_coil_td_high",
+      "condition": "Heating: indoor coil TD over 35 F (low indoor airflow / high head)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "indoorCoilTdF",
+          "op": ">",
+          "value": 35
+        }
+      ],
+      "explanation": "Condensing saturation is more than 35 F above indoor entering DB (typical 25-35 F): the indoor coil (now the condenser) is not rejecting heat — low indoor airflow (filter, blower speed, closed dampers, dirty coil), overcharge, or non-condensables. Head pressure and amps run high and the high-pressure switch may trip. Follows the heat-pump heating troubleshooting tables in the Carrier/Lennox service manuals.",
+      "nextChecks": [
+        "Check filters, blower speed tap/ESP; expect rated airflow.",
+        "Measure temperature rise across the indoor coil; expect 20-35 F (higher = low airflow)."
+      ],
+      "safety": [
+        "Never bypass or permanently jumper the high-pressure switch, high limits or any safety."
+      ]
+    },
+    {
+      "id": "hp_indoor_coil_td_low",
+      "condition": "Heating: indoor coil TD under 20 F (low capacity)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "indoorCoilTdF",
+          "op": "<",
+          "value": 20
+        }
+      ],
+      "explanation": "Condensing saturation is less than 20 F above indoor entering DB (typical 25-35 F): the system is delivering little heat — low charge, weak compressor, reversing valve leak-by, very low outdoor temperature (normal below about 20 F), or high indoor airflow. Follows the heat-pump heating troubleshooting tables in the Carrier/Lennox service manuals.",
+      "nextChecks": [
+        "Compare to the heating check chart for the outdoor DB; expect within band.",
+        "Measure discharge superheat and the reversing valve tubes; expect over 30 F and under 3-4 F difference on the suction-side tubes."
+      ]
+    },
+    {
+      "id": "reversing_valve_leak",
+      "condition": "Heating: reversing valve leak-by (low discharge SH, high suction)",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 75,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_heating"
+        ]
+      },
+      "when": [
+        {
+          "metric": "dischargeSuperheatF",
+          "op": "<",
+          "value": 30
+        },
+        {
+          "metric": "evapTdF",
+          "op": "<",
+          "value": 12
+        }
+      ],
+      "explanation": "Discharge superheat under 30 F with the outdoor coil TD under 12 F (suction high for the ambient): hot gas is bypassing inside the reversing valve straight back to suction. The compressor looks weak (low CR, low amps) and heating capacity is down. Confirm with the temperature across the reversing valve's suction-side tubes: more than 3-4 F between the suction line to the compressor and the tube from the coil means leak-by. Follows the Ranco/Emerson reversing valve troubleshooting procedure.",
+      "nextChecks": [
+        "Measure the three suction-side tubes of the reversing valve (line from the coil, line to the compressor/accumulator); expect within 3-4 F. A bigger difference = leaking valve.",
+        "Cycle the valve (O/B) and listen; expect a clean shift — a partial shift can be the solenoid/coil or low pressure differential."
+      ]
+    },
+    {
+      "id": "reversing_valve_leak_cooling",
+      "condition": "Heat pump cooling: possible reversing valve leak-by (low discharge SH, low CR)",
+      "severity": "warning",
+      "confidence": "low",
+      "priority": 60,
+      "appliesTo": {
+        "mode": [
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "dischargeSuperheatF",
+          "op": "<",
+          "value": 30
+        },
+        {
+          "metric": "compressionRatio",
+          "op": "<",
+          "value": 2.2
+        }
+      ],
+      "explanation": "On a heat pump in cooling, discharge superheat under 30 F with a compression ratio under 2.2 looks like a weak compressor but is just as often the reversing valve bypassing hot gas to suction. Check the valve before condemning the compressor. Follows the Ranco/Emerson reversing valve troubleshooting procedure.",
+      "nextChecks": [
+        "Measure the reversing valve suction-side tubes; expect within 3-4 F.",
+        "Measure compressor amps vs RLA; expect 60-90 %."
+      ]
+    },
+    {
+      "id": "refrigeration_targets",
+      "condition": "Refrigeration targets (medium/low temp)",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 20,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        }
+      ],
+      "explanation": "Refrigeration sanity targets: evaporator TD (box air - evap sat) 10-12 F medium temp, 6-10 F low temp (larger TD = frost/low charge/low airflow, smaller = high load or oversized coil); evaporator superheat 6-10 F at the coil outlet; total superheat 20-30 F at the compressor (Copeland minimum 20 F); condenser split 20-30 F air-cooled; compression ratio 4-8 medium temp, 8-12 low temp; discharge line under 225 F. Charge by sight glass only with normal head pressure and subcooled liquid; a bubbling glass while the fan cycles at low ambient is normal. Follows Copeland AE-1260/AE4-1287 and the RSES refrigeration troubleshooting charts.",
+      "nextChecks": [
+        "Confirm the box design temperature and TD from the evaporator nameplate/IOM; expect medium temp 10-12 F, low temp 6-10 F."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "refrigeration_evap_td_high",
+      "condition": "Refrigeration: evaporator TD over 15 F (frost / low charge / low airflow)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 55,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": ">",
+          "value": 15
+        }
+      ],
+      "explanation": "Entering (box) air minus evaporating saturation is above 15 F (normal 10-12 F medium temp, 6-10 F low temp): the coil is running too cold for the box — iced coil or failed defrost, evaporator fans off/slow, product blocking airflow, low charge or a starving TXV. High TD also dries out product. Follows the RSES/Heatcraft evaporator TD guidance.",
+      "nextChecks": [
+        "Inspect the coil for ice and check the defrost schedule/termination; expect a clear coil after defrost.",
+        "Check evaporator fans and product loading; expect all fans running and free air paths.",
+        "Measure superheat at the coil outlet; expect 6-10 F — high = starving/low charge."
+      ]
+    },
+    {
+      "id": "refrigeration_evap_td_low",
+      "condition": "Refrigeration: evaporator TD under 6 F (high load / overfeeding)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 50,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "evapTdF",
+          "op": "<",
+          "value": 6
+        }
+      ],
+      "explanation": "Box air minus evaporating saturation is under 6 F: the coil is warm for the box — heavy load / warm product / doors open (pull-down), an oversized coil, or the TXV overfeeding with saturated gas (and liquid) heading to the compressor. Follows the RSES/Heatcraft evaporator TD guidance.",
+      "nextChecks": [
+        "Measure superheat at the coil outlet and at the compressor; expect 6-10 F and 20-30 F.",
+        "Wait for pull-down to finish and re-read; expect TD to rise to 10-12 F (medium temp)."
+      ],
+      "safety": [
+        "Liquid returning to the compressor washes out the oil and slugs the valves/scroll: stop the compressor and correct the cause before any more run time."
+      ]
+    },
+    {
+      "id": "refrigeration_superheat_high",
+      "condition": "Refrigeration: total superheat over 30 F",
+      "severity": "warning",
+      "confidence": "medium",
+      "priority": 70,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": ">",
+          "value": 30
+        }
+      ],
+      "explanation": "Total superheat at the compressor above 30 F (normal 20-30 F): the compressor is running on hot, thin gas — low charge, starving TXV (lost element charge, plugged screen), restriction, iced coil, or a long uninsulated suction line. Discharge temperature and motor heat go up; on hermetics the motor cooling depends on that suction gas. Follows Copeland AE-1260 (suction gas superheat limits) and the RSES refrigeration troubleshooting chart.",
+      "nextChecks": [
+        "Measure superheat at the coil outlet; expect 6-10 F. High there = starving valve/low charge; normal there but high at the compressor = suction line heat gain.",
+        "Measure subcooling / sight glass at the receiver outlet; expect a clear glass and 5+ F SC.",
+        "Measure discharge line temperature; expect under 225 F."
+      ],
+      "safety": [
+        "Discharge line above 225 F breaks down the oil; above 250 F shut it down and find the cause before running it again.",
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more."
+      ]
+    },
+    {
+      "id": "refrigeration_superheat_low",
+      "condition": "Refrigeration: total superheat 5-12 F (liquid risk)",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 55,
+      "appliesTo": {
+        "mode": [
+          "refrigeration"
+        ]
+      },
+      "when": [
+        {
+          "metric": "superheatF",
+          "op": "between",
+          "value": 5,
+          "value2": 12
+        }
+      ],
+      "explanation": "Total superheat at the compressor between 5 and 12 F (Copeland wants at least 20 F on refrigeration): the margin against liquid floodback is thin — TXV overfeeding, bulb problem, low evaporator airflow/iced coil, or heavy defrost carry-over. Follows Copeland AE-1260 / AE4-1287.",
+      "nextChecks": [
+        "Check the TXV bulb mounting and insulation; expect tight contact at 10 or 2 o'clock.",
+        "Check evaporator fans and coil for ice; expect clear.",
+        "Re-read after a defrost cycle settles; expect 20-30 F total."
+      ],
+      "safety": [
+        "Liquid returning to the compressor washes out the oil and slugs the valves/scroll: stop the compressor and correct the cause before any more run time."
+      ]
+    },
+    {
+      "id": "vrf_chiller_scope",
+      "condition": "Variable-speed/inverter or screw compressor: gauge-based charge diagnosis out of scope",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 25,
+      "when": [
+        {
+          "metric": "compressorType",
+          "op": "between",
+          "value": 4,
+          "value2": 5
+        }
+      ],
+      "explanation": "Variable-speed (inverter) and screw compressors run wherever the controller puts them, so generic charging charts and fixed superheat/subcooling targets do not apply. On VRF, mini-splits and chillers, charge is verified by weight or by the manufacturer's service tool (Daikin Service Checker, Mitsubishi Maintenance Tool, LG LGMV, chiller controller subcooling/approach screens) and the assistant does not judge charge from gauge readings. Decode the error codes, check power and communication, and follow the manufacturer's procedure. Follows the manufacturer service-tool charging procedures (Daikin/Mitsubishi/LG) and the DESIGN scope statement.",
+      "nextChecks": [
+        "Pull the controller/service-tool data (target vs actual SH/SC, valve positions, error history); expect the manufacturer's own targets to be used.",
+        "If refrigerant was lost, recover, evacuate and weigh in the nameplate charge plus the piping adder table."
+      ],
+      "safety": [
+        "Never add or remove refrigerant without a leak check and valid readings (outdoor DB 65 F or more or confirmed head-pressure control, economizer closed, full stage, 10+ min runtime, no defrost/reheat). EPA 608: recover, never vent; follow AIM Act leak-repair rules on HFC systems of 15 lb or more.",
+        "A2L/A3 refrigerants: ventilate, no ignition sources, A2L-rated detector and recovery machine; never retrofit R-454B/R-32 into R-410A equipment."
+      ]
+    },
+    {
+      "id": "high_side_at_discharge_line",
+      "condition": "High side read at the discharge line — subcooling reads slightly high",
+      "severity": "info",
+      "confidence": "medium",
+      "priority": 20,
+      "when": [
+        {
+          "metric": "highSideMeasuredAt",
+          "op": "between",
+          "value": 1,
+          "value2": 1
+        }
+      ],
+      "explanation": "The high-side pressure came from the discharge line, which is a few psi above the liquid line (condenser pressure drop), so condensing saturation and subcooling computed from it read 1-3 F high. Fine for a sanity check; for a charge decision read at the liquid service valve. Follows the Carrier subcooling charging method (liquid-line pressure and temperature).",
+      "nextChecks": [
+        "Move the high-side gauge to the liquid service valve with the temperature probe next to it; expect SC 1-3 F lower than computed here."
+      ]
+    },
+    {
+      "id": "high_external_static",
+      "condition": "External static over 1.0 in. wc — likely low airflow",
+      "severity": "advisory",
+      "confidence": "medium",
+      "priority": 55,
+      "when": [
+        {
+          "metric": "externalStaticInWc",
+          "op": ">",
+          "value": 1
+        }
+      ],
+      "explanation": "External static pressure above 1.0 in. wc is beyond what most packaged units are rated for (0.3-0.8 in. wc typical): airflow is well below rated — dirty filters, dirty evaporator coil, closed/undersized ductwork, closed dampers or VAV boxes. Low airflow drives low suction, low SH (fixed orifice), high delta-T and coil icing. Follows the manufacturer fan performance tables (IOM) and ACCA airflow guidance.",
+      "nextChecks": [
+        "Check filters and the coil; expect clean.",
+        "Compare the measured ESP and blower speed to the IOM fan table; expect airflow about 350-450 CFM/ton.",
+        "Measure delta-T; expect the chart target (16-22 F typical)."
+      ]
+    },
+    {
+      "id": "delta_t_low",
+      "condition": "Delta-T under 12 F (low capacity or high airflow)",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 40,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "deltaTF",
+          "op": "<",
+          "value": 12
+        }
+      ],
+      "explanation": "Entering-minus-supply temperature is under 12 F (chart target usually 16-22 F, less with humid air): low capacity (low charge, weak compressor, restriction, part stage) or airflow above rated, or humid entering air soaking capacity as latent load. Not a charge indicator by itself — use it with SH/SC. Follows the Carrier cooling delta-T chart.",
+      "nextChecks": [
+        "Measure entering DB/WB and use the delta-T table target; expect within +/-3 F.",
+        "Confirm full stage and 10+ min run; check SH/SC for the capacity side."
+      ]
+    },
+    {
+      "id": "delta_t_high",
+      "condition": "Delta-T over 24 F (low airflow)",
+      "severity": "advisory",
+      "confidence": "low",
+      "priority": 40,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "deltaTF",
+          "op": ">",
+          "value": 24
+        }
+      ],
+      "explanation": "Entering-minus-supply temperature is above 24 F (chart target usually 16-22 F): too little air across the coil for the capacity — filters, coil, belts, blower speed, dampers, high ESP — or very dry entering air. Expect low suction and a cold coil; on a fixed orifice superheat drops. Follows the Carrier cooling delta-T chart.",
+      "nextChecks": [
+        "Measure ESP and inspect filters/coil/belts; expect rated ESP and a clean coil.",
+        "Compute evaporator TD; expect 30-40 F (higher confirms low airflow or low charge)."
+      ]
+    },
+    {
+      "id": "missing_suction_line_temp",
+      "condition": "Suction line temperature missing — superheat unknown",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 15,
+      "when": [
+        {
+          "metric": "suctionPsig",
+          "op": "present"
+        },
+        {
+          "metric": "suctionLineTempF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Suction pressure alone gives evaporating temperature but not superheat, and superheat is what separates low charge, restriction, overfeeding and floodback. Follows the Carrier charging chart measurement list.",
+      "nextChecks": [
+        "Clamp an insulated probe on the suction line about 6 in. from the suction service valve (fixed orifice: at the outdoor unit; TXV: also at the coil outlet); expect 10-25 F total superheat."
+      ]
+    },
+    {
+      "id": "missing_liquid_line_temp",
+      "condition": "Liquid line temperature missing — subcooling unknown",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 15,
+      "when": [
+        {
+          "metric": "liquidPsig",
+          "op": "present"
+        },
+        {
+          "metric": "liquidLineTempF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Liquid pressure alone gives condensing temperature but not subcooling, and subcooling is the charge indicator on TXV/EEV systems and the tie-breaker between undercharge and restriction on fixed-orifice systems. Follows the Carrier subcooling charging method.",
+      "nextChecks": [
+        "Clamp an insulated probe on the liquid line at the liquid service valve; expect subcooling 8-15 F (nameplate target on TXV units)."
+      ]
+    },
+    {
+      "id": "missing_outdoor_db",
+      "condition": "Outdoor dry bulb missing — split and low-ambient check unknown",
+      "severity": "info",
+      "confidence": "high",
+      "priority": 15,
+      "appliesTo": {
+        "mode": [
+          "ac_cooling",
+          "heat_pump_cooling"
+        ]
+      },
+      "when": [
+        {
+          "metric": "outdoorDbF",
+          "op": "absent"
+        }
+      ],
+      "explanation": "Without outdoor DB the engine cannot compute condenser split, the fixed-orifice superheat target, or confirm the readings were taken above 65 F — the hard rule for judging charge. Follows the Carrier charging chart measurement list.",
+      "nextChecks": [
+        "Measure outdoor DB in the shade at the condenser air inlet (not on the roof deck); expect 65 F or more for a charge check without head-pressure control."
+      ]
+    }
+  ],
+  "notes": [
+    "Defaults are for AC cooling (ac_cooling / heat_pump_cooling): compression ratio advisory 3.5 / warning 4.5, evaporator TD 30-40 F, condenser split 15-30 F (standard efficiency 25-30 F, high-efficiency/microchannel 10-20 F), delta-T 16-22 F, discharge line warn 225 F / critical 250 F, low-ambient minimum outdoor DB 65 F. byMode overrides: refrigeration (CR advisory 8 / warn 12, evap TD 8-12 F, split 20-30 F) and heat_pump_heating (CR advisory 5 / warn 6.5, outdoor coil TD 15-30 F, indoor coil TD 25-35 F via condenserSplitNormalF, temperature rise 20-35 F via deltaTNormalF).",
+    "Rule semantics: when[] clauses are ANDed; between is inclusive; present/absent test whether the metric is defined; a numeric clause on an undefined metric makes the rule not fire and reports the metric's source measurements in missing[]. Rules are ranked by severity (critical > warning > advisory > info), then confidence, then priority (higher first), then order in this file; duplicates by id are dropped. chargeRelated rules are downgraded to info and prefixed 'readings not valid for charge determination' when the validity gate fails.",
+    "Categorical measurements are exposed to when[] as numbers: sightGlass clear=0 bubbles=1 flashing=2 (none = absent); economizerPosition closed=0 minimum=1 open=2 (unknown = absent); headPressureControl none=0 fan_cycling=1 fan_vfd=2 flooding_valve=3 (unknown or not given = 0, i.e. treated as unconfirmed); suctionMeasuredAt compressor_suction=0 vapor_service_valve=1 evap_outlet=2 (unknown = absent); highSideMeasuredAt liquid_service_valve=0 discharge_line=1 vapor_service_valve=2; moistureIndicator dry=0 caution=1 wet=2; stageCommanded part=0 '1'=1 '2'=2 full=3; compressorType recip=0 scroll=1 tandem_scroll=2 digital_scroll=3 variable_speed=4 screw=5 (unknown = absent); meteringDevice fixed=0 txv=1 eev=2 (unknown = absent); efficiencyTier standard=0 high=1; booleans defrostActive/hotGasBypass/dehumidReheatActive false or not given=0, true=1. String fields (refrigerant, mode, circuit, notes) support present/absent only.",
+    "superheatDelta = superheatF - targetSuperheatF (target = nameplate, else the fixed-orifice chart by entering WB and outdoor DB; undefined for TXV/EEV without a nameplate target, so fixed-orifice chart rules never fire on TXV systems). subcoolingDelta = subcoolingF - targetSubcoolingF (nameplate, else 10 F for TXV/EEV; undefined for fixed orifice). Both targets are undefined in heat_pump_heating, which disables every cooling charging-chart rule in heating.",
+    "The engine adds three findings outside this file: readings_swapped_or_off (suction psig >= liquid psig: gauges swapped or unit off; charge and pressure-derived rules are skipped), unknown_refrigerant (no PT table for the stated refrigerant), and refrigerant_or_gauge_suspect (saturation temperatures impossible for the stated refrigerant: evap sat above entering air or condensing sat below outdoor air while running).",
+    "Sources followed: Carrier six-parameter cooling-cycle troubleshooting chart and charging charts (superheat / subcooling methods), standard fixed-orifice superheat charging table (Carrier/Goodman/Trane), Copeland application engineering bulletins AE-1260 (compressor operating envelope, discharge temperature, superheat), AE4-1287 (floodback and liquid migration), AE4-1327 (discharge temperature limits), AE4-1331 (scroll diagnostics), AE4-1372 (digital scroll), AE4-1414 (tandems), Sporlan bulletins 10-9/10-10 (TXV troubleshooting), 40-10 (filter driers and moisture), 90-30 (head-pressure control), 90-40 (hot gas bypass), Ranco/Emerson reversing valve troubleshooting, RSES/ESCO refrigeration troubleshooting charts, NEMA MG-1 (voltage imbalance), Honeywell JADE economizer service literature. Manufacturer unit-specific charts and bulletins take precedence over these generic rules.",
+    "Hard safety rules applied by these rules (see DESIGN.md): never add refrigerant without a leak check and valid readings; never diagnose charge below 65 F outdoor without confirmed head-pressure control; never bypass or jumper safeties; EPA 608 recovery, no venting, no refrigerant as leak-test gas, nitrogen only through a regulator with relief; never mix refrigerants or retrofit R-454B/R-32 into R-410A equipment; A2L handling (ventilation, no ignition sources, rated detector/recovery machine, RDS mitigation); LOTO per NFPA 70E; discharge line over 225 F is a warning, over 250 F critical."
+  ]
+}
