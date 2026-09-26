@@ -3671,83 +3671,917 @@
   {
    "id": "lg-multi-v",
    "name": "LG Multi V VRF error codes (CH codes)",
-   "description": "CHxx codes shown on the indoor unit / wired controller display and on the outdoor unit 7-segment display; CH01-CH19 indoor, CH21-CH59 outdoor/inverter and communication, CH100+ HR units and newer generations.",
+   "description": "CHxx codes shown on the indoor unit / wired controller display and on the outdoor unit 7-segment display; CH01-CH19 indoor, CH21-CH59 outdoor/inverter and communication, CH100+ HR units and newer generations. Coverage is partial: transcribed from search excerpts of the LG Multi V 5 service manual per-code pages, the Multi V (III) manual self-diagnosis list, the LG wall-mounted inverter service manual, LG Global video-guide titles, LG Help Library pages and LG's CH150 technical bulletin, corroborated by rapidhvacparts / acerrorcode / ARMA lists. Not transcribed (seen only as TOC entries): CH12, CH48, CH49, CH54, CH59, CH77, CH79, CH113-115, CH173, CH180, CH182, CH1xx HR-unit sensor codes beyond 201, and codes CH243-CH272 referenced by LG's guide index. The existing pack entry already carried CH01, CH05, CH21 and CH53 (secondary sources); this sidecar re-sources them to the Multi V 5 / wall-mount service manuals and keeps the meanings consistent. Wall-mount SM excerpt for CH25 in one search summary quoted garbled voltage limits ('over 373 V or below 776 V'); the numeric thresholds were not carried into the meaning. Severity mapping: 'shutdown' = codes the manuals describe as stopping the compressor/system (Level 1-3), 'warning' = sensor open/short codes that stop the affected unit but are field-repairable, 'info' = CH07 mode conflict which only blocks the conflicting indoor unit.",
    "appliesTo": [
     "lg-multi-v-outdoor"
    ],
    "faultCodes": [
     {
      "code": "CH01",
-     "meaning": "Indoor unit return air temperature sensor fault (open/short)",
+     "meaning": "Indoor unit air (return air) temperature sensor open or short - 'Air temperature sensor of indoor unit - open or short'; Multi V5 table: 'Indoor unit air temperature sensor disconnected or shorted'.",
      "likelyCauses": [
-      "Sensor open or shorted",
-      "Connector unplugged",
-      "Indoor PCB"
+      "Thermistor open or shorted",
+      "Sensor connector unplugged or poorly seated on the indoor PCB",
+      "Indoor unit PCB sensing circuit"
      ],
      "checks": [
-      "Sensor resistance vs. the service manual table (10 kohm class thermistor)",
-      "Connector seating at the indoor PCB"
+      "Manual: check wiring and the connection on the indoor unit PCB, then check the thermistor",
+      "Field: measure sensor resistance unplugged against the 10 kohm-class thermistor table; measure sensor voltage plugged in",
+      "Replace sensor, then indoor PCB if the input still reads open/short"
      ],
      "severity": "warning",
-     "source": "LG Multi V error code guides (rapidhvacparts.com CH code guide; ARMA 'LG Air Conditioning Fault Codes' PDF)",
-     "evidence": "multi_secondary"
+     "source": "LG Multi V manual (686189) p.60 self-diagnosis code list; LG Multi V5 SM p.126 Table 68; LG USA Help Library CH01",
+     "evidence": "manufacturer_doc"
     },
     {
      "code": "CH05",
-     "meaning": "Abnormal communication between the indoor unit and the outdoor unit",
+     "meaning": "Communication error: outdoor unit to indoor unit - 'failing to receive outdoor unit signal in indoor unit PCB'.",
      "likelyCauses": [
       "Communication wiring open, reversed polarity, or not shielded/grounded",
-      "Indoor unit not powered",
-      "Auto-addressing not completed after installation",
-      "Outdoor main PCB"
+      "Outdoor unit not powered or main PCB fault",
+      "Auto addressing not completed after installation",
+      "Indoor unit PCB"
      ],
      "checks": [
-      "DC communication voltage on the indoor/outdoor communication terminals",
-      "Wiring polarity and shield ground at one end only",
-      "Re-run auto addressing at the outdoor unit"
+      "Manual (wall-mount SM p.57 / Multi V5 SM): check the communication cable between outdoor unit PCB and indoor unit PCB; reconnect",
+      "Verify outdoor unit power and that auto addressing was run",
+      "Field: DC communication voltage on the indoor/outdoor communication terminals; shield grounded at one end only",
+      "Level 2 (communications) response - activates after 10 failed attempts to communicate"
      ],
      "severity": "shutdown",
-     "source": "LG Multi V Trouble Shooting Guide (Error Code CH05, 53, 237) - lg.com/global/business video guide; ARMA LG fault code PDF",
+     "source": "LG Multi V5 SM Table 68 / Error No. 05; LG wall-mounted inverter SM p.57 'Troubleshooting CH05, CH53'; LG Global video guide 'Error Code CH05, 53, 237'",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "CH21",
-     "meaning": "Inverter compressor / IPM (power module) fault - DC peak / overcurrent (compressor and high-voltage power electronics)",
+     "meaning": "Outdoor unit inverter compressor IPM fault - 'Inv. PCB IPM fault (fault or drive fault)' - DC peak / over-current detected by the intelligent power module.",
      "likelyCauses": [
       "Compressor winding short or locked rotor",
       "Inverter PCB / IPM failure",
-      "Low supply voltage or loose power connections"
+      "Water or moisture on the IPM",
+      "Poor heat-sink contact (no heat-transfer paste)"
      ],
      "checks": [
-      "Compressor winding resistance and megohm to ground",
-      "DC bus voltage and inverter output balance",
-      "Power supply voltage under load"
+      "Manual (Multi V5 SM p.144): check the inverter PCB assembly and compressor IPM heat sink; replace the inverter PCB assembly if faulty",
+      "Wall-mount SM: check insulation from water at the IPM part and the IPM circuit",
+      "Field: compressor winding resistance U-V/V-W/W-U balanced and megohm to ground; DC bus voltage",
+      "Always apply heat transfer paste to a new inverter PCB heat sink"
      ],
      "severity": "shutdown",
-     "source": "rapidhvacparts.com LG Multi V CH code guide; blog.usro.net 'LG Multi V Error Codes Explained' (third-party, meaning summarized)",
-     "evidence": "multi_secondary"
+     "source": "LG Multi V5 SM p.144 'Error No. 21'; LG wall-mounted inverter SM pp.59-61 (CH21 IPM fault); LG Global video guide 'Error Code CH21, 29'",
+     "evidence": "manufacturer_doc"
     },
     {
      "code": "CH53",
-     "meaning": "Abnormal communication between the indoor unit and the outdoor unit detected by the outdoor unit (inverter unit)",
+     "meaning": "Communication error between master indoor and outdoor units, detected at the outdoor unit - 'failing to receive indoor unit signal at the outdoor unit'.",
      "likelyCauses": [
-      "Communication line open/short or reversed",
+      "Communication cable between outdoor unit external PCB and indoor unit PCB open/reversed",
+      "Communication cable between cycle (main) PCB and outdoor external PCB",
       "Indoor unit count mismatch after auto addressing",
       "Noise / shield grounding"
      ],
      "checks": [
-      "Same checks as CH05 from the outdoor side",
-      "Number of indoor units recognized on the outdoor 7-segment display vs. installed"
+      "Manual (Multi V5 SM p.168): check the communication cable between outdoor unit external PCB and indoor unit PCB, reconnect; check the cable between cycle PCB and outdoor unit PCB; check cable and installation",
+      "Level 2 (communications) response after 10 failed attempts",
+      "Verify the number of indoor units shown on the outdoor 7-segment display vs. installed"
      ],
      "severity": "shutdown",
-     "source": "LG Help Library 'LG Air-Conditioner Error Codes - Checking code CH53'; LG Multi V Trouble Shooting Guide (CH05, 53, 237)",
+     "source": "LG Multi V5 SM p.168 'Error No. 53'; LG wall-mounted inverter SM p.57 'Troubleshooting CH05, CH53'; LG Help Library 'Checking code CH53'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH02",
+     "meaning": "Indoor unit inlet pipe temperature sensor open or short - 'Inlet pipe temperature sensor of indoor unit - open or short'; Multi V5: 'Indoor unit inlet pipe temperature sensor disconnected or shorted'.",
+     "likelyCauses": [
+      "Inlet (liquid) pipe thermistor open/short",
+      "Connector not seated on the indoor PCB",
+      "Indoor PCB"
+     ],
+     "checks": [
+      "Manual: check the connection on the indoor unit PCB",
+      "Field: sensor resistance vs. temperature table; check the sensor is clipped to the pipe"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V manual (686189) p.60; LG Multi V5 SM p.126 Table 68",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH03",
+     "meaning": "Communication error: wired remote controller to indoor unit - 'failing to receive wired remote controller signal in indoor unit PCB'.",
+     "likelyCauses": [
+      "Remote controller cable open, shorted or miswired (polarity)",
+      "Wired remote controller defective",
+      "Indoor PCB communication circuit",
+      "Cable run alongside power wiring (noise)"
+     ],
+     "checks": [
+      "Check remote controller cable continuity and terminal connections at both ends",
+      "Swap in a known-good wired remote controller",
+      "Check DC voltage on the remote controller terminals; replace indoor PCB if no signal"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.137 'Error No. 03'; LG Multi V manual (686189) p.60; LG Global video guide 'Error Code CH03'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH06",
+     "meaning": "Indoor unit outlet pipe temperature sensor open or short - 'Outlet pipe temperature sensor of indoor unit - open or short'.",
+     "likelyCauses": [
+      "Outlet (gas) pipe thermistor open/short",
+      "Connector unplugged",
+      "Indoor PCB"
+     ],
+     "checks": [
+      "Check connector seating on the indoor PCB",
+      "Sensor resistance vs. table; replace sensor then PCB"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM Table 68 / Error No. 06; LG USA Help Library CH06",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH07",
+     "meaning": "Different operation mode - 'Indoor unit is set in different cool/heat operation mode' from the other indoor units on the same (heat pump) outdoor unit.",
+     "likelyCauses": [
+      "One indoor unit calling for heating while the system is in cooling (or vice versa) on a heat-pump (non-heat-recovery) outdoor unit",
+      "Mode priority / master indoor unit setting"
+     ],
+     "checks": [
+      "Set all indoor units to the same mode, or set a master unit / mode lock on the central controller",
+      "On heat recovery systems check the HR unit valve addressing"
+     ],
+     "severity": "info",
+     "source": "LG USA Help Library 'Guide to Error Codes' (CH07: units set to different operating modes); acerrorcode.com / orionair LG Multi fault code sheet ('C7 Different operation mode')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH09",
+     "meaning": "Indoor unit EEPROM error - 'serial number marked on EEPROM of the indoor unit is 0 or FFFFFF' (EEPROM check-sum mismatch).",
+     "likelyCauses": [
+      "EEPROM not inserted / inserted backwards after PCB replacement",
+      "Corrupted or wrong EEPROM",
+      "Indoor PCB"
+     ],
+     "checks": [
+      "Check EEPROM seating and orientation on the indoor PCB",
+      "Replace EEPROM with the correct part for the model, else replace the PCB"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM Error No. 09; acerrorcode.com ('C9 EEPROM check sum')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH10",
+     "meaning": "Indoor unit fan motor poor operation / BLDC fan motor lock - 'fan motor connector disconnected or failure of indoor fan motor lock'.",
+     "likelyCauses": [
+      "Fan motor connector unplugged",
+      "BLDC fan motor locked or failed",
+      "Indoor PCB fan drive"
+     ],
+     "checks": [
+      "Check fan motor connector at the indoor PCB",
+      "Spin the blower by hand; check motor windings and the feedback (Hall) signal",
+      "Replace motor, then PCB"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM Error No. 10; acerrorcode.com ('CA BLDC fan motor lock'); LG USA Help Library CH10",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH22",
+     "meaning": "Inverter board input over-current (RMS) - 'current excess'; light-commercial: 'Max. C/T' (CT2 maximum current).",
+     "likelyCauses": [
+      "Low input voltage",
+      "Overload (dirty coil, fan failure, overcharge)",
+      "Internal CT / diode / resistor circuit fault on the inverter PCB"
+     ],
+     "checks": [
+      "Wall-mount SM: check the power source, fan operation, current, install condition, and the internal circuit (C/T, diode, resistor)",
+      "Field: measure supply voltage under load and compressor amps against nameplate"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM Table 69 'Error No. 22' (Inverter board input over current RMS); LG wall-mounted inverter SM pp.59-61 'CH21, CH22 Max. C/T'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH23",
+     "meaning": "Inverter compressor DC link low voltage - 'DC charging not performed after starting' (low DC voltage sensed at the outdoor inverter).",
+     "likelyCauses": [
+      "Loose DC link / reactor connections",
+      "Input power loss or low voltage",
+      "Charging relay / rectifier fault on the inverter PCB"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.148): check DC link connections",
+      "Wall-mount SM p.60: check TAB1 connected; DC link voltage below 300 V when not operating means fault",
+      "Field: measure DC bus voltage during start; check reactor and power wiring"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.148 'Error No. 23' (Table 79); LG wall-mounted inverter SM p.60 'CH23 DC Link Low voltage'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH24",
+     "meaning": "High pressure switch open - 'Press S/W open' (mechanical high pressure switch tripped).",
+     "likelyCauses": [
+      "Refrigerant overcharge / non-condensables",
+      "Blocked condenser or fan failure",
+      "Service valve not fully open",
+      "Switch or CN_PRESS connector fault"
+     ],
+     "checks": [
+      "Wall-mount SM p.60: verify 'CN_PRESS' connection, check the install condition for overload, check the SVC valve open, check for refrigerant leakage",
+      "Multi V5 SM p.149: replace the high pressure switch if it has failed open",
+      "Field: compare gauge high-side pressure with the switch set point before condemning the switch"
+     ],
+     "severity": "shutdown",
+     "source": "LG wall-mounted inverter SM p.60 'CH24 Press S/W Open'; LG Multi V5 SM p.149 'Error No. 24'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH25",
+     "meaning": "Input voltage high/low - 'Outdoor unit input voltage is out of range' (abnormal supply voltage).",
+     "likelyCauses": [
+      "Utility voltage high or low",
+      "Loose power connections / voltage drop",
+      "Inverter PCB voltage sensing (Trans1, bridge diode) fault"
+     ],
+     "checks": [
+      "Wall-mount SM p.60: check the power source and components (Trans1, B/Diode, diode, resistance)",
+      "Multi V5 SM p.150: verify supply, then replace inverter PCB assembly if sensing is wrong",
+      "Field: measure L-L voltage at the unit under load and at idle"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.150 'Error No. 25'; LG wall-mounted inverter SM p.60 'CH25 Input voltage'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH26",
+     "meaning": "DC compressor position detection error - inverter compressor starting failure.",
+     "likelyCauses": [
+      "Compressor windings open/unbalanced or compressor seized",
+      "Inverter PCB / IPM drive fault",
+      "Compressor leads miswired after replacement"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.151): check U-V, V-W, W-U winding resistance for the compressor model (e.g. JQC048MA/MB table) and check the inverter compressor PCB assembly and IPM",
+      "Wall-mount SM p.62: 'CH26 DC Compressor Position'",
+      "Field: megohm the compressor; try a restart after correcting wiring"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.151 'Error No. 26'; LG wall-mounted inverter SM p.62 'Troubleshooting CH26, CH27'; LG USA Help Library CH26",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH27",
+     "meaning": "PSC fault - 'CH27 PSC Fault' (power-factor/PFC over-voltage protection circuit fault; third-party lists describe it as over-voltage / high DC voltage).",
+     "likelyCauses": [
+      "Supply over-voltage or surge",
+      "PFC circuit / reactor fault on the inverter PCB",
+      "Loose DC link wiring"
+     ],
+     "checks": [
+      "Wall-mount SM p.62: follow the CH26/CH27 troubleshooting flow - check power source, then the inverter PCB",
+      "Field: check supply voltage and DC bus voltage; replace inverter PCB if it persists"
+     ],
+     "severity": "shutdown",
+     "source": "LG wall-mounted inverter SM p.62 'Troubleshooting CH26, CH27'; hvacreport.co.uk / becoolairconditioning (over-voltage description)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH29",
+     "meaning": "Inverter compressor over-current - 'Inverter compressor input current is >30A'.",
+     "likelyCauses": [
+      "Compressor overload (high pressure, liquid slugging)",
+      "Compressor winding fault",
+      "Inverter PCB / IPM current sensing"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.153): check if the inverter compressor PCB assembly and IPM are correct; apply heat transfer paste to a new inverter PCB heat sink",
+      "Field: clamp compressor amps at start and run; check operating pressures and charge"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.153 'Error No. 29'; LG Global video guide 'Error Code CH21, 29'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH32",
+     "meaning": "Inverter compressor 1 discharge temperature high - 'system/compressor shuts off because of high discharge temperature' (discharge pipe >115 C / 239 F for 10 s, or compressor dome 105 C / 221 F for 10 s).",
+     "likelyCauses": [
+      "Defective inverter compressor discharge pipe temperature sensor",
+      "Refrigerant leak or undercharge",
+      "Defective EEV",
+      "Defective liquid spray (injection) valve",
+      "Piping blockage"
+     ],
+     "checks": [
+      "Manual flow (Multi V5 SM p.155): check refrigerant level, discharge temperature sensor resistance, EEV operation in heating mode, and piping blockages",
+      "Field: measure actual discharge temperature and superheat; verify liquid injection"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.155 'Error Nos. 32 and 33'; LG wall-mounted inverter SM p.63 'CH32 D-pipe (Inverter) temp high'; LG Global video guide 'Error Code CH32, 33'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH33",
+     "meaning": "Inverter compressor 2 (or constant-speed compressor) discharge temperature high - same trip limits as CH32.",
+     "likelyCauses": [
+      "Same as CH32 on compressor 2"
+     ],
+     "checks": [
+      "Same as CH32 for compressor 2's discharge sensor, EEV and injection valve"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.155 'Error Nos. 32 and 33'; LG wall-mounted inverter SM p.63 'CH33 D-pipe (Constant) temp high'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH34",
+     "meaning": "High pressure - 'excessive rise of discharge pressure' in the outdoor unit (high pressure sensor over limit); LG split help: safety relay powered the unit down because of abnormal pressure in the sealed system.",
+     "likelyCauses": [
+      "Refrigerant overcharge",
+      "Defective EEV",
+      "Clogged / closed service valve",
+      "Defective outdoor PCB or pressure sensor",
+      "Indoor or outdoor fan failure",
+      "Blocked heat exchanger or filter"
+     ],
+     "checks": [
+      "Manual (LG Multi V SM): replace the corresponding pressure sensor or EEV, open the SVC valve, replace the PCB, check/replace fan parts, clean the indoor filter / outdoor heat exchanger, adjust refrigerant amount",
+      "Field: compare the high pressure sensor reading (LGMV) with a gauge; check condenser airflow and ambient"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V Service Manual (ManualsLib 2125885) high-pressure troubleshooting; LG Multi V5 SM Table 69 'Error No. 34'; LG Global video guide 'Error Code CH34'; LG Egypt help 'CH34, CH35'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH35",
+     "meaning": "Low pressure - excessive drop of low (suction) pressure detected by the low pressure sensor.",
+     "likelyCauses": [
+      "Refrigerant shortage / leak",
+      "Strainer or EEV clogged (frost/ice at the strainer)",
+      "Indoor airflow loss in cooling, outdoor coil blocked in heating",
+      "Low pressure sensor fault"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.157): if the temperature difference across the strainer is large enough to frost, check for clogs; replace the low pressure sensor if it reads wrong",
+      "Field: compare low pressure sensor value (LGMV) with a gauge; check charge by subcooling / superheat"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.157 'Error No. 35'; LG Global video guide 'Error Code CH35'; acerrorcode.com Multi V list",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH40",
+     "meaning": "Inverter compressor CT (current transformer) sensor fault - 'CT Sensor Fault' for the outdoor unit inverter compressor.",
+     "likelyCauses": [
+      "Inverter PCB CT sensing circuit fault",
+      "Abnormal input voltage"
+     ],
+     "checks": [
+      "Check input voltage; check the inverter PCB CT sensing circuit (wall-mount SM p.63)",
+      "Replace inverter PCB assembly if the CT circuit is faulty"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM 'Error No. 40'; LG wall-mounted inverter SM p.63 'Troubleshooting CH32, CH33, CH40 (CT sensor)'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH41",
+     "meaning": "Inverter compressor discharge pipe temperature sensor (TH3) open or short - 'defective compressor discharge pipe sensor that is either opened or shorted'.",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Poor solder / connector on the PCB",
+      "Outdoor PCB sensing circuit"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.160): insert the sensor connector to the PCB correctly; replace the sensor; replace the corresponding outdoor unit PCB",
+      "Check resistance of the discharge temperature sensor against the standard values by temperature (wall-mount SM p.64: estimate resistance unplugged and voltage plugged)"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.160 'Error Nos. 41 and 47'; LG wall-mounted inverter SM p.64 'CH41 D-pipe sensor (Inverter)'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH42",
+     "meaning": "Low pressure sensor open or short.",
+     "likelyCauses": [
+      "Pressure transducer failed",
+      "Connector / wiring to the PCB",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.161): confirm the sensor is connected to the PCB correctly; measure the V DC supply and signal to GND; replace the corresponding pressure sensor"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.161 'Error Nos. 42 and 43'; acerrorcode.com ('CH42 low pressure sensor fault')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH43",
+     "meaning": "High pressure sensor open or short.",
+     "likelyCauses": [
+      "Pressure transducer failed",
+      "Connector / wiring to the PCB",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.161): confirm the sensor is connected to the PCB correctly; measure V DC and signal to GND; replace the pressure sensor"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.161 'Error Nos. 42 and 43'; LG USA Help Library CH43",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH44",
+     "meaning": "Outdoor unit air (ambient) temperature sensor open or short.",
+     "likelyCauses": [
+      "Sensor open/short or soldered poorly",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Wall-mount SM p.64: estimate the resistance of the sensor unplugged and the voltage plugged in",
+      "Multi V5 SM p.162: replace the sensor (resistance varies with temperature)"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.162 'Error Nos. 44, 45, 46, 49, 153, and 154'; LG wall-mounted inverter SM p.64 'CH44 Air sensor'; LG USA Help Library CH44",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH45",
+     "meaning": "Outdoor unit condenser (heat exchanger) pipe temperature sensor open or short.",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Same sensor resistance / voltage checks as CH44; replace sensor then PCB"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.162; LG wall-mounted inverter SM p.64 'CH45 Condenser Pipe sensor'; LG USA Help Library CH45",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH46",
+     "meaning": "Outdoor unit suction pipe temperature sensor open or short.",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Same sensor resistance / voltage checks as CH44; replace sensor then PCB"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.162; LG wall-mounted inverter SM p.64 'CH46 Suction Pipe sensor'; LG USA Help Library CH46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH47",
+     "meaning": "Compressor 2 / constant-speed compressor discharge pipe temperature sensor open or short - 'D-pipe sensor (Constant)'.",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Same procedure as CH41 on the second compressor's discharge sensor"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.160 'Error Nos. 41 and 47'; LG wall-mounted inverter SM p.64 'CH47 D-pipe sensor (Constant)'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH50",
+     "meaning": "Outdoor unit three-phase power missing - one or more of the R(L1), S(L2), T(L3) input power line connections is missing.",
+     "likelyCauses": [
+      "Incorrect input voltage on R/S/T",
+      "Incorrect power line connections",
+      "Damaged main PCB",
+      "Inverter PCB input current sensor error"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.163): check R~S / S~T / T~R phase voltage is 208-230 V +/-10%; rewire and/or replace if errors are found; replace inverter PCB assembly",
+      "Note: reverse / open phase is a different code (CH54) - swapping two phases cures reversed rotation"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.163 'Error No. 50'; acerrorcode.com LG Multi V list (CH50 3-phase power missing)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH51",
+     "meaning": "Over capacity - 'Combination ratio is out of range' (connected indoor capacity exceeds the outdoor unit's allowed combination ratio).",
+     "likelyCauses": [
+      "Too many / too large indoor units connected",
+      "Indoor unit capacity DIP/EEPROM settings wrong",
+      "Outdoor capacity setting wrong"
+     ],
+     "checks": [
+      "Total the connected indoor capacities against the outdoor unit's allowed combination ratio",
+      "Check indoor unit capacity settings and rerun auto addressing"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.164 'Error No. 51(1)'; LG wall-mounted inverter SM p.65 'CH51 Over capacity'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH52",
+     "meaning": "Communication error between outdoor unit inverter PCB and main PCB (main PCB fails to receive the inverter PCB signal).",
+     "likelyCauses": [
+      "Inverter-to-main PCB communication cable loose",
+      "Inverter PCB not powered",
+      "Inverter or main PCB defective"
+     ],
+     "checks": [
+      "Check the communication cable between inverter PCB and main PCB; check inverter PCB power LEDs",
+      "Replace inverter PCB, then main PCB"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.166 'Error No. 52 - Communication error between outdoor unit ...' (title truncated in the excerpt seen); rapidhvacparts LG CH guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH57",
+     "meaning": "Communication error: main PCB to inverter PCB - 'failing to receive the signal from the main PCB at the inverter PCB of the outdoor unit'.",
+     "likelyCauses": [
+      "Main-to-inverter PCB communication cable",
+      "Inverter PCB or main PCB defective",
+      "Communication cables run with power cables (noise)"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.170): check the communication cable; replace inverter PCB; replace main PCB",
+      "Run communication cables separately from power cables"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.170 'Error No. 57'; LG Multi V Installation Manual (ManualsLib 1191304) error list",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH60",
+     "meaning": "Outdoor unit inverter PCB EEPROM error - 'access error of the Inverter PCB' (EEPROM check-sum).",
+     "likelyCauses": [
+      "EEPROM missing, wrong, or inserted in the wrong direction after PCB replacement",
+      "Inverter PCB 15 V DC supply",
+      "Inverter PCB"
+     ],
+     "checks": [
+      "Manual: check EEPROM checksum and direction, EEPROM insertion condition, power and installation, inverter PCB screw connections, 15 V DC input on the inverter PCB",
+      "Replace EEPROM, else the inverter PCB assembly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM 'Error No. 60' (inverter PCB EEPROM); LG wall-mounted inverter SM p.65 'CH60 EEPROM Check sum'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH61",
+     "meaning": "Condenser pipe (outdoor heat exchanger) temperature high - 'Condenser pipe sensor temp high'; third-party: outdoor unit overheating in cooling / indoor coil overheating in heating.",
+     "likelyCauses": [
+      "Blocked or dirty outdoor coil, poor ventilation around the outdoor unit",
+      "Outdoor fan failure",
+      "Refrigerant overcharge",
+      "Condenser pipe sensor drift"
+     ],
+     "checks": [
+      "Wall-mount SM p.66 CH61 flow: check outdoor coil/fan and the condenser pipe sensor",
+      "Field: measure condensing temperature vs. ambient; clean coil, verify fan speed"
+     ],
+     "severity": "shutdown",
+     "source": "LG wall-mounted inverter SM p.66 'Troubleshooting CH61, CH62'; hvacreport.co.uk / becoolairconditioning LG code lists",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH62",
+     "meaning": "Inverter PCB heat sink temperature high - 'Heat sink sensor temp high' (system turns off).",
+     "likelyCauses": [
+      "Heat sink dirty or airflow over it blocked",
+      "Missing heat transfer paste / loose PCB mounting",
+      "Outdoor fan not running",
+      "High ambient"
+     ],
+     "checks": [
+      "Wall-mount SM p.66 CH62 flow: check heat sink cleanliness, fan operation and the heat sink sensor",
+      "Multi V5 SM: if the inverter PCB is replaced, replace the heat sink and apply heat-transfer paste"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM 'Error No. 62' (Inverter PCB heatsink temperature high); LG wall-mounted inverter SM p.66 'CH62 Heat sink sensor temp high'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH65",
+     "meaning": "Inverter heat sink temperature sensor open or short.",
+     "likelyCauses": [
+      "Heat sink thermistor open/short or poorly soldered",
+      "Inverter PCB internal circuit"
+     ],
+     "checks": [
+      "Wall-mount SM p.64: estimate the resistance of the heat sink sensor unplugged and its voltage plugged in",
+      "Replace sensor / inverter PCB"
+     ],
+     "severity": "shutdown",
+     "source": "LG wall-mounted inverter SM p.64 'CH65 Heat sink sensor'; LG Multi V5 SM 'Error No. 65'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH67",
+     "meaning": "Outdoor fan lock - outdoor (BLDC) fan motor locked or not rotating.",
+     "likelyCauses": [
+      "Fan blade obstructed / motor seized",
+      "Fan motor windings or Hall sensor",
+      "Fan PCB / fan IPM drive"
+     ],
+     "checks": [
+      "Manual: check the fan condition (rotates freely), fan motor wiring and connector",
+      "Multi V5 SM p.115 'Checking the outdoor unit fan motor' and p.121 'Checking the fan IPM'"
+     ],
+     "severity": "shutdown",
+     "source": "LG Universal System Air Conditioner SM (ManualsLib 766627) p.105 'CH67 Outdoor fan lock'; acerrorcode.com ('CH67 outdoor fan motor / BLDC fan error')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH75",
+     "meaning": "Fan CT sensor error - 'Fan CT sensor' (Master: 751).",
+     "likelyCauses": [
+      "Fan PCB IPM / current sensing circuit"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.176): check if the fan PCB IPM is correct; replace fan PCB assembly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.176 'Error No. 75'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH86",
+     "meaning": "Outdoor unit main PCB EEPROM error.",
+     "likelyCauses": [
+      "EEPROM not inserted / wrong EEPROM after main PCB replacement",
+      "Main PCB"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.180): recheck power and installation; insert the EEPROM; reset after checking the EEPROM assembly; replace with the correct EEPROM"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.180 'Error No. 86'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH104",
+     "meaning": "Communication error between outdoor units - 'failure to receive a Slave unit signal at the main PCB of the Master outdoor unit'.",
+     "likelyCauses": [
+      "Inter-unit communication cable (A/B) open or reversed",
+      "Slave unit not powered",
+      "Ground wire not bonded to chassis"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.182): connect communication cable, connect power wiring, connect GND wire with chassis, connect A and B properly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.182 'Error No. 104'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH105",
+     "meaning": "Communication error between inverter PCB and fan PCB - 'failure to receive a fan signal at the main PCB' (Master: 1051).",
+     "likelyCauses": [
+      "Inverter compressor PCB to fan PCB connection not correct",
+      "Fan PCB power not supplied",
+      "Outdoor unit inverter compressor PCB and/or fan PCB defective"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.185): check the communication cable between inverter compressor PCB and fan PCB; verify power to the inverter 1 / inverter 2 terminals on the main PCB; replace the inverter PCB assembly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.185 'Error No. 105'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH106",
+     "meaning": "Fan PCB IPM fault - 'PCB IPM error' on the outdoor fan drive.",
+     "likelyCauses": [
+      "Fan motor locked or wiring fault",
+      "Fan PCB IPM failure"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.187): recheck power and installation; fan motor wire connections; check whether the outdoor fan motor assembly is locking up; replace fan PCB assembly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.187 'Error No. 106'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH107",
+     "meaning": "Fan PCB DC link low voltage - inverter PCB to fan PCB DC link defective / disconnected.",
+     "likelyCauses": [
+      "DC link wiring between inverter PCB and fan PCB disconnected",
+      "Fan PCB defective"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.189): measure DC link voltage; replace fan PCB assembly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.189 'Error No. 107'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH145",
+     "meaning": "Communication error between the master outdoor unit main PCB and the external (communication) PCB.",
+     "likelyCauses": [
+      "Main-to-external PCB cable",
+      "External PCB not powered / defective",
+      "Noise from power cables"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.191): check communication between main PCB and external PCB; run communication cables separately from power cables"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.191 'Error No. 145'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH150",
+     "meaning": "Liquid compression prevention (low suction superheat) - 'an error to prevent liquid compression which can induce serious compressor failure': suction superheat below 3 C (4.8 F) for 5 minutes while the outdoor unit is in cooling; shuts down and auto-restarts, escalating on repeat.",
+     "likelyCauses": [
+      "Flood-back / bypass at an indoor unit: indoor unit OFF with EEV open passes liquid without superheat",
+      "Subcooler EEV in the heat recovery box or the ODU sub-cooler EEV stuck open",
+      "Overcharge",
+      "Indoor EEV or coil sensor fault"
+     ],
+     "checks": [
+      "LG TB: find the indoor unit whose outlet pipe is cold while off (EEV not closing); check HR-box and ODU subcooler EEVs",
+      "Field: monitor suction superheat in LGMV; isolate indoor units to find the bypassing one"
+     ],
+     "severity": "shutdown",
+     "source": "LG Technical Bulletin 'Multi V CH150 error guide' (Scribd copy); LG Multi V5 SM p.192 'Error No. 150'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH151",
+     "meaning": "Indoor unit operation mode / reversing-valve error - 'the reversing valve has not switched correctly between heating and cooling'.",
+     "likelyCauses": [
+      "4-way valve coil open, disconnected or wrong coil",
+      "4-way valve stuck",
+      "Outdoor PCB 4-way valve output"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.193): reconnect the four-way valve / change or re-insert the four-way valve coil; replace outdoor unit PCB; replace the four-way valve",
+      "Field: check coil continuity, listen for the valve shifting, compare discharge and suction temperatures before/after mode change"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.193 'Error No. 151'; LG Global video guide 'Error Code CH151'; airnexus / rapidhvacparts LG code lists",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH153",
+     "meaning": "Outdoor unit upper heat exchanger temperature sensor error (open/short) - note: the Multi V 5 SM summary table reportedly labels 153 as an inverter heat sink temperature sensor error while the detail page describes a liquid pipe (condenser) sensor; confirm on the specific unit.",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Multi V5 SM p.162: replace the sensor (resistance varies with temperature)",
+      "Check both the upper heat exchanger / liquid pipe sensor and the inverter heat sink sensor for open/short before replacing"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.162 'Error Nos. 44, 45, 46, 49, 153, and 154' (grouped sensor page); rapidhvacparts LG CH guide; acerrorcode.com",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "CH154",
+     "meaning": "Outdoor unit lower heat exchanger temperature sensor error (open/short).",
+     "likelyCauses": [
+      "Sensor open/short",
+      "Connector",
+      "Outdoor PCB"
+     ],
+     "checks": [
+      "Multi V5 SM p.162: replace the sensor; verify resistance against the temperature table"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.162 'Error Nos. 44, 45, 46, 49, 153, and 154' (grouped sensor page); rapidhvacparts LG CH guide; acerrorcode.com",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "CH193",
+     "meaning": "Outdoor fan PCB heat sink over-temperature (third-party lists describe CH193/CH194 together as 'fan PCB heatsink over-temperature or its sensor error'; which number is the temperature trip vs. the sensor fault should be confirmed in the Multi V 5 SM pp.198-199).",
+     "likelyCauses": [
+      "Fan PCB heat sink dirty or airflow blocked",
+      "Fan PCB mounting / heat-transfer paste",
+      "High ambient"
+     ],
+     "checks": [
+      "Check heat sink cleanliness and obstructions, fan PCB connections and wiring",
+      "Refer to Multi V5 SM Error No. 193 (p.198)"
+     ],
+     "severity": "shutdown",
+     "source": "rapidhvacparts LG CH guide / airnexus LG VRF fault code list (CH193/194); LG Multi V5 SM TOC 'Error No. 193' p.198",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "CH194",
+     "meaning": "Outdoor fan PCB heat sink temperature sensor error (see CH193 note on the 193/194 assignment).",
+     "likelyCauses": [
+      "Heat sink thermistor on the fan PCB open/short",
+      "Fan PCB"
+     ],
+     "checks": [
+      "Check the fan PCB heat sink sensor and connections; refer to Multi V5 SM Error No. 194 (p.199)"
+     ],
+     "severity": "shutdown",
+     "source": "rapidhvacparts LG CH guide / airnexus LG VRF fault code list (CH193/194); LG Multi V5 SM TOC 'Error No. 194' p.199",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "CH200",
+     "meaning": "Auto pipe search failure - 'Failure to find an indoor unit': after auto pipe-search operation the number of indoor units detected differs from the number of communicating indoor units; displays on all zone controllers, central controllers and BACnet/LonWorks gateways.",
+     "likelyCauses": [
+      "Indoor unit piped to an HR-unit valve but not communicating (or vice versa)",
+      "Indoor unit EEV / valve not responding during the search",
+      "Pipe search run in unsuitable ambient conditions"
+     ],
+     "checks": [
+      "Re-run auto pipe detection (Multi V5 SM p.105 'Auto addressing for pipe detection') after confirming every indoor unit is powered and addressed",
+      "Compare detected vs. communicating indoor unit counts on the 7-segment display",
+      "Level 1 response (outdoor unit shut down); SM p.86 describes the 'level change of error code CH200 (SE14)' setting"
+     ],
+     "severity": "shutdown",
+     "source": "LG Global video guide 'Error Code CH200, 204'; LG Multi V5 SM p.86 'Level change of error code CH200 (SE14)' and p.105",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH201",
+     "meaning": "Heat recovery (HR) unit liquid pipe / subcooling pipe temperature sensor error.",
+     "likelyCauses": [
+      "HR unit sensor open/short",
+      "HR unit PCB connector"
+     ],
+     "checks": [
+      "Check the sensor and connections on the heat recovery unit PCB (code suffix identifies the HR unit number)"
+     ],
+     "severity": "warning",
+     "source": "rapidhvacparts LG CH guide (HR unit codes) - third-party",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "CH204",
+     "meaning": "Communication error between the outdoor unit and the heat recovery unit - 'the outdoor unit isn't hearing from the heat recovery unit'.",
+     "likelyCauses": [
+      "Communication bus wiring to the HR unit",
+      "HR unit not powered",
+      "HR unit PCB"
+     ],
+     "checks": [
+      "Check the communication bus wiring and the HR unit PCB power / LEDs; re-run auto addressing"
+     ],
+     "severity": "shutdown",
+     "source": "LG Global video guide 'Error Code CH200, 204' (title); blog.usro.net / rapidhvacparts descriptions",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "CH237",
+     "meaning": "Communication error between outdoor unit PCB and indoor unit PCB (indoor unit lost after addressing).",
+     "likelyCauses": [
+      "Outdoor unit not powered",
+      "Auto addressing not performed",
+      "Communication cable not connected correctly"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.206): check the outdoor unit is powered, whether the auto addressing procedure has been performed, and that the communication cable is connected correctly"
+     ],
+     "severity": "shutdown",
+     "source": "LG Multi V5 SM p.206 'Error No. 237'; LG Global video guide 'Error Code CH05, 53, 237'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "CH242",
+     "meaning": "Network (RS-485 central control) error - displayed as 2421 Master, 2422 Slave 1, 2423 Slave 2.",
+     "likelyCauses": [
+      "RS-485 communication cable not properly connected",
+      "Repeated indoor unit addresses",
+      "Simple central controller settings"
+     ],
+     "checks": [
+      "Manual (Multi V5 SM p.208): check the RS-485 cable, verify indoor unit addresses are not repeated, confirm simple central controller settings, recheck power and installation"
+     ],
+     "severity": "warning",
+     "source": "LG Multi V5 SM p.208 'Error No. 242'",
      "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
     "The outdoor unit main PCB has a 7-segment display and function buttons; error codes and operating data cycle on the display. LG's official trouble-shooting video guide covers CH05/CH53/CH237 communication faults.",
     "Clear a communication code by correcting the wiring and cycling power to the outdoor unit; re-run auto addressing if indoor units were added.",
-    "Only four codes were transcribed here. The complete CH table (CH01-CH19 indoor sensors/drain, CH21-CH29 inverter/compressor, CH32-CH47 sensors and pressure, CH51-CH59 capacity/communication, CH100+ heat recovery units) is in the LG Multi V service manual and LG's Help Library."
+    "Only four codes were transcribed here. The complete CH table (CH01-CH19 indoor sensors/drain, CH21-CH29 inverter/compressor, CH32-CH47 sensors and pressure, CH51-CH59 capacity/communication, CH100+ heat recovery units) is in the LG Multi V service manual and LG's Help Library.",
+    "Where codes appear: the indoor unit display window / LED, the wired remote controller display (CHxx), and the outdoor unit main PCB 7-segment LED (SSD). All error codes can also be viewed with the LGMV (LG Monitoring View) service tool / PLGMVW101 Wi-Fi module, which also shows live pressures, temperatures and superheat.",
+    "Reading the outdoor SSD: 1st-3rd digits are the error number and the 4th digit is the unit number (1 Master, 2 Slave 1, 3 Slave 2) - ARUM160LTE5 IM p.50; Multi V5 SM p.126 'Error Code Display'. Outdoor unit information cycles in sequence on the main PCB SSD.",
+    "Response levels (Multi V5 SM p.125): four levels - Level 4 'notify and keep operating' up to Level 1 'immediate system shutdown, manual restart required'. Non-communication faults start at Level 3 (auto-restart) and escalate to Level 1 on the 10th occurrence; communication faults (CH05/CH53) are Level 2 and activate after 10 failed communication attempts.",
+    "Clearing: correct the cause, then cycle power to the outdoor unit (Level 1 faults need a manual restart). Communication codes clear after wiring is fixed and, if indoor units were added or replaced, auto addressing is re-run.",
+    "Auto addressing (Multi V5 / ARUM IM p.40): wait 3 minutes after power-up, then press the RED button (SW01C) on the outdoor unit main PCB for 5 seconds; the number of connected indoor units shows on the 7-segment LED for 30 seconds when complete. Heat recovery systems also need auto pipe detection (Multi V5 SM p.105).",
+    "Sensor codes (CH01/02/06, CH41-47, CH65, CH153/154): unplug the sensor and measure resistance against the manual's temperature table, then measure the sensor voltage plugged in; replace the sensor before the PCB (wall-mount SM p.64 method).",
+    "Inverter codes (CH21/22/23/26/29): check U-V/V-W/W-U compressor winding balance and megohms, the inverter IPM, DC link voltage and connections; always apply heat-transfer paste and use a JIS screwdriver on inverter PCB screws (Multi V5 SM p.209).",
+    "Light-commercial LG splits (Multi F, universal/CAC) use the same CH numbering for the common codes (CH01-CH10 indoor, CH21-CH29 inverter, CH32-CH47 sensors/pressure, CH53, CH60-CH67) - the LG General Wall Mounted-Inverter Type service manual is the reference for those; Multi V VRF adds the 3-digit outdoor (CH1xx) and HR/central-control (CH2xx) codes."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -3762,6 +4596,61 @@
     {
      "title": "LG Air Conditioning Fault Codes (ARMA PDF)",
      "url": "https://www.arma.org.au/wp-content/uploads/2017/02/LG-FAULT-CODES-1.pdf"
+    },
+    {
+     "title": "LG Multi V 5 Service Manual (ARUM outdoor units) - Error Code General Information (p.125), Error Code Tables 68/69 (pp.126-128), per-code troubleshooting pages: Error No. 03 (p.137), 21 (p.144), 23 (p.148), 24 (p.149), 25 (p.150), 26 (p.151), 29 (p.153), 32/33 (p.155), 35 (p.157), 41/47 (p.160), 42/43 (p.161), 44/45/46/49/153/154 (p.162), 50 (p.163), 51 (p.164), 52 (p.166), 53 (p.168), 57 (p.170), 75 (p.176), 77 (p.177), 79 (p.178), 86 (p.180), 104 (p.182), 105 (p.185), 106 (p.187), 107 (p.189), 145 (p.191), 150 (p.192), 151 (p.193), 237 (p.206), 242 (p.208); Level change of error code CH200 (p.86)",
+     "docId": "LG Multi V5 SM (ManualsLib 1483751)",
+     "url": "https://www.manualslib.com/manual/1483751/Lg-Multi-V5.html?page=126"
+    },
+    {
+     "title": "LG Multi V Manual (Multi V III era) - Self-Diagnosis Function; Troubleshooting Guide; Error Indicator; Error Display (p.60) - code list '01: Air temperature sensor of indoor unit - open or short', '02: Inlet pipe temperature sensor of indoor unit', '03: Communication error wired remote controller - indoor unit'",
+     "docId": "LG Multi V manual (ManualsLib 686189)",
+     "url": "https://www.manualslib.com/manual/686189/Lg-Multi-V.html?page=60"
+    },
+    {
+     "title": "LG Multi V 5 ARUM160LTE5 Installation Manual - Self-Diagnosis Function (pp.50-52): error marks on indoor display, wired remote controller and outdoor 7-segment LED; 1st-3rd digits = error number, 4th = unit number (1 Master, 2 Slave 1, 3 Slave 2)",
+     "docId": "ARUM160LTE5 IM (ManualsLib 1919257)",
+     "url": "https://www.manualslib.com/manual/1919257/Lg-Multi-V-5-Arum160lte5.html?page=50"
+    },
+    {
+     "title": "LG General Wall Mounted-Inverter Type Service Manual (light-commercial / universal inverter split) - Part 4 Trouble Shooting: CH05/CH53 (p.57), CH21/CH22 Max C/T and IPM (pp.59-61), CH23/CH24/CH25 (p.60), CH26/CH27 (p.62), CH32/CH33/CH40 (p.63), CH41/CH44/CH45/CH46/CH47/CH65 (p.64), CH51/CH60 (p.65), CH61/CH62 (p.66); Error Indicator / Self-Diagnosis Function (p.46)",
+     "docId": "LG wall-mounted inverter SM (ManualsLib 92718)",
+     "url": "https://www.manualslib.com/manual/92718/Lg-General-Wall-Mounted-Inverter-Type.html?page=64"
+    },
+    {
+     "title": "LG Multi V S Outdoor Unit Service Manual (2-5 ton VRF, media.us.lg.com) - error code tables pp.88-93, detailed error codes pp.94-143 (located, not transcribed line by line)",
+     "docId": "SM_MULTI-V-S-Outdoor-Unit-Service-Manual_06_24",
+     "url": "https://media.us.lg.com/m/27e0f1a467d48bcf/original/SM_MULTI-V-S-Outdoor-Unit-Service-Manual_06_24-pdf.pdf"
+    },
+    {
+     "title": "LG Global Business HVAC video guides: Multi V Trouble Shooting Guide - Error Code CH03; CH05, 53, 237; CH21, 29; CH32, 33; CH34; CH35; CH151; CH200, 204; Single Split CH21 CH26 CH27 CH29",
+     "docId": "lg.com/global/business video guides",
+     "url": "https://www.lg.com/global/business/support/resource-download/hvac/video-guide/lg-multi-v-trouble-shooting-guide-error-code-ch05-53-237/"
+    },
+    {
+     "title": "LG USA Help Library - 'How to Troubleshoot Error Codes CH01, CH02, CH06, CH12, CH41-CH48, CH21, CH23, CH26, CH29...' and '[LG Air Conditioner] Guide to Error Codes' / 'How to read error codes'",
+     "docId": "LG USA Help Library CT10000014-20155399529696",
+     "url": "https://www.lg.com/us/support/help-library/how-to-troubleshoot-error-codes-ch01-ch02-ch06-ch12-ch41-ch42-ch43-ch44-ch45-ch46-ch47-ch48-e1-e2-e3-e7-e8-f2-f3-ch21-ch23-ch26-ch29-and-e9-on-your-lg-air-conditioner-CT10000014-20155399529696"
+    },
+    {
+     "title": "LG Technical Bulletin - Multi V CH150 error guide (reproduced on Scribd)",
+     "docId": "LG TB CH150",
+     "url": "https://www.scribd.com/document/836099204/Technical-Bulletin-Multi-V-CH150-error-guide"
+    },
+    {
+     "title": "rapidhvacparts.com - LG Multi V Error Code Guide: CH Codes Explained (Indoor, Outdoor, HR Units) (third-party transcription of LG Multi V III / Multi V 5 / ARUB-ARUN service manuals)",
+     "docId": "rapidhvacparts LG CH guide",
+     "url": "https://www.rapidhvacparts.com/blogs/news/lg-multi-v-error-code-guide-ch-codes-explained-indoor-outdoor-hr-units"
+    },
+    {
+     "title": "acerrorcode.com - LG VRF Error Codes List - Multi V (third-party)",
+     "docId": "acerrorcode LG Multi V",
+     "url": "https://acerrorcode.com/lg-multi-v-error-codes.html"
+    },
+    {
+     "title": "ARMA 'LG Air Conditioning Fault Codes' (Error Code / Key Word / Response) PDF and orionair.co.uk LG Multi/CAC fault code sheets (third-party, include indoor LED flash counts)",
+     "docId": "ARMA LG-FAULT-CODES-1.pdf",
+     "url": "https://www.arma.org.au/wp-content/uploads/2017/02/LG-FAULT-CODES-1.pdf"
     }
    ],
    "confidence": "medium",
@@ -3769,7 +4658,71 @@
     "LG Multi V trouble shooting video guide (lg.com)",
     "LG Help Library CH53",
     "rapidhvacparts.com LG Multi V CH code guide",
-    "ARMA LG fault codes PDF"
+    "ARMA LG fault codes PDF",
+    "https://www.manualslib.com/manual/1483751/Lg-Multi-V5.html?page=126",
+    "https://www.manualslib.com/manual/686189/Lg-Multi-V.html?page=60",
+    "https://www.manualslib.com/manual/1919257/Lg-Multi-V-5-Arum160lte5.html?page=50",
+    "https://www.manualslib.com/manual/92718/Lg-General-Wall-Mounted-Inverter-Type.html?page=64",
+    "https://media.us.lg.com/m/27e0f1a467d48bcf/original/SM_MULTI-V-S-Outdoor-Unit-Service-Manual_06_24-pdf.pdf",
+    "https://www.lg.com/global/business/support/resource-download/hvac/video-guide/lg-multi-v-trouble-shooting-guide-error-code-ch05-53-237/",
+    "https://www.lg.com/us/support/help-library/how-to-troubleshoot-error-codes-ch01-ch02-ch06-ch12-ch41-ch42-ch43-ch44-ch45-ch46-ch47-ch48-e1-e2-e3-e7-e8-f2-f3-ch21-ch23-ch26-ch29-and-e9-on-your-lg-air-conditioner-CT10000014-20155399529696",
+    "https://www.scribd.com/document/836099204/Technical-Bulletin-Multi-V-CH150-error-guide",
+    "https://www.rapidhvacparts.com/blogs/news/lg-multi-v-error-code-guide-ch-codes-explained-indoor-outdoor-hr-units",
+    "https://acerrorcode.com/lg-multi-v-error-codes.html",
+    "https://www.arma.org.au/wp-content/uploads/2017/02/LG-FAULT-CODES-1.pdf"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "Light-commercial / split indoor unit: operation LED blinks at 2-second intervals - 1st LED blinks = ones digit of the CH code, 2nd LED blinks = tens digit",
+     "meaning": "Indoor units without a 2-digit display show the error number by LED flash count (LG 'How to read error codes').",
+     "checks": [
+      "Count the flashes: e.g. 1st LED blinking 5 times steadily = CH05",
+      "Read the same code on the wired remote controller display if fitted"
+     ]
+    },
+    {
+     "pattern": "Indoor LED 1 flash",
+     "meaning": "CH01 - indoor air sensor open/short",
+     "checks": [
+      "See CH01"
+     ]
+    },
+    {
+     "pattern": "Indoor LED 2 flashes",
+     "meaning": "CH02 - indoor inlet pipe sensor open/short",
+     "checks": [
+      "See CH02"
+     ]
+    },
+    {
+     "pattern": "Indoor LED 5 flashes",
+     "meaning": "CH05 - indoor/outdoor communication error",
+     "checks": [
+      "See CH05"
+     ]
+    },
+    {
+     "pattern": "Indoor LED 6 flashes",
+     "meaning": "CH06 - indoor outlet pipe sensor open/short",
+     "checks": [
+      "See CH06"
+     ]
+    },
+    {
+     "pattern": "Indoor LED: 2nd LED 1 flash (tens digit) with 1st LED off",
+     "meaning": "CH10 - indoor fan motor lock / poor fan operation",
+     "checks": [
+      "See CH10"
+     ]
+    },
+    {
+     "pattern": "Outdoor unit 7-segment display (SSD): 3- or 4-digit number, e.g. 211, 1051, 2421",
+     "meaning": "Rightmost digit = outdoor frame reporting (1 Master, 2 Slave 1, 3 Slave 2, 4 Slave 3 on older multi-frame systems); remaining digits = error number (211 = error 21 on Master, 1051 = error 105 on Master). Heat recovery unit errors are followed by the HR unit number.",
+     "checks": [
+      "Strip the last digit to get the CH code, then find it in the table",
+      "If several faults exist the lower-numbered error is displayed first"
+     ]
+    }
    ]
   },
   {

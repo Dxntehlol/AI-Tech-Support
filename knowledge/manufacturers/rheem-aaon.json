@@ -1538,7 +1538,7 @@
   {
    "id": "honeywell-jade-w7220",
    "name": "Honeywell/Resideo JADE W7220 economizer module (Rheem/Ruud factory and field economizers)",
-   "description": "Two-line LCD economizer controller with alarms shown in the ALARMS menu. Used on Rheem/Ruud commercial packaged units with factory economizers (and widely on other brands).",
+   "description": "Two-line LCD economizer controller with alarms shown in the ALARMS menu. Used on Rheem/Ruud commercial packaged units with factory economizers (and widely on other brands). Shared table: the W7220 ALARMS table is identical on Carrier EconoMi$er X (factory and CRECOMZR accessory kits), Rheem/Ruud, Lennox, Trane, Daikin/Goodman and other OEM JADE-based economizers — Carrier LLECON-02SI and IIK-CRECOMZR reproduce the same MAT SENS ERR ... DA SENS ALM list. Use this entry for any unit whose economizer board is a W7220. The 17 W7220 alarms above are the full ALARMS list in Honeywell 62-0331/63-2700 (13 base alarms plus DA SENS ERR and the three communicating-actuator alarms). Coverage is marked partial only because the Belimo ZIP FDD table was not fully seen (MAT/DAT/CO2 and the 'economizing when it should not' / 'excess outdoor air' rows are missing) and because the exact ZIP display string for the damper-feedback alarm was not verified. The JADE W7220 meets Title 24 economizer FDD by way of its sensor and actuator alarms (MAT/OA/RA/DA SENS ERR, ACT ERROR/ACT STALLED, FREEZE ALARM, DA SENS ALM); no source showed separate JADE strings such as 'ECON FAIL', 'DAMPER FAULT', 'EXCESS OA' or 'NOT ECONOMIZING' — those wordings are the Title 24 fault categories, not W7220 display text. The Belimo ZIP does list Title 24 categories (air temperature sensor failure/fault, not economizing when it should, economizing when it should not, damper not modulating, excess outdoor air) as its FDD alar",
    "appliesTo": [
     "rheem-commercial-package-rk-rl-rq",
     "rheem-light-commercial-package-rs-rj"
@@ -1546,165 +1546,378 @@
    "faultCodes": [
     {
      "code": "MAT SENS ERR",
-     "meaning": "Mixed air sensor has failed or become disconnected.",
+     "meaning": "Indicates that the mixed air sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "likelyCauses": [
-      "Open/shorted MAT sensor (20k NTC) or wiring",
-      "Sensor unplugged at the module"
+      "Mixed air (20k NTC C7250 / C7400S) sensor open, shorted or unplugged at the MAT terminals",
+      "Broken or chafed sensor lead inside the mixed-air section",
+      "Sensor reading outside the controller's valid range (failed thermistor)"
      ],
      "checks": [
-      "Check wiring at the MAT terminals; measure sensor resistance against the 20k NTC table",
-      "Replace the sensor if the alarm persists"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: unplug the sensor and measure resistance; a 20k NTC reads ~20k ohm at 77 F — open or dead-short means a bad sensor or lead",
+      "Field practice: MAT is the one sensor the JADE cannot run without — economizer free cooling is unavailable until it clears"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331 JADE W7220 Installation Instructions, Alarms table",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table (also ManualsLib 1405190 p.24)",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "OA SYLK T ERR",
-     "meaning": "Outdoor air Sylk-bus temperature/enthalpy sensor has failed or become disconnected.",
+     "meaning": "OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "likelyCauses": [
-      "C7400S Sylk sensor failed, wiring open, or wrong sensor address"
+      "C7400S outdoor enthalpy (Sylk bus) sensor temperature element failed",
+      "S-BUS wiring open, reversed polarity is tolerated but a broken conductor is not",
+      "Sensor lost communication after having been detected (device fail)"
      ],
      "checks": [
-      "Check the S-bus wiring and sensor; replace the sensor if the alarm persists"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Manual: the JADE will not alarm a disconnected Sylk device during the 60-minute setup mode after power-up; after that all missing/failed components alarm",
+      "Field practice: verify the sensor's DIP/jumper is set to OA (not RA/DA) — a wrong address reads as a missing OA sensor"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms table",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "OA SYLK H ERR",
-     "meaning": "Outdoor air Sylk-bus humidity (enthalpy) sensor has failed or become disconnected.",
+     "meaning": "OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "likelyCauses": [
-      "C7400S sensor humidity element failed or disconnected"
+      "C7400S outdoor enthalpy sensor humidity element failed",
+      "S-BUS wiring problem or sensor disconnected"
      ],
      "checks": [
-      "Check wiring and sensor; replace if the alarm persists"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: temporarily remove power to the W7220 and restore it once the S-BUS wiring is verified so the module re-detects the sensor"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms table",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "ACT UNDER V",
-     "meaning": "Voltage received by the actuator is below the expected range.",
+     "meaning": "Indicates voltage received by the actuator is below the expected range. (Displayed only when a Sylk-bus communicating actuator is used.)",
      "likelyCauses": [
-      "Low 24 VAC supply / undersized transformer",
-      "Voltage drop in the actuator wiring"
+      "Low 24 VAC supply / undersized or overloaded transformer",
+      "Voltage drop on long or undersized actuator wiring",
+      "Too many Sylk devices on the bus"
      ],
      "checks": [
-      "Measure 24 VAC at the actuator under load",
-      "Check transformer VA rating and wiring"
+      "Field practice: measure 24 VAC at the actuator terminals with the actuator driving; compare to the transformer output",
+      "Field practice: check the transformer VA rating against total connected load"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms table",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table (communicating actuator alarms)",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "CO2 SENS ERR",
-     "meaning": "CO2 (demand-control ventilation) sensor error — sensor failed or disconnected (meaning expanded from the alarm name; see 62-0331 for exact text).",
+     "meaning": "Indicates that the CO2 sensor has failed, gone out of range, or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "checks": [
-      "Check the 2–10 V CO2 sensor wiring and output"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: measure the sensor output (should be 2-10 Vdc, not 0-10) and the sensor's 24 V supply; verify the DCV configuration matches the sensor type"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "2-10 Vdc CO2 sensor output missing or outside range at the CO2 terminals",
+      "Sylk-bus TR40 CO2 sensor lost communication",
+      "CO2 sensor unpowered or wired to the wrong terminals"
+     ]
     },
     {
      "code": "RA SYLK T ERR",
-     "meaning": "Return air Sylk-bus temperature sensor error (name expanded).",
+     "meaning": "RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "checks": [
-      "Check S-bus wiring/sensor"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: if a RA sensor was removed on purpose, power-cycle the module so it re-learns the installed devices (setup mode) and stops expecting it"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "C7400S return-air Sylk sensor temperature element failed or disconnected",
+      "Sensor configured for the wrong location (OA/RA/DA setting)"
+     ]
     },
     {
      "code": "RA SYLK H ERR",
-     "meaning": "Return air Sylk-bus humidity sensor error (name expanded).",
+     "meaning": "RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "checks": [
-      "Check S-bus wiring/sensor"
+      "Manual: check the wiring and replace the sensor if the alarm persists"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "C7400S return-air sensor humidity element failed",
+      "S-BUS wiring problem"
+     ]
     },
     {
      "code": "DA SYLK T ERR",
-     "meaning": "Discharge air Sylk-bus temperature sensor error (name expanded).",
+     "meaning": "Indicates that the discharge air sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists.",
      "checks": [
-      "Check S-bus wiring/sensor"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: the DA sensor is optional — if it was never installed and the alarm appears, the module learned a sensor that has since been removed; power-cycle to re-detect"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "C7400S discharge-air Sylk sensor failed or disconnected",
+      "S-BUS wiring problem"
+     ]
     },
     {
      "code": "OA SENS T ERR",
-     "meaning": "Outdoor air (hard-wired 20k) temperature sensor error (name expanded).",
+     "meaning": "Indicates that the outdoor air temperature sensor has failed or become disconnected. Check the wiring and replace the sensor if the alarm persists. (Shown when a 20k hard-wired OA temperature sensor is used; with Sylk sensors the OA SYLK alarms are shown instead.)",
      "checks": [
-      "Check OAT sensor wiring and resistance"
+      "Manual: check the wiring and replace the sensor if the alarm persists",
+      "Field practice: measure resistance across the OAT terminals with the sensor disconnected and compare to the 20k NTC table"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Hard-wired 20k NTC (C7250) outdoor air temperature sensor open/shorted",
+      "Sensor lead damaged in the hood or wiring harness"
+     ]
     },
     {
      "code": "ACT ERROR",
-     "meaning": "General actuator error (name expanded).",
+     "meaning": "Indicates that the actuator has failed or become disconnected. Check for stall, over voltage, under voltage, and actuator count.",
      "checks": [
-      "Check actuator wiring and S-bus connection; replace the actuator if it persists"
+      "Manual: check for stall, over voltage, under voltage, and actuator count",
+      "Field practice: run CHECKOUT > damper open/close and watch for ACT STALLED / ACT UNDER V / ACT OVER V, which pinpoint the cause",
+      "Field practice: free the damper blades and linkage by hand; verify 24 VAC at the actuator under load"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Damper actuator (2-10 Vdc or Sylk MS7505/MS7503) disconnected or failed",
+      "Actuator stalled against a bound damper",
+      "24 VAC supply to the actuator out of range",
+      "More than one Sylk actuator on the bus (actuator count)"
+     ]
     },
     {
      "code": "FREEZE ALARM",
-     "meaning": "Freeze-protection alarm — mixed/discharge air too cold; economizer driven to minimum (name expanded).",
+     "meaning": "Indicates that the outdoor temperature is below the LOW Temp Lockout setting or the mixed air temperature is below the Lo Setpoint. The alarm will clear when conditions return to normal range.",
      "checks": [
-      "Check MAT reading, damper minimum position and low-ambient operation"
+      "Manual: alarm clears when conditions return to normal range",
+      "Field practice: compare STATUS MAT/OAT readings against a reference thermometer; verify the damper actually drives to minimum when freeze protection is active",
+      "Field practice: review MA LO SET and LOW T LOCK in SETPOINTS/ADVANCED SETUP"
      ],
-     "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "severity": "info",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table; MA LO SET default from SETPOINTS table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Genuine low outdoor/mixed-air temperature (normal in winter)",
+      "MA LO SET (default 45 F, range 35-65 F) set too high for the application",
+      "Damper stuck open or minimum position too high, pulling cold air across the MAT sensor",
+      "MAT sensor reading low (bad sensor or poor placement)"
+     ]
     },
     {
      "code": "SHUTDOWN ACTIVE",
-     "meaning": "Shutdown input active — dampers closed by the shutdown/smoke input (name expanded).",
+     "meaning": "Indicates that AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX 2IN terminal.",
      "checks": [
-      "Check the shutdown (SD) input and the device driving it"
+      "Manual: this is a status alarm — the shutdown input is active, not a controller fault",
+      "Field practice: measure for 24 VAC at AUX2 IN and trace what is driving it; check the AUX2 IN setting in SYSTEM SETUP"
      ],
      "severity": "info",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Smoke detector / fire alarm or BAS shutdown relay is energizing AUX2 IN (dampers close)",
+      "AUX2 IN mis-programmed as SHUTDOWN when the input is really an occupied/heat input"
+     ]
     },
     {
      "code": "DMP CAL RUNNING",
-     "meaning": "Damper calibration in progress (name expanded).",
+     "meaning": "Displays if DCV Auto enable has been programmed and the Jade is completing a calibration on the dampers. This alarm will clear once calibration is complete.",
      "checks": [
-      "Wait for calibration to complete after power-up before judging damper response"
+      "Manual: wait — it clears when calibration completes",
+      "Field practice: do not judge damper response or run CHECKOUT until the calibration finishes"
      ],
      "severity": "info",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Normal: DCV CAL ENABLE = AUTO and the module is calibrating damper minimum/max positions after power-up or a setting change"
+     ]
     },
     {
      "code": "DA SENS ALM",
-     "meaning": "Discharge air sensor alarm (name expanded).",
+     "meaning": "Indicates that the discharge air temperature is out of the range set in the ADVANCED SETUP Menu (DA LO ALM / DA HI ALM).",
      "checks": [
-      "Check DAT sensor"
+      "Manual: range is set by DA LO ALM (low limit) and DA HI ALM (high limit) in ADVANCED SETUP",
+      "Field practice: verify supply air temperature with a probe at the sensor location, then review the alarm limits"
      ],
      "severity": "warning",
-     "source": "Honeywell 62-0331, Alarms menu list",
-     "evidence": "single_secondary"
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table and ADVANCED SETUP table",
+     "evidence": "manufacturer_doc",
+     "likelyCauses": [
+      "Discharge air genuinely too cold or too hot (cooling/heating problem, or economizer over-cooling)",
+      "DA LO ALM / DA HI ALM limits set too tight for the equipment",
+      "Discharge sensor reading wrong or mounted where it sees stratified air"
+     ]
+    },
+    {
+     "code": "DA SENS ERR",
+     "meaning": "Indicates that the discharge air sensor has failed or become disconnected.",
+     "likelyCauses": [
+      "Discharge air sensor open, shorted or disconnected"
+     ],
+     "checks": [
+      "Check the wiring and replace the sensor if the alarm persists (same treatment as the other SENS ERR alarms)"
+     ],
+     "severity": "warning",
+     "source": "Honeywell 63-2700 / ManualsLib 1405190 W7220 Alarms table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT OVER V",
+     "meaning": "Indicates voltage received by the actuator is above the expected range. (Displayed only when a Sylk-bus communicating actuator is used.)",
+     "likelyCauses": [
+      "High transformer secondary voltage (wrong primary tap, high line voltage)",
+      "Two power sources back-feeding the actuator"
+     ],
+     "checks": [
+      "Field practice: measure the 24 VAC supply at the actuator; correct the transformer tap or wiring"
+     ],
+     "severity": "warning",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table (communicating actuator alarms)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT STALLED",
+     "meaning": "Indicates the actuator stopped before achieving its commanded position. (Displayed only when a Sylk-bus communicating actuator is used.)",
+     "likelyCauses": [
+      "Damper blades bound, iced, or linkage jammed",
+      "Actuator stroke/end stops set wrong or damper over-travel",
+      "Actuator failed",
+      "Field report: an MS7505 gave a stall error during CHECKOUT open/close tests when it was not the only actuator on the W7220's bus"
+     ],
+     "checks": [
+      "Field practice: run CHECKOUT damper open/close and watch the blades; move the damper by hand with power off to feel for binding",
+      "Field practice: confirm only one communicating actuator is connected to the module"
+     ],
+     "severity": "warning",
+     "source": "Honeywell 62-0331 / 63-2700, ALARMS menu table (communicating actuator alarms); HVAC-Talk 2282959 for the multi-actuator field report",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: OAT Sensor out of range",
+     "meaning": "Belimo ZIP Economizer FDD: OAT Sensor out of range — economizing is disabled. The sensor is returning a value that is out of the predetermined range (potential thermistor failure); the outdoor air damper will return/remain at minimum position.",
+     "likelyCauses": [
+      "10k type 2 thermistor OAT sensor failed or leads damaged",
+      "Sensor exposed to direct sun / heat source reading outside range"
+     ],
+     "checks": [
+      "Manual: disconnect the sensor leads from the ECON-ZIP-BASE and measure resistance with an ohmmeter; compare to the 10K type 2 thermistor table and replace the sensor if significantly different"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: OAT Sensor not detected",
+     "meaning": "Belimo ZIP Economizer FDD: OAT Sensor not detected — economizing is disabled. This is a mandatory sensor and must be functional; repair or replace.",
+     "likelyCauses": [
+      "OAT sensor unplugged or open circuit at the base module",
+      "Sensor never installed"
+     ],
+     "checks": [
+      "Manual: mandatory sensor — repair or replace; the damper stays at minimum position until it is restored",
+      "Manual: verify resistance against the 10K type 2 thermistor table"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: OAH Sensor out of range",
+     "meaning": "Belimo ZIP Economizer FDD: OAH Sensor out of range — economizing is disabled.",
+     "likelyCauses": [
+      "Outdoor air humidity sensor failed or wiring fault"
+     ],
+     "checks": [
+      "Check OAH sensor wiring and output; replace the sensor if it persists"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: OAH Sensor not detected",
+     "meaning": "Belimo ZIP Economizer FDD: OAH Sensor not detected — economizing is disabled. If previously configured for differential enthalpy and the OAH sensor is not detected, economizing is based on differential dry bulb using the RAH sensor to monitor space humidity.",
+     "likelyCauses": [
+      "OAH sensor disconnected or removed after auto-detection"
+     ],
+     "checks": [
+      "Check OAH sensor wiring; if it was removed intentionally, allow the ZIP to reconfigure to dry-bulb changeover"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: RAT Sensor out of range",
+     "meaning": "Belimo ZIP Economizer FDD: RAT Sensor out of range — operation by OAT dry bulb (controller reconfigures from differential dry bulb to single outdoor dry bulb changeover).",
+     "likelyCauses": [
+      "Return air thermistor failed or leads damaged"
+     ],
+     "checks": [
+      "Manual: verify sensor resistance against the 10K type 2 thermistor table; replace if significantly different"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: RAT Sensor not detected",
+     "meaning": "Belimo ZIP Economizer FDD: RAT Sensor not detected — when a previously detected RAT sensor is not present, the system reconfigures from differential dry bulb economizing to operate based on single OAT dry bulb.",
+     "likelyCauses": [
+      "RAT sensor unplugged or open circuit"
+     ],
+     "checks": [
+      "Check RAT sensor wiring at the base module; economizing continues on single dry bulb in the meantime"
+     ],
+     "severity": "info",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, Fault Detection and Diagnostics table",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ZIP: Damper not modulating (actuator feedback)",
+     "meaning": "Belimo ZIP Economizer FDD: the feedback from the actuator (ACT5, 2-10 VDC) is used to determine damper position; if the ZIP commands the damper to a designated % and the feedback measured does not achieve the commanded value, this alarm is generated (Title 24 'damper not modulating' fault).",
+     "likelyCauses": [
+      "Damper bound, linkage disconnected or actuator failed",
+      "Actuator feedback wire not terminated at ACT5, or feedback range not 2-10 VDC",
+      "Control signal not re-scaled to the damper's actual stroke"
+     ],
+     "checks": [
+      "Manual: run the damper/actuator test — it opens the damper to 100 % (re-scale the control signal if needed), enables power exhaust and 1st-stage mechanical cooling, reverses, then drives to Vent Min position",
+      "Field practice: confirm the feedback wire is on ACT5 and reads 2-10 VDC as the damper strokes; free any binding"
+     ],
+     "severity": "warning",
+     "source": "Belimo ZIP Economizer Installation and Operation Manual, actuator feedback / FDD section (exact display string not verified — see notes)",
+     "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
     "Display/LEDs: the module is in the economizer/control compartment; use the ▲/▼/Enter/Esc buttons to walk STATUS → SETPOINTS → SYSTEM SETUP → ADVANCED SETUP → CHECKOUT → ALARMS.",
     "CHECKOUT drives the damper open/closed and exercises outputs for testing; STATUS shows live MAT/OAT/RAT, economizer availability and damper position.",
-    "Alarms clear automatically when the condition is resolved (e.g. a sensor reconnected); a persistent alarm after wiring is verified means the sensor or actuator is bad."
+    "Alarms clear automatically when the condition is resolved (e.g. a sensor reconnected); a persistent alarm after wiring is verified means the sensor or actuator is bad.",
+    "W7220 display: 2-line, 16-character LCD with four keys (up, down, Enter, Esc) on the module in the unit control box / economizer compartment. Menus: STATUS, SETPOINTS, SYSTEM SETUP, ADVANCED SETUP, CHECKOUT, ALARMS(#). The ALARMS menu title shows the number of active alarms in parentheses; alarms display only while they are active and there is no manual clear — fix the cause and the alarm drops off.",
+    "W7220: if one or more alarms are present and there has been no keypad activity for at least 5 minutes, the display automatically shows the ALARMS menu and cycles through the active alarms.",
+    "W7220 setup mode: for the first 60 minutes after power-up the module is in setup mode and will not alarm a disconnected OA sensor or Sylk-bus device; after 60 minutes it changes to operation mode and every removed or failed component alarms. Power-cycle the module after removing or replacing Sylk devices so it re-learns the bus.",
+    "W7220 CHECKOUT menu drives the damper to min/open/closed, exercises the exhaust, Y1/Y2 and AUX outputs and is the fastest way to reproduce ACT ERROR / ACT STALLED; STATUS shows live MAT, OAT, RAT, DAT, CO2, damper position and ECON AVAIL.",
+    "W7220 sensors: hard-wired MAT/OAT are 20k NTC (C7250); Sylk-bus C7400S enthalpy sensors and MS7505/MS7503 Sylk actuators daisy-chain on the S-BUS (polarity-insensitive two-wire). ACT UNDER V / ACT OVER V / ACT STALLED only appear with a communicating actuator.",
+    "W7212/W7213/W7214 EconoMi$er IV has no alarm display — only the three LEDs (Free Cool, DCV, Exhaust) and potentiometers; diagnose with the resistor checkout table in Honeywell 63-2596 (5.6k across T-T1, 1.2k checkout resistor across SO-+, 620 ohm across SR-+).",
+    "Belimo ZIP: use the LCD Alarms menu to view current and historic alarms — up to 10 alarms are stored with operating hours. The ZIP auto-detects sensors and reconfigures the changeover strategy (differential enthalpy -> differential dry bulb -> single OAT dry bulb) as sensors fail; verify 10k type 2 thermistors by resistance."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -1715,11 +1928,96 @@
     {
      "title": "Honeywell JADE W7220 Installation/Operator manual (ManualsLib p.24, alarms)",
      "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
+    },
+    {
+     "title": "Honeywell 62-0331-15 JADE Economizer Module (Model W7220) Installation Instructions — ALARMS menu table",
+     "docId": "62-0331-15",
+     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/62-0331.pdf"
+    },
+    {
+     "title": "Honeywell 63-2700-11 JADE Economizer Module W7220 Installation Instructions (full operator manual) — Alarms / Troubleshooting",
+     "docId": "63-2700-11",
+     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf"
+    },
+    {
+     "title": "Honeywell JADE W7220 Installation Instructions and Operators Manual (ManualsLib 1405190, p.24 Alarms)",
+     "docId": "manualslib-1405190",
+     "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
+    },
+    {
+     "title": "Carrier EconoMi$er X Factory-Installed Option Low Leak Economizer (LLECON-02SI) — W7220 menu/alarm table",
+     "docId": "LLECON-02SI",
+     "url": "https://www.shareddocs.com/hvac/docs/1009/Public/04/LLECON-02SI.pdf"
+    },
+    {
+     "title": "Carrier EconoMi$er X accessory installation instructions IIK-CRECOMZR67 (W7220-based)",
+     "docId": "IIK-CRECOMZR67",
+     "url": "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
+    },
+    {
+     "title": "Honeywell 63-2596 W7212, W7213, W7214 Economizer Logic Modules Product Data — LEDs and checkout table",
+     "docId": "63-2596-09",
+     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/literature-and-specs/datasheets/hbt-bms-W7212-W7213-W7214-Economizer-datasheet-63-2596.pdf"
+    },
+    {
+     "title": "Belimo ZIP Economizer Installation and Operation Manual — Fault Detection and Diagnostics (FDD) table",
+     "docId": "belimo-zip-iom",
+     "url": "https://www.kele.com/Catalog/22%20Thermostats_Controllers/PDFs/ZIP_Economizer_%20Complete%20Installation%20and%20Operation%20Manual.pdf"
+    },
+    {
+     "title": "Belimo ZIP Economizer Fault Detection / Troubleshooting excerpt (06/16)",
+     "docId": "belimo-zip-fdd-0616",
+     "url": "https://login.cambridgeport.net/manuals/Belimo-fault-detections-troubleshooting.pdf"
+    },
+    {
+     "title": "HVAC-Talk: Honeywell W7220 question (MS7505 ACT STALLED during checkout)",
+     "docId": "hvac-talk-2282959",
+     "url": "https://www.hvac-talk.com/threads/honeywell-w7220-question.2282959/"
     }
    ],
    "confidence": "medium",
    "sources": [
-    "Honeywell 62-0331 JADE W7220 installation instructions (alarm names and four alarm meanings transcribed from search summary)"
+    "Honeywell 62-0331 JADE W7220 installation instructions (alarm names and four alarm meanings transcribed from search summary)",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/62-0331.pdf",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf",
+    "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24",
+    "https://www.shareddocs.com/hvac/docs/1009/Public/04/LLECON-02SI.pdf",
+    "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/literature-and-specs/datasheets/hbt-bms-W7212-W7213-W7214-Economizer-datasheet-63-2596.pdf",
+    "https://www.kele.com/Catalog/22%20Thermostats_Controllers/PDFs/ZIP_Economizer_%20Complete%20Installation%20and%20Operation%20Manual.pdf",
+    "https://login.cambridgeport.net/manuals/Belimo-fault-detections-troubleshooting.pdf",
+    "https://www.hvac-talk.com/threads/honeywell-w7220-question.2282959/"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "W7212/W7213/W7214 EconoMi$er IV: FREE COOL LED on",
+     "meaning": "Free cooling is available — outdoor conditions are below the enthalpy/dry-bulb changeover setting and the module will use the damper for first-stage cooling.",
+     "checks": [
+      "Checkout (63-2596): with 24 VAC applied, a 620 ohm resistor across SO and + turns the free cool LED on; removing it turns the LED off",
+      "Checkout: with the enthalpy pot set to A the free cool LED turns on and the actuator drives to between 18 and 72 degrees open (5.6k ohm across T-T1 simulates MAT 50-55 F)"
+     ]
+    },
+    {
+     "pattern": "W7212/W7213/W7214: DCV LED on",
+     "meaning": "The module is in demand-control-ventilation mode (CO2 input above the DCV setpoint) and is opening the damper toward DCV MAX.",
+     "checks": [
+      "Checkout: a 9 V battery + to AQ, - to AQ1 turns the DCV and Exhaust LEDs on and drives the actuator to 45 degrees open with DCV MAX at mid position"
+     ]
+    },
+    {
+     "pattern": "W7212/W7213/W7214: EXHAUST LED on",
+     "meaning": "The exhaust fan contact (EXH1/EXH2) is closed — damper position has exceeded the exhaust fan setpoint potentiometer.",
+     "checks": [
+      "Checkout: LED and contacts follow the EXH SET pot; all LEDs off and exhaust contacts open is the starting state of the checkout procedure"
+     ]
+    },
+    {
+     "pattern": "W7212/W7213/W7214: all LEDs off, damper at minimum",
+     "meaning": "No free cooling, no DCV demand and no exhaust call — normal minimum-position ventilation, or the module is unpowered/not seeing a fan call.",
+     "checks": [
+      "Checkout preparation (63-2596): disconnect power at TR/TR1, disconnect devices at P and P1 and jumper P to P1, 5.6k ohm across T and T1, jumper TR to 1 (W7212: also TR to N), 1.2k ohm 4074EJM checkout resistor across SO and +, 620 ohm across SR and +, MIN POS and DCV MAX fully CCW, then apply 24 VAC to TR/TR1 and step through the table"
+     ]
+    }
    ]
   },
   {
