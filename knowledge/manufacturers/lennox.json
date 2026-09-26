@@ -4164,7 +4164,7 @@
   {
    "id": "imc",
    "name": "Lennox IMC (Integrated Modular Control) M1-x unit controller",
-   "description": "Board-mounted microprocessor controller (A55, versions M1-4 through M1-8) on L Series and S-Class (Strategos) gas/electric, electric/electric and heat pump rooftops (c. 1997-2012). Displays and stores 2-digit error codes; configured by DIP switches; optional IMC BACnet module and L Connection network. ENRICHMENT NOT PERFORMED: the session's WebSearch budget (200/200) was already exhausted when this sidecar was built, so no source could be consulted. Per the verification protocol (fault codes only from the controller manual, never from memory) this sidecar carries only the two codes that already had documented source evidence in the existing pack entry; nothing new was added. The full IMC Table 4 error-code table (codes 1 through ~100+, including 59, 73, 74, 92, 93) remains untranscribed. A follow-up run with search budget should transcribe it from the M1-7 v5.02 / M1-8 IMC Application Guide (Table 4 / Figure 16) and set coverage accordingly. The IMC uses a 2-digit 7-segment display on the A55 board rather than blink-code LEDs, so ledPatterns is intentionally empty pending a sourced description of the board's status LEDs.",
+   "description": "Board-mounted microprocessor controller (A55, versions M1-4 through M1-8) on L Series and S-Class (Strategos) gas/electric, electric/electric and heat pump rooftops (c. 1997-2012). Displays and stores 2-digit error codes; configured by DIP switches; optional IMC BACnet module and L Connection network. ENRICHMENT NOT PERFORMED: the session's WebSearch budget (200/200) was already exhausted when this sidecar was built, so no source could be consulted. Per the verification protocol (fault codes only from the controller manual, never from memory) this sidecar carries only the two codes that already had documented source evidence in the existing pack entry; nothing new was added. The full IMC Table 4 error-code table (codes 1 through ~100+, including 59, 73, 74, 92, 93) remains untranscribed. A follow-up run with search budget should transcribe it from the M1-7 v5.02 / M1-8 IMC Application Guide (Table 4 / Figure 16) and set coverage accordingly. The IMC uses a 2-digit 7-segment display on the A55 board rather than blink-code LEDs, so ledPatterns is intentionally empty pending a sourced description of the board's status LEDs. Transcribed from the M1-7 Version 5.02 Table 4 IMC Error Codes via search-engine excerpts of the manualzz text index and the lennoxeurope PDF; the same code numbering is used on the M1-8 (Version 6 door label lists codes 1-127). Coverage is \"partial\" because codes 103 and 105 could not be captured cleanly (search excerpts conflated them with 104 and 107) and ",
    "appliesTo": [
     "lennox-l-series-lga-lca-lha",
     "lennox-strategos-sga-sca-sha"
@@ -4172,30 +4172,1607 @@
    "faultCodes": [
     {
      "code": "12",
-     "meaning": "S4 high pressure switch (compressor 1) is open.",
+     "meaning": "S4 (High Press. 1) is open. Compr. 1 off.",
      "likelyCauses": [
       "High head pressure: dirty condenser coil, outdoor fan failure, overcharge, non-condensables",
       "Failed S4 switch or wiring"
      ],
      "checks": [
-      "Check head pressure vs. ambient, outdoor fan operation and coil cleanliness (field practice)",
-      "Verify S4 continuity when pressure is below the reset point (field practice)"
+      "Check head pressure vs. ambient, condenser fan operation and coil cleanliness (field practice)",
+      "Verify S4 continuity once pressure is below the reset point (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control manual, Table 4 error codes (manualzz mirror; transcribed from search excerpt)",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "13",
-     "meaning": "First-stage high pressure switch has opened three times (default) and the control has de-energized the compressor (lockout).",
+     "meaning": "S4 (High Press. 1) has opened 3 (default) times during a demand. The number of times is defined in ECTO 1.12 or 4.14. Compr. 1 locked off. Requires a reset or two short pushes of pushbutton to restore.",
      "likelyCauses": [
-      "Repeated high-pressure trips on compressor 1 (see code 12)"
+      "Repeated high-pressure trips on circuit 1 (see code 12)"
      ],
      "checks": [
-      "Correct the high-pressure cause, then reset the IMC (power cycle or reset per the IMC manual) to clear the lockout"
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
      ],
      "severity": "lockout",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control manual, Table 4 error codes (manualzz mirror; transcribed from search excerpt)",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "1",
+     "meaning": "Power loss for two cycles. This may indicate that the unit power is \"dirty\" or is of low quality. None on 3-phase units. 1-phase units: IMC will cycle compressor off for 5 minutes (default).",
+     "likelyCauses": [
+      "Poor-quality or intermittent line power, loose line-voltage connection",
+      "Brownouts or momentary outages"
+     ],
+     "checks": [
+      "Check line voltage and connections at the disconnect and unit terminal block (field practice)",
+      "Single-phase units: expect a 5-minute compressor off cycle after the event (manual)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "2",
+     "meaning": "ECTO access error. This may indicate a problem with the ECTO memory chip and parameters may not be changeable. Control will operate with the factory ECTO defaults.",
+     "likelyCauses": [
+      "Faulty ECTO memory chip on the A55 board"
+     ],
+     "checks": [
+      "Verify ECTO settings can still be read/changed; if not, replace the ECTO chip/board per Lennox (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "3",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "4",
+     "meaning": "A17 input indicates smoke alarm. Defined by ECTO 5.01. Default action unit off.",
+     "likelyCauses": [
+      "Smoke detector (A17) tripped or its output relay/wiring open"
+     ],
+     "checks": [
+      "Check the smoke detector for an actual alarm before resetting (field practice)",
+      "Verify ECTO 5.01 defines the intended smoke-alarm response (manual)"
+     ],
+     "severity": "shutdown",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "5",
+     "meaning": "S52 (Air Flow Switch) This indicates no blower air 16 seconds after blower demand. Blower will cycle with demand unless ECTO 6.17 is set to 1. In that case the blower will operate continuously during occupied periods and will cycle with demands during unoccupied periods.",
+     "likelyCauses": [
+      "Blower not running: belt, motor, contactor, overload",
+      "Air flow switch S52 or tubing/wiring fault"
+     ],
+     "checks": [
+      "Confirm blower rotation and belt condition, then check S52 and its tubing/wiring (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "6",
+     "meaning": "S27 (Dirty Filter Switch) This indicates a dirty filter.",
+     "likelyCauses": [
+      "Filters loaded",
+      "Dirty filter switch S27 set point too tight"
+     ],
+     "checks": [
+      "Replace filters; verify S27 setting and tubing (field practice)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "7",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "8",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "9",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "10",
+     "meaning": "24 VAC power loss at TB35-1 on A55 (M1) board.",
+     "likelyCauses": [
+      "Open safety circuit or fuse feeding TB35-1",
+      "Transformer / control fuse failure"
+     ],
+     "checks": [
+      "Check 24 VAC at TB35-1 on the A55 board and trace the feed upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "11",
+     "meaning": "24 VAC power loss at TB34-1 on A55 (M1) board. P113 pin 1.",
+     "likelyCauses": [
+      "Open device or fuse in the TB34-1 24 VAC feed",
+      "Loose P113 plug"
+     ],
+     "checks": [
+      "Check 24 VAC at TB34-1 / P113 pin 1 on the A55 board and trace upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "14",
+     "meaning": "S7 (High Press. 2) is open. Compr. 2 off.",
+     "likelyCauses": [
+      "High head pressure: dirty condenser coil, outdoor fan failure, overcharge, non-condensables",
+      "Failed S7 switch or wiring"
+     ],
+     "checks": [
+      "Check head pressure vs. ambient, condenser fan operation and coil cleanliness (field practice)",
+      "Verify S7 continuity once pressure is below the reset point (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "15",
+     "meaning": "S7 (High Press. 2) has opened 3 (default) times during a demand. The number of times is defined in ECTO 1.12 or 4.14. Compr. 2 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated high-pressure trips on circuit 2 (see code 14)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "16",
+     "meaning": "S28 (High Press. 3) is open. Compr. 3 off.",
+     "likelyCauses": [
+      "High head pressure: dirty condenser coil, outdoor fan failure, overcharge, non-condensables",
+      "Failed S28 switch or wiring"
+     ],
+     "checks": [
+      "Check head pressure vs. ambient, condenser fan operation and coil cleanliness (field practice)",
+      "Verify S28 continuity once pressure is below the reset point (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "17",
+     "meaning": "S28 (High Press. 3) has opened 3 (default) times during a demand. The number of times is defined in ECTO 1.12 or 4.14. Compr. 3 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated high-pressure trips on circuit 3 (see code 16)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "18",
+     "meaning": "S96 (High Press. 4) is open. Compr. 4 off.",
+     "likelyCauses": [
+      "High head pressure: dirty condenser coil, outdoor fan failure, overcharge, non-condensables",
+      "Failed S96 switch or wiring"
+     ],
+     "checks": [
+      "Check head pressure vs. ambient, condenser fan operation and coil cleanliness (field practice)",
+      "Verify S96 continuity once pressure is below the reset point (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "19",
+     "meaning": "S96 (High Press. 4) has opened 3 (default) times during a demand. The number of times is defined in ECTO 1.12 or 4.14. Compr. 4 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated high-pressure trips on circuit 4 (see code 18)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "20",
+     "meaning": "A42, S42, or S149 input is open between TB1-6 & TB1-23. A42 is a phase monitor; S42 is blower overload or inverter fault output; S149 is condensate overflow switch. Unit off.",
+     "likelyCauses": [
+      "Phase loss/reversal (A42)",
+      "Blower overload or VFD fault (S42)",
+      "Condensate overflow (S149)",
+      "Open wiring between TB1-6 and TB1-23"
+     ],
+     "checks": [
+      "Check phase monitor status, blower motor overload/VFD fault, and the condensate pan/overflow switch, then the TB1-6 to TB1-23 loop (manual + field practice)"
+     ],
+     "severity": "shutdown",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "21",
+     "meaning": "A42, S42, or S149 input has opened 3 (default) times during a demand. Unit locked off.",
+     "likelyCauses": [
+      "Repeated trips of the A42/S42/S149 safety loop (see code 20)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "22",
+     "meaning": "S87 (Low Press. 1) is open. Compr. 1 off.",
+     "likelyCauses": [
+      "Low refrigerant charge or leak",
+      "Low airflow / iced evaporator",
+      "Restriction (TXV, filter drier)",
+      "Failed S87 switch or wiring"
+     ],
+     "checks": [
+      "Check suction pressure, superheat and indoor airflow; note the IMC ignores the low-pressure switch during start-up so a logged trip is real (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "23",
+     "meaning": "S87 (Low Press. 1) has opened 3 (default) times during a demand. Compr. 1 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated low-pressure trips on circuit 1 (see code 22)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Search excerpt for code 23 garbled the compressor number; circuit 1 per the S87 designation."
+    },
+    {
+     "code": "24",
+     "meaning": "S88 (Low Press. 2) is open. Compr. 2 off.",
+     "likelyCauses": [
+      "Low refrigerant charge or leak",
+      "Low airflow / iced evaporator",
+      "Restriction (TXV, filter drier)",
+      "Failed S88 switch or wiring"
+     ],
+     "checks": [
+      "Check suction pressure, superheat and indoor airflow; note the IMC ignores the low-pressure switch during start-up so a logged trip is real (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "25",
+     "meaning": "S88 (Low Press. 2) has opened 3 (default) times during a demand. Compr. 2 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated low-pressure trips on circuit 2 (see code 24)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "26",
+     "meaning": "S98 (Low Press. 3) is open. Compr. 3 off.",
+     "likelyCauses": [
+      "Low refrigerant charge or leak",
+      "Low airflow / iced evaporator",
+      "Restriction (TXV, filter drier)",
+      "Failed S98 switch or wiring"
+     ],
+     "checks": [
+      "Check suction pressure, superheat and indoor airflow; note the IMC ignores the low-pressure switch during start-up so a logged trip is real (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "27",
+     "meaning": "S98 (Low Press. 3) has opened 3 (default) times during a demand. Compr. 3 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated low-pressure trips on circuit 3 (see code 26)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "28",
+     "meaning": "S97 (Low Press. 4) is open. Compr. 4 off.",
+     "likelyCauses": [
+      "Low refrigerant charge or leak",
+      "Low airflow / iced evaporator",
+      "Restriction (TXV, filter drier)",
+      "Failed S97 switch or wiring"
+     ],
+     "checks": [
+      "Check suction pressure, superheat and indoor airflow; note the IMC ignores the low-pressure switch during start-up so a logged trip is real (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "29",
+     "meaning": "S97 (Low Press. 4) has opened 3 (default) times during a demand. Compr. 4 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated low-pressure trips on circuit 4 (see code 28)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "30",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "31",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "32",
+     "meaning": "S49 (Freezestat 1) is open. Compr. 1 off.",
+     "likelyCauses": [
+      "Evaporator coil freezing: low airflow (dirty filter/coil, belt, blower), low charge",
+      "Failed S49 freezestat or wiring"
+     ],
+     "checks": [
+      "Check filters, blower/belt, evaporator coil and charge; allow the coil to thaw before retesting (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "33",
+     "meaning": "S49 (Freezestat 1) has opened 3 (default) times during a demand. The number of times is defined in ECTO 4.04. Compr. 1 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated freezestat trips on circuit 1 (see code 32)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "34",
+     "meaning": "S50 (Freezestat 2) is open. Compr. 2 off.",
+     "likelyCauses": [
+      "Evaporator coil freezing: low airflow (dirty filter/coil, belt, blower), low charge",
+      "Failed S50 freezestat or wiring"
+     ],
+     "checks": [
+      "Check filters, blower/belt, evaporator coil and charge; allow the coil to thaw before retesting (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "35",
+     "meaning": "S50 (Freezestat 2) has opened 3 (default) times during a demand. The number of times is defined in ECTO 1.13 or 4.15. Compr. 2 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated freezestat trips on circuit 2 (see code 34)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "36",
+     "meaning": "S53 (Freeze stat 3) is open. Compr. 3 off.",
+     "likelyCauses": [
+      "Evaporator coil freezing: low airflow (dirty filter/coil, belt, blower), low charge",
+      "Failed S53 freezestat or wiring"
+     ],
+     "checks": [
+      "Check filters, blower/belt, evaporator coil and charge; allow the coil to thaw before retesting (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "37",
+     "meaning": "S53 (Freeze stat 3) has opened 3 (default) times during a demand. Compr. 3 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated freezestat trips on circuit 3 (see code 36)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "38",
+     "meaning": "S95 (Freeze stat 4) is open. Compr. 4 off.",
+     "likelyCauses": [
+      "Evaporator coil freezing: low airflow (dirty filter/coil, belt, blower), low charge",
+      "Failed S95 freezestat or wiring"
+     ],
+     "checks": [
+      "Check filters, blower/belt, evaporator coil and charge; allow the coil to thaw before retesting (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "39",
+     "meaning": "S95 (Freeze stat 4) has opened 3 (default) times during a demand. Compr. 4 locked off. Requires a reset or two short pushes of pushbutton to restore.",
+     "likelyCauses": [
+      "Repeated freezestat trips on circuit 4 (see code 38)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "40",
+     "meaning": "Return air temperature (RT16) exceeded heating limit set in ECTO 5.06. Heating demand ignored. No heating.",
+     "likelyCauses": [
+      "Return air genuinely above the ECTO 5.06 limit",
+      "RT16 sensor reading high / misplaced"
+     ],
+     "checks": [
+      "Compare RT16 reading to a reference thermometer and review ECTO 5.06 (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "41",
+     "meaning": "Return air temperature (RT16) exceeded cooling limit set in ECTO 5.07. Cooling demand ignored. No cooling.",
+     "likelyCauses": [
+      "Return air genuinely below the ECTO 5.07 limit",
+      "RT16 sensor reading low / misplaced"
+     ],
+     "checks": [
+      "Compare RT16 reading to a reference thermometer and review ECTO 5.07 (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "42",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "43",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "44",
+     "meaning": "Gas valve 1 (GV1) is energized but no demand. Check gas control and wiring. Unit off.",
+     "likelyCauses": [
+      "Welded relay contact or miswire feeding GV1",
+      "Faulty ignition control A3"
+     ],
+     "checks": [
+      "With no heat demand, verify no 24 VAC at GV1; check ignition control and wiring (manual)"
+     ],
+     "severity": "shutdown",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "45",
+     "meaning": "Gas valve 2 (GV3) is energized but no demand. Check gas control and wiring. Unit off.",
+     "likelyCauses": [
+      "Welded relay contact or miswire feeding GV3",
+      "Faulty second-section ignition control"
+     ],
+     "checks": [
+      "With no heat demand, verify no 24 VAC at GV3; check ignition control and wiring (manual)"
+     ],
+     "severity": "shutdown",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "46",
+     "meaning": "No 24VAC relay power on A60 (E1) board, K9-5 input. Second heat section off.",
+     "likelyCauses": [
+      "Open device/fuse in the 24 VAC feed to the A60 electric-heat board"
+     ],
+     "checks": [
+      "Check 24 VAC at A60 K9-5 and trace upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "47",
+     "meaning": "No 24VAC relay power on A58 (G1) board, TB35-1 input. First heat section off.",
+     "likelyCauses": [
+      "Open device/fuse in the 24 VAC feed to the A58 gas-heat board"
+     ],
+     "checks": [
+      "Check 24 VAC at A58 TB35-1 and trace upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Action clause (\"first heat section off\") reconstructed from a search excerpt that attached it to the wrong row; verify in Table 4."
+    },
+    {
+     "code": "48",
+     "meaning": "No 24VAC relay power on A61 (HP1) board, TB34-1 input. Second compr. off.",
+     "likelyCauses": [
+      "Open device/fuse in the 24 VAC feed to the A61 heat-pump board"
+     ],
+     "checks": [
+      "Check 24 VAC at A61 TB34-1 and trace upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "49",
+     "meaning": "No 24VAC relay power on A59 (C2) board, TB35-1 input. Third and fourth compr. off.",
+     "likelyCauses": [
+      "Open device/fuse in the 24 VAC feed to the A59 second-compressor board"
+     ],
+     "checks": [
+      "Check 24 VAC at A59 TB35-1 and trace upstream (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "50",
+     "meaning": "Gas Unit: S10, S130, or S131 (Primary Heat Limit) is open.",
+     "likelyCauses": [
+      "Low airflow: dirty filters, belt, blower, closed dampers",
+      "Overfired burner / high gas pressure",
+      "Failed limit switch"
+     ],
+     "checks": [
+      "Check temperature rise, airflow and manifold pressure; test the limit for continuity when cool (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "51",
+     "meaning": "Gas Unit: S10, S130, S131 (Primary Heat Limit) has opened 3 (default) times during a demand. ECTO 3.04.",
+     "likelyCauses": [
+      "Repeated primary limit trips (see code 50)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "52",
+     "meaning": "S21 (Secondary Heat Limit 1) is open.",
+     "likelyCauses": [
+      "Low airflow or overfiring on heat section 1",
+      "Failed S21 switch"
+     ],
+     "checks": [
+      "Check airflow, temperature rise and S21 continuity (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "53",
+     "meaning": "S21 (Secondary Heat Limit 1) has opened 3 times during a demand.",
+     "likelyCauses": [
+      "Repeated secondary limit trips on section 1 (see code 52)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "54",
+     "meaning": "S47 (Roll Out) is open.",
+     "likelyCauses": [
+      "Flame rollout: blocked heat exchanger/flue, cracked heat exchanger, combustion air fault",
+      "Tripped manual-reset rollout switch"
+     ],
+     "checks": [
+      "Inspect heat exchanger, flue and burners before resetting the manual-reset rollout switch (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "55",
+     "meaning": "S47 (Roll Out Switch 1) opened 1 time during a demand.",
+     "likelyCauses": [
+      "Rollout switch tripped (locks out on the first occurrence)"
+     ],
+     "checks": [
+      "Find and fix the rollout cause, reset S47 manually, then reset the IMC (manual + field practice)"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "56",
+     "meaning": "S18 (Combustion Air Proof Switch 1) is open.",
+     "likelyCauses": [
+      "Combustion air blower not running or weak",
+      "Blocked flue/inlet, plugged pressure switch tubing",
+      "Failed S18 switch"
+     ],
+     "checks": [
+      "Check combustion air blower operation and amps, pressure-switch tubing and flue (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "57",
+     "meaning": "S18 (Combustion Air Proof Switch 1) has opened 3 times during a demand.",
+     "likelyCauses": [
+      "Repeated combustion air proving failures on section 1 (see code 56)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "58",
+     "meaning": "Gas valve 1 not energized two minutes after thermostat demand. Check gas supply, ignition control, and wiring.",
+     "likelyCauses": [
+      "Ignition control A3 failing to prove / lockout",
+      "No gas, low gas pressure, ignitor or flame sensor fault",
+      "Open safety in the ignition circuit"
+     ],
+     "checks": [
+      "Watch the ignition control for its own status; check gas pressure, ignitor, flame sense and wiring (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "59",
+     "meaning": "Gas valve 1 not energized 3 (default) times (2 minutes after a demand). Check gas supply, ignition control and wiring.",
+     "likelyCauses": [
+      "Repeated ignition failures on section 1 (see code 58)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "60",
+     "meaning": "S99 (Primary Heat Limit 2) is open.",
+     "likelyCauses": [
+      "Low airflow or overfiring on heat section 2",
+      "Failed S99 switch"
+     ],
+     "checks": [
+      "Check airflow, temperature rise and S99 continuity (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "61",
+     "meaning": "S99 (Primary Heat Limit 2) has opened 3 (default) times during a demand.",
+     "likelyCauses": [
+      "Repeated primary limit trips on section 2 (see code 60)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "62",
+     "meaning": "S100 (Secondary Heat Limit 2) is open.",
+     "likelyCauses": [
+      "Low airflow or overfiring on heat section 2",
+      "Failed S100 switch"
+     ],
+     "checks": [
+      "Check airflow, temperature rise and S100 continuity (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "63",
+     "meaning": "S100 (Secondary Heat Limit 2) has opened 3 (default) times during a demand.",
+     "likelyCauses": [
+      "Repeated secondary limit trips on section 2 (see code 62)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "64",
+     "meaning": "S69 (Roll Out Switch 2) is open.",
+     "likelyCauses": [
+      "Flame rollout on section 2",
+      "Tripped manual-reset rollout switch"
+     ],
+     "checks": [
+      "Inspect heat exchanger, flue and burners before resetting S69 (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "65",
+     "meaning": "S69 (Roll Out Switch 2) has opened 1 (default) times during a demand.",
+     "likelyCauses": [
+      "Rollout switch 2 tripped (locks out on the first occurrence)"
+     ],
+     "checks": [
+      "Find and fix the rollout cause, reset S69 manually, then reset the IMC (manual + field practice)"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "66",
+     "meaning": "S45 (Combustion Air Proof Switch 2) is open.",
+     "likelyCauses": [
+      "Combustion air blower 2 not running or weak",
+      "Blocked flue/inlet, plugged tubing",
+      "Failed S45 switch"
+     ],
+     "checks": [
+      "Check combustion air blower 2, pressure-switch tubing and flue (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "67",
+     "meaning": "S45 (Combustion Air Proof Switch 2) has opened 3 (default) times during a demand.",
+     "likelyCauses": [
+      "Repeated combustion air proving failures on section 2 (see code 66)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "68",
+     "meaning": "Gas valve 2 not energized two minutes after demand. Check gas supply, ignition control, and wiring (GV3).",
+     "likelyCauses": [
+      "Second-section ignition control failing to prove",
+      "No gas, ignitor or flame sensor fault"
+     ],
+     "checks": [
+      "Check gas pressure, ignitor, flame sense and wiring on heat section 2 (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "69",
+     "meaning": "Gas valve 2 not energized 3 (default) times (2 minutes after demand). Check gas supply, ignition control and wiring. ECTO 3.09.",
+     "likelyCauses": [
+      "Repeated ignition failures on section 2 (see code 68)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "70",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "71",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "72",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved code in the M1-7 v5.02 table."
+    },
+    {
+     "code": "73",
+     "meaning": "Network fails to send all remote sensor data within a 5-minute window. Cleared by IMC reset or when missing network data is received.",
+     "likelyCauses": [
+      "L Connection / BAS network down or the remote sensor source offline",
+      "ECTO configured for network sensors that are not being written"
+     ],
+     "checks": [
+      "Check the network controller and wiring; confirm which sensors ECTO expects from the network (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "74",
+     "meaning": "Zone sensor (A2) problem. Check sensor and wiring. IMC will switch over to the backup mode option set with ECTO 6.01. If no backup mode is selected, the unit will shut down.",
+     "likelyCauses": [
+      "Open/shorted zone sensor A2 or its wiring",
+      "Wrong sensor type (A2 is a 2-wire thermistor with 1k series resistor)"
+     ],
+     "checks": [
+      "Measure A2 resistance vs. temperature at the board terminals; check ECTO 6.01 backup mode (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "75",
+     "meaning": "Outdoor Temperature (RT17) Sensor Problem. Check wiring and sensor. The control defaults to a high outdoor temp. operation.",
+     "likelyCauses": [
+      "Open/shorted RT17 thermistor or wiring"
+     ],
+     "checks": [
+      "Measure RT17 resistance vs. outdoor temperature at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "76",
+     "meaning": "Relative humidity sensor (A91) problem. Check sensor and wiring. No reheat.",
+     "likelyCauses": [
+      "A91 RH sensor failed, unpowered or wiring open"
+     ],
+     "checks": [
+      "Check A91 supply voltage and output signal at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "77",
+     "meaning": "Discharge (Supply) Air Temperature Sensor (RT6) problem. Check wiring and sensor. No free cooling. Economizer damper will close. All economizer modes. No FAC, FAH, DACC, or DACH.",
+     "likelyCauses": [
+      "Open/shorted RT6 thermistor or wiring"
+     ],
+     "checks": [
+      "Measure RT6 resistance vs. supply air temperature at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "78",
+     "meaning": "Return Air Temperature Sensor (RT16) problem.",
+     "likelyCauses": [
+      "Open/shorted RT16 thermistor or wiring"
+     ],
+     "checks": [
+      "Measure RT16 resistance vs. return air temperature at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "79",
+     "meaning": "A major communication problem between the main board and add-on boards has occurred. Alarm can also be caused by multiple GP1 (A133) boards set to the same mode. Main control has locked out all add-on boards. Reset control to restore.",
+     "likelyCauses": [
+      "Loose/damaged expansion-port ribbon connections",
+      "Two GP1 (A133) boards set to the same mode",
+      "Failed add-on board"
+     ],
+     "checks": [
+      "Check add-on board heartbeat LEDs and connectors; verify GP1 DIP modes are unique; reset control (manual)"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "80",
+     "meaning": "A communication problem between the main board and add-on board has occurred. Alarm can also be caused by multiple GP1 (A133) boards set to the same mode.",
+     "likelyCauses": [
+      "Intermittent expansion-port connection",
+      "Duplicate GP1 (A133) modes"
+     ],
+     "checks": [
+      "Check add-on board connectors and heartbeat LEDs; verify GP1 DIP modes (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "81",
+     "meaning": "IMC configuration error. Unit DIP sw. is set to cooling or heat pump unit but ECTO 4.24 options 1 & 2 apply to gas units OR Unit DIP sw. is set to heat pump but ECTO 4.24 options 3, 5, 6, and 7 apply to Humiditrol units.",
+     "likelyCauses": [
+      "ECTO 4.24 option does not match the UNIT DIP switch equipment type"
+     ],
+     "checks": [
+      "Correct ECTO 4.24 or the UNIT DIP switch to match the unit type (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "82",
+     "meaning": "Main board reset or power outage has occurred.",
+     "likelyCauses": [
+      "Power interruption or a manual reset"
+     ],
+     "checks": [
+      "Informational; check for recurring power problems if frequent (field practice)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "83",
+     "meaning": "IMC configuration error. The add-on boards plugged into the main control don't agree with the UNIT DIP switch settings. Check UNIT DIP switch setting and add-on boards types.",
+     "likelyCauses": [
+      "Wrong add-on board for the unit type or UNIT DIP switch set wrong"
+     ],
+     "checks": [
+      "Compare installed add-on boards with the UNIT DIP switch settings (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "84",
+     "meaning": "An add-on board did not respond or is not recognized when polled by main control during system power-up. Add-on board with problem will have flickering heartbeat or no heartbeat.",
+     "likelyCauses": [
+      "Add-on board unpowered, unseated or failed"
+     ],
+     "checks": [
+      "Find the board with a flickering/absent heartbeat LED; reseat connectors and check its 24 VAC (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "85",
+     "meaning": "Humiditrol reheat: ECTO 4.24 is set to option 3, 5, 6, or 7, or ECTO 4.25 is set to 100, but RH1 add-on board is not installed OR the RH1 add-on board is detected but ECTO 4.24 is not set to option 3, 5, 6, or 7, or ECTO 4.25 set to 100.",
+     "likelyCauses": [
+      "Humiditrol ECTO settings do not match the presence of the RH1 board"
+     ],
+     "checks": [
+      "Match ECTO 4.24 / 4.25 to whether an RH1 reheat board is installed (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "86",
+     "meaning": "Thermostat input conflict. Simultaneous heat and cool demands. Check thermostat wiring.",
+     "likelyCauses": [
+      "Miswired or failed thermostat / BAS relay outputs"
+     ],
+     "checks": [
+      "Check for Y and W energized together at TB1 (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "87",
+     "meaning": "UNIT (equipment type) DIP switch has changed while unit is energized. Check UNIT DIP switch setting and reset control. Make sure the UNIT DIP switch settings agree with the unit type.",
+     "likelyCauses": [
+      "DIP switch moved with power on"
+     ],
+     "checks": [
+      "Set the UNIT DIP switch correctly and reset the control (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "88",
+     "meaning": "This may indicate a problem with the ECTO chip. Controller will operate on factory default ECTO settings.",
+     "likelyCauses": [
+      "Faulty ECTO memory chip"
+     ],
+     "checks": [
+      "Replace the ECTO chip/board if custom ECTO settings are needed (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "89",
+     "meaning": "No address is set on unit address DIP switch SW3. Any one switch on SW3 must be in \"on\" position. SW3 is factory set with switch #2 in on position.",
+     "likelyCauses": [
+      "All SW3 address switches off"
+     ],
+     "checks": [
+      "Set a unit address on SW3 (factory: switch #2 on) (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "90",
+     "meaning": "RAM error.",
+     "likelyCauses": [
+      "Failed A55 main board"
+     ],
+     "checks": [
+      "Reset control; if the error persists replace the A55 board (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "91",
+     "meaning": "Outdoor enthalpy sensor (A7) open. Check sensor and wiring. No economizer free cooling operation if economizer mode is set to ODE or DIF.",
+     "likelyCauses": [
+      "A7 enthalpy sensor open or wiring fault"
+     ],
+     "checks": [
+      "Check A7 wiring and output at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "92",
+     "meaning": "Indoor enthalpy sensor (A62) open. Check sensor and wiring. No economizer free cooling operation if economizer mode is set to DIF.",
+     "likelyCauses": [
+      "A62 enthalpy sensor open or wiring fault"
+     ],
+     "checks": [
+      "Check A62 wiring and output at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "93",
+     "meaning": "The control has changed the system mode because of an error with the controlling sensor or because of a loss of communication. IMC has switched over to the backup mode option set with ECTO 6.01.",
+     "likelyCauses": [
+      "Zone/controlling sensor fault (see 74) or network loss (see 73)"
+     ],
+     "checks": [
+      "Find the underlying sensor or communication error in the stored codes; confirm ECTO 6.01 backup mode (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "94",
+     "meaning": "Zone sensor setpoint out-of-range error. IMC reverts to default 65°F (18°C) heating and 80°F (27°C) cooling setpoints.",
+     "likelyCauses": [
+      "Setpoint adjustment slider/pot on the zone sensor open, shorted or miswired"
+     ],
+     "checks": [
+      "Check the setpoint input wiring and resistance at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "95",
+     "meaning": "ECTO parameter has been changed by the pushbutton. For information only. Indicates that someone has made an ECTO change.",
+     "likelyCauses": [
+      "Someone edited ECTO settings locally"
+     ],
+     "checks": [
+      "Informational (manual)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "96",
+     "meaning": "Four stage interface failure A138. ECTO 6.01 set to option 12 when no A138 board present can also cause this alarm. No heating or cooling.",
+     "likelyCauses": [
+      "A138 four-stage interface failed or missing while ECTO 6.01 = 12"
+     ],
+     "checks": [
+      "Check A138 board and heartbeat; correct ECTO 6.01 if no A138 is installed (manual)"
+     ],
+     "severity": "shutdown",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "97",
+     "meaning": "Four stage interface A138 detected but ECTO 6.01 is not set to option 12 or equipment type is set to heat pump.",
+     "likelyCauses": [
+      "ECTO 6.01 / UNIT DIP switch do not match the installed A138 board"
+     ],
+     "checks": [
+      "Set ECTO 6.01 to option 12 or remove the A138 board (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "98",
+     "meaning": "ECTO memory chip write error. ECTO settings may not be saved.",
+     "likelyCauses": [
+      "Faulty ECTO memory chip"
+     ],
+     "checks": [
+      "Re-check ECTO values after a reset; replace the ECTO chip/board if changes do not persist (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "99",
+     "meaning": "Outdoor Air Control Sensor (A24) open.",
+     "likelyCauses": [
+      "A24 (outdoor air CFM / control sensor) open or wiring fault"
+     ],
+     "checks": [
+      "Check A24 wiring and output at the board (field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "100",
+     "meaning": "GP1 board set to VAV mode is plugged in but at least one of the ECTO 0.01 or 0.23 or 8.16 option is not selected. Alarm 100 will also be set if ECTO 0.23 set to option 1-15 and ECTO 8.16 is set to option 8-15.",
+     "likelyCauses": [
+      "GP1 (A133) VAV configuration incomplete or conflicting"
+     ],
+     "checks": [
+      "Review ECTO 0.01, 0.23 and 8.16 against the GP1 DIP mode (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "101",
+     "meaning": "Modulating Gas Valve (MGV) mode: the IMC will set alarm 101 unless ECTO 3.13 option 1-6 or ECTO 3.21 option 1-15 is selected.",
+     "likelyCauses": [
+      "GP1 set to MGV mode without matching ECTO 3.13 / 3.21 selection"
+     ],
+     "checks": [
+      "Set ECTO 3.13 or 3.21 for the modulating gas valve, or change the GP1 mode (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "102",
+     "meaning": "General Purpose (GP) mode: the IMC will set alarm 102 unless ECTO 9.01 option 1-11, ECTO 9.12 option 1-11 or ECTO 9.23 option 1-15 is selected.",
+     "likelyCauses": [
+      "GP1 set to GP mode without matching ECTO 9.xx selection"
+     ],
+     "checks": [
+      "Set ECTO 9.01, 9.12 or 9.23, or change the GP1 mode (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "104",
+     "meaning": "VAV, CAV w/bypass damper, or exhaust fan configuration error. Cases that can cause this alarm include GP1 (A133 w/ DIP set to VAV) present but no ECTO 0.01, 0.23, or 8.16 option selected.",
+     "likelyCauses": [
+      "GP1 VAV/CAV/exhaust configuration incomplete"
+     ],
+     "checks": [
+      "Review ECTO 0.01, 0.23 and 8.16 for the installed GP1 board (manual)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "106",
+     "meaning": "Building air pressure sensor A34 problem. Occurs only when GP1 is present, A133 DIP switch is set to VAV, ECTO 8.16 is set to 4-7 or 12-23, and A34 input is less than 0.2VDC or higher than 9.8VDC.",
+     "likelyCauses": [
+      "A34 building pressure transducer unpowered, failed or wiring open"
+     ],
+     "checks": [
+      "Check A34 supply and 0-10 VDC output at the GP1 input (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "107",
+     "meaning": "Supply duct pressure sensor A30 problem. Occurs only when GP1 is present, A133 DIP switch is set to VAV, ECTO 0.01 is not 0, and when PID mode is selected in ECTO 0.01 AND A30 sensor input is greater than 9.8VDC or the blower has been operating for at least 16 seconds with VFD or bypass damper output greater than ECTO 0.26 AND A30 sensor input is less than 0.2VDC.",
+     "likelyCauses": [
+      "A30 duct static transducer unpowered, failed, tubing disconnected or wiring open"
+     ],
+     "checks": [
+      "Check A30 supply, tubing and 0-10 VDC output at the GP1 input (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "108",
+     "meaning": "Supply duct pressure exceeded maximum limit set by ECTO 0.21 for more than 20 seconds.",
+     "likelyCauses": [
+      "VAV boxes closed / duct static high",
+      "VFD or bypass damper not responding",
+      "ECTO 0.21 limit set too low"
+     ],
+     "checks": [
+      "Verify VFD/bypass damper control, VAV box positions and the ECTO 0.21 limit (manual + field practice)"
+     ],
+     "severity": "warning",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "109",
+     "meaning": "Error 107 and/or 108 has occurred 3 times (default).",
+     "likelyCauses": [
+      "Repeated supply duct pressure sensor or high-static events (see 107/108)"
+     ],
+     "checks": [
+      "Lockout clears with a control reset or two short pushes of the A55 pushbutton (manual); fix the root cause first"
+     ],
+     "severity": "lockout",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "110",
+     "meaning": "IMC is waiting up to 5 minutes for network sensor data defined in ECTO 5.27.",
+     "likelyCauses": [
+      "Network sensor data not yet received after power-up or reset"
+     ],
+     "checks": [
+      "Informational; if it persists see code 73 (manual)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "111",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "112",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "113",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "114",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "115",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "116",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "117",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "118",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "119",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "120",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "121",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "122",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "123",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "124",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "125",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "126",
+     "meaning": "Reserved.",
+     "likelyCauses": [],
+     "checks": [],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
+     "evidence": "manufacturer_doc",
+     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
+    },
+    {
+     "code": "127",
+     "meaning": "Error buffer overflow.",
+     "likelyCauses": [
+      "More errors stored than the buffer holds"
+     ],
+     "checks": [
+      "Clear stored errors (RECALL on, hold pushbutton until 0) after recording them (manual)"
+     ],
+     "severity": "info",
+     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc"
     }
    ],
@@ -4203,7 +5780,18 @@
     "Error codes are shown on the A55 IMC board's 2-digit display and stored for later recall (IMC manual Table 4 and Figure 16 list every code; M1-7 v5.02 is at webmanuals.lennoxeurope.com / manualzz 'IMC V7').",
     "Codes seen in the field but not transcribed here: 59 (sensor-related), 73/74, 92 (DIP-switch configuration) and 93 - look them up in Table 4 or the LennoxPros Error Code Lookup tool before acting.",
     "The IMC shunts the low-pressure switches (S87/S88) during compressor start until pressure stabilizes, so a low-pressure trip logged after the delay is a real refrigerant/airflow problem.",
-    "Lennox Technical Support 800-453-6669 is referenced in the IMC documentation."
+    "Lennox Technical Support 800-453-6669 is referenced in the IMC documentation.",
+    "Where to look: the A55 (M1-7/M1-8) board in the unit control box carries a multi-digit LED readout, a single pushbutton, a green heartbeat LED and MODE DIP switches (UNIT TEST, RECALL, ECTO, TEMP, OPT2, SHIFT). Active error codes are shown on the readout; every code is also stored for recall.",
+    "Read stored codes: set the MODE DIP RECALL switch ON, then short-push the pushbutton; stored codes display in reverse order (most recent first) with each short push. A zero means nothing is stored. Set RECALL back OFF when done.",
+    "Clear stored codes: with RECALL ON, hold the pushbutton down until 0 is displayed, then turn RECALL OFF.",
+    "Reset a lockout: two successive short pushes of the pushbutton reset counters, lockout conditions and timers (codes marked \"locked off/locked out\" - 13, 15, 17, 19, 21, 23, 25, 27, 29, 33, 35, 37, 39, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 109). A control power reset does the same. Fix the root cause first; manual-reset rollout switches (S47/S69) must be reset at the switch.",
+    "A single push of the pushbutton advances to the next display; a double push returns to the previous display (used in ECTO/TEMP modes).",
+    "Unit test: the UNIT TEST DIP switch / \"Testing Unit Function\" section lets the IMC drive individual outputs (blower, compressors, fans, reversing valve, service relay) to check components; thermostat demands can also be simulated by jumpering TB1-6 to TB1-3 (blower), TB1-18 (Y1), TB1-12 (Y2) or TB1-2 (W1). A short push of the pushbutton skips the current delay timer.",
+    "The service output (24 VAC alarm relay) is energized by default on the lockout errors marked with * in Table 4; this is what a BAS or remote light sees.",
+    "Trip counters: most \"opened 3 (default) times\" thresholds are set by ECTO parameters (e.g. 1.12/4.14 high pressure, 1.13/4.15 freezestat, 4.04, 3.04, 3.09); a unit configured with a different count will lock out sooner or later than the table states.",
+    "The IMC ignores the low-pressure switches during compressor start-up, so a stored low-pressure code (22-29) reflects a real trip after the delay.",
+    "Sensor codes 73-78 and 91-99: RT6/RT16/RT17 are 2-wire thermistors, A2 zone sensors are a 2-wire thermistor with a 1k series resistor; measure resistance at the board terminals against the temperature-resistance chart before replacing.",
+    "LennoxPros.com Error Code Lookup tool (Technical Tools) covers IMC codes; Lennox Technical Support 800-453-6669."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -4233,6 +5821,34 @@
      "title": "Lennox IMC BACnet Module manual",
      "docId": "Corp. 0624-L5",
      "url": "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/0624b.pdf"
+    },
+    {
+     "title": "Lennox M1-7 Version 5.02 Integrated Modular Control (IMC) L Series / S-Class manual, Table 4 IMC Error Codes and Diagnostics section",
+     "docId": "IMC V7 (webmanuals.lennoxeurope.com mirror)",
+     "url": "http://webmanuals.lennoxeurope.com/Out%20of%20Production/Rooftop/CHA/Controls/IMC%20V7.pdf"
+    },
+    {
+     "title": "Lennox Integrated Modular Controller M1-7 VERSION 5.2x User Manual (manualzz text-indexed copy)",
+     "docId": "manualzz 10426901",
+     "url": "https://manualzz.com/doc/10426901/imcmanualv7"
+    },
+    {
+     "title": "Litho M1-7 Version 5.02 Integrated Modular Control Guide (manualzz text-indexed copy)",
+     "docId": "manualzz 11141999",
+     "url": "https://manualzz.com/doc/11141999/imc-v7"
+    },
+    {
+     "title": "Lennox M1-8 Version 6 Error Code Door Label (codes 1-127)",
+     "docId": "scribd 717583442",
+     "url": "https://www.scribd.com/document/717583442/M1-8-Version-6-Error-Code-Door-Label"
+    },
+    {
+     "title": "HVAC-Talk thread: Lennox IMC 1-7 error code 11 (corroboration only)",
+     "url": "https://hvac-talk.com/vbb/threads/2218117-Lennox-IMC-1-7-error-code-11"
+    },
+    {
+     "title": "JustAnswer: Lennox M1-7 codes 73, 74, 93 (corroboration only)",
+     "url": "https://www.justanswer.com/hvac/l29n5-lennox-thermostat-series-rtu-m1-7-board.html"
     }
    ],
    "confidence": "medium",
@@ -4241,7 +5857,53 @@
     "Lennox Controls Kits and Accessories 506217-01 (IMC on LG/LC/LH and SG/SC rooftops)",
     "http://webmanuals.lennoxeurope.com/Out%20of%20Production/Rooftop/CHA/Controls/IMC%20V7.pdf",
     "https://manualzz.com/doc/10426901/imcmanualv7",
-    "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/0624b.pdf"
+    "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/0624b.pdf",
+    "https://manualzz.com/doc/11141999/imc-v7",
+    "https://www.scribd.com/document/717583442/M1-8-Version-6-Error-Code-Door-Label",
+    "https://hvac-talk.com/vbb/threads/2218117-Lennox-IMC-1-7-error-code-11",
+    "https://www.justanswer.com/hvac/l29n5-lennox-thermostat-series-rtu-m1-7-board.html"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "Heartbeat LED (green) flashing steadily - A55 main board or any add-on board",
+     "meaning": "Normal operation.",
+     "checks": [
+      "No action (manual, Heartbeat LED Operation table)"
+     ]
+    },
+    {
+     "pattern": "Heartbeat LED flickering - add-on board",
+     "meaning": "Check electrical connections (add-on boards). An add-on board that is not recognized at power-up (error 84) will have a flickering heartbeat or no heartbeat.",
+     "checks": [
+      "Reseat the expansion-port ribbon/plug connections to that board; check for error 79/80/84 (manual)"
+     ]
+    },
+    {
+     "pattern": "Heartbeat LED steady off",
+     "meaning": "No voltage to the board.",
+     "checks": [
+      "Check 24 VAC to the board (TB35-1 / TB34-1 on the A55; see error codes 10, 11, 46-49) (manual + field practice)"
+     ]
+    },
+    {
+     "pattern": "Heartbeat LED steady on",
+     "meaning": "Defective board - replace.",
+     "checks": [
+      "Power-cycle once to confirm, then replace the board (manual)"
+     ]
+    },
+    {
+     "pattern": "LED readout shows 8.8.8 at power-up then goes blank",
+     "meaning": "Normal power-up self test; the readout stays blank when no error is active.",
+     "checks": [
+      "If a code stays on the readout after start-up, look it up in Table 4 (manual)"
+     ]
+    },
+    {
+     "pattern": "LED readout shows 0 with RECALL DIP switch on",
+     "meaning": "No error codes are stored.",
+     "checks": []
+    }
    ]
   }
  ],

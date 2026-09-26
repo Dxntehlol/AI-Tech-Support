@@ -763,84 +763,301 @@
   {
    "id": "smart-equipment",
    "name": "Johnson Controls Smart Equipment (Simplicity SE) controller - SE-SPU1001/1002/1011/1012",
-   "description": "Microprocessor unit controller with on-board LCD and joystick (SE-SPU), optional SE-Mobile app / Verasys BAS; alarms are named text alarms (service and FDD alarms), not numeric codes. Fitted to York/Coleman/Luxaire Z-series and later rooftops from about 2014. Smart Equipment alarm table NOT transcribed: the enrichment run for this platform had no working source access (WebSearch budget exhausted before the agent started; WebFetch/curl blocked; no cached LIT-12011998 / LIT-12011950 / Verasys alarm-summary material on disk). Per the verification protocol no alarm meanings were added from memory. The existing four paraphrased entries remain LOW confidence / 'inferred' and must be verified or replaced from the LIT-12011998 Alarm appendix (Service alarms, FDD alarms) and the Verasys Alarms Summary Technical Bulletin in a follow-up run.",
+   "description": "Microprocessor unit controller with on-board LCD and joystick (SE-SPU), optional SE-Mobile app / Verasys BAS; alarms are named text alarms (service and FDD alarms), not numeric codes. Fitted to York/Coleman/Luxaire Z-series and later rooftops from about 2014. Smart Equipment alarm table NOT transcribed: the enrichment run for this platform had no working source access (WebSearch budget exhausted before the agent started; WebFetch/curl blocked; no cached LIT-12011998 / LIT-12011950 / Verasys alarm-summary material on disk). Per the verification protocol no alarm meanings were added from memory. The existing four paraphrased entries remain LOW confidence / 'inferred' and must be verified or replaced from the LIT-12011998 Alarm appendix (Service alarms, FDD alarms) and the Verasys Alarms Summary Technical Bulletin in a follow-up run. Smart Equipment alarms are text alarms on the LCD / app / BAS, not numeric codes or flash codes; the older Simplicity / Simplicity Lite UCB flash codes (e.g. 4 flashes HPS1 lockout) belong to the separate simplicity-ucb platform, not to SE. Transcription status: the critical-alarm rows (HPS1-4, LPS1-4, FS1-4, LS1-3, APS, smoke shutdown, economizer offline) and the five FDD alarm names were seen in manufacturer sources via search summaries of LIT-12011998 / LIT-12011950 / the ZJ IOM alarm table and the SE product bulletin. The complete service-priority and service alarm rows of Table 2 (individual sensor-failure alarms, 4-stage / FDD board offline, f",
    "appliesTo": [
     "york-z-series-rtu-r410a",
     "york-x-series-hp-rtu-r410a"
    ],
    "faultCodes": [
     {
-     "code": "Low Pressure fault (circuit 1 / 2)",
-     "meaning": "Low-pressure switch input open for the circuit; compressor locked out after repeated trips",
+     "code": "HPS1 / HPS2 / HPS3 / HPS4 lockout (High Pressure Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three HPS1 trips within two hours' (likewise 'Three HPS2 trips within two hours', HPS3, HPS4) - the high-pressure switch of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
+     "likelyCauses": [
+      "Condenser fan not running (motor, capacitor, contactor, CF output) or condenser coil dirty / airflow blocked",
+      "Refrigerant overcharge or non-condensables in the circuit",
+      "High outdoor ambient with restricted condenser air, recirculation of discharge air",
+      "Failed or miswired HPS (switch open with normal head pressure)"
+     ],
+     "checks": [
+      "Source: a single HPS trip shows as 'shutdown due to a safety' (circuit open now); three trips in two hours become 'Locked out due to a safety' and need ResetLO or a power cycle after repair (York Alarm Reset / Hard Lockout doc)",
+      "Field practice: gauge head pressure against outdoor ambient; verify condenser fan(s) run and the coil is clean",
+      "Field practice: with pressures normal, ohm the HPS and its wiring to the UCB HPS input; the safeties override commissioning/test mode, so a tripped HPS also blocks the stage in test (LIT-12011950)"
+     ],
+     "severity": "lockout",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11; York 'Alarm Reset / Hard Lockout Ver 3.3 or later'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LPS1 / LPS2 / LPS3 / LPS4 lockout (Low Pressure Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three LPS1 trips within one hour' (likewise LPS2, LPS3, LPS4) - the low-pressure switch of that compressor stage opened three times inside a one-hour window and the control locks out that stage.",
      "likelyCauses": [
       "Low refrigerant charge / leak",
-      "Low airflow or dirty filters causing coil freeze",
-      "Failed LPS or open wiring"
+      "Low evaporator airflow (dirty filters, slipping belt, closed dampers, dirty coil) causing low suction pressure",
+      "Restricted metering device or liquid-line drier",
+      "Failed LPS or open wiring; low ambient cooling without low-ambient controls"
      ],
      "checks": [
-      "Gauge the circuit: suction pressure vs. LPS trip point",
-      "Check evaporator airflow, filters, blower belt",
-      "Ohm the LPS with the circuit equalized"
+      "Source: a single trip reads as 'shutdown due to a safety'; the third trip inside one hour locks the stage out until ResetLO / power cycle (York Alarm Reset / Hard Lockout doc)",
+      "Field practice: gauge suction pressure and superheat against the LPS trip point; check evaporator airflow, filters and belt first",
+      "Field practice: ohm the LPS with the circuit equalized and inspect the LPS wiring to the UCB input"
      ],
      "severity": "lockout",
-     "evidence": "inferred",
-     "notes": "LOW confidence: alarm name paraphrased from memory of the SE controls guide, not transcribed. Verbatim list: LIT-12011998 Smart Equipment Controls Technical Bulletin, Alarm appendix / Service alarms."
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Low pressure switch'",
+     "evidence": "manufacturer_doc"
     },
     {
-     "code": "High Pressure fault (circuit 1 / 2)",
-     "meaning": "High-pressure switch input open for the circuit; compressor locked out after repeated trips",
+     "code": "FS1 / FS2 / FS3 / FS4 lockout (Freeze Switch / freezestat, critical alarm)",
+     "meaning": "Critical alarm: 'Three FS1 trips within two hours' (likewise FS2, FS3, FS4) - the freezestat of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
      "likelyCauses": [
-      "Condenser fan failure or dirty condenser coil",
-      "Overcharge or non-condensables",
-      "Failed HPS"
+      "Low evaporator airflow (filters, belt, blower speed, closed dampers) letting the coil frost",
+      "Low refrigerant charge",
+      "Freezestat sensing bulb loose or misplaced on the coil, or failed freezestat",
+      "Cooling running at low return-air temperature (economizer / low load) without low-ambient provisions"
      ],
      "checks": [
-      "Verify condenser fan(s) run and coil is clean",
-      "Gauge head pressure against outdoor ambient",
-      "Check HPS continuity when pressure is normal"
+      "Secondary (HVAC-Talk, York rooftop): the freeze stat opens at about 26 F coil temperature and closes at about 41 F; three trips in a two-hour window lock out that compressor stage (CR1 / CR2)",
+      "Field practice: measure evaporator airflow / static pressure, suction pressure and superheat while the coil is clear",
+      "Field practice: verify the freezestat is mounted on the coil correctly and check its continuity with the coil above the reset point; clear the lockout with ResetLO or a power cycle after repair"
      ],
      "severity": "lockout",
-     "evidence": "inferred",
-     "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Freezestat alarm'",
+     "evidence": "manufacturer_doc"
     },
     {
-     "code": "Freeze fault",
-     "meaning": "Evaporator freeze sensor / freeze stat indicates coil freezing; compressor circuit locked out",
+     "code": "LS1 / LS2 / LS3 lockout (gas heat Limit Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three LS1 trips within one hour' (likewise LS2, LS3) - the heat-section limit switch of that heating stage opened three times inside a one-hour window and the control locks out that heating stage.",
      "likelyCauses": [
-      "Low airflow (filters, belt, dampers)",
-      "Low charge",
-      "Failed freeze sensor"
+      "Insufficient airflow across the heat exchanger (dirty filters, belt, blower speed, blocked supply/return)",
+      "Over-fired burner (gas pressure / manifold pressure too high) or wrong orifice",
+      "Restricted heat exchanger or flue; failed or weak limit switch",
+      "Fan-on-heat delay / blower not running while burner is on"
      ],
      "checks": [
-      "Measure evaporator airflow / static",
-      "Check suction pressure and superheat",
-      "Verify sensor resistance vs. temperature"
+      "Source: the UCB monitors the MV (gas valve) input and starts the FAN ON HEAT DELAY timer when 24 V appears on MV; heating stages are H1-H3 (LIT-12011950 gas heating sequence)",
+      "Field practice: verify blower runs during heat, measure temperature rise against the nameplate range and check manifold gas pressure",
+      "Field practice: ohm the limit switch cold and inspect the LS wiring to the UCB; clear the lockout with ResetLO or a power cycle after repair"
      ],
      "severity": "lockout",
-     "evidence": "inferred",
-     "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
+     "evidence": "manufacturer_doc"
     },
     {
-     "code": "Supply Air Temperature sensor fault",
-     "meaning": "Supply-air temperature sensor reads open/shorted or out of range",
+     "code": "APS lockout (Air Proving Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three APS trips within 1.5 hours' - the supply-fan air proving input (SF_APS, 'the feedback from the Air Proven Switch or a current sensor') was lost three times inside a 1.5-hour window; 'Supply Fan is required before allowing compressor and heat stage outputs', so cooling and heating are held off.",
      "likelyCauses": [
-      "Unplugged or damaged SAT sensor",
-      "Wrong sensor type / wiring to the SE-SPU"
+      "Supply fan not running (belt broken, motor overload, contactor, VFD fault) or fan running backwards",
+      "APS differential switch tubing disconnected/kinked, switch failed or set too tight; current sensor not seeing motor current",
+      "Extremely dirty filters or blocked ductwork dropping the fan differential below the switch setting"
      ],
      "checks": [
-      "Ohm the sensor (10k NTC style) and compare with the resistance table in the SE technical guide",
-      "Check the sensor plug on the SE-SPU"
+      "Source: the Supply fan status screen shows SF On and the UO9 light On when the fan output is energized; APS status is shown on the same status screens (LIT-12011950 Air proving switch setup / Operation)",
+      "Field practice: with the fan commanded on, confirm rotation, belt and motor amps, then jumper/measure the APS input to separate a fan problem from a switch problem",
+      "Field practice: check APS tubing and setting; clear the lockout with ResetLO or a power cycle once the fan proves"
+     ],
+     "severity": "lockout",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation 'Air proving switch setup'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Unit Shutdown Due to Smoke (critical alarm)",
+     "meaning": "Critical alarm 'Unit Shutdown Due to Smoke': raised when 'the SD input loses 24 VAC' - the smoke-detector / shutdown input circuit to the UCB has opened and the unit shuts down.",
+     "likelyCauses": [
+      "Duct smoke detector tripped (real smoke or a dirty/over-sensitive detector)",
+      "Field shutdown / fire-alarm relay contact opened, or SD jumper removed on a unit without a detector",
+      "Broken wire or loose terminal in the SD 24 VAC loop"
+     ],
+     "checks": [
+      "Field practice: measure 24 VAC at the UCB SD input; trace the loop through the duct detector(s) and any fire-alarm interlock relay",
+      "Field practice: reset the duct detector and check its sensitivity / cleanliness; confirm the factory jumper is present when no detector is installed",
+      "Source: critical alarms need ResetLO or a power cycle to restore operation after the cause is repaired (York Alarm Reset / Hard Lockout doc)"
+     ],
+     "severity": "shutdown",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Economizer board goes from Online to Offline (SA bus communication alarm)",
+     "meaning": "Alarm 'Economizer board goes from Online to Offline' - the UCB lost SA-bus communication with the SE-ECO economizer controller that it had previously discovered.",
+     "likelyCauses": [
+      "24 VAC power lost at the economizer board (24V~ IN COM / HOT)",
+      "SA bus cable unplugged, reversed polarity or wrong addressing between UCB and economizer board",
+      "Economizer board firmware error or failed board"
+     ],
+     "checks": [
+      "Source: the economizer board power LED lit = 24 VAC present; a 1/10-second on/off flash = networking error (polarity, addressing) or firmware error (reload from USB); SA bus LED lit/flickering = UCB-to-economizer SA bus communication active, off = board awaiting SA bus communication (SE-ECO1001-1 catalog page)",
+      "Source: the UCB green SA bus LED flashes when the UCB has established communication with SA bus devices (Quick Start Guide LIT-12011938)",
+      "Field practice: reseat/replace the SA bus cable, check 24 VAC at the board, then run RELEARN so the UCB rediscovers connected boards"
      ],
      "severity": "warning",
-     "evidence": "inferred",
-     "notes": "LOW confidence: paraphrased; confirm in LIT-12011998 Alarm appendix."
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2; LIT-12011950 Sequence of Operation Table 11 (non-FDD alarms); SE-ECO1001-1 catalog page (LEDs)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Shutdown due to a safety (single HPS / LPS / FS / LS / APS trip, service priority alarm)",
+     "meaning": "Service priority fault: the alarm text reads 'shutdown due to a safety' rather than 'Locked out due to a safety'. 'If the alarm says shutdown, it means the circuit is open at that time.' Service Priority Faults 'shut down a portion of the unit operation and count toward maximum shutdowns prior to lockout'; they 'clear themselves once the problem is corrected or the safety resets'.",
+     "likelyCauses": [
+      "The named safety switch (HPS, LPS, freezestat, limit, air proving) is currently open - see the matching lockout entry for causes",
+      "Intermittent wiring at the switch or UCB input"
+     ],
+     "checks": [
+      "Source: the affected stage restarts by itself when the switch closes; three trips inside the window (HPS/FS two hours, LPS/LS one hour, APS 1.5 hours) escalate to the critical lockout alarm",
+      "Field practice: read the alarm while the switch is still open and measure the switch input to identify which safety is open before it resets"
+     ],
+     "severity": "warning",
+     "source": "York Tech Corner 'Alarm Reset / Hard Lockout Ver 3.3 or later' (alarm categories); LIT-12011998 Alarm appendix Table 2 (Service priority alarms)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Excessive Supply Air Temp Cooling (supply-air temperature limit)",
+     "meaning": "'YORK units have a secondary safety built into the SE control that monitors supply air temperature and will drop stages of cooling or heat if the supply temperature exceeds the setting in the SE control. As the supply temperature returns to within the limitations, stages of heat or cool will be allowed to restart after any anti short cycle timers have expired.' The 'Excessive Supply Air Temp Cooling' alarm is one of the alarms that prevents cooling operation.",
+     "likelyCauses": [
+      "Cooling SAT limit reached (default 45 F, adjustable down to 40 F): low airflow, low load, economizer plus mechanical cooling, or oversized staging",
+      "Heating counterpart: SAT above the heating limit (default 140 F, adjustable to 180 F) from low airflow or over-firing",
+      "Supply air sensor misplaced (too close to coil / heat exchanger) or reading wrong"
+     ],
+     "checks": [
+      "Source: limits are set under Details > Cooling > Setup and Details > Heating > Setup; the safety can be disabled in the SE control (York 'Excessive Supply Temperature')",
+      "Field practice: verify airflow (filters, belt, blower speed, static) and compare the SAT reading with a reference thermometer in the supply duct",
+      "Field practice: on VAV units also review low-limit tempering setpoints (LL_LOWSAT_SP default 65 F, LL_UPSAT_SP default 80 F) before raising the limit"
+     ],
+     "severity": "warning",
+     "source": "York Tech Corner 'Excessive Supply Temperature' (Rev1 01092020); LIT-12011950 Sequence of Operation (low limit tempering setpoints)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Space temperature cooling alarm / Space temperature heating alarm (service alarm)",
+     "meaning": "Space temperature cooling alarm: the space temperature exceeds the operating cooling setpoint for more than 60 minutes. Space temperature heating alarm: the space temperature is less than the operating heating setpoint for more than 60 minutes.",
+     "likelyCauses": [
+      "Unit unable to meet load: locked-out or shut-down stages (see safety alarms), low charge, dirty coils/filters",
+      "Setpoint or schedule change, wrong occupancy source, or space sensor reading wrong / badly located",
+      "Excessive outdoor air (economizer stuck open) or building load beyond capacity"
+     ],
+     "checks": [
+      "Source: this is an informative service alarm - it does not itself shut the unit down (alarm categories per York Alarm Reset / Hard Lockout doc)",
+      "Field practice: check the active alarms list for a safety lockout first, then compare space temperature, setpoints and stage status on the UCB Status screens",
+      "Field practice: verify the space / network sensor reading against a reference thermometer"
+     ],
+     "severity": "info",
+     "source": "LIT-12011950 Smart Equipment Controls Sequence of Operation Technical Bulletin 5.0, 'Space temperature alarming'; LIT-12011998 Alarm appendix (Service alarms)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Air Temp Sensor Fault (FDD alarm)",
+     "meaning": "FDD alarm 'Air Temp Sensor Fault' indicates a problem with one of the air temperature sensors; check the Outdoor Air, Return Air or Supply Air sensors. The FDD also reports a fault when the local supply air temperature (SAT) sensor is disconnected from the unit controller.",
+     "likelyCauses": [
+      "OAT, RAT or SAT sensor unplugged, open, shorted or corroded connector",
+      "Sensor reading implausible (mounted in sun, in the discharge stream, or in a dead pocket)",
+      "'Phantom' alarm: the sensor is not installed on this unit but its input is still enabled (see Phantom entry)"
+     ],
+     "checks": [
+      "Field practice: scroll the Status screens (joystick down through SAT, RAT, OAT) and compare each reading with a reference thermometer; ohm the 10k thermistor against the resistance table in the SE technical guide",
+      "Source: economizing is not performed when the SAT is unreliable and the unit is configured for zone control or demand air temperature control (LIT-12011950)",
+      "Source: FDD faults can be viewed on the UCB local display, the network sensor, a thermostat with the X (fault) output, the MAP gateway or the BAS (SEC Product Bulletin)"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); Smart Equipment Controls (SEC) Product Bulletin LIT-12011934 (economizer FDD); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Not Economizing When It Should (FDD alarm)",
+     "meaning": "FDD alarm 'Not Economizing When It Should' - the economizer is not using outdoor air when it should (outdoor conditions are suitable for free cooling but the damper is not opening).",
+     "likelyCauses": [
+      "Damper actuator failed, linkage disconnected or damper stuck closed",
+      "Changeover setpoint / enthalpy or dry-bulb settings too restrictive; economizer disabled in setup",
+      "OAT / RAT (or humidity) sensor reading wrong so the control believes free cooling is unavailable"
+     ],
+     "checks": [
+      "Field practice: command the damper in test/commissioning mode and watch actuator travel; check 24 VAC and the control signal at the actuator",
+      "Field practice: verify the economizer changeover method and setpoints under Details > Economizer, and the OAT/RAT readings",
+      "Source: FDD alarms and economizer sensor fault indications can be enabled or disabled from the display (LIT-12011950 'Disable or Enable FDD Alarms' / 'Disable or Enable Economizer Sensor Fault Indications')"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Economizing When It Should Not (FDD alarm)",
+     "meaning": "FDD alarm 'Economizing When It Should Not' ('economizing when not required') - the economizer is bringing in outdoor air for cooling when outdoor conditions are not suitable.",
+     "likelyCauses": [
+      "Damper stuck open or actuator not closing (linkage, failed actuator, loss of control signal)",
+      "Changeover setpoints set too high / wrong changeover method for the climate",
+      "OAT or RAT sensor error making outdoor air look cooler than it is"
+     ],
+     "checks": [
+      "Field practice: verify damper closes to minimum position when commanded; check actuator feedback and linkage",
+      "Field practice: compare OAT/RAT readings and the changeover setpoint; correct sensor placement",
+      "Source: FDD faults are reported on the UCB display, network sensor, thermostat X output, MAP gateway or BAS (SEC Product Bulletin)"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Damper Not Modulating (FDD alarm)",
+     "meaning": "FDD alarm 'Damper Not Modulating' - the economizer damper is not able to modulate properly; check the damper, the linkage to the actuator, or the actuator.",
+     "likelyCauses": [
+      "Actuator failed, no 24 VAC, or control signal missing / wrong (2-10 V)",
+      "Linkage slipped, damper blades seized or obstructed",
+      "Actuator feedback wiring open so the control cannot confirm position"
+     ],
+     "checks": [
+      "Field practice: drive the damper open and closed from the commissioning / test menu and watch for movement and feedback change",
+      "Field practice: check actuator power, signal and feedback at the economizer board terminals; free up or replace the damper linkage",
+      "Field practice: re-run the economizer commissioning after repair and confirm the FDD alarm clears"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Excess Outdoor Air (FDD alarm)",
+     "meaning": "FDD alarm 'Excess Outdoor Air' - the economizer is allowing excess outdoor air inside (more than the minimum position / ventilation requirement calls for).",
+     "likelyCauses": [
+      "Minimum position set too high or damper not returning to minimum (actuator, linkage, feedback)",
+      "Damper blade seals damaged, damper stuck partly open",
+      "Return-air damper / hood problems, or OAT/RAT/SAT sensor error skewing the outdoor-air fraction calculation"
+     ],
+     "checks": [
+      "Field practice: verify minimum position setting and actual damper position at minimum; inspect blade seals and linkage",
+      "Field practice: check the OAT, RAT and SAT readings the control uses to estimate outdoor-air fraction",
+      "Source: FDD alarms can be disabled/enabled from the display if the ventilation design intentionally exceeds the default expectations (LIT-12011950)"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Phantom sensor / economizer alarm (sensor not installed)",
+     "meaning": "'Phantom Alarms' are active alarms displayed that represent failures of sensors that are physically not installed on the unit (typically economizer / accessory sensor fault indications).",
+     "likelyCauses": [
+      "Board replaced or reconfigured with sensor/accessory inputs enabled that the unit does not have",
+      "Accessory board or sensor removed after the UCB had discovered it",
+      "Sensor fault indications left enabled for optional economizer sensors"
+     ],
+     "checks": [
+      "Source: the UCB automatically recognizes accessory York SMART controllers and accessory input sensors when they are connected to a powered system - run RELEARN so it rediscovers what is actually connected (US Air Conditioning Distributors 'Relearn or Reset Lockouts' procedure; York Phantom Economizer Alarms)",
+      "Source: use 'Disable or Enable Economizer Sensor Fault Indications' in the display to suppress indications for sensors not fitted (LIT-12011950 Alarms)",
+      "Field practice: confirm on the Status screens which sensor inputs read open/shorted before disabling anything"
+     ],
+     "severity": "info",
+     "source": "York Tech Corner 'Phantom Economizer Alarms' (Rev1 02122020); LIT-12011950 'Disable or Enable Economizer Sensor Fault Indications'",
+     "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
     "Use the SE-SPU's LCD and joystick (Alarms menu) or the SE-Mobile app / Verasys UI to read active and historical alarms; the alarm names are text, not numeric codes.",
     "The verbatim alarm tables are in the Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix: Service alarms and FDD alarms) and the Simplicity SE Controls Technical Guide (SE-SPU1001/1002/1011/1012); the 2-stage rooftop guide is 5127914-UTG-B-1116.",
     "Verasys Alarms Summary Technical Bulletin (Smart Equipment RTU controller section) lists the same alarms as seen from the BAS.",
-    "Compressor lockouts are cleared from the Alarms / Details menu or by cycling power once the cause is corrected."
+    "Compressor lockouts are cleared from the Alarms / Details menu or by cycling power once the cause is corrected.",
+    "Display: the UCB (SE-SPU) has an on-board LCD with a joystick, ENTER and CANCEL buttons. Move the joystick up/down to scroll menu items and press ENTER to open a sub-menu or show a property value; press CANCEL repeatedly to return to the IDLE (home) screen. Joystick down from IDLE scrolls SAT, RAT, OAT and the other sensor readings (Status).",
+    "Alarms: 'Alarms' is a top-level menu on the UCB display; the home screen can display up to 5 active alarms. Alarms are grouped as critical, service priority and service (LIT-12011998 Alarm appendix Table 2); FDD alarms are a separate table (Table 3). The same alarms are visible through the SE-Mobile app / MAP gateway, a network sensor, a thermostat with the X fault output, or the BAS (Verasys / Metasys).",
+    "Reading alarm text: 'shutdown due to a safety' means the safety circuit is open right now (service priority - auto-clears when the safety resets and counts toward the maximum shutdowns before lockout); 'Locked out due to a safety' is a critical alarm (three trips in the window) that stays until reset.",
+    "Clearing a hard lockout (ResetLO): firmware 1.0-3.2: Details > Unit > ResetLO. Firmware 3.3-3.4: from IDLE joystick down to Summary > ENTER > Sensors > ENTER > Unit > ENTER > ResetLO > ENTER. Later firmware: Summary > Unit > ResetLO. Push the joystick right to change OFF to ON and press ENTER; after 3-5 seconds ON changes back to OFF on its own, which means the reset is complete and the lockout is broken. Cycling unit power also clears critical lockouts. If the lockout does not reset, the fault still exists.",
+    "RELEARN (make the UCB rediscover connected boards/sensors, clears phantom sensor alarms): firmware 1.0-3.2: from IDLE joystick down to Controller > ENTER > SysCntlrs > ENTER > Misc > ENTER > RELEARN > ENTER (display shows False/True). Perform it with the unit not operating; on 3.3+ the ResetLO function performs the equivalent.",
+    "FDD: economizer FDD is built into the standard software and is enabled in the field from the unit keypad/display; FDD alarms and economizer sensor fault indications can be disabled/enabled from the display (LIT-12011950 Alarms section). FDD faults can be read on the UCB display, MAP gateway or BAS.",
+    "Supply-air limits: the SE control drops cooling/heating stages when SAT exceeds the cooling limit (default 45 F, adjustable to 40 F) or heating limit (default 140 F, adjustable to 180 F); set under Details > Cooling > Setup and Details > Heating > Setup.",
+    "Safeties override commissioning/test mode: a compressor cannot be energized in test if its HPS is tripped. The supply fan must be proven (APS / current sensor input) before compressor and heat outputs are allowed.",
+    "Verbatim alarm tables: LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix (Critical alarms, Service priority alarms, Service alarms, FDD alarms); LIT-12011950 Sequence of Operation Overview, Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms); Verasys Alarms Summary Technical Bulletin, 'Smart Equipment Rooftop Unit (RTU) Controller' section (BAS view of the same alarms)."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -860,13 +1077,144 @@
     {
      "title": "Smart Equipment Controls Technical Guide 2-Stage 5127914-UTG-B-1116",
      "docId": "5127914-UTG-B-1116"
+    },
+    {
+     "title": "Smart Equipment Control (SEC) Technical Bulletin - Alarm appendix (Table 2 alarms: critical / service priority / service; Table 3 FDD alarms)",
+     "docId": "LIT-12011998 (UTB-A-0714 / UTB-B-0418 / UTB-C-0119)",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content"
+    },
+    {
+     "title": "Smart Equipment Controls Technical Bulletin 5.0 - Alarm appendix / Critical alarms, Service alarms (web)",
+     "docId": "LIT-12011998",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms"
+    },
+    {
+     "title": "Smart Equipment Controls Sequence of Operation Overview Technical Bulletin - Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms), Unit protection (HPS / LPS / Freezestat), Air proving switch setup, Space temperature alarming",
+     "docId": "LIT-12011950 (E-0120)",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf"
+    },
+    {
+     "title": "SMART Equipment Unit Controls Sequence of Operation Overview - Alarms extract (page 63, Table 11 / Table 12)",
+     "docId": "LIT-12011950 extract 'SSE Alarms.pdf'",
+     "url": "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770"
+    },
+    {
+     "title": "YORK Tech Corner - Alarm Reset / Hard Lockout Ver 3.3 or later (Rev1 01252020)",
+     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
+    },
+    {
+     "title": "YORK Tech Corner - Excessive Supply Temperature (Rev1 01092020)",
+     "docId": "excessive-supply-temperature_rev1_01092020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf"
+    },
+    {
+     "title": "YORK Tech Corner - Phantom Economizer Alarms (Rev1 02122020)",
+     "docId": "phantom-economizer-faults_rev1_02122020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf"
+    },
+    {
+     "title": "Smart Equipment Control Troubleshooting Guide",
+     "docId": "6138895-UTG-A-0521/0721",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
+    },
+    {
+     "title": "Smart Equipment Controls (SEC) Product Bulletin - Economizer controller FDD faults",
+     "docId": "LIT-12011934 / SE-COM1001-0",
+     "url": "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf"
+    },
+    {
+     "title": "Title 24 Impact on Packaged Rooftop Units Application Guide - FDD fault list",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content"
+    },
+    {
+     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.4 and older) - UCB LEDs, start-up sequence, menu navigation",
+     "docId": "LIT-12011938",
+     "url": "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6"
+    },
+    {
+     "title": "SE-ECO1001-1 Economizer Controller catalog page - board LEDs",
+     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content"
+    },
+    {
+     "title": "US Air Conditioning Distributors - Performing a Relearn or Reset Lockouts on a Simplicity Smart Equipment board",
+     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
+    },
+    {
+     "title": "R-410A J**ZJ Series w/ Smart Equipment Installation Manual - Alarms (Table 2)",
+     "url": "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
     }
    ],
-   "confidence": "low",
+   "confidence": "medium",
    "sources": [
     "docs.johnsoncontrols.com - Simplicity SE (Smart Equipment) Controls Technical Guide",
     "docs.johnsoncontrols.com - Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix)",
-    "docs.johnsoncontrols.com - Verasys Alarms Summary Technical Bulletin 4.0"
+    "docs.johnsoncontrols.com - Verasys Alarms Summary Technical Bulletin 4.0",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf",
+    "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
+    "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content",
+    "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6",
+    "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content",
+    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
+    "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "UCB (SE-SPU) green POWER LED steady on, display backlight lit",
+     "meaning": "24 VAC is applied to the C and 24V terminals; the LED and backlight remain lit as long as power is applied.",
+     "checks": [
+      "Off: check 24 VAC at C / 24V, the control transformer and fuse before suspecting the board"
+     ]
+    },
+    {
+     "pattern": "UCB red FAULT LED lights, goes off briefly, then flashes during start-up",
+     "meaning": "Normal start-up sequence; after start-up completes the Fault LED stops flashing and turns off.",
+     "checks": [
+      "If it keeps flashing after start-up there are active alarms - open the Alarms menu on the display"
+     ]
+    },
+    {
+     "pattern": "UCB red FAULT LED blinking during operation",
+     "meaning": "Active fault(s) present on the control board (for example sensors or options that are not installed or are disconnected).",
+     "checks": [
+      "Read the Alarms menu; if the faults relate to sensors/options not installed, perform RELEARN so the board rediscovers connected devices (US Air Conditioning Distributors relearn procedure)"
+     ]
+    },
+    {
+     "pattern": "UCB green SA BUS LED lights briefly at start-up, then flashes",
+     "meaning": "Flashing indicates the UCB has established communication with SA bus devices (economizer, 4-stage, FDD boards, network sensor).",
+     "checks": [
+      "Off with accessory boards installed: check the SA bus cable, polarity/addressing and 24 VAC at the accessory boards"
+     ]
+    },
+    {
+     "pattern": "Economizer board (SE-ECO1001) POWER LED lit",
+     "meaning": "24 VAC is present at the 24V~ IN COM and HOT pins.",
+     "checks": [
+      "Off: check the 24 VAC feed and connector to the economizer board"
+     ]
+    },
+    {
+     "pattern": "Economizer board POWER LED flashing 1/10 second on / off",
+     "meaning": "Networking error (polarity, addressing, etc.) or a firmware error (likely correctable by re-loading firmware from a USB flash drive).",
+     "checks": [
+      "Check SA bus polarity and addressing; reload firmware via USB per the SE software update guide"
+     ]
+    },
+    {
+     "pattern": "Economizer board SA BUS LED lit / flickering vs. off",
+     "meaning": "Lit or flickering: UCB-to-economizer board SA bus communication is active. Off: the economizer board is awaiting SA bus communication.",
+     "checks": [
+      "Off: check the SA bus cable between UCB and economizer board, then RELEARN"
+     ]
+    }
    ]
   }
  ],

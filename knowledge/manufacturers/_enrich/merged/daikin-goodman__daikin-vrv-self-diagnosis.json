@@ -1,0 +1,1035 @@
+{
+  "pack": "daikin-goodman",
+  "platformId": "daikin-vrv-self-diagnosis",
+  "name": "Daikin VRV (VRV III / IV / IV-S / IV+ / X) and SkyAir malfunction self-diagnosis codes (remote controller / outdoor PCB display)",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Daikin VRV IV+ Service Manual ESIE18-14 (2019.07) - Part 2 Troubleshooting, error codes with sub-codes (E3-18, E4-01-02-03, E5-01-02-03, E6-17-19-21, E7-01-13-25, E9-01-05-08, J3-59-60-61, J5-01-03-05, J6-01-02-03, J7-06-07-08, J9-01-02-03, L1-48-50-52, L4-01-02-03, L5-03-05-07, L8-03-06-07, L9-01-05-06, LC-14-15-16, P1-01-02-03, PJ-04-05-06, U7-03/04, UE-00, UF-01; 2.3.163 indoor-unit related error codes) as reproduced on ManualsLib",
+      "docId": "ESIE18-14",
+      "url": "https://www.manualslib.com/manual/2185350/Daikin-Vrv-IvPlus.html"
+    },
+    {
+      "title": "Daikin VRV IV-S RXTQ-TAVJU Series Service Manual - Part 6 Service Diagnosis: 'Error Codes and Descriptions' (p.142), 'Error Code Indication by Outdoor Unit PCB' (p.144), 'Transmission Error Between Indoor Units and Outdoor Units' (p.208)",
+      "docId": "SiUS331604EF",
+      "url": "https://www.manualslib.com/manual/1649908/Daikin-Vrv-Iv-S-Rxtq-Tavju-Series.html?page=142"
+    },
+    {
+      "title": "Daikin VRV IV Heat Pump Service Manual SiUS341615E (RXYQ72-408TAYDU/TATJU) - Service Diagnosis / troubleshooting by error code (daikincomfort.com PDF)",
+      "docId": "SiUS341615E",
+      "url": "https://daikincomfort.com/docs/default-source/vrv-iv-heat-pump/sm-hp-sius341615e--final.pdf"
+    },
+    {
+      "title": "Daikin RXYQ-TA Series (VRV IV) Service Manual - 'Error Codes and Descriptions' (p.184) and 'Error Codes - Sub Codes' (p.186)",
+      "docId": "RXYQ-TA SM",
+      "url": "https://www.manualslib.com/manual/1516503/Daikin-Rxyq-Ta-Series.html?page=184"
+    },
+    {
+      "title": "Daikin VRV III / VRV II / VRV-WII Service Manuals (Si30-408 family) - per-code troubleshooting pages: 'A7 Malfunction of Swing Flap Motor (MA)', 'A9 Malfunction of Moving Part of Electronic Expansion Valve (20E)', 'AF Drain Level above Limit', 'AJ Malfunction of Capacity Determination Device', 'C4/C5/C9/CJ thermistor', 'E3 Actuation of High Pressure Switch', 'E4 Actuation of Low Pressure Sensor', 'F3 Abnormal Discharge Pipe Temperature', 'U4 Malfunction of Transmission between Indoor Units and Outdoor Units', 'U5', 'UH Malfunction of System, Refrigerant System Address Undefined'",
+      "docId": "Si30-408 / VRV-WII SM",
+      "url": "https://www.manualslib.com/manual/1282697/Daikin-Vrv.html"
+    },
+    {
+      "title": "Daikin After Sales Service Division SM-TS3 - Simple Self-Diagnosis by Malfunction Code (RA, SkyAir, VRV, PA, HRV) pp.1-6 error code chart and pp.7-8 'Self-Diagnosis by Remote Controller (SkyAir, VRV)'",
+      "docId": "SM-TS3",
+      "url": "https://www.daikin.com/-/media/Project/Daikin/daikin_com/products/ac/services/error_codes/pdf/sm-ts3_p1-6_errorcode-pdf.pdf"
+    },
+    {
+      "title": "Daikin North America SkyAir 'Malfunction Code Chart' (Malfunction-Code-Chart-001) and SkyAir P-series service manual SiUS28-902",
+      "docId": "Malfunction-Code-Chart-001",
+      "url": "https://daikincomfort.com/docs/default-source/skyair-system---heat-pump/malfunction-code-chart-001.pdf"
+    },
+    {
+      "title": "Daikin VRV Commissioning Guide Participant Guide (TB-VRV107) and VRV Service & Troubleshooting Participant Guide (TB-VRV104) - outdoor PCB LED (H1P-H8P) states during initialization / test operation",
+      "docId": "TB-VRV107 / TB-VRV104",
+      "url": "https://apps.goodmanmfg.com/training/files/54aeaf8f0ecccTB-VRV107-VRV-Commissioning-Only.pdf"
+    },
+    {
+      "title": "Daikin BRC1E73 Navigation Remote Controller Service Manual SiUS721424EB / Installation Manual - 'Procedure for checking error history'",
+      "docId": "SiUS721424EB",
+      "url": "https://daikincomfort.com/docs/default-source/navigation-remote-controller/sm-sm_brc1e73.pdf"
+    },
+    {
+      "title": "coolautomation.com - Daikin Error Codes (Malfunction Self-Diagnosis); acerrorcode.com Daikin fault code list; airnexus.io Daikin VRV fault codes field guide (third-party corroboration only)",
+      "url": "https://coolautomation.com/blog/daikin-error-and-fault-codes-troubleshooting/"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "A0",
+      "meaning": "Indoor unit: External protection device activated (VRV IV+ sub-code A0-00: Main PCB error).",
+      "likelyCauses": [
+        "External protection device (field-wired safety, e.g. condensate overflow switch or fire/ smoke interlock) connected to the indoor PCB T1/T2 terminals has opened",
+        "Wrong field setting for the T1/T2 input, or a jumper missing on the terminal",
+        "Defective indoor unit PCB (sub-code 00 on VRV IV+)"
+      ],
+      "checks": [
+        "Identify what is wired to the indoor unit T1/T2 (external input) terminals and check that contact for continuity; a normally-closed device that has opened will hold the code",
+        "Check the indoor field setting that defines the T1/T2 input (forced OFF vs. error input) against the installation manual",
+        "If nothing is field-wired and the terminals are jumpered, suspect the indoor PCB (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 sec. 2.3.163 'Indoor unit related error codes' (A0-00 Main PCB error); VRV IV-S RXTQ SM 'Error Codes and Descriptions' p.142 (A0 External protection device abnormality); SM-TS3 chart division A 'External protection device activated'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A1",
+      "meaning": "Indoor unit: Indoor unit control PCB abnormality (VRV IV+ sub-code A1-00: EEPROM error on main PCB).",
+      "likelyCauses": [
+        "Defective indoor unit PCB / EEPROM data error",
+        "External noise or a power disturbance corrupting the PCB memory"
+      ],
+      "checks": [
+        "Cycle power to the indoor unit; if the code returns immediately after restart the indoor PCB is faulty and should be replaced (manual remedy)",
+        "Before replacing, verify the correct 24 V / line-voltage supply and fuse on the indoor PCB (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 sec. 2.3.163 (A1-00 EEPROM error on main PCB); VRV IV-S RXTQ SM p.142 (A1 Indoor unit control PCB abnormality); SkyAir Malfunction-Code-Chart-001 (A1 Indoor PCB error)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A3",
+      "meaning": "Indoor unit: Drain level control system abnormality (VRV IV+ sub-code A3-00: Float switch open during thermo ON in cooling mode). Per the service manual, if the float switch remains ON even after the residual operation of the drain pump has ended, A3 is displayed.",
+      "likelyCauses": [
+        "Drain pump not running or failed (no power, seized, wiring disconnected)",
+        "Condensate drain line clogged, drain hose kinked or improperly sloped, so the pan fills",
+        "Float switch stuck, wired wrong or connector loose on the indoor PCB",
+        "Field-wired humidifier or drain from another unit feeding the pan"
+      ],
+      "checks": [
+        "Check whether the drain pan is actually full of water; if yes, pour water into the pan and confirm the drain pump runs and the line drains (manual check)",
+        "If the pan is dry, check the float switch: it should be open (OFF) with the float down; ohm it and inspect the connector on the indoor PCB",
+        "Verify drain pump voltage at the PCB connector while the pump should be running; replace the pump if voltage is present and it does not run",
+        "Check the drain line for kinks, sags, and the trap/riser height against the installation manual"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 sec. 2.3.163 (A3-00); VRV IV-S RXTQ SM p.142 (A3 Drain level control system abnormality) and drain level control system troubleshooting page; SkyAir Malfunction-Code-Chart-001 (A3 Drain pump abnormal)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A5",
+      "meaning": "Indoor unit: High pressure control in heating, freeze-up protection control in cooling (antifreeze). Freeze-up prevention / high-pressure protection actuated by the indoor heat exchanger thermistor.",
+      "likelyCauses": [
+        "Low indoor airflow: dirty filter, dirty coil, blocked return/supply, fan speed too low",
+        "Indoor heat exchanger thermistor (R2T) faulty or misplaced, giving a false low/high temperature",
+        "Low refrigerant charge or EEV problem (indoor coil freezes in cooling)",
+        "Heating: restricted airflow or overcharge driving high pressure at the indoor coil"
+      ],
+      "checks": [
+        "Check filter, coil and airflow first; confirm fan speed and that dampers/registers are open",
+        "Compare the indoor coil thermistor (R2T) reading against an actual clamp-on pipe temperature; replace if it does not track",
+        "Check superheat/subcooling and EEV operation on the affected indoor unit (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Daikin SM-TS3 chart (A5 'High pressure control in heating, freeze-up protection control in cooling'); SkyAir Malfunction-Code-Chart-001 (A5 Antifreeze); VRV service manual FTA 'Actuation of freeze-up prevention control of indoor unit'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A6",
+      "meaning": "Indoor unit: Indoor fan motor lock, overload (VRV IV+ sub-code A6-01: Fan motor locked). Abnormal fan revolutions are detected by a signal output from the fan motor.",
+      "likelyCauses": [
+        "Fan motor locked (bearing failure, foreign object in the blower wheel)",
+        "Fan motor wiring / connector disconnected or broken; fan motor feedback (Hall IC) signal missing",
+        "Defective fan motor (DC motor) or defective indoor PCB / fan PCB",
+        "Overload from excessive static pressure or wrong ESP setting on ducted units"
+      ],
+      "checks": [
+        "Power off and turn the blower wheel by hand; it must spin freely",
+        "Check the fan motor connectors on the indoor PCB (power and signal plugs); look for burnt pins",
+        "With power on, check for DC output to the fan at the PCB; if voltage is present and the motor does not run, replace the motor; if no output, replace the PCB (manual remedy)",
+        "On ducted (FXMQ/FXSQ) units confirm the external static pressure setting matches the duct system"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 sec. 2.3.163 (A6-01 Fan motor locked); VRV IV-S RXTQ SM p.142 (A6 Indoor fan motor lock, overload) and A6 detection method; SkyAir Malfunction-Code-Chart-001 (A6 Indoor fan motor abnormal)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A7",
+      "meaning": "Indoor unit: Malfunction of swing flap motor (MA). Applicable to FXCQ, FXHQ, FXKQ models; detected by the ON/OFF of the limit switch when the motor turns.",
+      "likelyCauses": [
+        "Swing flap motor failed or disconnected",
+        "Limit switch faulty or flap mechanism jammed",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Remove the obstruction / check the flap linkage moves freely",
+        "Check the swing motor connector on the indoor PCB and the limit switch continuity; replace the motor assembly if the motor does not respond to the PCB output (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual (Si30-408 family) 'A7 Indoor Unit: Malfunction of Swing Flap Motor (MA)' as reproduced on ManualsLib; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "A9",
+      "meaning": "Indoor unit: Malfunction of moving part of electronic expansion valve (20E). Applicable to all indoor unit models; the microcomputer checks the electronic expansion valve coil.",
+      "likelyCauses": [
+        "EEV coil open / short or connector disconnected from the indoor PCB",
+        "EEV body stuck (moving part jammed)",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Check the EEV coil connector on the indoor PCB, then ohm each coil winding to common and compare with the service manual value; replace the coil if open/shorted (manual check)",
+        "On power-up, listen/feel for the EEV initialization travel (clicking) to confirm the moving part responds",
+        "If the coil and wiring are good, replace the EEV body; if no drive output, replace the indoor PCB"
+      ],
+      "severity": "shutdown",
+      "source": "Daikin VRV service manual (Si30-408 family) 'A9 Indoor Unit: Malfunction of Moving Part of Electronic Expansion Valve (20E)' as reproduced on ManualsLib; SkyAir Malfunction-Code-Chart-001",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "AF",
+      "meaning": "Indoor unit: Drain level above limit. Applicable to FXCQ, FXFQ, FXSQ, FXKQ, FXMQ, FXDQ, FXUQ; water leakage is detected based on float switch ON/OFF operation while the compressor is in non-operation.",
+      "likelyCauses": [
+        "Water entering the drain pan while the unit is off (backflow from a shared drain line, field humidifier, or a drain from another unit)",
+        "Drain piping fault (no slope, no trap, blocked line)",
+        "Float switch faulty"
+      ],
+      "checks": [
+        "Check the drain piping for backflow into the pan when this unit is off; add a trap / correct the slope per the installation manual",
+        "Check for a field-installed humidifier or other water source draining into the pan",
+        "Test the float switch operation (open with float down)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual (Si30-408 family) 'AF Indoor Unit: Drain Level above Limit' as reproduced on ManualsLib; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "AJ",
+      "meaning": "Indoor unit: Malfunction of capacity determination device. Capacity is determined according to resistance of the capacity setting adaptor and the memory inside the IC on the indoor unit PC board, and whether the value is normal or abnormal is determined.",
+      "likelyCauses": [
+        "Capacity setting adaptor not installed after replacing the indoor PCB (replacement PCBs ship without capacity data)",
+        "Wrong or faulty capacity setting adaptor",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "If the indoor PCB was recently replaced, install the correct capacity setting adaptor for the unit model (manual remedy)",
+        "Check the adaptor is plugged into the correct connector and matches the model capacity; replace the PCB if the code persists"
+      ],
+      "severity": "shutdown",
+      "source": "Daikin VRV service manual (Si30-408 family) 'AJ Indoor Unit: Malfunction of Capacity Determination Device' as reproduced on ManualsLib; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "C4",
+      "meaning": "Indoor unit: Malfunction of thermistor (R2T) for heat exchanger (liquid pipe) - short / open.",
+      "likelyCauses": [
+        "Thermistor R2T open or shorted",
+        "Connector loose / disconnected on the indoor PCB",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Unplug R2T from the indoor PCB and measure resistance; compare with the Daikin thermistor table (about 20 kΩ at 25 °C / 77 °F for VRV indoor pipe thermistors); replace if open, shorted or far off the curve",
+        "Check the connector pins and harness for damage; if the thermistor is good, replace the indoor PCB (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual (Si30-408 family) 'C4 Indoor Unit: Malfunction of Thermistor (R2T) for Heat Exchanger' as reproduced on ManualsLib; SkyAir Malfunction-Code-Chart-001 (C4 Indoor heat exchanger (1) thermistor short/open)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "C5",
+      "meaning": "Indoor unit: Malfunction of thermistor (R3T) for gas pipes - short / open. Detected by the temperature reported by the gas pipe thermistor.",
+      "likelyCauses": [
+        "Thermistor R3T open or shorted",
+        "Connector loose / disconnected on the indoor PCB",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Unplug R3T and measure resistance against the thermistor table; replace if out of range",
+        "Check the connector and harness; replace the indoor PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual (Si30-408 family) 'C5 Indoor Unit: Malfunction of Thermistor (R3T) for Gas Pipes' as reproduced on ManualsLib; SkyAir Malfunction-Code-Chart-001 (C5 Indoor heat exchanger (2) thermistor short/open)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "C9",
+      "meaning": "Indoor unit: Malfunction of thermistor (R1T) for suction air - short / open. Detected by the suction air temperature thermistor.",
+      "likelyCauses": [
+        "Return-air thermistor R1T open or shorted",
+        "Connector loose / disconnected on the indoor PCB",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Unplug R1T and measure resistance against the thermistor table; replace if out of range",
+        "Check the connector and harness; replace the indoor PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual (Si30-408 family) 'C9 Indoor Unit: Malfunction of Thermistor (R1T) for Suction Air' as reproduced on ManualsLib; SkyAir Malfunction-Code-Chart-001 (C9 Malfunction of thermistor (R1T) for suction air)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "CJ",
+      "meaning": "Indoor unit: Malfunction of thermostat sensor in remote controller.",
+      "likelyCauses": [
+        "Remote controller built-in thermistor faulty",
+        "Defective remote controller PCB"
+      ],
+      "checks": [
+        "Note: the unit keeps running on the indoor unit's own suction-air thermistor when CJ is set (field practice / manual note); replace the wired remote controller to clear the code",
+        "Check the remote controller wiring (P1/P2) and that the controller is not exposed to a heat source"
+      ],
+      "severity": "info",
+      "source": "Daikin VRV service manual (Si30-408 family) 'CJ Indoor Unit: Malfunction of Thermostat Sensor in Remote Controller' as reproduced on ManualsLib; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E1",
+      "meaning": "Outdoor unit: P.C.B. defect (VRV IV+ sub-code E1-02: Outdoor unit main PCB A1P error).",
+      "likelyCauses": [
+        "Defective outdoor unit main PCB (A1P)",
+        "External noise / power disturbance",
+        "Wrong PCB fitted or wrong field settings after replacement"
+      ],
+      "checks": [
+        "Cycle power at the outdoor unit; if E1 returns at once the main PCB is faulty and should be replaced (manual remedy)",
+        "After replacing the main PCB, restore the DIP switch / field settings for the model and re-run the auto-address setting (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (E1-02 Outdoor unit main PCB A1P error); SkyAir Malfunction-Code-Chart-001 (E1 Outdoor unit: P.C.B. defect); VRV IV-S RXTQ SM p.142",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E3",
+      "meaning": "Outdoor unit: Actuation of high pressure switch (HPS). VRV IV+ sub-codes E3-01-03-05 Actuation of high pressure switch; E3-18 Actuation of high pressure switch during test run (closed stop valve in the refrigerant circuit); E3-20-21-22 Jumper open on main PCB.",
+      "likelyCauses": [
+        "Stop valve closed (especially during test run / commissioning)",
+        "Dirty or blocked outdoor heat exchanger, short-circuited condenser air, outdoor fan not running (cooling)",
+        "Indoor airflow blocked, dirty filter, or indoor EEV closed (heating)",
+        "Refrigerant overcharge or non-condensables in the system",
+        "Defective high pressure switch, HPS connector loose on the main PCB, or high pressure sensor error"
+      ],
+      "checks": [
+        "Manual check points: (1) Is the stop valve open? (2) Is the HPS connector properly connected to the main PCB? (3) Does the high pressure switch have continuity?",
+        "Compare the high pressure sensor value from the outdoor PCB / Service Checker with gauge pressure at the service port; if they disagree, suspect the sensor",
+        "Check the outdoor fan runs in cooling and the coil is clean; in heating check indoor filters/airflow and that the indoor EEV opens",
+        "Check subcooling for overcharge; recover and weigh in if needed (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.15 (E3-18 Actuation of high pressure switch during test run, E3-20-21-22 Jumper open on main PCB); VRV-WII SM p.186 'E3 Outside Unit: Actuation of High Pressure Switch' check points; VRV IV-S RXTQ SM p.142; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E4",
+      "meaning": "Outdoor unit: Actuation of low pressure sensor (VRV IV+ sub-code E4-01-02-03: Low pressure error). Abnormality is detected by the pressure value with the low pressure sensor.",
+      "likelyCauses": [
+        "Out of gas (refrigerant shortage / leak), closing of stop valve, or refrigerant system clogging (VRV III-S manual lists these for low pressure 0.25 MPa or less)",
+        "Indoor airflow problem in cooling (dirty filter, fan failure) or outdoor coil iced/blocked in heating",
+        "Indoor or outdoor EEV not opening",
+        "Defective low pressure sensor or connector"
+      ],
+      "checks": [
+        "Compare the low pressure sensor reading (outdoor PCB monitor / Service Checker) with a gauge on the suction service port; if they disagree, suspect the sensor",
+        "Confirm all stop valves are fully open; check superheat and leak-check if the charge is low",
+        "Check indoor airflow / filters (cooling) and outdoor coil / defrost (heating); verify EEV operation",
+        "Check the low pressure sensor connector on the main PCB"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.15 (E4-01-02-03 Low pressure error); VRV III-S SM low pressure supposed causes; VRV IV-S RXTQ SM p.142 ('E4 Actuation of low pressure sensor'); SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E5",
+      "meaning": "Outdoor unit: Inverter compressor motor lock / compressor overload (VRV IV+ sub-codes E5-01-02-03 Compressor overload / motor lock error (M1C); E5-07-08-09 same for M2C). SkyAir: actuation of compressor overheat protection.",
+      "likelyCauses": [
+        "Compressor mechanically locked or seized (liquid slugging, oil loss, bearing failure)",
+        "Compressor overloaded: high discharge temperature from refrigerant shortage, clogged piping, or closed stop valve",
+        "Compressor wiring / winding failure (open, shorted, insulation breakdown)",
+        "Defective inverter PCB"
+      ],
+      "checks": [
+        "Confirm stop valves open; check discharge temperature and superheat for shortage / restriction",
+        "Disconnect the compressor leads and measure winding-to-winding resistance (balanced) and megohm each winding to ground",
+        "Check the inverter PCB output with the compressor disconnected per the service manual before condemning the compressor",
+        "Check for liquid floodback, oil return and crankcase heater operation (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.17 (E5-01-02-03 / E5-07-08-09 Compressor overload/motor lock error); SkyAir Malfunction-Code-Chart-001 (E5 Inverter compressor motor lock); SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E6",
+      "meaning": "Outdoor unit: Compressor start-up error / compressor lock (VRV IV+ sub-code E6-17-19-21: Inverter overcurrent error). Listed as 'Compressor start up error' / 'Compressor lock' in the SM-TS3-based lists.",
+      "likelyCauses": [
+        "Compressor locked or hard to start (oil dilution, liquid refrigerant in the compressor, seized scroll)",
+        "Compressor winding fault or wiring / terminal fault causing overcurrent at start",
+        "Defective inverter PCB or power module",
+        "Stop valve closed"
+      ],
+      "checks": [
+        "Confirm stop valves open and the crankcase heater has been energized (6 h+ after a power outage before starting, per Daikin practice)",
+        "Megohm the compressor and check winding balance; inspect the compressor terminal and U/V/W wiring for looseness",
+        "Check the inverter PCB per the service manual with the compressor disconnected",
+        "If the compressor is mechanically locked, replace the compressor and check oil / filter drier"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.17 (E6-17-19-21 Inverter overcurrent error); SM-TS3 chart / coolautomation.com list (E6 Compressor start up error); Daikin VRV III SM index (E6 Compressor lock)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E7",
+      "meaning": "Outdoor unit: Malfunction of outdoor unit fan motor (VRV IV+ sub-codes E7-01-13-25 Outdoor unit fan motor M1F error; E7-02-14-26 Outdoor unit fan motor M2F error). Malfunction of the fan motor system is detected according to the fan speed detected by the Hall IC when the fan motor runs.",
+      "likelyCauses": [
+        "Faulty fan motor (bearing, winding, Hall IC feedback)",
+        "Fan blocked by foreign matter / ice, or fan blade damaged",
+        "Fan motor connector loose or harness damaged",
+        "Defective outdoor fan inverter PCB (A4P/A7P on VRV IV+)",
+        "Strong wind driving the fan backwards at start (reverse rotation)"
+      ],
+      "checks": [
+        "Power off and spin the fan by hand; remove obstructions / ice; check the fan blade",
+        "Check the fan motor power and signal connectors at the fan inverter PCB; look for burnt pins",
+        "Measure the fan motor winding resistance (U-V, V-W, W-U balanced) and megohm to ground; replace the motor if unbalanced/grounded (manual method)",
+        "If the motor tests good, check DC bus / output of the fan inverter PCB and replace the PCB if no output"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (E7-01-13-25 / E7-02-14-26 Outdoor unit fan motor error); Daikin SkyAir SM p.196 and R-410A SM p.140 'E7 Malfunction of Outdoor Unit Fan Motor' (detection by Hall IC; supposed causes faulty fan motor / faulty outdoor inverter PCB); SkyAir Malfunction-Code-Chart-001",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E9",
+      "meaning": "Outdoor unit: Malfunction of moving part of electronic expansion valve (VRV IV+ sub-codes E9-01-05-08 Electronic expansion valve Y1E malfunction; E9-03-06-09 Y2E malfunction; E9-20-21-22 / E9-23-24-25 Y1E/Y2E failure; E9-51-52-53 Expansion valve thermal cutting error; E9-54-55-56 Expansion valve defective circuit).",
+      "likelyCauses": [
+        "Outdoor EEV coil (Y1E main / Y2E subcooling) open, shorted or disconnected from the main PCB",
+        "EEV body stuck / moving part jammed",
+        "Defective outdoor main PCB EEV drive circuit"
+      ],
+      "checks": [
+        "Check the EEV coil connectors on the outdoor main PCB; ohm each winding and compare with the service manual values; replace the coil if open/shorted",
+        "On power-up, confirm the EEV initialization travel (clicking) on each valve body",
+        "If coils and wiring are good, replace the EEV body; if the PCB gives no drive, replace the main PCB (manual remedy)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.24 (E9-51-52-53 Expansion valve thermal cutting error, E9-54-55-56 Expansion valve defective circuit) and E9-01-05-08 / E9-03-06-09 Y1E/Y2E malfunction; Daikin ERSQ SM p.169 'E9 Outdoor Unit: Malfunction of Moving Part of Electronic Expansion Valve'; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F3",
+      "meaning": "Outdoor unit: Abnormal discharge pipe temperature (VRV IV+: Compressor body temperature too high). Abnormality is detected according to the temperature detected by the discharge pipe temperature sensor.",
+      "likelyCauses": [
+        "Refrigerant shortage / leak (high superheat, high discharge temperature)",
+        "Faulty electronic expansion valve (indoor or outdoor EEV not opening enough)",
+        "Faulty discharge pipe thermistor (R2T/R3T) or wrong placement",
+        "Refrigerant circuit restriction, closed stop valve, or non-condensables",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Compare the discharge thermistor value (outdoor PCB monitor / Service Checker) with a clamp-on pipe temperature; replace the thermistor if it reads high falsely",
+        "Check suction superheat and subcooling; leak-check and weigh in charge if short",
+        "Verify EEV operation (coil resistance, initialization travel) on the outdoor unit and on the indoor units in operation",
+        "Confirm stop valves open and check for liquid-line restriction (temperature drop across drier/strainer)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV-WII SM p.194 'F3 Outside Unit: Abnormal Discharge Pipe Temperature'; Daikin ERSQ SM p.173; VRV IV+ SM ESIE18-14 (F3 Compressor body temperature too high); SkyAir Malfunction-Code-Chart-001 (F3 Outdoor unit: abnormal discharge pipe temperature)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "F6",
+      "meaning": "Outdoor unit: Refrigerant overcharged (VRV IV+: Refrigerant overcharge detection during test-run).",
+      "likelyCauses": [
+        "Too much refrigerant added (additional charge miscalculated for pipe length)",
+        "Outdoor heat exchanger dirty / outdoor fan problem producing high pressure that the control interprets as overcharge",
+        "Faulty outdoor thermistors or high pressure sensor giving false readings",
+        "Closed stop valve during test run"
+      ],
+      "checks": [
+        "Recalculate the additional charge from the actual liquid-line lengths per the installation manual and compare with the total charge on the nameplate + added",
+        "Check outdoor coil cleanliness and fan operation; verify high pressure sensor against gauges",
+        "Recover refrigerant to the calculated charge; re-run the test operation (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (F6 Refrigerant overcharge detection during test-run); SkyAir Malfunction-Code-Chart-001 (F6 Outdoor unit: refrigerant overcharged); SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "H7",
+      "meaning": "Outdoor unit: Abnormal outdoor fan motor signal / fan motor position detection sensor error (VRV IV+: Defective fan inverter PCB A4P or A7P).",
+      "likelyCauses": [
+        "Outdoor DC fan motor position (Hall IC) signal missing - motor or signal harness fault",
+        "Defective fan inverter PCB (A4P / A7P)",
+        "Fan motor connector loose"
+      ],
+      "checks": [
+        "Check the fan motor signal connector at the fan inverter PCB; inspect the harness for damage",
+        "Swap-test / replace the fan motor if the winding test is good but the signal is missing; otherwise replace the fan inverter PCB (manual remedy)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (H7 Defective fan inverter PCB A4P or A7P); SM-TS3 chart via coolautomation.com / removeandreplace.com lists (H7 Fan motor position detection sensor error)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "H9",
+      "meaning": "Outdoor unit: Malfunction of thermistor (R1T) for outdoor air (VRV IV+: Ambient temperature thermistor R1T abnormality). Malfunction is detected from the temperature detected by the outdoor air thermistor - short circuit or open circuit.",
+      "likelyCauses": [
+        "Outdoor air thermistor R1T open or shorted",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug R1T from the outdoor main PCB and measure resistance against the thermistor table; replace if open/shorted",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (H9 Ambient temperature thermistor R1T abnormality); SkyAir Malfunction-Code-Chart-001 (H9 Outdoor unit: malfunction of thermistor (R1T) for outdoor air); VRV IV-S RXTQ SM p.142",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J2",
+      "meaning": "Outdoor unit: Current sensor malfunction (faulty current sensor).",
+      "likelyCauses": [
+        "Defective current sensor (CT) on the inverter / main PCB",
+        "Compressor not drawing current (open winding / wiring) so the sensor reads zero while running",
+        "Defective outdoor PCB"
+      ],
+      "checks": [
+        "Check the compressor U/V/W wiring and winding resistance; a disconnected compressor lead can present as a current-sensor fault",
+        "If the compressor is good, replace the inverter / main PCB containing the current sensor (manual remedy)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 index (J2 Current sensor malfunction); SM-TS3 chart via coolautomation.com list (J2 Faulty current sensor)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J3",
+      "meaning": "Outdoor unit: Malfunction of discharge pipe thermistor (R2T/R3T). When a short circuit or an open circuit in the discharge pipe temperature thermistor is detected, J3 appears (VRV IV+ sub-code J3-59-60-61: Discharge thermistor crosswired).",
+      "likelyCauses": [
+        "Discharge pipe thermistor open or shorted",
+        "Thermistors cross-wired between compressors (M1C/M2C) after service",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug the discharge thermistor and measure resistance against the thermistor table (discharge thermistors use a different curve than pipe/air thermistors - use the correct column); replace if out of range",
+        "On multi-compressor units confirm each discharge thermistor is on the matching compressor and connector",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (J3-59-60-61 Discharge thermistor crosswired); Daikin R-410A SM p.146 / ERSQ SM p.176 'J3 Outdoor Unit: Malfunction of Discharge Pipe Thermistor'; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J5",
+      "meaning": "Outdoor unit: Malfunction of thermistor (R3T / R5T) for suction pipe (VRV IV+ sub-code J5-01-03-05: Compressor suction thermistor R3T malfunction).",
+      "likelyCauses": [
+        "Suction pipe thermistor open or shorted",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug the suction thermistor and measure resistance against the thermistor table; replace if out of range",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (J5-01-03-05 Compressor suction thermistor R3T malfunction); VRV III-S RXYMQ SM p.157 'J5 Malfunction of Thermistor (R3T, R5T) for Suction Pipe 1, 2'; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J6",
+      "meaning": "Outdoor unit: Malfunction of heat exchanger thermistor (VRV IV+ sub-code J6-01-02-03: De-icer thermistor R7T abnormality) - open / short or disconnected.",
+      "likelyCauses": [
+        "Outdoor coil (de-icer) thermistor open or shorted",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug the heat exchanger thermistor and measure resistance against the thermistor table (20 kΩ-type at 25 °C for pipe thermistors); replace if out of range",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (J6-01-02-03 De-icer thermistor R7T abnormality); Daikin Sensira SM p.22 'J6-00 Outdoor Unit: Malfunction of Heat Exchanger Thermistor'; SM-TS3 chart; coolautomation.com / acerrorcode.com (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J7",
+      "meaning": "Outdoor unit: Malfunction of thermistor on heat exchanger (2) / liquid pipe thermistor (VRV IV+ sub-code J7-06-07-08: Liquid thermistor R5T abnormality).",
+      "likelyCauses": [
+        "Liquid pipe / heat exchanger (2) thermistor open or shorted",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug the thermistor and measure resistance against the thermistor table; replace if out of range",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (J7-06-07-08 Liquid thermistor R5T abnormality); SM-TS3 chart via coolautomation.com list (J7 Malfunction of thermistor on heat exchanger (2))",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "J9",
+      "meaning": "Outdoor unit: Gas pipe thermistor malfunction (VRV IV+ sub-code J9-01-02-03: Gas thermistor R6T abnormality; subcooling heat exchanger gas pipe thermistor).",
+      "likelyCauses": [
+        "Subcooling heat exchanger gas thermistor open or shorted",
+        "Connector loose / disconnected on the outdoor main PCB",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Unplug the thermistor and measure resistance against the thermistor table; replace if out of range",
+        "Check the connector and harness; replace the main PCB if the thermistor is good (manual remedy)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (J9-01-02-03 Gas thermistor R6T abnormality); SM-TS3 chart via coolautomation.com list (J9 Gas pipe thermistor malfunction)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L1",
+      "meaning": "Outdoor unit: Malfunction of inverter (inverter PCB abnormality; VRV IV+ sub-code L1-48-50-52: Inverter PCB A6P 16 V DC abnormal).",
+      "likelyCauses": [
+        "Defective inverter PCB (power module, current sensor or internal DC supply fault)",
+        "Compressor ground fault / short damaging the inverter",
+        "Loose or burnt power wiring to the inverter PCB"
+      ],
+      "checks": [
+        "Power off, wait for the DC bus capacitors to discharge (check < 10 V DC), then inspect the inverter PCB and connectors for burn marks and loose plugs",
+        "Megohm the compressor before replacing the inverter PCB so a shorted compressor does not destroy the new board (field practice)",
+        "Follow the service manual inverter PCB check (power module diode test); replace the inverter PCB if defective"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (L1-48-50-52 Inverter PCB A6P 16 V DC abnormal); VRV IV-S RXTQ SM p.142 (L1); SM-TS3 chart via coolautomation.com list (L1 Malfunction of inverter)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L4",
+      "meaning": "Outdoor unit: Malfunction of inverter radiating fin temperature rise (VRV IV+ sub-codes L4-01-02-03 Inverter PCB A3P high fin temperature; L4-09-10-11 Inverter PCB A6P high fin temperature). Fin temperature is detected by the thermistor of the radiation fin; malfunction when the inverter radiation fin temperature rises above about 83 °C.",
+      "likelyCauses": [
+        "Fin temperature rise due to short circuit / blocked cooling airflow over the inverter heat sink (dirty fins, fan not running)",
+        "Defective fin thermistor (false high reading)",
+        "Defective inverter PCB",
+        "Poor contact between the power module and the heat sink (thermal compound / screws after PCB replacement)"
+      ],
+      "checks": [
+        "Check that the inverter heat sink fins are clean and the outdoor fan / cooling path is unobstructed",
+        "Compare the fin thermistor reading (monitor mode / Service Checker) with the actual heat-sink temperature; replace the thermistor if it reads high falsely",
+        "After a PCB replacement, verify the module is screwed flat to the heat sink with thermal compound (field practice)",
+        "Replace the inverter PCB if the fin temperature is truly high with good cooling"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (L4-01-02-03 / L4-09-10-11 High fin temperature); Daikin E-series SM p.338 / ERSQ SM p.190 'L4 Malfunction of Inverter Radiating Fin Temperature Rise' (83 °C threshold; supposed causes faulty inverter PCB, faulty fin thermistor); SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L5",
+      "meaning": "Outdoor unit: Inverter instantaneous overcurrent (DC output) / compressor motor ground fault or short circuit (VRV IV+ sub-codes L5-03-05-07 Output overcurrent detection on inverter PCB A3P; L5-14-15-16 on inverter PCB A6P). Possible causes per manual: defective compressor coil (wiring disconnection or insulation failure), compressor startup failure (mechanical lock), defective inverter PCB.",
+      "likelyCauses": [
+        "Compressor motor winding short or ground fault (insulation failure)",
+        "Compressor mechanical lock / seizure at start",
+        "Inverter PCB / power module failure",
+        "Loose or damaged U/V/W compressor leads"
+      ],
+      "checks": [
+        "Disconnect the compressor and megohm each winding to ground; check winding-to-winding resistance balance",
+        "Check the inverter PCB output with the compressor disconnected per the service manual (power module diode check)",
+        "Inspect compressor terminal and leads for chafing / burnt spots",
+        "Check for liquid floodback / oil issues that could lock the compressor (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.42 (L5-03-05-07 / L5-14-15-16 Output overcurrent detection on inverter PCB; causes defective compressor coil, compressor startup failure (mechanical lock), defective inverter PCB); Daikin Stylish SM p.25 'L5-00 Outdoor Unit: Inverter Instantaneous Overcurrent'; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L8",
+      "meaning": "Outdoor unit: Malfunction of overcurrent inverter compressor / compressor overload, motor disconnected (VRV IV+ sub-codes L8-03-06-07 Overcurrent on inverter PCB A3P except start-up; L8-11-12-13 on inverter PCB A6P). Causes per manual: compressor overloaded, wiring disconnection in compressor coil, disconnection of compressor wiring, defective inverter PCB.",
+      "likelyCauses": [
+        "Compressor overloaded (high pressure / high load, low charge with high discharge temperature)",
+        "Open compressor winding or disconnected compressor wiring (U/V/W)",
+        "Defective inverter PCB",
+        "Stop valve partly closed or refrigerant circuit restriction"
+      ],
+      "checks": [
+        "Check the U/V/W compressor connections at the inverter PCB and compressor terminal; measure winding resistance for an open phase",
+        "Check operating pressures / superheat for an overload condition; confirm stop valves open",
+        "Check the inverter PCB per the service manual; replace if defective"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.42 (L8-03-06-07 / L8-11-12-13 Overcurrent on inverter PCB except start-up; causes compressor overloaded, wiring disconnection in compressor coil, disconnection of compressor wiring, defective inverter PCB); SM-TS3 chart via coolautomation.com list (L8 Comp overload, motor disconnected)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "L9",
+      "meaning": "Outdoor unit: Malfunction of inverter compressor startup error (stall prevention) / compressor lock (VRV IV+ sub-codes L9-01-05-06 Stall prevention by inverter PCB A3P; L9-10-11-12 by inverter PCB A6P). Often caused by the stop valve not being opened.",
+      "likelyCauses": [
+        "Stop valve not opened (large pressure differential at start)",
+        "Compressor mechanically locked or liquid-filled (oil dilution / floodback)",
+        "Compressor wiring / winding fault",
+        "Defective inverter PCB",
+        "Pressure equalization not achieved before restart (short cycling)"
+      ],
+      "checks": [
+        "Confirm all stop valves are fully open (liquid, gas, and equalizing/oil lines where fitted)",
+        "Ensure the crankcase heater has been on long enough after a power interruption before starting (Daikin practice); check for liquid in the compressor",
+        "Megohm the compressor and check winding balance; check the inverter PCB per the service manual",
+        "Replace the compressor if it is mechanically locked"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (L9-01-05-06 / L9-10-11-12 Stall prevention by inverter PCB; cause 'stop valve not opened'); SM-TS3 chart via coolautomation.com list (L9 Compressor lock)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "LC",
+      "meaning": "Outdoor unit: Malfunction of transmission between inverter and control (outdoor main) PCB (VRV IV+ sub-codes LC-14-15-16, LC-19-20-21, LC-24-25-26, LC-30-31-32 Transmission abnormality main PCB). Fix per SM-TS3: defective connection between the inverter PCB and the control PCB.",
+      "likelyCauses": [
+        "Loose or damaged transmission harness / connector between the main PCB (A1P) and the inverter PCB (A3P/A6P) or fan inverter PCB",
+        "Defective inverter PCB or main PCB",
+        "External noise on the harness, or wrong PCB combination after replacement",
+        "Inverter PCB not powered (blown fuse / open DC bus)"
+      ],
+      "checks": [
+        "Power off, then reseat the flat/ribbon transmission connectors between the main PCB and each inverter PCB; check for bent pins",
+        "Confirm the inverter PCB is powered (LED on the inverter PCB / DC bus voltage per manual)",
+        "After a PCB replacement, verify the part number and DIP/field settings match the model",
+        "Replace the inverter PCB, then the main PCB, per the service manual flow if the harness is good"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 pp.45-46 (LC-14-15-16 / LC-19-20-21 / LC-24-25-26 / LC-30-31-32 Transmission abnormality main PCB); Daikin SM-TS3 chart (LC Malfunction of transmission between control and inverter PCB; fix: defective connection between the inverter PCB and the control PCB)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P1",
+      "meaning": "Outdoor unit: Inverter over-ripple protection / open phase or unbalanced power supply (VRV IV+ sub-codes P1-01-02-03 Open phase or unbalanced power supply detection by inverter PCB A3P; P1-07-08-09 by inverter PCB A6P).",
+      "likelyCauses": [
+        "Open phase or phase voltage imbalance in the three-phase supply",
+        "Loose power terminal / breaker contact on one phase",
+        "Defective DC bus capacitor or inverter PCB (excessive DC ripple)"
+      ],
+      "checks": [
+        "Measure all three phase-to-phase voltages at the outdoor unit power terminals under load; imbalance or a dropped phase triggers the code",
+        "Check for loose lugs, corroded contacts, and the disconnect / breaker on each phase",
+        "If the supply is balanced, check the inverter PCB (capacitor / power module) per the service manual and replace if defective"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (P1-01-02-03 / P1-07-08-09 Open phase or unbalanced power supply detection by inverter PCB); Daikin SM-TS3 chart (P1 Inverter over ripple); coolautomation.com list (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "P4",
+      "meaning": "Outdoor unit: Malfunction of inverter radiating fin temperature thermistor (fin thermistor abnormality; some lists: power unit humidity sensor malfunction on older models).",
+      "likelyCauses": [
+        "Radiation fin thermistor open or shorted",
+        "Fin thermistor connector loose on the inverter PCB",
+        "Defective inverter PCB (the fin thermistor is often built into / soldered on the PCB)"
+      ],
+      "checks": [
+        "If the fin thermistor is a separate plug-in part, ohm it against the thermistor table and check the connector; otherwise replace the inverter PCB (manual remedy)",
+        "Confirm the code is not the humidity-sensor variant on older VRV II/III models with a power-unit humidity sensor before ordering parts (field practice)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (P4 Fin thermistor abnormality); Daikin VRV-WII SM p.218 'P4 Outside Unit: Malfunction of Inverter Radiating Fin Temperature Sensor'; SkyAir Malfunction-Code-Chart-001 (P4 Malfunction of radiator fin temperature thermistor); coolautomation.com list (P4 Power unit humidity sensor malfunction)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "PJ",
+      "meaning": "Outdoor unit: Failure of capacity set resistor / capacity setting mismatch for inverter PCB (VRV IV+ sub-codes PJ-04-05-06 and PJ-12-13-14 Capacity setting mismatch for inverter PCB).",
+      "likelyCauses": [
+        "Wrong replacement main PCB or inverter PCB fitted (capacity setting does not match the unit model)",
+        "Capacity setting adaptor / resistor missing or wrong after PCB replacement",
+        "Defective PCB"
+      ],
+      "checks": [
+        "After any outdoor PCB replacement, confirm the PCB part number and capacity setting (adaptor, DIP switches or field setting) match the outdoor unit model per the service manual",
+        "Fit the correct capacity setting adaptor / PCB; replace the PCB if the setting is correct and the code persists"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (PJ-04-05-06 / PJ-12-13-14 Capacity setting mismatch for inverter PCB); Daikin SM-TS3 chart (PJ Failure of capacity set resistor)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U0",
+      "meaning": "System: Shortage of refrigerant - low pressure drop due to refrigerant shortage or electronic expansion valve failure (abnormal suction pipe temperature).",
+      "likelyCauses": [
+        "Refrigerant leak / short charge (additional charge not added for pipe length)",
+        "Electronic expansion valve (indoor or outdoor) stuck / not opening",
+        "Closed stop valve or clogged piping / strainer",
+        "Suction thermistor or low pressure sensor fault causing false detection"
+      ],
+      "checks": [
+        "Check suction pressure and superheat; compare the low pressure sensor and suction thermistor readings with gauges / clamp-on temperatures",
+        "Leak-check the system (electronic detector, nitrogen pressure test); recalculate and weigh in the additional charge per the installation manual",
+        "Verify EEV coil resistance and initialization on the outdoor unit and the indoor units; confirm all stop valves open",
+        "U0 is often a warning that allows continued operation; correct the cause before it escalates to E4 (field practice)"
+      ],
+      "severity": "warning",
+      "source": "VRV IV-S RXTQ SM p.142 / VRV IV-S installer manual 'Error codes: overview' (U0 Low pressure drop due to refrigerant shortage or electronic expansion valve failure); Daikin VRV SM 'U0 Shortage of Refrigerant'; SM-TS3 chart; coolautomation.com list (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U1",
+      "meaning": "System: Reverse phase / negative phase, open phase - three-phase power supply phase sequence reversed or a phase missing (reverse phase detection).",
+      "likelyCauses": [
+        "Incoming power L1/L2/L3 connected in the wrong rotation",
+        "One phase missing (blown fuse, loose lug)",
+        "Defective main PCB phase detection circuit"
+      ],
+      "checks": [
+        "Check phase rotation at the outdoor unit power terminals with a phase-rotation meter; swap two of the incoming phases if reversed (per installation manual)",
+        "Verify all three phase voltages are present and balanced at the terminal block and the disconnect",
+        "If rotation and voltage are correct, replace the main PCB (manual remedy)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 / VRV IV installer reference (U1 reverse phase detection); SM-TS3 chart (U1 Negative phase, open phase); coolautomation.com / acerrorcode.com lists (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U2",
+      "meaning": "System: Power supply insufficient or instantaneous failure (open phase / voltage imbalance; DC voltage of the inverter main circuit abnormal). Detection method: checking the voltage of the main circuit capacitor built in the inverter and the power supply voltage.",
+      "likelyCauses": [
+        "Low line voltage, open phase or phase imbalance at the outdoor unit",
+        "Momentary power interruption / voltage sag (utility, generator transfer)",
+        "Loose power connections, undersized wiring or a failing contactor / breaker",
+        "Defective inverter PCB, DC bus capacitor, or DC fan motor power supply (some sub-codes)"
+      ],
+      "checks": [
+        "Measure all three phase-to-phase voltages under load and compare with the nameplate range (VRV IV 460 V units: 414-506 V; the VRV manual gives 380-415 V ±10 % for 50 Hz Y1 units) and check the imbalance",
+        "Check every power connection from the disconnect to the outdoor terminal block for looseness / heat discoloration",
+        "Read the inverter DC bus voltage in monitor mode / per the service manual; replace the inverter PCB if the DC voltage is abnormal with a good supply",
+        "Check the sub-code on the outdoor 7-segment display to separate a supply problem from a fan-motor DC supply fault (VRV IV)"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV-S RXTQ SM p.142 / VRV IV-S installer manual (U2 Power supply insufficient or instantaneous failure); Daikin VRV III-S SM (U2 detection method: main circuit capacitor and supply voltage, 380-415 V ±10 %); SM-TS3 chart; coolautomation.com list (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U4",
+      "meaning": "System: Malfunction of transmission between indoor units and outdoor units (indoor-outdoor / outdoor-BS unit transmission error). The microcomputer checks if transmission between indoor and outdoor units is normal.",
+      "likelyCauses": [
+        "Indoor-to-outdoor / outdoor-to-outdoor transmission wiring (F1, F2) disconnected, shorted, or wrong wiring (polarity, looped, wrong terminal block)",
+        "Outdoor unit or an indoor unit powered off (breaker off, blown fuse)",
+        "Indoor or outdoor PCB failure",
+        "Wiring / address auto-setting not re-run after wiring changes, or wrong master/slave setting on multi-outdoor systems"
+      ],
+      "checks": [
+        "Confirm every indoor unit and the outdoor unit(s) have power; check the indoor PCB fuse",
+        "Check F1/F2 transmission wiring: correct terminals (indoor-outdoor F1/F2 vs. outdoor-outdoor Q1/Q2 on VRV IV), no loops, no polarity swap, shielded cable grounded at one end, not run with power wiring",
+        "Measure DC voltage on F1-F2 at the outdoor unit (roughly 15-16 V DC on a healthy bus; a short to ground reads near 0 V) (field practice)",
+        "After any wiring repair, re-run the wiring/address auto-setting from the outdoor unit (VRV IV: BS button sequence per the installation manual) and cycle power; if only one indoor unit shows U4, suspect that unit's PCB"
+      ],
+      "severity": "shutdown",
+      "notes": "Most common Daikin VRV code in the field per multiple sources.",
+      "source": "Daikin VRV-WII SM p.226 / VRV III REYQ8PY1 SM p.322 / R-410A SM p.164 'U4 Malfunction of Transmission between Indoor Units and Outdoor Units'; VRV IV-S RXTQ SM p.208 'Transmission Error Between Indoor Units and Outdoor Units'; VRV IV+ SM ESIE18-14 (U4 detection); SM-TS3 chart; coolautomation.com / airnexus.io (corroboration)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U5",
+      "meaning": "System: Malfunction of transmission between remote controller and indoor unit.",
+      "likelyCauses": [
+        "Remote controller wiring (P1/P2) broken, shorted, wrong polarity, or too long / undersized",
+        "Two remote controllers both set as MAIN (main/sub setting not made)",
+        "Defective remote controller or indoor PCB",
+        "External noise on the P1/P2 cable (run with power wiring)"
+      ],
+      "checks": [
+        "Check P1/P2 wiring continuity and that it is not shorted; keep the run within the maximum length in the installation manual",
+        "If two controllers are fitted, set one to SUB (BRC1E: field setting / DIP switch per model)",
+        "Swap in a known-good remote controller; if U5 persists, replace the indoor PCB (manual flow)"
+      ],
+      "severity": "shutdown",
+      "source": "Daikin VRV service manual (Si30-408 family) 'U5 Malfunction of Transmission between Remote Controller and Indoor Unit'; VRV IV installer reference (U5 symptom); SM-TS3 chart (U5 Transmission to remote controller)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U7",
+      "meaning": "System: Transmission error across outdoor units (VRV IV+ sub-codes U7-03 Transmission abnormality between main outdoor unit and sub 1 outdoor unit; U7-04 between main and sub 2; U7-24 Duplication of address setting on multiple DTA104A61/62 external control adaptors).",
+      "likelyCauses": [
+        "Outdoor-to-outdoor transmission wiring (Q1/Q2 on VRV IV; F1/F2 on VRV III) disconnected, wrong, or wired to the wrong terminals",
+        "Master / sub outdoor unit setting not made or duplicated",
+        "One outdoor module powered off",
+        "Duplicate address on external control adaptors (DTA104A61/62)",
+        "Defective outdoor main PCB"
+      ],
+      "checks": [
+        "Check the outdoor-outdoor transmission wiring terminals and daisy-chain per the installation manual; confirm all modules are powered",
+        "Verify the master/sub setting on each outdoor module (VRV IV sets this automatically by wiring; VRV III via field setting) and re-run the auto-address setting",
+        "For U7-24, check the address setting of every DTA104A61/62 adaptor on the system",
+        "Replace the main PCB of the module that does not communicate if wiring and settings are correct"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 p.60 (U7-03 / U7-04 Transmission abnormality between main outdoor unit and sub outdoor unit; U7-24 duplication of DTA104A61/62 address); SM-TS3 chart (U7 Transmission between outdoor units)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U8",
+      "meaning": "System: Transmission error between main and sub remote controllers (master & slave R/C).",
+      "likelyCauses": [
+        "Both remote controllers set as MAIN, or the SUB controller setting lost",
+        "Wiring between the two controllers broken / shorted",
+        "Incompatible controller models paired as main/sub",
+        "Defective remote controller"
+      ],
+      "checks": [
+        "Set one controller to MAIN and the other to SUB per the controller installation manual, then cycle power",
+        "Check the P1/P2 wiring between the controllers and the indoor unit",
+        "Replace the sub controller if the setting and wiring are correct (manual flow)"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual index 'U8 Transmission Error between Main and Sub Remote Controllers' (ManualsLib); SM-TS3 chart (U8 Transmission between master & slave R/C)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "U9",
+      "meaning": "System: Transmission error between indoor and outdoor units in the same system - another indoor unit on the same refrigerant system has an error (VRV IV+ sub-code U9-01: Other indoor unit has error).",
+      "likelyCauses": [
+        "A different indoor unit on the same refrigerant circuit is faulted (its own code is displayed on that unit's controller)",
+        "Transmission wiring fault at another indoor unit on the same system"
+      ],
+      "checks": [
+        "U9 is displayed on the healthy units; find the indoor unit that shows a different code (or the outdoor unit error history) and troubleshoot that unit first",
+        "Check F1/F2 wiring and power at every indoor unit on the circuit; U9 clears when the faulted unit is repaired"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (U9-01 Other indoor unit has error); Daikin VRV service manual 'U9 Transmission Error between Indoor and Outdoor Units in the same System'; SM-TS3 chart",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UA",
+      "meaning": "System: Improper combination of indoor and outdoor units, indoor units and remote controller (excessive number of indoor units / connected capacity, or wrong refrigerant type / model combination).",
+      "likelyCauses": [
+        "Too many indoor units or connected capacity ratio outside the allowed range for the outdoor unit",
+        "Indoor unit model not compatible with the outdoor unit (wrong refrigerant / series, e.g. R-22 or R-407C indoor on an R-410A system)",
+        "Wrong outdoor PCB or capacity setting after a PCB replacement",
+        "Remote controller model not compatible with the indoor unit",
+        "Wiring / address auto-setting not re-run after adding or removing indoor units"
+      ],
+      "checks": [
+        "Count the indoor units and add up the connection ratio; compare with the outdoor unit limits in the engineering data",
+        "Check every indoor unit model number against the outdoor unit's compatibility list",
+        "Re-run the wiring/address auto-setting after any change in indoor unit count; check the sub-code on the outdoor 7-segment display for which combination is rejected (VRV IV)",
+        "After a PCB replacement, confirm the PCB part number and capacity setting"
+      ],
+      "severity": "shutdown",
+      "source": "Daikin VRV service manual 'UA Improper Combination of Indoor and Outdoor Units, Indoor Units and Remote Controller' (ManualsLib); VRV IV-S RXTQ SM p.142; SM-TS3 chart (UA Excessive number of fancoils)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UC",
+      "meaning": "System: Address duplication of centralized remote controller (two central controllers / adaptors set to the same address).",
+      "likelyCauses": [
+        "Two centralized controllers (or intelligent Touch Controller / interface adaptors) set to the same group / central address",
+        "Duplicated indoor unit group address in central control"
+      ],
+      "checks": [
+        "List every central controller and interface device on the DIII-NET; give each a unique address / master-slave setting per the controller installation manual",
+        "Check the group addresses set on the indoor units (via the remote controller field setting) for duplicates",
+        "Cycle power to the central controllers after correcting"
+      ],
+      "severity": "warning",
+      "source": "Daikin VRV service manual 'UC Address Duplication of Centralized Remote Controller' (ManualsLib); SM-TS3 chart (UC Address duplication of central controllers)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UE",
+      "meaning": "System: Malfunction of transmission between indoor unit and centralized remote controller (VRV IV+ sub-code UE-00: Communication error with central controller device).",
+      "likelyCauses": [
+        "DIII-NET (F1/F2) wiring between the indoor units and the central controller broken, shorted, or wrong",
+        "Central controller powered off or defective",
+        "Indoor unit group address not set / changed",
+        "Defective indoor PCB"
+      ],
+      "checks": [
+        "Check the central controller has power and its F1/F2 connection to the network; check the DIII-NET wiring and the terminator / master setting on the central controller",
+        "Verify the group address of the affected indoor unit(s) matches the central controller configuration",
+        "If only one indoor unit shows UE, check that unit's F1/F2 wiring and PCB"
+      ],
+      "severity": "warning",
+      "source": "VRV IV+ SM ESIE18-14 (UE-00 Communication error with central controller device); SM-TS3 chart (UE Transmission error between indoor & central)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UF",
+      "meaning": "System: Refrigerant system not set / wiring and piping mismatch (VRV IV+ sub-code UF-01: Wiring and piping mismatch - auto address inconsistency on F1-F2). The transmission wiring and the refrigerant piping do not correspond, or the wiring/piping check operation was not completed.",
+      "likelyCauses": [
+        "Indoor units' F1/F2 transmission wiring connected to a different outdoor unit than their refrigerant piping",
+        "Stop valves closed or indoor EEV not opening during the automatic wiring/piping check (unit cannot detect refrigerant flow)",
+        "Test operation / auto-address check not performed after installation",
+        "Indoor unit thermistor fault preventing detection"
+      ],
+      "checks": [
+        "Confirm all stop valves are open, then run the test operation / wiring-piping check from the outdoor unit (BS buttons per the installation manual) and let it complete",
+        "Trace the F1/F2 wiring of the affected indoor units and confirm it lands on the same outdoor unit their piping connects to",
+        "Check the indoor unit pipe thermistors (C4/C5) and EEV; a unit whose coil temperature does not change during the check is flagged as mismatched"
+      ],
+      "severity": "shutdown",
+      "source": "VRV IV+ SM ESIE18-14 (UF-01 Wiring and piping mismatch - auto address inconsistency on F1-F2); Daikin R-410A / FCQ service manuals 'Malfunction of Transmission between Indoor and Outdoor Unit (U4 or UF)'; SM-TS3 chart (UF Refrigeration system not set / wiring-piping)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "UH",
+      "meaning": "System: Malfunction of system, refrigerant system address undefined (system error - refrigerant system set-up not completed).",
+      "likelyCauses": [
+        "Automatic address setting (wiring/piping check) not completed after installation or after adding / relocating indoor units",
+        "Indoor unit power was off during the auto-address operation",
+        "Transmission wiring (F1/F2) problem preventing the indoor unit from receiving an address",
+        "Indoor or outdoor PCB replaced without re-running the auto-address setting"
+      ],
+      "checks": [
+        "Power all indoor units, then re-run the automatic address / wiring-piping setting from the outdoor unit (installation manual BS-button procedure) and wait for it to finish",
+        "Check the F1/F2 wiring to the affected indoor unit(s)",
+        "If UH persists on one unit after a successful auto-address run, replace that indoor unit's PCB (manual flow)"
+      ],
+      "severity": "shutdown",
+      "source": "Daikin VRV service manual 'UH Malfunction of System, Refrigerant System Address Undefined' (ManualsLib); VRV IV-S RXTQ SM p.142; SM-TS3 chart (UH System error, refrigeration system set up)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "Outdoor PCB H1P-H7P (VRV III / IV): H1P off, H2P off, H3P ON, H4P-H7P off (x x w x x x x)",
+      "meaning": "Normal system status / normal test operation - initialization complete, no malfunction.",
+      "checks": [
+        "This is the default (non-setting) display; H3P on solid = normal. Nothing to do."
+      ]
+    },
+    {
+      "pattern": "Outdoor PCB H2P ON solid (x w x x x x x)",
+      "meaning": "Malfunction detected (abnormal end of test operation / error). During power-up initialization H2P is on; if H2P remains on solid after about 25 minutes, there is an error in the system.",
+      "checks": [
+        "Read the malfunction code on any wired remote controller (or the outdoor 7-segment display on VRV IV) and troubleshoot that code",
+        "To restart the initialization, recycle power to the master outdoor unit or press and hold the RESET button on the outdoor PCB for 5 seconds (VRV commissioning guide)"
+      ]
+    },
+    {
+      "pattern": "Outdoor PCB H2P flashing / flickering",
+      "meaning": "Preparation or test operation in progress ('Prepare, test: flickering'). On VRV IV-S RXYSQ10/12 the 7-segment display shows '201' during test operation.",
+      "checks": [
+        "Wait for the test operation to finish (up to ~30 min); confirm the result on the remote controller"
+      ]
+    },
+    {
+      "pattern": "Outdoor PCB H1P: OFF = default situation, FLASHING = Mode 1 (monitor mode), ON = Mode 2 (setting mode)",
+      "meaning": "Indicates which field-setting mode the outdoor PCB is in. BS1 (MODE) changes the mode; BS2 (SET) selects the item; BS3 (RETURN) confirms / reads the value.",
+      "checks": [
+        "Mode 1 (H1P blinking) is read-only monitoring: current error / error history, sensor values; Mode 2 (H1P on) changes settings (low noise, demand, test operation, refrigerant recovery, etc.)",
+        "Press BS1 repeatedly to return to the default situation (H1P off) when done"
+      ]
+    },
+    {
+      "pattern": "Outdoor PCB H8P ON during initialization",
+      "meaning": "Initialization indication: the outdoor unit is initializing (checking wiring/piping and addressing indoor units) after power-up.",
+      "checks": [
+        "Wait until H8P/H2P go out and H3P is on solid before starting a test operation; do not operate the remote controllers until initialization completes"
+      ]
+    },
+    {
+      "pattern": "Outdoor unit 7-segment display (VRV IV RXYQ-T/TA, IV+, VRV X) shows a two-character code (e.g. 'E3', 'U4') with a two-digit sub-code",
+      "meaning": "Error code and sub-code of the outdoor unit (or of the indoor unit that faulted). The sub-code identifies the compressor / PCB / valve concerned (e.g. E7-01 = fan M1F, E7-02 = fan M2F; L5-03 = inverter A3P; L5-14 = inverter A6P).",
+      "checks": [
+        "Note both the main code and the sub-code before power-cycling; the sub-code selects the exact troubleshooting page in the service manual",
+        "Use Mode 1 (monitor) to display the last error codes stored in the outdoor unit"
+      ]
+    }
+  ],
+  "diagnosticTips": [
+    "Reading codes on a BRC1C-type (button) wired controller: when the unit stops on a fault the operation LED blinks and the code shows on the display. Press the Inspection/Test button once to enter inspection mode - the 'Unit' indication lights and the Unit No. display shows which indoor unit faulted; press Menu/Enter (or the temperature buttons on older models) to step through codes. Press Inspection/Test again to exit (SM-TS3 pp.7-8 'Self-Diagnosis by Remote Controller').",
+    "Reading codes on a BRC1E navigation controller: the operation indicator blinks and the code flashes on screen; press Menu/Enter to show the malfunction code (and model name / service contact if set). Error history: from the basic screen hold the Cancel button for 4 seconds or longer to open the Service Settings menu, select 'Error History' (the 10 most recent codes with unit numbers) (BRC1E73 installation manual 'Procedure for checking error history').",
+    "Clearing codes / history: correct the cause first. On BRC1C-type controllers, while in check (inspection) mode hold the ON/OFF button for 4 seconds or more and the malfunction history is cleared; on BRC1E the error display goes out when ON/OFF is held 4 s. Most codes reset when the unit is restarted from the controller; inverter / compressor codes (E5, E6, L5, L8, L9) and transmission codes (U4, UA, UF, UH) usually need power cycled at the outdoor unit and, after wiring changes, the wiring/address auto-setting re-run.",
+    "Wireless controller (SkyAir / residential): hold the Timer Cancel (or INSPECTION/TEST) button ~5 seconds to enter diagnosis mode; step the code with the UP/DOWN buttons and point at the unit - a long continuous beep confirms the code that matches, two short beeps = partial match, one short beep = no match.",
+    "Outdoor unit: the VRV IV (RXYQ-T/TA, IV+, VRV X, IV-S 10/12 HP) main PCB has a 7-segment display that shows the error code and sub-code; VRV III and VRV IV-S 8 HP use the H1P-H7P LEDs (see LED patterns). Use BS1 (MODE) to enter Mode 1 (H1P blinking = monitor mode) and BS2/BS3 to read the current error and error history and live sensor values; Mode 2 (H1P on) holds field settings including test operation, refrigerant recovery / vacuum mode and low-noise / demand settings. Daikin Service Checker (D-Checker / VRV Checker) connected to the outdoor PCB gives full live data.",
+    "Code prefix tells you where to look: A/C = indoor unit; E/F/H/J/L/P = outdoor unit (E = protection devices/actuators, F = refrigerant abnormal temps, H = outdoor sensors/fan signal, J = outdoor thermistors and sensors, L = inverter, P = inverter sensors/capacity); U = system (power supply, transmission, combination). On VRV IV the sub-code (e.g. E7-02) identifies which compressor, inverter PCB, fan or valve.",
+    "Commissioning: after power-up let the outdoor unit finish initialization (H8P/H2P out, H3P on, or 7-segment display clear) before running the test operation; a test operation that ends abnormally shows H2P on and the code on the remote controller. Always check the stop valves are fully open first - closed stop valves produce E3-18, E4, L9, U0 and UF during test run.",
+    "Marked VRV / SkyAir: these codes apply to Daikin Industries VRV, SkyAir and ductless products, not to Goodman-built Daikin-branded unitary equipment (those use the DS/DZ/DM board LED codes and Daikin One thermostat codes)."
+  ],
+  "notes": [
+    "Coverage is 'partial': the 52 codes here are the commonly encountered main codes seen in the Daikin VRV IV+ / VRV IV-S / RXYQ-TA / VRV III service manuals and the SM-TS3 chart. The full VRV IV+ table also includes E2, E8, EA, F4, H1, H3, H4, H5, H6, H8, HC, HF, HJ, J1, J4, J8, JA, JC, L0, L3, L6, L7, LA, LE, P0, P2, P3, P5, P6, P7, P8, P9, PA, PC, PE, PH, U3, U6, UJ, M-codes (central controllers) and the numerous two-digit sub-codes, which were not transcribed in this session.",
+    "Meanings are transcribed from Daikin service manual wording as reproduced on ManualsLib and daikin.com (SM-TS3); where the manual pages were only visible as page titles / index entries, the wording is the manual's title for that code. Likely causes and checks combine the manual's 'supposed causes' where seen with standard field practice (labelled).",
+    "Thermistor curves: Daikin indoor/outdoor pipe and air thermistors are 20 kΩ-type at 25 °C (77 °F); discharge pipe thermistors use a different (higher-resistance) curve. Always use the table for the specific thermistor in the service manual.",
+    "VRV IV and later display sub-codes (E3-18, L5-03 etc.) on the outdoor 7-segment display; VRV III and earlier show only the two-character main code on the remote controller and via LED blink codes on the outdoor PCB.",
+    "The existing 9 codes in the pack (E3, E4, E5, U0, U1, U2, U4, L5, J6) are retained with manufacturer wording added and evidence upgraded to manufacturer_doc; meanings are consistent with the earlier entries."
+  ]
+}
