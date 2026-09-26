@@ -1,0 +1,824 @@
+{
+  "pack": "trane",
+  "platformId": "symbio_700",
+  "name": "Trane Symbio 700 unit controller (Precedent 3-25 t, Voyager 3 / Voyager Commercial 27.5-50 t, Odyssey split, Foundation) with Symbio 800 (IntelliPak 1/3, RAUK) diagnostics folded in",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Trane Symbio 700 Application Manual (Precedent) — Troubleshooting: Diagnostics, Unit Communication Fault, Sensor Fault (ManualsLib 2171320 pp.32-34)",
+      "docId": "ManualsLib 2171320",
+      "url": "https://www.manualslib.com/manual/2171320/Trane-Symbio-700.html?page=32"
+    },
+    {
+      "title": "Trane SYMBIO 700 Information & Troubleshooting Manual (ManualsLib 3014960; also star-supply.com TS_SYMBIO 700 Information & Troubleshooting Manual 02_22_22)",
+      "docId": "ManualsLib 3014960",
+      "url": "https://www.manualslib.com/manual/3014960/Trane-Symbio-700.html"
+    },
+    {
+      "title": "Trane Commercial Help Center — Cooling Troubleshooting for Precedent, Odyssey, Foundation Units with Symbio 700 Controls",
+      "docId": "support.trane.com article 40694224718733",
+      "url": "https://support.trane.com/hc/en-us/articles/40694224718733-Cooling-Troubleshooting-for-Precedent-Odyssey-Foundation-Units-with-Symbio-700-Controls"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Compressor Proving Circuit(s) Troubleshooting for Precedent and Odyssey",
+      "docId": "article 360055248371",
+      "url": "https://support.trane.com/hc/en-us/articles/360055248371-Symbio-700-Compressor-Circuit-s-Troubleshooting"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 VFD Related Faults Requiring a Manual Reset",
+      "docId": "article 360060773152",
+      "url": "https://support.trane.com/hc/en-us/articles/360060773152-Symbio-700-VFD-Related-Faults-Requiring-a-Manual-Reset"
+    },
+    {
+      "title": "Trane Commercial Help Center — Supply Fan: Precedent w/ Symbio700 Supply Fan Failure & Diagnostics",
+      "docId": "article 12188151942029",
+      "url": "https://support.trane.com/hc/en-us/articles/12188151942029-Supply-Fan-Precedent-w-Symbio700-Supply-Fan-Failure-Diagnostics"
+    },
+    {
+      "title": "Trane Commercial Help Center — Precedent Symbio Supply Fan ERM fault",
+      "docId": "article 35264421572493",
+      "url": "https://support.trane.com/hc/en-us/articles/35264421572493-Precedent-Symbio-Supply-Fan-ERM-fault"
+    },
+    {
+      "title": "Trane Commercial Help Center — Staged Gas Heat Troubleshooting for Precedent & Large Foundation Units with Symbio 700 Controls",
+      "docId": "article 40080574995981",
+      "url": "https://support.trane.com/hc/en-us/articles/40080574995981-Staged-Gas-Heat-Troubleshooting-for-Precedent-Large-Foundation-Units-with-Symbio-700-Controls"
+    },
+    {
+      "title": "Trane Commercial Help Center — Precedent with Symbio 700 - Ignition Controller Board Module Diagnostics",
+      "docId": "article 12588925977101",
+      "url": "https://support.trane.com/hc/en-us/articles/12588925977101-Precedent-with-Symbio-700-Ignition-Controller-Board-Module-Diagnostics"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Unit Controller LED Description",
+      "docId": "article 9143158447373",
+      "url": "https://support.trane.com/hc/en-us/articles/9143158447373-Symbio-700-Unit-Controller-LEDS"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Service Test Mode",
+      "docId": "article 12622113194637",
+      "url": "https://support.trane.com/hc/en-us/articles/12622113194637-Symbio-700-Service-Test-Mode"
+    },
+    {
+      "title": "Trane Commercial Help Center — Condensate Drain Pan Overflow Switch",
+      "docId": "article 12187921759501",
+      "url": "https://support.trane.com/hc/en-us/articles/12187921759501-Condensate-Drain-Pan-Overflow-Switch"
+    },
+    {
+      "title": "Trane Commercial Help Center — Clogged Filter Switch Precedent Packaged Rooftop Units 3 to 25 Tons",
+      "docId": "article 12382126289421",
+      "url": "https://support.trane.com/hc/en-us/articles/12382126289421-Clogged-Filter-Switch-Precedent-Packaged-Rooftop-Units-3-to-25-Tons"
+    },
+    {
+      "title": "Trane Commercial Help Center — Maintenance Required Diagnostic",
+      "docId": "article 360061130932",
+      "url": "https://support.trane.com/hc/en-us/articles/360061130932-Maintenance-Required-Diagnostic"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Space Static Pressure Input Trip & Space Pressure Calibration Limit Diagnostics",
+      "docId": "article 36793589773325",
+      "url": "https://support.trane.com/hc/en-us/articles/36793589773325-Symbio-700-Space-Static-Pressure-Input-Trip-Space-Pressure-Calibration-Limit-Diagnostics"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Options Module Communication Errors in Tracer TU",
+      "docId": "article 34094366681101",
+      "url": "https://support.trane.com/hc/en-us/articles/34094366681101-Symbio-700-Options-Module-Communication-Errors-in-Tracer-TU"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 700 Fresh Air Options Module Configuration and Installation Guide",
+      "docId": "article 26680155964429",
+      "url": "https://support.trane.com/hc/en-us/articles/26680155964429-Symbio-700-Fresh-Air-Options-Module-Configuration-and-Installation-Guide"
+    },
+    {
+      "title": "Trane Commercial Help Center — Resolved Service Alert: Voyager 3 & Precedent (Symbio 700) Nuisance Alarming for 'Invalid ID' or 'Config Invalid' Diagnostics on Modulating Gas Heat Units",
+      "docId": "article 41559758408333",
+      "url": "https://support.trane.com/hc/en-us/articles/41559758408333-Resolved-Service-Alert-Voyager-3-Precedent-Symbio-700-Nuisance-Alarming-for-Invalid-ID-or-Config-Invalid-Diagnostics-on-Modulating-Gas-Heat-Units"
+    },
+    {
+      "title": "Trane Commercial Help Center — Service Alert: Symbio 700 Board Failures (No Fault Found) - Troubleshoot before considering return",
+      "docId": "article 36458690055821",
+      "url": "https://support.trane.com/hc/en-us/articles/36458690055821-Service-Alert-Symbio-700-Board-Failures-No-Fault-Found-Troubleshoot-before-considering-return"
+    },
+    {
+      "title": "Trane Commercial Help Center — Odyssey Symbio 700 Demand Defrost",
+      "docId": "article 360055393311",
+      "url": "https://support.trane.com/hc/en-us/articles/360055393311-Odyssey-Symbio-700-Demand-Defrost"
+    },
+    {
+      "title": "Trane Commercial Help Center — Danfoss TR150 VFD Broken Belt Detection - Symbio 700 and 800",
+      "docId": "article 25355866911757",
+      "url": "https://support.trane.com/hc/en-us/articles/25355866911757-Danfoss-TR150-VFD-Broken-Belt-Detection-Symbio-700-and-800"
+    },
+    {
+      "title": "Trane Symbio 700 Controller Application Manual (ManualsLib 3011763) — Sensor Fault; Compressor Fault (p.46); Gas Heat Diagnostics and Alarm Indicator Status (p.54)",
+      "docId": "ManualsLib 3011763",
+      "url": "https://www.manualslib.com/manual/3011763/Trane-Symbio-700-Controller.html?page=46"
+    },
+    {
+      "title": "Symbio 700 Controller Application Guide — Precedent (BAS-SVP062C-EN) / Voyager Commercial 27.5-50 t (BAS-APG048C-EN) / Odyssey (ACC-APG001A-EN)",
+      "docId": "BAS-SVP062C-EN; BAS-APG048C-EN; ACC-APG001A-EN",
+      "url": "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/voyager-commercial-27-1-2-to-50-tons/BAS-APG048C-EN_04132024.pdf"
+    },
+    {
+      "title": "IntelliPak with Symbio 800 Programming Guide (RT-SVP011G-EN) — Troubleshooting diagnostics table (ManualsLib 2901605 p.86)",
+      "docId": "RT-SVP011G-EN / ManualsLib 2901605",
+      "url": "https://www.trane.com/content/dam/Trane/Commercial/global/products-systems/equipment/unitary/rooftop-systems/intellipak-i-20-to-130-tons/RT-SVP011G-EN_02112023.pdf"
+    },
+    {
+      "title": "Trane Commercial Help Center — Intellipak with Symbio 800 controls Supply and Relief Fan Proving Failure",
+      "docId": "article 16077871063053",
+      "url": "https://support.trane.com/hc/en-us/articles/16077871063053-Intellipak-with-Symbio-800-controls-Supply-and-Relief-Fan-Proving-Failure"
+    },
+    {
+      "title": "Trane Commercial Help Center — IntelliPak and RAUK with Symbio 800 – Loss of Charge Diagnostics and Other Refrigeration issues",
+      "docId": "article 31263569395981",
+      "url": "https://support.trane.com/hc/en-us/articles/31263569395981-IntelliPak-and-RAUK-with-Symbio-800-Loss-of-Charge-Diagnostics-and-Other-Refrigeration-issues"
+    },
+    {
+      "title": "Trane Commercial Help Center — IntelliPak (Symbio 800) - How to troubleshoot a Traq Flow Sensor Failures",
+      "docId": "article 25825742264461",
+      "url": "https://support.trane.com/hc/en-us/articles/25825742264461-IntelliPak-Symbio-800-How-to-troubleshoot-a-Traq-Flow-Sensor-Failures"
+    },
+    {
+      "title": "Trane Commercial Help Center — IntelliPak Symbio 800 - E09 or '53' Alarm on Gas Heat Controller",
+      "docId": "article 16077821301133",
+      "url": "https://support.trane.com/hc/en-us/articles/16077821301133-IntelliPak-Symbio-800-E09-or-53-Alarm-on-Gas-Heat-Controller"
+    },
+    {
+      "title": "Trane Commercial Help Center — Symbio 800 - Outdoor Air Flow and Duct Static Pressure Alarms in Event Log",
+      "docId": "article 34375539024781",
+      "url": "https://support.trane.com/hc/en-us/articles/34375539024781-Symbio-800-Outdoor-Air-Flow-and-Duct-Static-Pressure-Alarms-in-Event-Log"
+    },
+    {
+      "title": "Industrial Monitor Direct — Trane Symbio 700 Supply Fan Failure: ERM Diagnostics & Fix (secondary)",
+      "url": "https://industrialmonitordirect.com/blogs/knowledgebase/trane-symbio-700-erm-supply-fan-1-failure-troubleshooting"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "Compressor X Proving Trip",
+      "meaning": "Occurs when a compressor output is commanded ON, running for more than 5 seconds, and its proving input opens; the circuit is disabled for 15 minutes. Trane help center: a HPC or DTL trip removes the voltage from the compressor contactor; if the HPC or DTL trip while the compressor is running, both compressors shut down for 15 minutes, then auto reset and begin staging as necessary. This can happen up to 3 times in a row.",
+      "likelyCauses": [
+        "High Pressure Cutout (HPC) opened — R-410A HPC opens at 650 psig, closes at 550 psig (dirty/blocked condenser coil, condenser fan not running, overcharge, non-condensables)",
+        "Discharge Temperature Limit (DTL) switch on the discharge line opened (low charge, high superheat, restriction)",
+        "Contactor auxiliary (proving) switch loose, misadjusted or failed; loose 24 V wiring in the HPC/DTL/contactor coil series circuit",
+        "Loss of 24 VAC to the contactor coil (transformer, fuse, wiring)"
+      ],
+      "checks": [
+        "Read the trip count and time stamps under Alarms; note whether the trip coincides with high ambient/heat-of-day (HPC) or long run (DTL)",
+        "With the compressor running, verify 24 VAC through HPC and DTL (wired in series with the compressor contactor coil) and that the contactor aux contact closes when the coil is energized",
+        "Check head pressure, condenser coil cleanliness and condenser fan operation; check discharge line temperature and superheat for DTL trips",
+        "Use Service Test Mode to stage the compressor and watch the proving input state on the display/app (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.32 'Diagnostic: Compressor X Proving Trip'); Trane help center 'Cooling Troubleshooting for Precedent, Odyssey, Foundation Units with Symbio 700 Controls' (article 40694224718733)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Circuit X Proving Lockout",
+      "meaning": "Set if a circuit accumulates 4 'Compressor X Proving Trips' during the same operating sequence, or if its proving input does not close within 5 seconds at startup; this locks out the circuit until a Diagnostic Reset is initiated. Trane help center: the Compressor Proving Lockout diagnostic occurs when the Symbio board calls for the compressor contactor and the contactor doesn't pull in within 7 seconds, or a safety (HPC or DTL) opened while the compressor was running after the circuit had proved.",
+      "likelyCauses": [
+        "Four consecutive proving trips (HPC/DTL opening repeatedly) in one operating sequence",
+        "Contactor does not pull in: open HPC/DTL at start, failed contactor coil, missing 24 VAC, open wiring",
+        "Bad or dislodged contactor auxiliary switch — Trane bench note: the contactor pulls in for about 7 seconds and drops back out, producing a Compressor Proving Lockout",
+        "Symbio 700 compressor relay output contact resistance too high (board fault)"
+      ],
+      "checks": [
+        "Clear with Service > Diagnostics > Reset Diagnostics (display) or Alarms > Reset Diagnostics (app) only after finding the cause; it will re-lock on the next 4 trips",
+        "In Service Test Mode command the compressor; confirm 24 VAC at the contactor coil and that the aux switch closes within 5 seconds",
+        "Trane service alert board test: energize Cool 2 in test mode (LED 5 on the Symbio 700 board should be ON) and measure the relay contact resistance across the orange/yellow wire pins within ~5 s — replace the board if above 10 ohms",
+        "Check HPC/DTL continuity cold (both normally closed) and the refrigerant-side causes listed under Compressor X Proving Trip"
+      ],
+      "severity": "lockout",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.32); Trane help center 'Symbio 700 Compressor Proving Circuit(s) Troubleshooting' (article 360055248371) and 'Service Alert: Symbio 700 Board Failures (No Fault Found)' (article 36458690055821)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor X Contactor Failure",
+      "meaning": "Generated if a compressor proving input is active for 5 continuous seconds when the associated compressor command output is inactive.",
+      "likelyCauses": [
+        "Welded/stuck compressor contactor (compressor running with no call)",
+        "Auxiliary proving switch stuck closed or miswired to 24 V",
+        "Symbio 700 compressor relay output contact welded"
+      ],
+      "checks": [
+        "With no cooling call, check whether the compressor contactor is pulled in and whether the compressor is running; measure voltage at the contactor coil",
+        "Verify the aux switch state matches the contactor state; check for a shorted proving input wire",
+        "If the coil has no voltage but the contactor is closed, replace the contactor; if the Symbio relay output is energized with no command, replace the board (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.32 'Diagnostic: Compressor X Contactor Failure')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Circuit X LPC Trip",
+      "meaning": "Occurs if a compressor low pressure cutout input opens; this disables the circuit for 3 minutes and increments the LPC trip count. If the circuit then runs for 3 minutes its LPC Trip Count is reset to 0. Trane help center: if the LPC trips while the compressor is running, both compressors shut down for 3 minutes, then auto reset and begin staging; this can happen up to 3 times in a row.",
+      "likelyCauses": [
+        "Low refrigerant charge / leak",
+        "Low airflow across the evaporator (dirty filters, dirty coil, fan problem, frost) or low load",
+        "Restricted metering device, liquid line drier or solenoid",
+        "Low ambient cooling without low-ambient control; LPC wiring or switch fault (Precedent/Large Foundation: single LPC on the suction manifold before the tee; Odyssey dual-circuit: one LPC per suction line)"
+      ],
+      "checks": [
+        "Read suction pressure and superheat while the circuit runs; compare to the LPC open/close points for the unit",
+        "Check airflow: filters, evaporator coil, supply fan speed/rotation, dampers",
+        "Inspect for frost; verify the FroStat and evaporator defrost settings",
+        "Check LPC continuity and the LPC input wiring at the Symbio 700 (P19-1 / P20-1 per the wiring legend)"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.32 'Diagnostics - Low Pressure Cutout; Diagnostic: Circuit X LPC Trip'); Trane help center article 40694224718733",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Circuit X LPC Lockout",
+      "meaning": "Circuit X LPC Trip can happen up to 3 times in a row; if it happens a 4th time the unit locks out compressor operation and sets a Circuit X LPC Lockout requiring a manual reset (Diagnostic Reset).",
+      "likelyCauses": [
+        "Same root causes as Circuit X LPC Trip persisting across four consecutive starts: low charge, low airflow, restriction, failed LPC switch"
+      ],
+      "checks": [
+        "Do not simply reset; find the low-pressure cause first (charge, airflow, restriction) — see Circuit X LPC Trip checks",
+        "After repair, reset via Service > Diagnostics > Reset Diagnostics (display) or the Symbio app Alarms > Reset Diagnostics, then run the circuit in Service Test Mode and watch suction pressure"
+      ],
+      "severity": "lockout",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.32 'Diagnostic: Circuit X LPC Lockout'); Trane help center article 40694224718733",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "FroStat Trip",
+      "meaning": "Occurs when the compressor circuit is operating in cooling mode and shuts down when the FroStat input becomes active (closed); the supply fan continues to operate until the FroStat input is inactive (open). Trane help center (Precedent): when the FOS trips all compressor operation stops and the indoor fan stays on at low speed to thaw the coil; this is an auto-reset alarm and once the FOS resets the compressors begin staging as necessary.",
+      "likelyCauses": [
+        "Evaporator coil freezing: low airflow (dirty filters/coil, low fan speed, closed dampers), low charge, or low-load/low-ambient operation",
+        "FroStat (FOS) sensor mis-located, shorted, or its input configured 'FroStat Installed' with no device"
+      ],
+      "checks": [
+        "Inspect the evaporator for ice; check filters, coil, supply fan speed and duct static",
+        "Check charge/superheat and suction pressure once thawed",
+        "Verify the FroStat setting in configuration (FroStat Installed is the default) and the switch wiring/state under Status > Inputs"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 4183382 / 2171320 'FroStat Trip', Evaporator Defrost Control); Trane help center article 40694224718733",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Supply Fan Failure",
+      "meaning": "VFD units: if the Symbio 700 requests the Supply Fan VFD to run and the VFD fails to run for 40 continuous seconds, this failure is detected; all unit functions are shut down immediately and it requires a manual reset or power cycle. ECM (EBM-Papst) units: the supply fan speed must be greater than 30 rpm for 40 continuous seconds; if the speed falls below 30 rpm a supply fan failure diagnostic is generated and operation is stopped.",
+      "likelyCauses": [
+        "VFD not running: VFD fault/trip, VFD parameter 8-01 set to 'Digital only' (should be 'Controlword only' with a Symbio controller), Modbus harness problem",
+        "ECM motor: loss of high voltage to the motor, tach/Modbus feedback loss, broken belt, seized bearing",
+        "Motor overload, blown fuses, contactor/bypass contactor failure"
+      ],
+      "checks": [
+        "Check the VFD display for its own fault (and the VFD fault log) before resetting the Symbio; verify parameter 8-01 = Controlword",
+        "Verify line voltage and motor voltage at the fan motor; confirm the belt and blower turn freely",
+        "Command the fan in Service Test Mode and watch the fan speed/status point on the display/app; confirm Modbus TX/RX LEDs (LED 11/12) blink to the VFD",
+        "Reset via Service > Diagnostics > Reset Diagnostics or power cycle after the cause is corrected"
+      ],
+      "severity": "shutdown",
+      "source": "Trane help center 'Symbio 700 VFD Related Faults Requiring a Manual Reset' (article 360060773152) and 'Supply Fan: Precedent w/ Symbio700 Supply Fan Failure & Diagnostics' (article 12188151942029); Symbio 700 Troubleshooting Manual (ManualsLib 3014960 p.77 'Diagnostic: Supply Fan Failure')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Supply Fan VFD Communication Failure (VFD comm loss)",
+      "meaning": "If continual loss of communication between the controller and the VFD has occurred for a 30 second period, this failure is detected; all unit functions are shut down immediately and it requires a manual reset or power cycle.",
+      "likelyCauses": [
+        "Modbus RTU harness between Symbio 700 and the VFD open/loose or damaged",
+        "VFD powered down or its Modbus address/baud parameters changed",
+        "VFD control card failure"
+      ],
+      "checks": [
+        "Watch LED 11 (TX green) / LED 12 (RX yellow) 'Modbus RTU Link VFD' on the Symbio 700 — both should blink; TX only means the VFD is not answering",
+        "Check the VFD harness connectors and shield; verify the VFD is powered and its communication parameters match Trane's factory values (VFD harness part numbers in the troubleshooting manual)",
+        "Reset with Reset Diagnostics or a power cycle after repair"
+      ],
+      "severity": "shutdown",
+      "notes": "Exact on-screen alarm text not confirmed from a source; the article describes the condition and response.",
+      "source": "Trane help center 'Symbio 700 VFD Related Faults Requiring a Manual Reset' (article 360060773152); Symbio 700 Troubleshooting Manual (ManualsLib 3014960 p.77 'VFD Faults Requiring Manual Reset')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Supply Fan ERM Fault (Supply Fan 1 / Supply Fan 2 ERM fault)",
+      "meaning": "Trane help center: Precedent Symbio units use EBM-Papst supply fan motors with onboard electronics that communicate to the Symbio unit controller via Modbus (some units use a Mitsubishi VFD); any time a supply fan ERM fault is reported, that fault is being communicated by the motor or the Mitsubishi VFD back to the Symbio controller. A significant number of supply fan ERM faults stem from motor high-voltage loss, often linked to connection issues; a voltage imbalance greater than 2% phase-to-phase can also cause it.",
+      "likelyCauses": [
+        "Loss or dropout of high voltage to the ECM motor — loose/burned connections at the motor plug, contactor or terminal block",
+        "Phase-to-phase voltage imbalance greater than 2 %",
+        "Motor electronics fault, tach/feedback loss, low fan speed (secondary source: fan below 30 rpm threshold, cold-weather load, bypass contactor contact degradation, harness issues at the motor junction)"
+      ],
+      "checks": [
+        "Focus on the high-voltage connections first: inspect and tighten the motor power plug, contactor lugs and disconnect; look for heat discoloration",
+        "Measure phase-to-phase voltage at the unit and at the motor under load; compute imbalance (>2 % is a cause)",
+        "Check the motor Modbus/COMM connection and address (see Trane 'How to address EBM Papst indoor blower motors' articles); run the fan in Service Test Mode and watch the reported speed",
+        "Supply Fan 1 vs 2 location is documented in Trane article 23910785556621"
+      ],
+      "severity": "shutdown",
+      "notes": "The alarm blocks the supply fan (and therefore gas heat ignition, which needs fan proving). Exact display string varies by firmware ('Supply Fan 1 ERM Fault' per secondary source).",
+      "source": "Trane help center 'Precedent Symbio Supply Fan ERM fault' (article 35264421572493); secondary: Industrial Monitor Direct 'Trane Symbio 700 Supply Fan Failure: ERM Diagnostics & Fix'",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Unit Communications Failure (On-Board I/O)",
+      "meaning": "If the Symbio 700 controller fails to connect to its onboard I/O, the controller sets a diagnostic for Unit Communications Failure, the On-Board I/O Communication Status becomes 'Not Communicating', and all unit functions are shut down. With a Symbio 700 Onboard I/O failure all Symbio 700 controller inputs and outputs are disabled.",
+      "likelyCauses": [
+        "Internal controller fault or corrupted/incomplete firmware update",
+        "Low or unstable 24 VAC supply to the board during boot",
+        "Board damage (moisture, surge)"
+      ],
+      "checks": [
+        "Check LED 9 (System) is solid after boot and LED 10 (Alarm) state; measure 24 VAC at the board power terminals",
+        "Power cycle the controller; if it persists, update to the latest firmware per Trane 'Guidelines and Best Practices for Updating Firmware' before condemning the board",
+        "Follow the Trane 'Board Failures (No Fault Found)' service alert steps before replacing the unit controller"
+      ],
+      "severity": "shutdown",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Troubleshooting; Unit Communication Fault')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Unit Communications Failure (Options Module: Customer Connection / Fresh Air Options / Indoor Options Module)",
+      "meaning": "For a Customer Options Module (and likewise the Fresh Air Options Module and Indoor Options Module) a diagnostic for Unit Communications Failure is set, the module's Communication Status becomes 'Not Communicating', and all unit functions dependent on data from that module are discontinued (e.g. economizer outdoor-air damper and power exhaust operation with the Fresh Air Options Module; electric heat that is discharge-air-temperature dependent with the Indoor Options Module).",
+      "likelyCauses": [
+        "Module rotary address switches set wrong (field-installed Fresh Air Options Module must be address 76); an improperly addressed module creates a communication diagnostic",
+        "Older version-1 Symbio firmware does not recognize newer Renesas option modules (expects a different hardware part number for that address) — upgrade firmware",
+        "Some Renesas boards shipped without the hardware part number flashed (shows as incomplete '40031' in Tracer TU) and will not communicate at all — replace the board",
+        "IMC bus wiring/power to the module loose or open"
+      ],
+      "checks": [
+        "Check the module address switches against Trane article 17958128698637 (which module/address for which options); FOM = 76",
+        "Watch the IMC TX/RX LEDs on the Symbio 700 (normally very fast pulsing, look dim) and the module's own status LED",
+        "Update the Symbio 700 firmware to the latest version, then re-discover the modules",
+        "Verify module 24 VAC power and IMC cable connectors at both ends"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34); Trane help center 'Symbio 700 - Options Module Communication Errors in Tracer TU' (article 34094366681101) and 'Fresh Air Options Module Configuration and Installation Guide' (article 26680155964429)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Space Temperature Sensor Failure",
+      "meaning": "If a sensor value goes outside of its minimum or maximum range the point goes into an Alarm State and the sensor is considered failed; the fault is annunciated in the Active Alarm list. Loss of Space Temperature Active does not shut down unit operation; rather it disables specific operating modes that require valid space temperature. A unit configured for a zone sensor with no zone sensor connected shows Space Temperature Active of 1,000,001 F.",
+      "likelyCauses": [
+        "Zone sensor not connected, open/shorted sensor wiring, wrong sensor type (10 kOhm thermistor expected)",
+        "Unit configured for Zone Sensor control while a conventional thermostat is wired (see Trane 'How to Change from a Zone Sensor to a Thermostat Control')",
+        "BAS-supplied space temperature value stale or out of range"
+      ],
+      "checks": [
+        "Read Space Temperature Active under Status; 1,000,001 F means no valid input",
+        "Ohm the zone sensor at the unit terminals and compare to the thermistor chart; check for opens/shorts in the field wiring",
+        "Confirm Space Controller configuration (zone sensor vs thermostat) matches what is installed"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Sensor Fault'); Symbio 700 Controller Application Manual (ManualsLib 3011763 p.46 'Sensor Fault'); Trane help center article 31507520595597",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Outdoor Air Temperature Sensor Failure",
+      "meaning": "Outdoor Air Temperature Active out of its minimum/maximum range is treated as a failed sensor and annunciated in the Active Alarm list; if the outdoor air temperature sensor fails, economizer cooling is disabled.",
+      "likelyCauses": [
+        "Open or shorted OA sensor / wiring (sensor located in the condenser section)",
+        "Sensor unplugged after service; connector corrosion",
+        "BAS-supplied outdoor temperature stale (the Outdoor Air Temperature Arbitrator chooses between local and BAS value)"
+      ],
+      "checks": [
+        "Display: Home > Status > System > Outdoor Air Temperature Arbitrator to see which source is in use and its value",
+        "Ohm the sensor and compare to the 10 kOhm thermistor chart; inspect the plug and harness",
+        "After repair confirm economizer becomes available again (economizer enable status)"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Sensor Fault'); Symbio 700 Controller Application Manual (ManualsLib 3011763 p.46)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Discharge Air Temperature Sensor Failure",
+      "meaning": "Discharge Air Temperature Local out of range is treated as a failed sensor and annunciated in the Active Alarm list. If the discharge air temperature input becomes invalid the control automatically reverts to Single Loop Space Temperature Control; functions that depend on the discharge air temperature (supply air tempering, discharge-air-dependent electric heat, VAV discharge air control) are discontinued.",
+      "likelyCauses": [
+        "Open/shorted discharge (supply) air sensor or harness in the supply fan section",
+        "Sensor damaged by heat or moisture; wrong sensor type"
+      ],
+      "checks": [
+        "Read Discharge Air Temperature Local under Status; ohm the sensor and compare to the thermistor chart",
+        "Inspect the harness routing near the heat exchanger for chafing; replace the sensor if out of tolerance"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Sensor Fault'); Symbio 700 Controller Application Guide (Space Temperature Control / Supply Air Tempering sections)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Coil Temperature Sensor 1 / 2 Failure",
+      "meaning": "Coil Temperature Sensor 1 and 2 out of range are treated as failed sensors and annunciated in the Active Alarm list. Heat pump units with a coil temperature sensor out of range have demand defrost disabled and operation reverts to a time-based defrost cycle.",
+      "likelyCauses": [
+        "Outdoor coil sensor open/shorted, poor contact with the copper, or unplugged",
+        "Sensor mis-located after coil repair"
+      ],
+      "checks": [
+        "Display: Status > Refrigeration > Coil Temperature Sensor; compare to outdoor ambient when the unit is off",
+        "Verify the sensor is clamped with good contact to the coil tube at the factory location; ohm the sensor",
+        "On Odyssey independent-circuit heat pumps each circuit has its own coil sensor and defrosts per circuit"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Sensor Fault'); Trane help center 'Odyssey Symbio 700 Demand Defrost' (article 360055393311)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Space Humidity / Space CO2 / Duct Static Pressure Sensor Failure",
+      "meaning": "The Symbio 700 also monitors the Space Humidity Sensor, Space CO2 Sensor and Duct Static Pressure sensor; a value outside the minimum/maximum range puts the point into an Alarm State, the sensor is considered failed and the fault is annunciated in the Active Alarm list. Functions depending on the failed sensor (dehumidification, demand-controlled ventilation, VAV duct static control) are discontinued.",
+      "likelyCauses": [
+        "Sensor unpowered, miswired (0-10 V / 4-20 mA type or range mismatch), or not installed while configured 'Installed'",
+        "Duct static transducer tubing disconnected or pinched"
+      ],
+      "checks": [
+        "Check the sensor's configuration (type, range, installed) against what is wired; read the raw value under Status",
+        "Measure the sensor output at the option-module input; verify supply power to the sensor",
+        "For duct static, verify transducer tubing and pickup location"
+      ],
+      "severity": "warning",
+      "notes": "Alarm text is per sensor (e.g. 'Space Humidity Sensor Failure'); grouped here because the source lists them together.",
+      "source": "Symbio 700 Application Manual (ManualsLib 2171320 p.34 'Sensor Fault')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Duct Static Pressure Local Trip / Duct Static Pressure Local Lockout",
+      "meaning": "Trane lists a resolved service alert for Precedent and Voyager 3 (Symbio 700) 'Duct Static Pressure Local Trip or Lockout'. Related Symbio guidance: when the supply fan is OFF the Event Log may show Outdoor Air Flow and Duct Static alarms because the transducers sometimes read below the unit's configured minimum operating range of 0 CCFM or 0 iwc.",
+      "likelyCauses": [
+        "Duct static above the high-limit setpoint: closed VAV boxes/fire dampers, blocked ducts, fan speed too high, static setpoint or high-limit set wrong",
+        "Transducer reading below range with the fan off (nuisance), wiring/plug/voltage problems at the transducer",
+        "Tubing leaks, water in the tubing, or the outside-air static reference not installed correctly"
+      ],
+      "checks": [
+        "Verify the wiring is correct, all plugs are connected and the voltages are present at the transducer",
+        "Verify factory tubing is correct with no air leaks; verify the outside-air static pressure reference is properly installed — if not, rainwater can enter the tubing; correct and dry out the tubing",
+        "Compare the displayed duct static to a manometer; check the duct static setpoint and high-limit values and VAV box/damper positions",
+        "Lockout requires Reset Diagnostics after the cause is corrected"
+      ],
+      "severity": "lockout",
+      "source": "Trane help center service alert 'Precedent & Voyager 3 (Symbio 700) Duct Static Pressure Local Trip or Lockout' (referenced via 'Symbio 800 - Outdoor Air Flow and Duct Static Pressure Alarms in Event Log', article 34375539024781)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Space Static Pressure Input Trip / Space Pressure Calibration Limit",
+      "meaning": "Trane help center: the Space Pressure Calibration Limit diagnostic can be generated if the calibration solenoid is not functioning properly. For one second every minute the calibration solenoid is energized to zero out the transducer; if it is not functioning the controls do not receive the correct error signal and interpret the sensor reading as zero pressure — after a power cycle the sensor reads correctly for one minute, then declines to 0.00 iwc before giving the diagnostic.",
+      "likelyCauses": [
+        "Calibration solenoid failed or not energizing",
+        "Transducer wiring at the Fresh Air Options Module (FOM) P1-3 (+5 VDC), P1-2 (signal), P1-1 (common) loose or wrong",
+        "Tubing leaks or disconnected pickups; failed FOM"
+      ],
+      "checks": [
+        "Verify wiring, plugs and voltages at the transducer; during calibration the FOM should see about 0.53 VDC at 0.00 iwc across P1-1 to P1-2",
+        "Verify factory tubing is correct with no leaks",
+        "If the FOM is functioning but the solenoid does not work, replace the calibration solenoid; if everything checks and the diagnostic remains, replace the FOM"
+      ],
+      "severity": "warning",
+      "source": "Trane help center 'Symbio 700 Space Static Pressure Input Trip & Space Pressure Calibration Limit Diagnostics' (article 36793589773325)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "FDD: Excessive Outdoor Air",
+      "meaning": "In minimum ventilation mode when the damper feedback position is more than 10 % above the damper commanded value for 5 continuous minutes (Title 24 economizer fault detection and diagnostics).",
+      "likelyCauses": [
+        "Actuator not following the command (failed actuator, wrong control signal type), damper linkage slipped or damper stuck open",
+        "Feedback wiring problem (P11-2 red 'OA DAMPER FEEDBACK' vs P11-3 blue 'OA DAMPER OUT'), wrong plug (PPM87/PPF87 or PPM201/PPF201)",
+        "Minimum position setpoint miscalibrated"
+      ],
+      "checks": [
+        "Verify the PPM87/PPF87 or PPM201/PPF201 plug for any FDD economizer alarm",
+        "If P11-3 blue is sending 10 VDC on OA DAMPER OUT, P11-2 red should read 10 VDC on OA DAMPER FEEDBACK; compare command vs feedback across the stroke in Service Test Mode",
+        "Inspect the damper blades and linkage; confirm actuator power and direction"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Controller Application Manual (ManualsLib 3011763, economizer FDD section); Trane help center Symbio 700 economizer accessory articles (12617393670413, 12573323145357, 22043583370765)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "FDD: Outdoor Air Damper Not Modulating",
+      "meaning": "In minimum ventilation mode when the damper feedback is more than 10 % below the damper commanded value for 5 continuous minutes.",
+      "likelyCauses": [
+        "Actuator not moving: no power, failed actuator, disconnected linkage, damper frozen/obstructed",
+        "Feedback or command wiring open at P11; wrong economizer plug",
+        "Fresh Air Options Module not communicating (economizer functions disabled)"
+      ],
+      "checks": [
+        "Command the damper in Service Test Mode and watch feedback vs command; verify 24 VAC at the actuator and the 0-10 VDC command at P11-3 vs feedback at P11-2",
+        "Verify the PPM87/PPF87 or PPM201/PPF201 plug and harness",
+        "Manually stroke the damper to check for binding"
+      ],
+      "severity": "warning",
+      "source": "Symbio 700 Controller Application Manual (ManualsLib 3011763, economizer FDD section); Trane help center Symbio 700 economizer accessory articles",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Filter Change Required",
+      "meaning": "The clogged filter switch accessory kit detects static pressure differentials across the filters to indicate a clogged or dirty filter condition; when it detects such a condition the Symbio 700 annunciates a filter change required alarm. The pressure switch is factory preset at 0.45 in. wc for FIACLFS001/3/5* and 0.75 in. wc for FIACLFS002/4/6*.",
+      "likelyCauses": [
+        "Dirty/loaded filters",
+        "Switch setpoint too low for the installed filter type; tubing reversed or leaking",
+        "Configuration 'Clogged Filter: Installed' on the Fresh Air Options Module with no switch wired"
+      ],
+      "checks": [
+        "Replace filters and confirm the alarm clears; measure filter pressure drop with a manometer against the switch setting",
+        "Verify the clogged filter switch tubing (high side upstream, low side downstream) and the input at the Fresh Air Options Module",
+        "Check the FOM configuration (Clogged Filter > Installed) matches the hardware"
+      ],
+      "severity": "info",
+      "source": "Trane help center 'Clogged Filter Switch Precedent Packaged Rooftop Units 3 to 25 Tons' (article 12382126289421); 'Fresh Air Options Module Configuration and Installation Guide' (article 26680155964429)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Maintenance Required",
+      "meaning": "Trane help center: if you see a Maintenance Required diagnostic it is most likely caused by the Filter Runtime Hours counter reaching the Filter Runtime Hours Setpoint, which can be checked in the Indoor settings on the controller.",
+      "likelyCauses": [
+        "Supply fan runtime exceeded the configured filter service interval"
+      ],
+      "checks": [
+        "Change filters, then reset the Filter Runtime Hours counter in Settings > Indoor (or via the Symbio app); adjust the setpoint to the site's filter schedule if needed"
+      ],
+      "severity": "info",
+      "source": "Trane help center 'Maintenance Required Diagnostic' (article 360061130932)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "High Condensate Level",
+      "meaning": "When the condensate overflow input closes for six continuous seconds the Symbio 700 generates an auto-reset diagnostic, immediately disables all compressor and heating operation, de-energizes condenser fans and compressors, and shuts down supply fan operation. The switch can trip up to two times in a 72-hour period and auto-reset each time, producing a 'High Condensate Level' diagnostic.",
+      "likelyCauses": [
+        "Drain pan overflow: plugged condensate drain or trap, unit not level, missing/incorrect trap",
+        "Float switch stuck or wired closed; water in the pan from a cracked pan or blown-off condensate at high airflow"
+      ],
+      "checks": [
+        "Inspect the drain pan and clear the drain/trap; verify the trap depth for the unit's negative static",
+        "Check the overflow switch operation and wiring; confirm the input state under Status > Inputs",
+        "Unit auto-restarts when the switch opens; count trips — the third within 72 h locks out"
+      ],
+      "severity": "shutdown",
+      "source": "Trane help center 'Condensate Drain Pan Overflow Switch' (article 12187921759501); 'Staged Gas Heat Troubleshooting ... Symbio 700' (COF trip shuts down all unit operation including the indoor fan)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Condensate Overflow Lockout",
+      "meaning": "If the condensate overflow switch trips a third time within 72 hours the Symbio 700 produces a 'Condensate Overflow Lockout' diagnostic and requires a manual reset.",
+      "likelyCauses": [
+        "Persistent drain problem (plugged drain/trap, improper trap, unit pitch) not corrected after the auto-reset trips"
+      ],
+      "checks": [
+        "Correct the drainage problem, verify the pan is dry and the switch opens, then reset via Service > Diagnostics > Reset Diagnostics (display) or the Symbio app"
+      ],
+      "severity": "lockout",
+      "source": "Trane help center 'Condensate Drain Pan Overflow Switch' (article 12187921759501)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Gas Heat Lockout Manifold 1 (ignition lockout)",
+      "meaning": "If 3 attempts for ignition have occurred without flame detection the gas heat ignition controller locks out; the control board resets after one hour. The lockout can also be cleared by removing the call for heat (thermostat, zone sensor or BAS) for 5 seconds and returning to heat, or by cycling power off for a minimum of 5 seconds. On modulating gas heat units the Symbio 700 reports it as 'Diagnostic: Gas Heat Lockout Manifold 1'.",
+      "likelyCauses": [
+        "No flame proven: flame sensor dirty/failed (valid flame is at least 1.2 microamps), poor ground, gas valve not opening, no gas / low gas pressure, igniter failure",
+        "Combustion pressure switch not proving (blocked flue/inducer, tubing) — see IGN 3-flash",
+        "Ignition board (White-Rodgers on Precedent staged heat; Beckett/VB1285 on modulating heat) fault or Modbus loss to the Symbio"
+      ],
+      "checks": [
+        "Read the IGN module LED flash code (see LED table) and the alarm text/time stamps; note whether flame was never sensed or dropped out",
+        "Check inlet and manifold gas pressure, igniter, flame sensor microamps (>=1.2 uA) and burner ground",
+        "Verify the combustion blower and pressure switch operation; check for flue restriction",
+        "Trane's flame-sensor article: if pressures are fine and the flame signal is still absent, the ignition board may need replacement"
+      ],
+      "severity": "lockout",
+      "source": "Trane help center 'Staged Gas Heat Troubleshooting for Precedent & Large Foundation Units with Symbio 700 Controls' (article 40080574995981); 'Precedent with Symbio 700 - Gas Heat Flame Sensor Troubleshooting' (article 23729138924685); service alert article 41559758408333 (alarm string)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Modulating Gas Invalid ID Plug Manifold 1 / Config Invalid",
+      "meaning": "Service alert (resolved): modulating gas heat units (model digit 10 = B) on Symbio 700 firmware v7.02 or older may produce multiple nuisance alarms 'Diagnostic: Modulating Gas Invalid ID Plug Manifold 1' and 'Diagnostic: Gas Heat Lockout Manifold 1'. The issue originated in how the Symbio 700 managed the routine reboots of the VB1285 ignition controller; later firmware waits for the controller to fully reboot and validates the alarm before passing it to the event log.",
+      "likelyCauses": [
+        "Symbio 700 firmware v7.02 or older on a modulating gas heat unit (nuisance)",
+        "If it persists on current firmware: ID plug on the ignition controller harness actually missing/loose, or wrong gas-heat configuration"
+      ],
+      "checks": [
+        "Check the Symbio 700 firmware version and update to the latest release per Trane's firmware guidelines",
+        "If the alarm continues after updating, verify the ID plug and harness at the VB1285 controller and the unit's gas heat configuration"
+      ],
+      "severity": "warning",
+      "source": "Trane help center 'Resolved - Service Alert: Voyager 3 & Precedent - (Symbio 700) Nuisance Alarming for Invalid ID or Config Invalid Diagnostics on Modulating Gas Heat Units' (article 41559758408333)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Broken Belt (VFD warning, Danfoss TR150)",
+      "meaning": "Due to the Modbus adaptation of the VFDs operating belt-driven fans, broken belt detection has been implemented on Symbio 700 (and 800) units; setting VFD parameter 22-61 (broken belt torque) from 10 % to 5 % has been found to resolve nuisance broken belt alarm issues.",
+      "likelyCauses": [
+        "Actual broken or slipping belt",
+        "Nuisance: low-torque operation at low fan speed with the default 10 % broken-belt torque threshold"
+      ],
+      "checks": [
+        "Inspect the belt and sheaves first",
+        "If the belt is intact, set Danfoss TR150 parameter 22-61 to 5 % per Trane; reset the VFD and the Symbio diagnostic"
+      ],
+      "severity": "warning",
+      "source": "Trane help center 'Danfoss TR150 VFD Broken Belt Detection - Symbio 700 and 800' (article 25355866911757)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Supply Fan X Proving Failure / Relief Fan Proving Failure (Symbio 800, IntelliPak)",
+      "meaning": "IntelliPak with Symbio 800 diagnostic raised when the supply (or relief/exhaust) fan is commanded but airflow is not proven. Trane help center: the Combustion Fan Proving Switch and the Supply Air Proving Switch (3S14) are wired in series; 3S14 is often the culprit at the beginning of the ignition sequence as it is a differential pressure switch that should close at 0.20 iwc (closed with the supply fan at 22 Hz or greater).",
+      "likelyCauses": [
+        "Supply fan VFD never started (VFD fault, run command/Modbus problem) — check the VFD diagnostic log, parameter 15-30",
+        "Supply air proving switch 3S14 out of adjustment, tubing loose on the high port, or the red cap not removed from the low port",
+        "Low duct static in SZVAV applications or with a panel removed during heat-exchanger oil burn-off",
+        "Broken belt, motor overload, blown fuses"
+      ],
+      "checks": [
+        "Confirm the VFD is running and check its diagnostic log (parameter 15-30) for a VFD-side fault",
+        "Test the proving switch with a squeeze bulb or by ramping the fan; it should be open with the fan off and closed at 22 Hz or above; adjust sensitivity if needed",
+        "Verify the tubing on the high port and that the low-port red cap was removed",
+        "On SZVAV with firmware >= 1.30.008 increase the Heating Min Discharge Air Flow Setpoint in service settings until the switch closes"
+      ],
+      "severity": "shutdown",
+      "notes": "Symbio 800 alarms display on the TD7 front panel under Active Alarms / Historic Alarms; full table in RT-SVP011 (Diagnostic, Target, Severity, Persistence, Condition/Response, Reset Level).",
+      "source": "Trane help center 'Intellipak with Symbio 800 controls Supply and Relief Fan Proving Failure' (article 16077871063053); 'Intellipak Symbio Combustion Fan proving switch' (article 31150918286733); IntelliPak with Symbio 800 Programming Guide RT-SVP011 troubleshooting table",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Compressor Contactor Failure (Symbio 800, IntelliPak)",
+      "meaning": "IntelliPak with Symbio 800 diagnostic triggered when a fixed-speed compressor fails to prove off for 6 continuous seconds (proving input still indicates running after the compressor is commanded off).",
+      "likelyCauses": [
+        "Welded compressor contactor",
+        "Proving input (current sensor / aux contact) stuck or miswired"
+      ],
+      "checks": [
+        "With the compressor commanded off, check whether the contactor is still pulled in and the compressor still draws current",
+        "Verify the proving device and its wiring to the compressor module; replace the contactor if welded"
+      ],
+      "severity": "warning",
+      "source": "IntelliPak with Symbio 800 Programming Guide (RT-SVP011; ManualsLib 2901605 p.86 troubleshooting diagnostics)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Loss of Charge Warning / Loss of Charge Lockout (Symbio 800, IntelliPak / RAUK)",
+      "meaning": "Symbio 800 refrigeration diagnostics for a circuit that appears to have lost charge. Per Trane, firmware 4.10.002 (Oct 2024) enhanced the loss-of-charge algorithm: the Loss of Charge Warning no longer triggers in active Reheat or Hot Gas Bypass, Loss of Charge Detection became a non-latching warning with detection time extended from 300 to 1800 seconds, and the Loss of Charge Lockout diagnostic time was extended from 300 to 900 seconds. During a lockout the circuit is inhibited from starting and running but may be allowed to start if the diagnostic condition is cleared.",
+      "likelyCauses": [
+        "Actual refrigerant leak / low charge",
+        "Nuisance trips on older firmware (< 4.10.002), especially during reheat or hot gas bypass operation",
+        "Suction/discharge pressure transducer error or wiring"
+      ],
+      "checks": [
+        "Verify charge with gauges (subcooling/superheat) before resetting; leak-check if low",
+        "Compare the transducer readings on the display to gauge readings; check transducer wiring",
+        "Update Symbio 800 firmware to 4.10.002 or later if nuisance alarms occur in reheat/HGBP"
+      ],
+      "severity": "lockout",
+      "source": "Trane help center 'IntelliPak and RAUK with Symbio 800 – Loss of Charge Diagnostics and Other Refrigeration issues' (article 31263569395981)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Airflow Press X Measurement Failure (Traq flow sensor, Symbio 800)",
+      "meaning": "The 'Airflow Press X Measurement Failure' diagnostic (X = 1 or 2) indicates that the calibration solenoid is not responding correctly. The calibration solenoid is energized for one second every minute to zero out the transducer; if it is not functioning the controls do not receive the correct error signal and interpret the sensor reading as zero pressure.",
+      "likelyCauses": [
+        "Calibration solenoid failed (most common)",
+        "Rarely: transducer failed or the SPACE PRESSURE/TRAQ LLID defective",
+        "Tubing leaks or disconnected"
+      ],
+      "checks": [
+        "Unplug both tubes from the transducer and read the voltage at the black and green wires at the transducer, or SIGNAL and GND at the SPACE PRESSURE/TRAQ LLID (J3-2, 3)",
+        "Verify the solenoid clicks once per minute; replace it if not",
+        "Replace the transducer or LLID only after the solenoid and tubing check good"
+      ],
+      "severity": "warning",
+      "source": "Trane help center 'IntelliPak (Symbio 800) - How to troubleshoot a Traq Flow Sensor Failures' (article 25825742264461)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "E09 (VB1285) / flash code 53 (VB1287) — gas heat controller pressure switch (Symbio 800, IntelliPak)",
+      "meaning": "The supply air proving pressure switch closes at 0.20 iwc; if the duct static pressure is low the unit generates an E09 alarm on the VB1285 (modulating burner controller) or a '53' flash code on the VB1287 (staged burner controller). Commonly seen at unit start-up, when a panel has been removed to burn processing oil off the heat exchanger, or in SZVAV applications where operating duct static is low.",
+      "likelyCauses": [
+        "Duct static below 0.20 iwc at the proving switch (SZVAV low airflow, open panel, low fan speed)",
+        "Proving switch tubing/cap problem or switch out of adjustment"
+      ],
+      "checks": [
+        "Verify with a squeeze bulb or ramp the supply fan up to test the proving switch (closes at 0.20 iwc)",
+        "SZVAV with Symbio 800 firmware 1.30.008 or higher: increase the Heating Min Discharge Air Flow Setpoint in service settings until the proving switch closes",
+        "Replace panels removed for oil burn-off before running heat"
+      ],
+      "severity": "lockout",
+      "source": "Trane help center 'IntelliPak Symbio 800 - E09 or 53 Alarm on Gas Heat Controller' (article 16077821301133)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "Outdoor Air Flow / Duct Static Pressure alarms in Event Log with fan off (Symbio 800)",
+      "meaning": "There are times when the supply fan is OFF and the Event Log shows Outdoor Air Flow and Duct Static alarms because the transducers monitoring these pressures sometimes read below the unit's configured minimum operating range of 0 CCFM or 0 iwc.",
+      "likelyCauses": [
+        "Transducer zero drift / slightly negative reading with the fan off (nuisance)",
+        "Wiring, plug or supply-voltage problems at the transducer; tubing leaks or rainwater in the tubing from an improperly installed outside-air static reference"
+      ],
+      "checks": [
+        "Verify the wiring, plugs and voltages at the transducer",
+        "Verify factory tubing with no leaks and that the outside-air static reference is properly installed; if rainwater entered the tubing, correct the installation and dry it out",
+        "Ignore isolated fan-off events if the readings are correct with the fan running"
+      ],
+      "severity": "info",
+      "source": "Trane help center 'Symbio 800 - Outdoor Air Flow and Duct Static Pressure Alarms in Event Log' (article 34375539024781)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "Symbio 700 board LED 9 (System) solid",
+      "meaning": "Normal — solid when power is applied and after the boot sequence completes.",
+      "checks": ["If off: check 24 VAC to the board and the board fuse; if it never goes solid the controller is not booting (try power cycle, then firmware recovery per Trane)"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 10 (Alarm Status) flashing red",
+      "meaning": "An active alarm exists (LED is normally off).",
+      "checks": ["Read the alarm text on the onboard display (Alarms) or in the Symbio Service & Installation app; clear with Service > Diagnostics > Reset Diagnostics after repair"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 7 (Ethernet Activity) flashing green / LED 8 (Ethernet Link) solid yellow",
+      "meaning": "LED 7 flashes green with network traffic; LED 8 is solid yellow when the board is connected to a router or switch.",
+      "checks": ["No link LED: check the cable and switch port; link but no activity: check IP configuration / BACnet IP settings"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 3 (Bluetooth) on / flashing",
+      "meaning": "On when Bluetooth is connected, flashes during pairing, otherwise off.",
+      "checks": ["Press the Bluetooth pair button on the controller and pair from the Symbio Service & Installation app"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 23 / LED 24 (BACnet MS/TP link) RX blinking yellow / TX blinking green",
+      "meaning": "BACnet MS/TP data received (RX yellow) or sent (TX green).",
+      "checks": ["RX with no TX: check MAC address/baud and that the BAS is polling this device; neither: check the MS/TP wiring polarity and termination"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 11 / LED 12 (Modbus RTU Link VFD) TX blinking green / RX blinking yellow",
+      "meaning": "Modbus data sent to (TX) and received from (RX) the supply fan VFD / communicating motor.",
+      "checks": ["TX only: the VFD is not answering — check the harness, VFD power and Modbus parameters; a 30 s loss of VFD communication shuts the unit down and needs a manual reset"]
+    },
+    {
+      "pattern": "Symbio 700 board IMC TX/RX LEDs very fast pulsing (look dim)",
+      "meaning": "Normal inter-module communication with the option modules.",
+      "checks": ["If a module shows Not Communicating, check its rotary address (Fresh Air Options Module = 76), IMC cable and 24 VAC, and update Symbio firmware for newer Renesas modules"]
+    },
+    {
+      "pattern": "Symbio 700 board LED 5 on",
+      "meaning": "Compressor (Cool 2) relay output energized — used in Trane's board test: with Cool 2 commanded in Service Test Mode, LED 5 should be ON.",
+      "checks": ["Measure the relay contact resistance across the orange/yellow wire pins within ~5 s (before the proving fault); more than 10 ohms means the unit controller board must be replaced"]
+    },
+    {
+      "pattern": "IGN module LED1 off",
+      "meaning": "No power to the ignition module, or internal failure.",
+      "checks": ["Check 24 VAC to the ignition module and its fuse; check the harness from the Symbio 700"]
+    },
+    {
+      "pattern": "IGN module LED1 solid green",
+      "meaning": "Normal, no call for heat.",
+      "checks": []
+    },
+    {
+      "pattern": "IGN module LED1 slow pulse (3/4 s on, 1/4 s off)",
+      "meaning": "Normal, with a call for heat.",
+      "checks": []
+    },
+    {
+      "pattern": "IGN module 1 flash",
+      "meaning": "The ignition module has power but is not communicating to the Symbio 700 — a problem with the Modbus between the Symbio 700 and the ignition board (E6 Modbus connection).",
+      "checks": ["Check the Modbus harness/connector E6 between the Symbio 700 and the ignition board; verify the gas-heat configuration and firmware"]
+    },
+    {
+      "pattern": "IGN module 2 flash",
+      "meaning": "No flame was sensed on ignition, or the flame dropped out while running. Flame across the sensor should register at a minimum of 1.2 microamps to be a valid flame signal.",
+      "checks": ["Measure flame current (>=1.2 uA); clean/replace the flame sensor, check burner ground, gas pressure, igniter and gas valve; after 3 failed trials the controller locks out (auto-reset after 1 hour, or remove the heat call for 5 s / power cycle 5 s)"]
+    },
+    {
+      "pattern": "IGN module 3 flash",
+      "meaning": "The pressure switch did not close in the correct amount of time after the combustion fan was energized, opened while the unit was heating, or is closed when the combustion fan is commanded off.",
+      "checks": ["Check the combustion blower runs, the pressure switch tubing, flue/inducer restriction and the switch contacts (should be open with the blower off)"]
+    },
+    {
+      "pattern": "IGN module 4 flash",
+      "meaning": "One or both of the Thermal Cutout (TCO) switches are open during a call for heat. TCO lockouts are auto reset and do not require a manual reset; when a TCO trips the supply fan stays on and the combustion fan runs at high speed.",
+      "checks": ["TCO trips are typically caused by low airflow or damaged TCO wiring/switch/mounting — check filters, fan speed, duct static and the TCO wiring; TCO locations are in Trane article 40181109909645"]
+    },
+    {
+      "pattern": "IGN module 5 flash",
+      "meaning": "The ignition module is sensing a flame without a call for heat — could be a failing flame sensor or a gas valve that is not closing.",
+      "checks": ["Shut off gas and verify the gas valve closes (no flame after the call ends); check the flame sensor and its wiring for a false signal; replace the valve or sensor as found"]
+    },
+    {
+      "pattern": "Phase monitor green LED",
+      "meaning": "Proper phasing (phase monitors are installed on 5-25 t three-phase units to ensure the scroll compressors rotate the correct direction).",
+      "checks": []
+    },
+    {
+      "pattern": "Phase monitor red LED",
+      "meaning": "Phase reversal (incoming leads crossed) — the phase monitor immediately shuts the unit down; crossed control wires on the Y and Y-out terminals also light the red LED and prevent the unit from running.",
+      "checks": ["Swap two leads on the incoming power to the unit; if still red, check the control wiring connections to the phase monitor; if all wiring is correct the phase monitor is defective and needs to be replaced"]
+    }
+  ],
+  "diagnosticTips": [
+    "Alarms: on the onboard display home screen swipe at the top of the page or select the Alarm icon to see active and historic alarms in plain language (no flash codes); the Symbio Service & Installation app (Bluetooth — press the pair button on the controller) shows the same list with suggested resolutions.",
+    "Reset diagnostics/lockouts: onboard display Service > Diagnostics > Reset Diagnostics, or app Alarms > Reset Diagnostics; a power cycle also clears VFD/supply-fan manual-reset faults. Lockouts (Circuit X Proving Lockout, Circuit X LPC Lockout, Condensate Overflow Lockout, Duct Static Lockout) return unless the cause is fixed.",
+    "Service Test Mode: Home screen > Tools icon (bottom right) > Service Test; energize fans, compressors, heat and dampers individually. Exit with the blue stop icon next to the active test; tests time out after the Service Test Timeout (60 min default) or a power cycle. MZVAV units wait 6 minutes before enabling any test.",
+    "View sensor values: Home > Down arrow to Status > check mark > System (Outdoor Air Temperature Arbitrator) or Refrigeration (Coil Temperature Sensor); Status > Inputs shows FroStat, condensate overflow, emergency stop and other binary inputs.",
+    "Compressor safeties: every compressor has a normally closed HPC (R-410A opens 650 psig / closes 550 psig) and a normally closed DTL on the discharge line, wired in series with the contactor 24 VAC coil; the Symbio sees a trip through the contactor auxiliary (proving) contact. Precedent/Large Foundation have one LPC on the suction manifold; Odyssey dual-circuit condensers have one per suction line.",
+    "Gas heat ignition lockout (3 failed trials) auto-resets after 1 hour, or clear it by removing the heat call for 5 seconds or cycling power off for at least 5 seconds. Read the IGN module LED flash code (right side of the module) before resetting.",
+    "Before replacing a Symbio 700 board (Trane 'No Fault Found' service alert): update firmware to the latest revision, verify the unit configuration, and run the relay-contact test (Cool 2 in test mode, LED 5 on, <10 ohms across the relay pins) — a high percentage of returned boards test good.",
+    "Option modules: Customer Connection Module, Fresh Air Options Module (field address 76) and Indoor Options Module communicate over IMC; a wrong rotary address or old v1 firmware with a Renesas module produces a Unit Communications Failure for that module.",
+    "VFD units (Danfoss TR150 / Mitsubishi): the Symbio commands the drive over Modbus; parameter 8-01 must be Controlword (not Digital only) or the drive will not start and a Supply Fan Failure results; set 22-61 to 5 % for nuisance broken-belt alarms.",
+    "Symbio 800 (IntelliPak 1/3, RAUK): alarms are read on the TD7 touch display under Active Alarms / Historic Alarms; the programming guide RT-SVP011 troubleshooting table gives Diagnostic text, Target, Severity, Persistence, Condition/Response and Reset Level for every diagnostic, with hyperlinks to troubleshooting."
+  ],
+  "notes": [
+    "Symbio 700 diagnostics are descriptive text strings, not numeric codes; 'X' in a code stands for the compressor/circuit number (1, 2, ...). Exact wording can vary slightly between firmware versions and between the display, the app and BACnet.",
+    "Coverage is partial: the full appendix table ('list of all supported Symbio 700 Diagnostics and if it sets the Alarm Indicator') in the application guides (BAS-SVP062 Precedent, BAS-APG048 Voyager Commercial/Voyager 3, ACC-APG001 Odyssey) and the Symbio 700 Information & Troubleshooting Manual could not be read in full through search snippets; entries here are the ones whose meaning was visible in a Trane source.",
+    "Emergency Stop and the generic gas-heat diagnostics entry already exist in the base pack entry (trane.json controls[] symbio_700) and are not repeated here.",
+    "Symbio 800 (IntelliPak with Symbio 800, RAUK) is a different controller and display (TD7) with its own diagnostics table; the Symbio 800 entries here are marked in the code text and were folded in per the task request. Not seen in any source and therefore omitted: Symbio 800 'Invalid Timed Override Request' (title only), the VB1285/VB1287 full error-code tables (Trane article 32018301353869 'Modulating Gas Heat Error codes' and 34341120088205 'IPAK 3 & Voyager 3 w/Symbio 700: Gas Heat Error codes and literature' hold them as attachments), IGN module 6/7-flash meanings (only seen for electromechanical boards), and any heat-pump defrost or low-ambient lockout diagnostic text.",
+    "Secondary sources (Industrial Monitor Direct ERM article) were used only to corroborate Trane articles."
+  ]
+}

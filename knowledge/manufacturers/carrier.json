@@ -2872,7 +2872,7 @@
   {
    "id": "systemvu",
    "name": "Carrier SystemVu rooftop controller",
-   "description": "Integrated DDC unit controller (MBB main base board + display) shipped on 48/50LC, newer 48/50FC/GC/KC/JC and optionally 48/50TC/HC. Alarm codes: F### = fault (unit or component shutdown), A### = alert. More than 300 configuration and 300 status/diagnostic points are available from the display.",
+   "description": "Integrated DDC unit controller (MBB main base board + display) shipped on 48/50LC, newer 48/50FC/GC/KC/JC and optionally 48/50TC/HC. Alarm codes: F### = fault (unit or component shutdown), A### = alert. More than 300 configuration and 300 status/diagnostic points are available from the display. Coverage is partial. WebSearch summaries exposed only individual rows of the SystemVu alarm tables (Table 12/13 in 48/50FC-GC-01T, Table 16 in S-VU-LC-4-26-xxT, Faults and Alerts in SYSVU-FE-GE-02T); the full table (all sensor open/short alerts for SAT/OAT/RAT/SPT/SPRH/IAQ, circuit A/B pressure and compressor alerts, economizer FDD alerts, IGC/heat alerts, communication alerts, Humidi-MiZer and RDS/A2L leak alarms on 48/50JC) could not be read and is NOT transcribed. Verifiers should open the PDFs (shareddocs links above) and extend this file. A605 and A608 meanings are paraphrased from a search summary of Table 16 ('motor thermistor thermal' and 'AMA internal fault'); the exact display text must be confirmed against the 48/50LC manual before promotion beyond medium confidence. A600-A604 and A609 exist in the same VFD block but were not seen. A321 definition comes from a Carrier distributor tech tip (Mingledorff's) that reproduces the 48/50JC SystemVu alert text; the manual itself (48/50JC-4-6-02T) was not readable through search, hence evidence single_secondary. Codes A140-A156 and A200-A210 returned in searches belonged to Carrier ComfortLink chiller/38AP tables (e.g. A140 reverse ro",
    "appliesTo": [
     "48/50LC",
     "48/50FC",
@@ -2885,136 +2885,339 @@
    "faultCodes": [
     {
      "code": "F010",
-     "meaning": "MBB low voltage.",
+     "meaning": "MBB LOW VOLTAGE. Action taken by control: Unit Shutdown. Reset: Automatic. Probable cause: brownout condition, low supply voltage, supply power missing a phase.",
      "likelyCauses": [
-      "Low 24 VAC supply to the main base board (transformer tap, overloaded control circuit, low line voltage)"
+      "Brownout / low line voltage at the unit",
+      "Supply power missing a phase (blown line fuse, open leg)",
+      "Low 24 VAC to the main base board (wrong transformer primary tap, overloaded control circuit)"
      ],
      "checks": [
-      "Measure 24 VAC at MBB power input under load; check TRAN primary tap vs line voltage",
-      "Check for added 24 V loads (accessories, thermostat) exceeding transformer VA"
+      "Measure L1-L2, L2-L3, L1-L3 at the unit disconnect and at the contactor line side; look for a missing/low phase (manual)",
+      "Measure 24 VAC at the MBB power input under load; check TRAN primary tap against actual line voltage (field practice)",
+      "Check for added 24 V loads (accessories, thermostat) exceeding transformer VA (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section — faults that can cause unit shutdown",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16; SYSVU-FE-GE-02T Faults and Alerts",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F011",
-     "meaning": "MBB reference voltage out of range.",
+     "meaning": "MBB REFERENCE VOLTAGE. Action taken by control: Unit Shutdown. Reset: Automatic. Probable cause: MBB failure or supply voltage low.",
      "likelyCauses": [
+      "Low supply voltage to the MBB",
       "MBB internal reference failure",
-      "Shorted sensor pulling down the reference"
+      "Shorted sensor or wiring pulling down the board reference"
      ],
      "checks": [
-      "Disconnect sensor plugs one at a time; if the fault clears, find the shorted sensor/wiring",
-      "Replace MBB if it persists with sensors disconnected"
+      "Verify line and 24 VAC supply first (same checks as F010) (manual: supply voltage low)",
+      "Disconnect sensor plugs one at a time; if the fault clears, find the shorted sensor/wiring (field practice)",
+      "Replace the MBB if it persists with sensors disconnected and supply voltage verified (manual: MBB failure)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F013",
-     "meaning": "MBB fuse 2 open.",
+     "meaning": "MBB FUSE 2 OPEN (fault; unit shutdown).",
      "likelyCauses": [
-      "Short on the output circuit protected by fuse 2 (contactor coil, relay wiring)"
+      "Short on the 24 V output circuit protected by MBB fuse 2 (contactor coil, relay or accessory wiring)"
      ],
      "checks": [
-      "Inspect the MBB fuse; find the short on the protected output before replacing"
+      "Inspect the MBB fuse; find and clear the short on the protected output before replacing the fuse (field practice)",
+      "Check contactor coils and field-wired accessories on that output for shorts to ground (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F014",
-     "meaning": "MBB fuse 3 open.",
+     "meaning": "MBB FUSE 3 OPEN (fault; unit shutdown).",
      "likelyCauses": [
-      "Short on the output circuit protected by fuse 3"
+      "Short on the 24 V output circuit protected by MBB fuse 3"
      ],
      "checks": [
-      "Inspect the MBB fuse; find the short on the protected output before replacing"
+      "Inspect the MBB fuse; find and clear the short on the protected output before replacing the fuse (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F018",
-     "meaning": "MBB EEPROM failure.",
+     "meaning": "MBB EEPROM FAILURE (fault; unit shutdown).",
      "likelyCauses": [
-      "Main base board memory failure"
+      "Main base board non-volatile memory failure"
      ],
      "checks": [
-      "Cycle power; if it returns, replace the MBB and reconfigure"
+      "Cycle 24 V power to the MBB; if the fault returns, replace the MBB and re-enter the configuration (field practice)",
+      "Record the unit configuration from the display before replacing the board (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F204",
-     "meaning": "Remote shutdown input active.",
+     "meaning": "REMOTE SHUTDOWN — the remote/fire shutdown input is active (fault; unit shutdown).",
      "likelyCauses": [
-      "Field shutdown contact (fire/smoke, BAS) open/closed per configuration",
+      "Field shutdown contact (fire/smoke, BAS remote shutdown) open or closed per configured polarity",
       "Wiring or configuration of the shutdown input"
      ],
      "checks": [
-      "Check the remote shutdown input state and its configured polarity",
-      "Check the smoke detector / fire alarm relay contacts"
+      "Check the remote shutdown input state on the display and its configured polarity (manual)",
+      "Check the duct smoke detector / fire alarm relay contacts and any BAS shutdown wiring (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F205",
-     "meaning": "Indoor fan manual limit trip.",
+     "meaning": "INDOOR FAN MANUAL LIMIT TRIP — indoor fan motor manual-reset limit/overload has tripped (fault; unit shutdown).",
      "likelyCauses": [
-      "Indoor fan motor overload / manual-reset limit tripped (belt, bearings, high static, wrong voltage tap)"
+      "Indoor fan motor overload (belt, bearings, high static, wrong voltage tap, high amps)"
      ],
      "checks": [
-      "Check IFM amps against FLA, belt and drive, external static",
-      "Reset the limit after correcting the cause"
+      "Check IFM amps against nameplate FLA, belt and drive condition, external static pressure (field practice)",
+      "Reset the manual limit only after correcting the cause (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F206",
-     "meaning": "Phase monitor trip.",
+     "meaning": "PHASE MONITOR TRIP (fault; unit shutdown).",
      "likelyCauses": [
-      "Phase loss, reversal or voltage imbalance on the 3-phase supply"
+      "Phase loss, phase reversal or voltage imbalance on the 3-phase supply"
      ],
      "checks": [
-      "Measure L1-L2, L2-L3, L1-L3; imbalance < 2 %",
-      "Verify rotation (swap two incoming leads only at the unit disconnect if reversed)",
-      "Check the phase monitor's LED and setpoints"
+      "Measure L1-L2, L2-L3, L1-L3; voltage imbalance should be under 2 % (field practice)",
+      "Verify rotation; if reversed, swap two incoming leads only at the unit disconnect (field practice)",
+      "Check the phase monitor LED and its trip setpoints (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes (faults that can cause unit shutdown); S-VU-LC-4-26-03T Table 16",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "F318",
-     "meaning": "Compressor stuck on (compressor running with no command).",
+     "meaning": "COMPRESSOR STUCK ON — compressor running with no command (suction pressure does not rise by the minimum suction amount and the pressure ratio does not fall by at least the off pressure ratio after the compressor is commanded off).",
      "likelyCauses": [
       "Welded compressor contactor",
-      "Mis-wired relay/contactor"
+      "Mis-wired relay/contactor or bypassed control"
      ],
      "checks": [
-      "With the compressor command off, check contactor: if pulled in with 0 V at the coil, replace it",
-      "Check current sensor reading vs command"
+      "With the compressor command off, check the contactor: if pulled in with 0 V at the coil, replace it (field practice)",
+      "Compare suction/discharge pressure or current-sensor readings against the compressor command on the display (manual definition)"
      ],
      "severity": "shutdown",
-     "source": "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+     "source": "48/50FC-GC-01T Table 12/13 SystemVu Controller Alarm Codes; 48/50JC-4-6 controls (Fault F318 — Compressor Stuck On)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "F202",
+     "meaning": "FREEZE PROTECTION FAULT — the F202 freeze protection setting triggers an alarm when the unit supply air temperature falls below a configured value; it generates the alarm and causes unit shutdown (optional auto-reset).",
+     "likelyCauses": [
+      "Supply air temperature genuinely below the freeze-protection setpoint (low airflow, iced evaporator, economizer stuck open in cold weather, heat not firing)",
+      "Failed/mis-located SAT sensor reading low",
+      "Nuisance trip: on 48/50JC and 48/50LC units, when the SAT_HEAT point is set to Disable the SAT is set to 0 F during the first 5 minutes of heat, which trips the freeze protection fault (Carrier TSB PTC2022-0008B)"
+     ],
+     "checks": [
+      "Read the SAT on the display and compare with a reference thermometer in the supply plenum (field practice)",
+      "Check the freeze-protection setpoint and auto-reset configuration in the display (manual)",
+      "If the fault occurs at the start of every heating cycle on a JC/LC unit, check the SAT_HEAT configuration point and apply the TSB PTC2022-0008B remedy (manufacturer bulletin)",
+      "Check indoor airflow, filters, economizer minimum position and heat operation before resetting (field practice)"
+     ],
+     "severity": "shutdown",
+     "source": "SYSVU-FE-GE-01T / SYSVU-FE-GE-02T Faults and Alerts (Fault F202 — Freeze Protection Fault); Carrier Enterprise TSB PTC2022-0008B 'JC and LC SystemVu F202 Faults'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "F310",
+     "meaning": "CIRA DOWN DUE TO FAIL — refrigerant circuit A is shut down because of a circuit failure (fault).",
+     "likelyCauses": [
+      "An underlying circuit A alert (pressure, compressor, safety) has locked the circuit out; F310 is the consequence, not the root cause"
+     ],
+     "checks": [
+      "Open ALARMS / alarm history on the display and find the circuit A alert(s) logged just before F310; troubleshoot those first (field practice)",
+      "After correcting the cause, clear alarms and run the circuit in SERVICE TEST to verify pressures and compressor operation (manual: Service Test)"
+     ],
+     "severity": "shutdown",
+     "source": "SYSVU-FE-GE-02T / S-VU-LC-4-26-03T Faults and Alerts (Fault F310 — CIRA DOWN DUE TO FAIL)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A161",
+     "meaning": "OARH SHORTED SENSOR (Outdoor Air Relative Humidity sensor short circuit). Alert; probable cause: bad sensor, bad wiring, or incorrectly configured sensor.",
+     "likelyCauses": [
+      "Shorted OARH sensor or wiring",
+      "Sensor assigned to the wrong analog input channel or wrong sensor type configured"
+     ],
+     "checks": [
+      "Check OARH sensor wiring for shorts and the 4-20 mA / voltage signal at the MBB input (field practice)",
+      "Verify the OARH assigned channel and sensor configuration in the display (manual: incorrectly configured sensor)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-02T/-03T Table 16 SystemVu Controller Alarm Codes (A161-OARH SHORTED SENSOR); SYSVU-FE-GE-02T Alerts (Alert A161 — OARH Short Circuit)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A162",
+     "meaning": "RARH OPEN CIRCUIT (Return Air Relative Humidity sensor open). Alert.",
+     "likelyCauses": [
+      "Open RARH sensor or broken wiring / unplugged connector",
+      "RARH configured but no sensor installed"
+     ],
+     "checks": [
+      "Check the RARH sensor connector and wiring continuity (field practice)",
+      "If no RARH sensor is installed, set the input assignment to none in the configuration (field practice)"
+     ],
+     "severity": "warning",
+     "source": "SYSVU-FE-GE-02T Alerts / Appendix E BACnet points list (Alert A162 — RARH Open Circuit); S-VU-LC-4-26 Table 16",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A163",
+     "meaning": "RARH SHORT CIRCUIT (Return Air Relative Humidity sensor shorted). Alert.",
+     "likelyCauses": [
+      "Shorted RARH sensor or wiring",
+      "Wrong sensor type / channel configured"
+     ],
+     "checks": [
+      "Check RARH wiring for shorts and the signal at the MBB analog input (field practice)",
+      "Verify the RARH assigned channel and type in the configuration (field practice)"
+     ],
+     "severity": "warning",
+     "source": "SYSVU-FE-GE-02T Alerts / Appendix E BACnet points list (Alert A163 — RARH Short Circuit); S-VU-LC-4-26 Table 16",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A166",
+     "meaning": "OAQ OPEN SENSOR (Outdoor Air Quality/CO2 sensor open). Action taken by control: no OAQ operations. Reset: Automatic. Probable cause: bad sensor, bad wiring, or incorrectly configured sensor.",
+     "likelyCauses": [
+      "Open OAQ sensor or wiring / unplugged connector",
+      "OAQ configured on an input with no sensor installed"
+     ],
+     "checks": [
+      "Check OAQ sensor power and signal wiring at the MBB input (field practice)",
+      "Verify the OAQ assigned channel and configuration; if no sensor is installed, unassign it (manual: incorrectly configured sensor)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A166-OAQ OPEN SENSOR)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A167",
+     "meaning": "OAQ SHORTED SENSOR (Outdoor Air Quality/CO2 sensor shorted). Action taken by control: no OAQ operations. Reset: Automatic. Probable cause: bad sensor, bad wiring, or incorrectly configured sensor.",
+     "likelyCauses": [
+      "Shorted OAQ sensor or wiring",
+      "Wrong sensor type / channel configured"
+     ],
+     "checks": [
+      "Check OAQ wiring for shorts and the signal at the MBB analog input (field practice)",
+      "Verify the OAQ assigned channel and sensor type in the configuration (manual)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A167-OAQ SHORTED SENSOR)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A321",
+     "meaning": "CIR.A FAIL TO PRESSURE — 20 seconds after the compressor turns on, suction pressure did not drop more than the suction amount (CIR.A MIN SUC.P) and discharge pressure did not rise more than the discharge amount.",
+     "likelyCauses": [
+      "Compressor not pumping: reverse rotation of a 3-phase scroll (building wiring phase change), failed scroll set, open internal overload",
+      "Compressor contactor not pulling in / compressor not actually running",
+      "Suction or discharge pressure transducer failed or mis-wired"
+     ],
+     "checks": [
+      "Watch suction and discharge pressure on the display or gauges at compressor start; a scroll running backwards is noisy and pressures barely move (Mingledorff's tech tip)",
+      "Check rotation; if reversed, swap any two leads of the 3-phase supply at the unit disconnect (Mingledorff's tech tip / manual)",
+      "Confirm the compressor is actually running (amps) and that the pressure transducers track gauge readings (field practice)",
+      "Check the CIR.A MIN SUC.P and discharge-amount configuration values before condemning the compressor (manual definition)"
+     ],
+     "severity": "warning",
+     "source": "Mingledorff's tech tip 'FAIL TO PRESSURE on a 48JC04-06 (Alert A321)' reproducing the 48/50JC-4-6 SystemVu controls alert definition",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "A605",
+     "meaning": "IDF VFD motor thermistor / motor thermal alert (indoor fan drive reports motor over-temperature). Wording paraphrased from Table 16; verify exact text.",
+     "likelyCauses": [
+      "Indoor fan motor overheating: overload, high static, blocked cooling, wrong drive motor data"
+     ],
+     "checks": [
+      "Read the VFD fault log on the drive keypad and compare motor amps to nameplate FLA (field practice)",
+      "Check external static, belts/drive and motor cooling; verify motor data programmed in the VFD (field practice)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A605-IDF VFD ... motor thermistor/thermal)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A606",
+     "meaning": "IDF VFD VOLTAGE. Action taken by control: IDF speed reduced. Reset: Automatic. Probable cause: motor improper size, motor overload, or configuration errors.",
+     "likelyCauses": [
+      "Motor improper size for the drive",
+      "Motor overload",
+      "VFD / SystemVu configuration errors",
+      "Supply voltage sag or over-voltage at the drive (field practice)"
+     ],
+     "checks": [
+      "Read the drive's fault/warning log and DC bus voltage on the VFD keypad (field practice)",
+      "Check incoming voltage and imbalance at the VFD input; check motor amps against FLA (field practice)",
+      "Verify VFD motor parameters and SystemVu IDF configuration (manual: configuration errors)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A606-IDF VFD VOLTAGE)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A607",
+     "meaning": "IDF VFD CURRENT LIMIT. Action taken by control: IDF speed reduced. Reset: Automatic. Probable cause: motor improper size, motor overload, or configuration errors.",
+     "likelyCauses": [
+      "Motor overload (high static, tight belts, bad bearings)",
+      "Motor improper size for the drive",
+      "VFD current-limit or motor parameter configuration errors"
+     ],
+     "checks": [
+      "Check motor amps vs FLA and the VFD current-limit setting (field practice)",
+      "Check external static pressure, belt tension, bearings and wheel condition (field practice)",
+      "Verify VFD motor parameters against the motor nameplate (manual: configuration errors)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A607-IDF VFD CURRENT LIMIT)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "A608",
+     "meaning": "IDF VFD AMA internal fault (drive automatic motor adaptation / internal fault reported to SystemVu). Wording paraphrased from Table 16; verify exact text.",
+     "likelyCauses": [
+      "VFD internal fault or failed automatic motor adaptation run",
+      "Wrong motor data in the drive"
+     ],
+     "checks": [
+      "Read the fault on the VFD keypad; cycle drive power and re-run motor adaptation with correct nameplate data if applicable (field practice)",
+      "Replace the drive if the internal fault persists after a power cycle (field practice)"
+     ],
+     "severity": "warning",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A608-IDF VFD ... AMA internal fault)",
      "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
     "The SystemVu display is on the MBB in the main control box; navigate with the arrow/enter keys to ALARMS to view active/history alarms, and to SERVICE TEST to run compressors, fans, heat and economizer manually.",
     "Clear alarms from the ALARMS menu (reset) after the fault condition is removed; F-codes that shut the unit down require the cause to be fixed first.",
-    "Coverage is partial: only shutdown-class faults transcribed from the 48/50FC-GC controls manual are listed. The full alarm/alert table (sensor failures A140-series, economizer, IGC, Humidi-MiZer, RDS/A2L leak alarms on JC units) is in the SystemVu controls manual for the family (48/50FC-GC-01T, S-VU-LC-4-26-03T)."
+    "Coverage is partial: only shutdown-class faults transcribed from the 48/50FC-GC controls manual are listed. The full alarm/alert table (sensor failures A140-series, economizer, IGC, Humidi-MiZer, RDS/A2L leak alarms on JC units) is in the SystemVu controls manual for the family (48/50FC-GC-01T, S-VU-LC-4-26-03T).",
+    "Display: the SystemVu interface is an integrated 6-key, 4-line x 30-character LCD keypad/display module in the main control box, standard on every SystemVu unit. It gives access to all inputs/outputs, configuration points, current operating-mode decisions, and the alarm history.",
+    "Code format: F### = fault (the control takes a shutdown action; e.g. F010 MBB LOW VOLTAGE = Unit Shutdown), A### = alert (informational or reduced-function, e.g. A166 OAQ OPEN SENSOR = no OAQ operations). Each table row lists Fault/Alert, Action Taken by Control, Reset Method (Automatic or Manual) and Probable Cause. The quick unit status indicator on the display shows run, alarm or fault.",
+    "Viewing/clearing: active faults and alerts and the alarm history are reviewed and cleared from the local display (ALARMS menu) or from a network device (CCN / i-Vu / BACnet MS/TP). Automatic-reset codes clear when the condition goes away; fix the cause before resetting shutdown faults.",
+    "Service Test: a built-in test routine (SERVICE TEST menu; e.g. HEAT 1 TEST, IDF SPEED TEST) lets you run compressors, indoor/outdoor fans, heat stages and the economizer manually for start-up commissioning and diagnosis. After clearing alarms, verify compressors, fans and valves in Service Test.",
+    "Alarm numbering groups seen in the manuals: 01x = MBB hardware (voltage, fuses, EEPROM); 20x = unit-level shutdowns (freeze protection F202, remote shutdown F204, indoor fan limit F205, phase monitor F206); 16x = humidity/air-quality sensor open/short alerts (OARH A160/A161, RARH A162/A163, OAQ A166/A167); 3xx = refrigerant circuit A/B (A321 CIR.A FAIL TO PRESSURE, F310 CIRA DOWN DUE TO FAIL, F318 COMPRESSOR STUCK ON); 60x = indoor fan VFD alerts (A605-A608).",
+    "Gas heat: the IGC (Integrated Gas Control) board has its own LED; count flashes per the IGC table above. The IGC monitors the rollout switch, limit switch and flue gas pressure switch and controls the direct-spark ignition; SystemVu reports IGC problems as heat alerts but the root cause is read from the IGC LED.",
+    "The alarm list varies by product and SystemVu software version (v1.x 48/50FC-GC, v2.x-3.x 48/50LC, v2.x-4.x 48/50JC, v4.x 50FEQ/GEQ/48QE); always refer to the Controls, Start-Up, Operation and Troubleshooting book for the unit's family and version."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -3029,11 +3232,137 @@
     {
      "title": "Carrier SystemVu RTU Controller product page",
      "url": "https://www.carrier.com/commercial/en/us/systemvu/"
+    },
+    {
+     "title": "Carrier 48/50FC 04-07, 48/50GC 04-06 Single Package Rooftop Units with SystemVu Controls Version 1.X — Controls, Start-Up, Operation and Troubleshooting (Table 12/13 SystemVu Controller Alarm Codes; Table 18 IGC Board LED Alarm Codes)",
+     "docId": "48/50FC-GC-01T (ManualsLib 1666356)",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/0B/48_50FC-GC-01T.pdf"
+    },
+    {
+     "title": "Carrier 48/50LC 04-26 WeatherExpert with SystemVu Controls Version 2.X/3.X — Controls, Start-Up, Operation and Troubleshooting (Table 16 SystemVu Controller Alarm Codes: Fault/Alert, Action Taken by Control, Reset Method, Probable Cause; IGC Board LED Alarm Codes)",
+     "docId": "S-VU-LC-4-26-02T / -03T / -04T / -06T (ManualsLib 1801319, 1585307)",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/08/S-VU-LC-4-26-03T.pdf"
+    },
+    {
+     "title": "Carrier 50FEQ/50GEQ/48QE (and 48/50FE/GE) Rooftop Units with SystemVu Controls Version 4.X — Controls, Start-Up, Operation and Troubleshooting Instructions (Faults and Alerts section, per-alert paragraphs, Appendix E BACnet points list)",
+     "docId": "SYSVU-FE-GE-01T / SYSVU-FE-GE-02T / S-VU-FE-GE-01T",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/01/SYSVU-FE-GE-02T.pdf"
+    },
+    {
+     "title": "Carrier 48/50JC 04-06 Ultra High Efficiency Variable Speed Rooftop Units with SystemVu Controls — Controls, Start-Up, Operation and Troubleshooting",
+     "docId": "48/50JC-4-6-02T",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/01/48-50JC-4-6-02T.pdf"
+    },
+    {
+     "title": "Carrier Enterprise / Carrier technical service bulletin — 'JC and LC SystemVu F202 Faults' (nuisance F202 freeze-protection fault when SAT_HEAT is disabled)",
+     "docId": "PTC2022-0008B",
+     "url": "https://resource.carrierenterprise.com/is/content/Watscocom/ce_canada_technical-service-bulletins-document_20220705_PTC20220008Bpdf"
+    },
+    {
+     "title": "Mingledorff's tech tip — 'FAIL TO PRESSURE' on a 48JC04-06 (Alert A321), reproducing the SystemVu alert definition and reverse-rotation diagnosis",
+     "docId": "mingledorffs.com/fail-to-pressure",
+     "url": "https://www.mingledorffs.com/fail-to-pressure/"
+    },
+    {
+     "title": "TSI HVAC service reference — Carrier IGC board LED codes (Symptom / Cause / Remedy table reproduced from Carrier rooftop service literature)",
+     "docId": "tsihvac igc_codes.pdf",
+     "url": "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
     }
    ],
    "confidence": "medium",
    "sources": [
-    "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section"
+    "Carrier 48/50FC, GC Controls, Start-Up, Operation and Troubleshooting (Form 48/50FC-GC-01T) and S-VU-LC-4-26-03T (SystemVu, 48/50LC) — Alarms and Alerts section",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/0B/48_50FC-GC-01T.pdf",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/08/S-VU-LC-4-26-03T.pdf",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/01/SYSVU-FE-GE-02T.pdf",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/01/48-50JC-4-6-02T.pdf",
+    "https://resource.carrierenterprise.com/is/content/Watscocom/ce_canada_technical-service-bulletins-document_20220705_PTC20220008Bpdf",
+    "https://www.mingledorffs.com/fail-to-pressure/",
+    "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf",
+    "https://www.carrier.com/commercial/en/us/systemvu/"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "IGC LED off",
+     "meaning": "Hardware failure / loss of power to the IGC — no gas heating.",
+     "checks": [
+      "Check the 5 amp fuse on the IGC, power to the unit, the 24 V circuit breaker, the transformer and the wiring to the IGC (48/50FC-GC-01T Table 18 IGC Board LED Alarm Codes)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 1 flash",
+     "meaning": "Limit switch fault — the high-temperature limit switch opened; gas valve and igniter turn off while the indoor fan and inducer remain on.",
+     "checks": [
+      "Check indoor airflow: filters, blower speed/belt, external static, closed dampers (field practice)",
+      "Check limit switch wiring and that the limit closes when cooled (field practice)",
+      "Note: limit circuit lockout occurs if the limit or flame rollout switch is open longer than 3 minutes or 10 successive limit trips occur (IGC description)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 2 flashes",
+     "meaning": "Flame sense fault.",
+     "checks": [
+      "Clean the flame sensor rod; check flame-sense wiring, polarity/ground of the 24 V circuit and burner alignment (field practice)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 3 flashes",
+     "meaning": "Pressure switch fault — the flue gas pressure switch is read closed before the inducer starts (or fails to close after it starts).",
+     "checks": [
+      "Check for a stuck/welded pressure switch, pinched or wet tubing, blocked flue or inducer, and switch wiring (TSI IGC codes / field practice)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 4 flashes",
+     "meaning": "Four consecutive limit switch faults.",
+     "checks": [
+      "Treat as a repeat of the 1-flash cause: airflow, limit switch, blower; correct before resetting (field practice)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 5 flashes",
+     "meaning": "Ignition lockout fault.",
+     "checks": [
+      "Check gas supply/pressure, gas valve voltage, igniter, flame sensor and combustion air; reset by cycling 24 V power to the IGC (field practice)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 6 flashes",
+     "meaning": "Induced-draft motor fault.",
+     "checks": [
+      "Check for proper voltage to the inducer motor and verify the speed sensor plug at IGC terminal J2 (PIN 1 white, PIN 2 red, PIN 3 black) (TSI IGC codes)",
+      "Ensure the induced-draft blower wheel is secured to the motor shaft (48FC/LC service literature)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 7 flashes",
+     "meaning": "Rollout switch fault — the rollout switch has opened; heating is shut down.",
+     "checks": [
+      "Check gas valve operation and that the induced-draft blower wheel is properly secured to the motor shaft (Carrier service literature)",
+      "Inspect the heat exchanger and burners for blockage or cracks before resetting the manual rollout switch (field practice)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 8 flashes",
+     "meaning": "Internal control fault — the IGC has sensed an internal hardware or software error.",
+     "checks": [
+      "If the fault is not cleared by resetting 24 V power, replace the IGC (48/50FC-GC-01T Table 18)"
+     ]
+    },
+    {
+     "pattern": "IGC LED 9 flashes",
+     "meaning": "Internal software fault / software lockout.",
+     "checks": [
+      "If the error code is not cleared by resetting unit power, replace the IGC (TSI IGC codes)"
+     ]
+    },
+    {
+     "pattern": "IGC LED multiple codes",
+     "meaning": "If more than one error code exists they are displayed on the LED in numerical sequence with a 3-second pause between codes.",
+     "checks": [
+      "Count each flash group separately; write down all codes before cycling power (manual)"
+     ]
+    }
    ]
   },
   {
