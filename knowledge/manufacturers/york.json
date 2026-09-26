@@ -25,7 +25,7 @@
    "description": "Legacy 10-character York serial (1971 - Oct 2004): four letters + six-digit sequence. Letter 1 = plant, letter 2 = month, letter 3 = year, letter 4 = item type (M = mfg. basic unit, P = purchased basic unit, S/T = low-side item, Y/Z = accessory). Year letters cycle every 21 years; this entry is the FIRST cycle (A = 1971 ... Y = 1991).",
    "eraStart": 1971,
    "eraEnd": 1991,
-   "regex": "^([A-Z])([A-HK-N])([A-HJ-NPR-TV-Y])([A-Z])(\\d{6})$",
+   "regex": "^(?:\\([A-Z]\\))?([A-Z])([A-HK-N])([A-HJ-NPR-TV-Y])([A-Z])(\\d{6})$",
    "date": {
     "method": "letterYear",
     "yearGroup": 3,
@@ -78,8 +78,8 @@
      "E": "Elyria OH",
      "M": "Madisonville (one source: Marysville)",
      "N": "Norman OK",
-     "T": "Typhoon",
-     "U": "Tutco",
+     "T": "Typhoon (single secondary source: PICKHVAC)",
+     "U": "Tutco (single secondary source: PICKHVAC)",
      "W": "Wichita KS",
      "X": "Monterrey MX",
      "Y": "York PA"
@@ -122,7 +122,8 @@
     "AMBIGUOUS BY DESIGN: the year letter repeats every 21 years (A = 1971 or 1992 ... N = 1983 or 2004). The decoder will also match the 1992-2004 entry and flag the result ambiguous; pick the cycle from the nameplate: R-22 units with an ANSI/AHRI standard year printed on the plate in the 1990s, a Simplicity board, or a 10 SEER/EER rating are the 1992-2004 cycle; units this old (1971-1991) are rarely still in service.",
     "Months skip I and J (K = Sep, L = Oct, M = Nov, N = Dec). Year letters skip I, O, Q, U.",
     "Only ADFM654321 is a source-stated example (Parts Town / InspectApedia state it decodes to April, 1976 or 1997). The other two examples are rule-derived fixtures, not nameplate photos - which is why confidence is medium, not high.",
-    "The item-type letter (position 4) is captured as [A-Z]; the York sheet lists M, P, S, T, Y, Z. Coleman (Wichita, W) and Luxaire/Fraser-Johnston products built by York used this same scheme."
+    "The item-type letter (position 4) is captured as [A-Z]; the York sheet lists M, P, S, T, Y, Z. Coleman (Wichita, W) and Luxaire/Fraser-Johnston products built by York used this same scheme.",
+    "Some legacy plates print an extra leading letter in parentheses, e.g. '(S)EBHM062202'; building-center.org: 'this is the same styling, just ignore the first letter in parenthesis'. The regex accepts and ignores that prefix (decoded from E-B-H-M = Elyria, Feb, year letter H)."
    ]
   },
   {
@@ -130,7 +131,7 @@
    "description": "Legacy 10-character York serial (1971 - Oct 2004), SECOND letter cycle: year letter A = 1992 ... N = 2004. Same layout as the 1971-1991 entry: plant letter, month letter, year letter, item-type letter, six-digit sequence.",
    "eraStart": 1992,
    "eraEnd": 2004,
-   "regex": "^([A-Z])([A-HK-N])([A-HJ-N])([A-Z])(\\d{6})$",
+   "regex": "^(?:\\([A-Z]\\))?([A-Z])([A-HK-N])([A-HJ-N])([A-Z])(\\d{6})$",
    "date": {
     "method": "letterYear",
     "yearGroup": 3,
@@ -175,8 +176,8 @@
      "E": "Elyria OH",
      "M": "Madisonville (one source: Marysville)",
      "N": "Norman OK",
-     "T": "Typhoon",
-     "U": "Tutco",
+     "T": "Typhoon (single secondary source: PICKHVAC)",
+     "U": "Tutco (single secondary source: PICKHVAC)",
      "W": "Wichita KS",
      "X": "Monterrey MX",
      "Y": "York PA"
@@ -203,6 +204,13 @@
       "year": 2000,
       "month": 7
      }
+    },
+    {
+     "serial": "(S)EBHM062202",
+     "expect": {
+      "year": 1999,
+      "month": 2
+     }
     }
    ],
    "confidence": "medium",
@@ -218,12 +226,13 @@
    "notes": [
     "Regex only admits year letters A-N (1992-2004); letters P-Y in position 3 can only be 1984-1991 and are handled by the 1971-1991 entry, so those serials decode unambiguously.",
     "For A-N the 1971-1983 cycle also matches: disambiguate from the nameplate (R-22 Sunline 2000 / Predator D-series with a Simplicity board = this cycle). The format ended in October 2004 (last letter N = 2004).",
-    "ADFM654321 is the source-stated example (April 1997 in this cycle); NLNM123456 and WGJM000789 are rule-derived fixtures."
+    "ADFM654321 is the source-stated example (April 1997 in this cycle); NLNM123456 and WGJM000789 are rule-derived fixtures.",
+    "Some legacy plates print an extra leading letter in parentheses, e.g. '(S)EBHM062202'; building-center.org: 'this is the same styling, just ignore the first letter in parenthesis'. The regex accepts and ignores that prefix (decoded from E-B-H-M = Elyria, Feb, year letter H)."
    ]
   },
   {
    "id": "york-jci-2004-present",
-   "description": "Current York / Coleman / Luxaire / Fraser-Johnston / Champion serial (October 2004 - present): letter, digit, letter, digit, six-digit sequence (e.g. W1G7123456). Position 1 = plant, positions 2 and 4 read together = year (1 + 7 = 2017), position 3 = month letter (A-H = Jan-Aug, K = Sep, L = Oct, M = Nov, N = Dec).",
+   "description": "Current York / Coleman / Luxaire / Fraser-Johnston / Champion serial (phased in during 2004; the legacy four-letter format ended October 2004): letter, digit, letter, digit, six-digit sequence (e.g. W1G7123456). Position 1 = plant, positions 2 and 4 read together = year (1 + 7 = 2017), position 3 = month letter (A-H = Jan-Aug, K = Sep, L = Oct, M = Nov, N = Dec).",
    "eraStart": 2004,
    "regex": "^([A-Z])(\\d)([A-HK-N])(\\d)(\\d{6})$",
    "date": {
@@ -252,7 +261,7 @@
      "W": "Wichita KS",
      "N": "Norman OK",
      "A": "Apodaca (Monterrey) MX",
-     "S": "Source 1 (JCI parts subsidiary)"
+     "S": "Source 1 (JCI parts subsidiary) (single secondary source: Parts Town)"
     }
    },
    "examples": [
@@ -300,19 +309,19 @@
     "Year = (digit in position 2) x 10 + (digit in position 4), 2000-based: W1G7 = 2017, N2K3 = 2023, W0E4 = 2004. Pattern letter/digit/letter/digit cannot be confused with the four-letter legacy format.",
     "Month letters skip I and J (K = Sep). Several third-party decoders describe this as 'A to N, skipping I and J' - the same map.",
     "Nameplate: York/JCI plates print 'SERIAL NO.' directly under 'MODEL NO.'; Coleman, Luxaire, Fraser-Johnston and Champion plates use the identical scheme (all built by JCI Unitary Products).",
-    "Confidence is medium (many agreeing secondary decoders; the first three examples are source-stated, N2K3456789 is a rule-derived fixture). No manufacturer document or warranty lookup could be consulted in this session - a JCI warranty lookup on york.com would raise it to high.",
-    "Rumoured newer formats (e.g. 'S...E...' 2019+) could not be confirmed; 'S' as position 1 is the Source 1 parts plant code in this same format."
+    "Confidence is medium (many agreeing secondary decoders, including the York Central Tech Talk 2011 distributor 'decoder ring' PDF; the first three examples are source-stated, N2K3456789 is a rule-derived fixture). No warranty/serial lookup could be run in this session - a JCI warranty lookup on york.com would raise it to high.",
+    "Rumoured newer formats (e.g. 'S...E...' 2019+) could not be confirmed; 'S' as position 1 is the Source 1 parts plant code in this same format.",
+    "Changeover: the source-stated example W0E4298223 decodes to May 2004, i.e. this style was already in use before the October 2004 date the legacy-format sheets give as the end of the four-letter style; expect either style on 2004 plates."
    ]
   }
  ],
  "modelFormats": [
   {
    "id": "york-z-series-rtu-r410a",
-   "family": "York Z-series R-410A single package rooftop (ZE/ZF/ZH/ZJ/ZR/ZT: Sunline / Predator / Sun Choice / Sun Pro / Sun Premier, 3-12.5 t)",
-   "description": "Position 1 'Z' = A/C single package, R-410A. Position 2 = product identifier (efficiency tier / series). Positions 3-5 = nominal cooling capacity in MBH. Remaining positions (heat type, heat input, voltage, cabinet/options, revision) are tolerated but not decoded here because the nomenclature page could not be transcribed in this session.",
+   "family": "York Z-series R-410A single package rooftop (ZE/ZF/ZH/ZJ/ZR/ZT/ZB: Sunline / Predator / Sun Pro, 3-25 t)",
+   "description": "Position 1 'Z' = A/C single package, R-410A. Position 2 = product identifier (series / efficiency family). Positions 3-5 = nominal cooling capacity in MBH (older 036/048/060 sizes and current 037/049/061 sizes both exist; 180-300 on the 15-25 t ZJ/ZR/ZF). Position 6 = heat type letter, positions 7-8 = heat capacity code (captured; meanings only partly transcribed). Remaining positions (voltage, cabinet/options, revision) are tolerated but not decoded because the nomenclature page could not be transcribed in this session.",
    "productType": "packaged_rtu",
-   "eraStart": 2009,
-   "regex": "^(Z)([EFHJRT])(036|042|048|060|072|078|090|102|120|150)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
+   "regex": "^(Z)([BEFHJRT])(036|037|042|048|049|060|061|072|078|090|102|120|150|180|210|240|300)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
    "segments": [
     {
      "group": 1,
@@ -328,14 +337,15 @@
      "name": "Product identifier (series / efficiency)",
      "attribute": "series",
      "map": {
-      "E": "ZE - 14 SEER standard-efficiency A/C, 3-6 t (Sunline / Sun Choice)",
-      "F": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t)",
-      "J": "ZJ - 6.5-12.5 t single package A/C (Sun Choice / Predator)",
-      "R": "ZR - Z-series A/C, 3-6 t (efficiency tier not confirmed)",
-      "H": "ZH - Z-series high-efficiency A/C (tier not confirmed)",
-      "T": "ZT - Z-series A/C (tier not confirmed)"
+      "E": "ZE - Sunline standard-efficiency A/C, 3-6 t (14 SEER on 2016+ ZE036-072 per JCI submittal; pre-2016 ZE036-060 tier not confirmed)",
+      "F": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t; ZF180-300 = 15-25 t)",
+      "J": "ZJ - Predator / Sun Pro high-efficiency A/C, 3-25 t (older ZJ036-060 nomenclature: 13.0 SEER)",
+      "R": "ZR - Sun Pro MagnaDRY hot-gas-reheat A/C, 3-25 t (~14.5 SEER at 3-5 t)",
+      "H": "ZH - Predator standard/mid-efficiency gas/electric, 3-12.5 t (11.7 EER guide 528150-YTG)",
+      "T": "ZT - UHE ultra-high-efficiency Sun Pro, 3-12.5 t (up to 17.5 SEER / 21.2 IEER)",
+      "B": "ZB - UHE Sun Pro (paired with ZT, 037-150)"
      },
-     "notes": "Map is PARTIAL: only F (13 SEER / 11.0 EER) is transcribed from the manufacturer nomenclature; E and J from JCI installation-manual titles; R/H/T existence only from literature titles."
+     "notes": "Map is PARTIAL: only F (13 SEER / 11.0 EER) is transcribed from a manufacturer nomenclature page; E, J, R, H, T and B are from JCI installation-manual / technical-guide titles and york.com product pages (ZJ037-061: 'Sun Pro' / Predator tech guide 528150-YTG-W-0315; ZR037-061: 'Sun Pro MagnaDRY'; ZH: 'Predator R410A 11.7 EER' 528150-YTG-T-0514; ZT/ZB: 'UHE' 5167821-YTG-M-0320; ZJ/ZR/ZF 180-300: 5168277-YTG-K-0119). Efficiency tiers are era-dependent (ZJ036-060 was 13 SEER, ZJ037-061 ~14.5-15 SEER); treat as family labels, not ratings. york.com brands Sun Choice (15-27.5 t) and Sun Premier (25-50 t) separately - they are not Z-series prefixes."
     },
     {
      "group": 3,
@@ -343,19 +353,28 @@
      "attribute": "tonnage",
      "transform": "mbh_to_tons",
      "unit": "mbh",
-     "notes": "036 = 3 t ... 150 = 12.5 t (manufacturer nomenclature)."
+     "notes": "036 = 3 t ... 150 = 12.5 t, 180-300 = 15-25 t (MBH / 12). Current 3-5 t sizes are coded 037/049/061 (ZR037/049/061 = 3/4/5 t nominal per the 2014 catalog 'ZH037, 049, 061 Predator') - mapped explicitly because 037/12 would format as 3.1.",
+     "map": {
+      "037": "3",
+      "049": "4",
+      "061": "5"
+     }
     },
     {
      "group": 4,
-     "name": "Heat type letter (not decoded)",
-     "attribute": "other",
-     "notes": "Nameplates carry a heat-type letter here (e.g. 'N' on gas units); the map was not verified in this session - read the IOM nomenclature page."
+     "name": "Heat type letter",
+     "attribute": "heat_type",
+     "map": {
+      "C": "Cooling only (C00 per ZF036 nomenclature)"
+     },
+     "notes": "ZF036 IOM p.6 nomenclature: the block after the capacity is heat type + nominal heat capacity, 'C00' = Cooling Only. Other letters (e.g. N on gas units) are unverified and pass through as the raw letter."
     },
     {
      "group": 5,
-     "name": "Heat input code (not decoded)",
-     "attribute": "other",
-     "notes": "Two-digit heating code follows the heat letter on the factory model number; not verified."
+     "name": "Heat capacity code",
+     "attribute": "heat_capacity",
+     "transform": "raw",
+     "notes": "Two-digit heat code following the heat-type letter; '00' = no heat (cooling only). Other values' meaning not transcribed."
     }
    ],
    "refrigerant": "R-410A",
@@ -368,7 +387,7 @@
      "model": "ZF036",
      "expect": {
       "unit_type": "A/C single package, R-410A",
-      "series": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t)",
+      "series": "ZF - 13.0 SEER / 11.0 EER A/C (Predator / Sun Pro, 3-6 t and 7.5-12.5 t; ZF180-300 = 15-25 t)",
       "tonnage": "3"
      }
     },
@@ -390,13 +409,46 @@
      "expect": {
       "tonnage": "12.5"
      }
+    },
+    {
+     "model": "ZR049",
+     "expect": {
+      "tonnage": "4"
+     }
+    },
+    {
+     "model": "ZF240",
+     "expect": {
+      "tonnage": "20"
+     }
+    },
+    {
+     "model": "ZJ210",
+     "expect": {
+      "tonnage": "17.5"
+     }
+    },
+    {
+     "model": "ZB037",
+     "expect": {
+      "tonnage": "3"
+     }
+    },
+    {
+     "model": "ZF036C00A2A",
+     "expect": {
+      "tonnage": "3",
+      "heat_type": "Cooling only (C00 per ZF036 nomenclature)",
+      "heat_capacity": "00"
+     }
     }
    ],
    "notes": [
     "Nameplate: the factory model number is the long string on the 'MODEL NO.' line (e.g. ZF036...); sales literature and submittals shorten it to the first five characters (ZF036, ZJ090). Decode from the first five characters.",
-    "Z-series ships with Simplicity LITE (ZE/ZF/ZJ/ZR 2009-2015), then Smart Equipment SE-SPU controls (2014+, standard on most 3-25 t units).",
+    "Controls: Simplicity LITE on 3-6 t ZE/XN (and earlier 3-12.5 t Z-series) from ~2009 through at least 2020 (ZE IOMs 5188235-YIM-B-1016 / -E-0518, 6021974-UIM-A-1120); Simplicity SE / Smart Equipment on 6.5-12.5 t ZJ/ZH/ZR from 2014 (ZJ IOM 1107662-YIM-B-1014; ACHR News 12 Nov 2014) and on later Sun Core ZX/ZY/ZQ/ZL.",
     "Coleman and Luxaire commercial rooftops are the same JCI product; whether their model prefixes differ from York's was not confirmed.",
-    "Tail after the tonnage is tolerated but not decoded (heat type/input, voltage, cabinet, revision) - transcribe from the nomenclature page in the family's technical guide before relying on it."
+    "Tail after the heat code is tolerated but not decoded (voltage, cabinet, revision) - transcribe from the nomenclature page in the family's technical guide before relying on it.",
+    "Introduction year not confirmed (eraStart removed): the 3-5 t ZF/ZR/XP technical guide 251933-YTG was already at revision J by Oct 2009, implying earlier revisions; the R-410A Z-series certainly predates 2009 but no source gave the launch year."
    ],
    "confidence": "medium",
    "evidence": "manufacturer_doc",
@@ -406,14 +458,88 @@
     "JCI docs: Installation Manual ZE036 to ZE072 R-410A Single Package Rooftop Units 14 SEER (5188235-YIM-B-1016)",
     "JCI docs: Installation Manual York ZJ 6-1/2 - 12-1/2 Ton R-410A Single Package Unit",
     "Technical Guide R-410A ZH/ZJ/ZR Series (5167795-YTG-O-0120); Technical Guide R-410A ZF Series 7-1/2 thru 12-1/2 ton",
-    "Submittal Data Sheet YORK ZF ZH ZJ ZR ZT Series PREDATOR"
+    "Submittal Data Sheet YORK ZF ZH ZJ ZR ZT Series PREDATOR",
+    "JCI docs: Installation Manual ZR037 to ZR061 R-410A York Sun Pro MagnaDRY Packaged Unit; Installation Manual ZJ037 to ZJ061 R-410A York Sun Pro Single Package Unit",
+    "JCI docs: Technical Guide ZH/ZJ/ZR 037 to 150 Series York Sun Pro R-410A Single Package Unit (5167795-YTG-O-0120); Technical Guide ZT/ZB037 to ZT/ZB150 Series UHE; R-410A ZT/ZB Series 3-12.5 Ton (5167821-YTG-M-0320)",
+    "JCI docs: Technical Guide ZJ/ZR/ZF Series 180-300 Mbh (5168277-YTG-K-0119)",
+    "UPGnet 2014 catalog: ZH037, 049, 061 Predator R-410A Packaged Unit (037/049/061 = 3/4/5 t nominal)",
+    "JCI docs: Submittal Data Sheet ZE036 to ZE072 (14 SEER) R-410A Sunline; Technical Guide R-410A ZE/XN 5190086-YTG-G-1119",
+    "ManualsLib ZJ Series Technical Manual p.6 nomenclature (older ZJ036-060: 'J = 13.0 SEER A/C')"
+   ],
+   "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "york-sun-core-zxzyzqzl",
+   "family": "York Sun Core ZX/ZY/ZQ/ZL R-410A single package rooftop (2020+, 3-12.5 t, two-digit size code)",
+   "description": "Current (2020+) 3-12.5 t York Sun Core rooftops use a two-digit size code 04-14 after the two-letter prefix (ZX04 ... ZX14, ZY04 ... ZY14, ZQ04-14, ZL08-14) instead of the three-digit MBH capacity of the older Z-series. The code-to-tons map was NOT transcribed - read the nomenclature page of Technical Guide 1068152-YTG.",
+   "productType": "packaged_rtu",
+   "eraStart": 2020,
+   "regex": "^(Z)([XYQL])(0[4-9]|1[0-4])(?:[A-Z0-9/-]*)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Product category",
+     "attribute": "unit_type",
+     "map": {
+      "Z": "A/C single package, R-410A (Sun Core)"
+     },
+     "notes": "From the JCI document titles ('YORK Sun Core ZX/ZY/ZQ/ZL ... R-410A Single Package Unit'); no nomenclature page transcribed."
+    },
+    {
+     "group": 2,
+     "name": "Series",
+     "attribute": "series",
+     "map": {
+      "X": "ZX Sun Core",
+      "Y": "ZY Sun Core",
+      "Q": "ZQ Sun Core",
+      "L": "ZL Sun Core"
+     },
+     "notes": "Series letters from the JCI technical guide / installation manual titles; efficiency tiers not transcribed. ZL is listed only at sizes 08-14; the regex admits 04-14 for every letter."
+    },
+    {
+     "group": 3,
+     "name": "Size code (04-14, not converted to tons)",
+     "attribute": "other",
+     "notes": "Two-digit size code 04-14 spans 3-12.5 t; code->tons map NOT transcribed - read the nomenclature page of 1068152-YTG. Deliberately not exposed as tonnage so the decoder never reports an invented capacity."
+    }
+   ],
+   "refrigerant": "R-410A",
+   "controlPlatformIds": [
+    "smart-equipment"
+   ],
+   "examples": [
+    {
+     "model": "ZX04",
+     "expect": {
+      "unit_type": "A/C single package, R-410A (Sun Core)",
+      "series": "ZX Sun Core"
+     }
+    },
+    {
+     "model": "ZY14N",
+     "expect": {
+      "series": "ZY Sun Core"
+     }
+    }
+   ],
+   "notes": [
+    "LOW confidence: format existence and the 04-14 size codes come from JCI document titles and the york.com Sun Core page only; the tonnage of each code, heat codes and the rest of the string are not decoded.",
+    "Control platform: later Sun Core units ship with Smart Equipment (per the Simplicity SE era note in this pack); not confirmed from a Sun Core IOM - verify on the unit."
+   ],
+   "confidence": "low",
+   "evidence": "single_secondary",
+   "sources": [
+    "JCI docs: Technical Guide: YORK Sun Core ZX/ZY/ZQ/ZL 04 to 14 Series 3 to 12.5 Ton R-410A Single Package Unit (1068152-YTG, revisions Z-0120 through MM-1223)",
+    "JCI docs: Installation Manual ZX Series 6 - 12.5 Ton (5943356-UIM-A-1020)",
+    "york.com - Sun Core packaged rooftop product page"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "york-x-series-hp-rtu-r410a",
    "family": "York X-series R-410A single package heat pump rooftop (XN/XP, 3-5 t)",
-   "description": "Companion to the Z-series: 'X' = heat pump single package, R-410A (XN/XP appear alongside ZE/ZF/ZR in the 3-5 t technical guide). Positions 3-5 = nominal cooling capacity in MBH.",
+   "description": "Companion to the Z-series: 'X' = heat pump single package, R-410A (JCI document titles: 'XN036 - 060 Sunline Magnum R-410A Gas/Electric Single Package Heat Pumps', 'XP 036 - 060 Sunline R-410A Packaged Heat Pump'). Positions 3-5 = nominal cooling capacity in MBH.",
    "productType": "packaged_rtu",
    "eraStart": 2009,
    "regex": "^(X)([NP])(036|042|048|060)(?:[A-Z0-9/-]*)?$",
@@ -423,19 +549,19 @@
      "name": "Product category",
      "attribute": "unit_type",
      "map": {
-      "X": "Heat pump single package, R-410A (inferred from Z = A/C single package)"
+      "X": "Heat pump single package, R-410A (XN/XP document titles)"
      },
-     "notes": "Category meaning inferred from the ZE/ZF/ZR/XN/XP technical guide grouping; not transcribed from a nomenclature page."
+     "notes": "Category meaning from JCI installation-manual / technical-guide titles that describe XN/XP as single package heat pumps; no nomenclature page was transcribed."
     },
     {
      "group": 2,
      "name": "Product identifier",
      "attribute": "series",
      "map": {
-      "N": "XN heat pump",
-      "P": "XP heat pump"
+      "N": "XN - Sunline Magnum single package heat pump, 14.0 SEER",
+      "P": "XP - Sunline single package heat pump, 13.0 SEER"
      },
-     "notes": "Efficiency tiers not confirmed."
+     "notes": "Tiers from Technical Guide R-410A ZE/XN 5190086-YTG-G-1119 (XN036/048 = 14.0 SEER) and the 'York XP Sunline R410A 13 SEER Technical Guide'; era-dependent, treat as labels."
     },
     {
      "group": 3,
@@ -455,7 +581,7 @@
      "model": "XP036",
      "expect": {
       "tonnage": "3",
-      "series": "XP heat pump"
+      "series": "XP - Sunline single package heat pump, 13.0 SEER"
      }
     },
     {
@@ -466,24 +592,27 @@
     }
    ],
    "notes": [
-    "LOW confidence: only the tonnage rule is solid. Confirm 'X = heat pump' on the unit's nomenclature page (Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton)."
+    "LOW confidence: 'X = heat pump' and the N/P tiers rest on document titles, not a transcribed nomenclature page. Confirm on the unit's nomenclature page (Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton)."
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "single_secondary",
    "sources": [
     "Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton (manualzz 34526987)",
-    "TG York R-410A ZF/ZR/XP Series 3-5 Ton 60 Hz (251933-YTG-J-1009, 'Sunline XP')"
+    "TG York R-410A ZF/ZR/XP Series 3-5 Ton 60 Hz (251933-YTG-J-1009, 'Sunline XP')",
+    "JCI docs: Installation Manual XN036 - 060 Sunline Magnum R-410A Gas/Electric Single Package Heat Pumps",
+    "UPGnet: XP 036 - 060 Sunline R-410A Packaged Heat Pump; usermanual.wiki 'York XP Sunline R410A 13 SEER Technical Guide'",
+    "Technical Guide R-410A ZE/XN 5190086-YTG-G-1119 (XN036/048 14.0 SEER; XP036/048 13.0 SEER)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "york-d-series-sunline-predator-r22",
-   "family": "York Sunline 2000 / Predator D-series R-22 single package rooftop (DM/DJ/DF/DE 3-25 t)",
+   "family": "York Sunline 2000 / Predator D-series R-22 single package rooftop (DM/DJ/DF/DH/DY 3-25 t)",
    "description": "Position 1 'D' = A/C single package, R-22. Position 2 = product identifier (M = 9.0 EER A/C per the DM090 manual). Positions 3-5 = nominal cooling capacity in MBH (DM090 = 7.5 t, DM180/240/300 = 15/20/25 t).",
    "productType": "packaged_rtu",
    "eraStart": 1998,
    "eraEnd": 2010,
-   "regex": "^(D)([MJFE])(036|048|060|072|078|090|102|120|150|180|210|240|300)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
+   "regex": "^(D)([MJFEHY])(036|048|060|072|078|090|102|120|150|180|210|240|300)([A-Z]?)(\\d{2})?(?:[A-Z0-9/-]*)?$",
    "segments": [
     {
      "group": 1,
@@ -502,9 +631,11 @@
       "M": "DM - 9.0 EER A/C (Predator / Sunline 2000; DM180-300 = 15-25 t Sunline 2000 high-efficiency)",
       "J": "DJ - Sunline Magnum / Sunline 13.0-13.5 SEER (3-5 t) and DJ 210 (17.5 t)",
       "F": "DF - Sunline (e.g. DF072, 6 t)",
-      "E": "DE - Sunline D-series (tier not confirmed)"
+      "E": "DE - unconfirmed: no source found for a 'DE' prefix (only 'D1EE036 Sunline Plus', which is the D#XX legacy format); kept so an unknown plate still decodes",
+      "Y": "DY - Sunline 14.00 SEER A/C / gas-electric, 3-5 t",
+      "H": "DH - Sunline Ultra A/C, 3-5 t"
      },
-     "notes": "Map PARTIAL: only M (9.0 EER) is transcribed from the manufacturer nomenclature; J and F from literature titles; E unconfirmed."
+     "notes": "Map PARTIAL: only M (9.0 EER) is transcribed from the manufacturer nomenclature; J and F from literature titles; Y from the ManualsLib 'YORK DY 036 Technical Manual' (single package gas/electric and A/C, 3-5 t, 14.00 SEER; DY048, DY060); H from the manualzz 'YORK Sunline Ultra DH036, DH048, DH060 Technical Guide'; E has no source and is unconfirmed."
     },
     {
      "group": 3,
@@ -515,14 +646,16 @@
     },
     {
      "group": 4,
-     "name": "Heat type letter (not decoded)",
-     "attribute": "other",
-     "notes": "Nomenclature template shows a heat-type letter here (e.g. 'N10' on DM090 gas units); map not verified."
+     "name": "Heat type letter",
+     "attribute": "heat_type",
+     "notes": "DM090 nomenclature template shows a heat-type letter here ('N10' on DM090 gas units); the letter meanings were not transcribed - passed through as the raw letter."
     },
     {
      "group": 5,
-     "name": "Heat input code (not decoded)",
-     "attribute": "other"
+     "name": "Heat capacity code",
+     "attribute": "heat_capacity",
+     "transform": "raw",
+     "notes": "Two-digit heat code from the DM090 template ('D M 090 N10 ...'); meaning not transcribed."
     }
    ],
    "refrigerant": "R-22",
@@ -567,6 +700,13 @@
      "expect": {
       "tonnage": "25"
      }
+    },
+    {
+     "model": "DY048",
+     "expect": {
+      "tonnage": "4",
+      "series": "DY - Sunline 14.00 SEER A/C / gas-electric, 3-5 t"
+     }
     }
    ],
    "notes": [
@@ -580,18 +720,20 @@
     "York DM090 Installation Manual, Nomenclature (ManualsLib 197965 p.7)",
     "York Technical Guide DM 180, 240 & 300 Sunline 2000 (036-21476-002-E-0904; 262259-YTG-G-1109)",
     "HVAC Tech Support: Sunline DJ036-060 13.0 thru 13.5 SEER; Sunline DF072 technical guides",
-    "York DJ 210 Technical Manual, Product Nomenclature (ManualsLib 197961 p.3)"
+    "York DJ 210 Technical Manual, Product Nomenclature (ManualsLib 197961 p.3)",
+    "ManualsLib: YORK DY 036 Technical Manual (single package gas/electric and A/C, 3-5 t, 14.00 SEER)",
+    "manualzz: YORK Sunline Ultra DH036, DH048, DH060 Technical Guide"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "york-sunline2000-dxcg-legacy",
-   "family": "York Sunline 2000 legacy D#CG/D#CE single package rooftop (R-22, 1990s - mid 2000s)",
+   "family": "York Sunline 2000 legacy D#CG/D#CE single package rooftop (R-22, 1990s - mid 2000s; CG = gas/electric, CE = A/C)",
    "description": "Older Sunline 2000 nomenclature: 'D' + one digit (series generation) + two letters (e.g. CG) + nominal cooling capacity in MBH, followed by heat type/input, voltage and option codes. Example family: D3CG090.",
    "productType": "packaged_rtu",
    "eraStart": 1990,
    "eraEnd": 2006,
-   "regex": "^(D)(\\d)([A-Z]{2})(036|048|060|072|090|102|120|150|180|240|300)(?:[A-Z0-9/-]*)?$",
+   "regex": "^(D)(\\d)([A-Z]{2})(036|048|060|072|076|090|102|120|150|180|240|300)(?:[A-Z0-9/-]*)?$",
    "segments": [
     {
      "group": 1,
@@ -605,20 +747,25 @@
      "group": 2,
      "name": "Series generation digit",
      "attribute": "series",
-     "notes": "Meaning of the digit (1/2/3/7...) not verified."
+     "notes": "Product generation digit per the D2CG/D7CG manual nomenclature ('Product Generation'); the meaning of each digit (1/2/3/7...) is not transcribed."
     },
     {
      "group": 3,
-     "name": "Configuration letters (not decoded)",
-     "attribute": "other",
-     "notes": "e.g. 'CG' on gas-heat units; letter meanings not verified in this session."
+     "name": "Product identifier (configuration)",
+     "attribute": "heat_type",
+     "map": {
+      "CG": "Gas/electric single package",
+      "CE": "Cooling with optional electric heat single package"
+     },
+     "notes": "From the 'York D2CG 072, D7CG 036, D7CG 048, D7CG 060 User Manual' nomenclature (ManualMachine: Product Category D = Single Package Air Conditioner (air cooled), digit = Product Generation, Product Identifier CG = Gas/Electric) and the JCI title 'D3CE and D3CG 090 to 150 Single Package Gas Electric Units and Single Package Air Conditioners 7.5 to 12.5 Tons Technical Guide' (CG = gas/electric, CE = A/C). Other letter pairs are not mapped."
     },
     {
      "group": 4,
      "name": "Nominal cooling capacity (MBH)",
      "attribute": "tonnage",
      "transform": "mbh_to_tons",
-     "unit": "mbh"
+     "unit": "mbh",
+     "notes": "MBH / 12. Size 076 (D3CE 076) is listed on ManualsLib only - single source."
     }
    ],
    "refrigerant": "R-22",
@@ -638,15 +785,25 @@
      "expect": {
       "tonnage": "10"
      }
+    },
+    {
+     "model": "D7CG048",
+     "expect": {
+      "tonnage": "4",
+      "heat_type": "Gas/electric single package"
+     }
     }
    ],
    "notes": [
-    "LOW confidence: only the existence of D3CG090 (JCI installation instructions) and the MBH tonnage convention are confirmed; D3CG120 is a rule-derived fixture. Read the nomenclature page in the unit's installation instructions."
+    "LOW confidence: the D3CG090 installation instructions, the D2CG/D7CG manual nomenclature and the D3CE/D3CG technical guide title confirm the layout and CG/CE meanings; D3CG120 is a rule-derived fixture. Read the nomenclature page in the unit's installation instructions."
    ],
    "confidence": "low",
    "evidence": "single_secondary",
    "sources": [
-    "York D3CG090 Installation Instructions Manual, Nomenclature (ManualsLib 868452 p.2)"
+    "York D3CG090 Installation Instructions Manual, Nomenclature (ManualsLib 868452 p.2)",
+    "ManualMachine: York D2CG 072, D7CG 036, D7CG 048, D7CG 060 User Manual (nomenclature: Product Category / Generation / Product Identifier CG = Gas/Electric / nominal cooling capacity)",
+    "JCI docs: D3CE and D3CG 090 to 150 Single Package Gas Electric Units and Single Package Air Conditioners 7.5 to 12.5 Tons Technical Guide",
+    "ManualsLib: York SUNLINE 2000 D3CE 076 (size 076, single source)"
    ],
    "lastVerified": "2026-09-26"
   }
@@ -655,7 +812,7 @@
   {
    "id": "simplicity-ucb",
    "name": "York Simplicity / Simplicity LITE unit control board (UCB) LED flash codes",
-   "description": "Single-LED flash-code diagnostics on the York unit control board. Original Simplicity (Sunline 2000 / Predator D-series, ~1998-2009: LAST ERROR button, Modbus/BAS port, fault history) and Simplicity LITE (Z-series 3-12.5 t, ~2009-2015) use different flash tables; only states confirmed from a cited source are listed here. Enrichment pass (2026-09-26) added no codes: no manufacturer document or corroborating source could be retrieved during the pass, and the verification protocol forbids transcribing codes from memory. The flash-code list here remains limited to the four states cited from ZE036 IOM 5188235-YIM-B-1016 p.66 and one secondary thread; for any other flash count, or for Simplicity SE / Elite alarm and history codes (SE-MOBILE app or display), read the flash-code / alarm table printed on the unit's control-box label or in the unit IOM (e.g. 5188244-YIM, 826081-XIM) before acting. Enrichment pass 2026-09-26 (search-only; WebFetch blocked). Flash codes were read from search summaries of the York ZE036 IOM 5188235-YIM-B-1016 p.66, ZJ078/ZF150 Sun Pro IOM p.60, Predator BP120 IOM p.40, Sunline DCG IOM p.55 and DUQ024-060 IOM p.28; meanings are transcribed as the summaries quoted them and should be spot-checked against the printed tables by a verifier. Coverage is 'partial': the UCB flash table (steady/heartbeat/off, 1-14) and ICB flash table (heartbeat, 1-10) are believed complete for original Simplicity and Simplicity LITE (the DM090 IOM table also ends at 14 flashes), b",
+   "description": "Single-LED flash-code diagnostics on the York unit control board. Original Simplicity (Sunline 2000 / Predator D-series, ~1998-2009: LAST ERROR button, Modbus/BAS port, fault history) and Simplicity LITE (3-6 t ZE/XN, and earlier 3-12.5 t Z-series, from ~2009 through at least 2020: ZE IOMs 5188235-YIM-B-1016 / -E-0518, technical guide 5190086-YTG-G-1119, ZE IOM 6021974-UIM-A-1120) share the same UCB numbering; 6.5-12.5 t ZJ/ZH/ZR moved to Simplicity SE / Smart Equipment from 2014 (ZJ IOM 1107662-YIM-B-1014; ACHR News 12 Nov 2014), as did the later Sun Core ZX/ZY/ZQ/ZL - those text alarms are on the separate 'smart-equipment' platform. Flash codes here were read (search-only pass, 2026-09-26; WebFetch blocked) from search summaries of the York ZE036 IOM 5188235-YIM-B-1016 p.66, ZJ078/ZF150 Sun Pro IOM p.60, Predator BP120 IOM p.40, Sunline DCG IOM p.55 and DUQ024-060 IOM p.28; meanings are transcribed as the summaries quoted them and should be spot-checked against the printed tables. Coverage: the UCB flash table (steady / heartbeat / off and 1-14; believed complete - the DM090 IOM table also ends at 14 flashes) and the ICB flash table (heartbeat and 1-10; complete) are listed. Not covered: any UCB flash count above 14 on later firmware, and the JCI IQ / TempMaster variants. Intelli-Comfort (15-25 t D-series) and Millennium Simplicity Elite (25-40 t) numbered alarms are on their own platforms in this pack.",
    "appliesTo": [
     "york-z-series-rtu-r410a",
     "york-x-series-hp-rtu-r410a",
@@ -683,7 +840,7 @@
      "meaning": "Heart Beat - Normal Operation",
      "likelyCauses": [],
      "checks": [
-      "No active fault; the ZE036 IOM describes normal operation as a 1 second on / 1 second off heartbeat, while fault codes flash at about 200 ms on / 200 ms off",
+      "No active fault; the IOM 'Unit Control Board Flash Codes' page describes normal operation as a 1 second on / 1 second off heartbeat, while fault codes are 1/4-second flashes followed by a two-second pause before the code repeats (e.g. a two-flash code flashes on and off twice, stays off for two seconds, then repeats)",
       "If the unit is not responding, check the thermostat inputs (Y1/Y2/W1/W2/G) at the board and the ASCD timer (field practice)"
      ],
      "severity": "info",
@@ -715,12 +872,13 @@
      ],
      "checks": [
       "Measure outdoor ambient; above about 55 F the switch should be open - ohm it and its wiring to the UCB",
-      "If the unit must cool at low ambient, confirm a low-ambient kit is installed and the switch is wired per the kit instructions (field practice)"
+      "If the unit must cool at low ambient, confirm a low-ambient kit is installed and the switch is wired per the kit instructions (field practice)",
+      "York Central Tech Talk: FC 10 is a notice only and NOT a lockout. With the LAS closed and a cooling call, the compressors are cycled 10 minutes on / 5 minutes off (economizer software switch OFF - factory default on units shipped without an economizer) or held off while the economizer free-cools (switch ON); confirm the economizer switch setting matches the installed equipment"
      ],
-     "severity": "warning",
+     "severity": "info",
      "source": "York ZE036 IOM 5188235-YIM-B-1016 p.66 ('10 Flashes - Compressors Locked Out On Low Outdoor Air Temperature'); York Central Tech Talk 'Simplicity Diagnostics Flash Codes' (FC 10); ZJ078 IOM p.60",
      "evidence": "manufacturer_doc",
-     "notes": "LOW confidence - from a secondary source only; confirm against the flash-code table printed on the unit's control-box label or IOM."
+     "notes": "Not a lockout: with the LAS closed the compressors cycle 10 min on / 5 min off (no-economizer default) or are held off while the economizer free-cools (York Central Tech Talk 'Simplicity Diagnostics Flash Codes'). Meaning text is from the ZE036 IOM search summary; confirm against the flash-code table printed on the unit's control-box label."
     },
     {
      "code": "LED OFF",
@@ -987,7 +1145,7 @@
     },
     {
      "code": "ICB 4 flashes",
-     "meaning": "4 Flashes - Not Applicable",
+     "meaning": "4 Flashes - Not Used (DUQ024-060 IOM p.28) / Not Applicable (Sunline DCG IOM p.55 wording)",
      "likelyCauses": [
       "Not a defined ICB code on this table"
      ],
@@ -995,8 +1153,9 @@
       "Re-count the flashes; confirm against the ICB label"
      ],
      "severity": "info",
-     "source": "York Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('4 Flashes - Not Applicable')",
-     "evidence": "manufacturer_doc"
+     "source": "York DUQ024-060 IOM p.28 'Ignition Control Board Flash Codes' ('4 Flashes - Not Used'); York Sunline DCG IOM p.55 (same row, search summary showed the table but not row 4 verbatim)",
+     "evidence": "manufacturer_doc",
+     "notes": "The two IOMs word this row differently; neither defines a 4-flash ICB fault."
     },
     {
      "code": "ICB 5 flashes",
@@ -1090,227 +1249,508 @@
      "severity": "shutdown",
      "source": "York DUQ024-060 IOM p.28 / Sunline DCG IOM p.55 'Ignition Control Board Flash Codes' ('10 Flashes - Flame Sense Circuit Failure')",
      "evidence": "manufacturer_doc"
+    }
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "UCB LED: steady on",
+     "meaning": "Control Failure - Replace Control (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Verify 24 VAC and the board fuse, cycle power once, then replace the board if it stays steady"
+     ]
     },
     {
-     "code": "SE: C1 Locked Out Due to High Pressure",
-     "meaning": "Critical alarm - C1 Locked Out Due to High Pressure: three HPS1 trips within two hours (same alarm exists as C2/C3/C4 for HPS2/HPS3/HPS4)",
+     "pattern": "UCB LED: heartbeat (1 s on / 1 s off)",
+     "meaning": "Normal Operation (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "No fault stored; fault codes are 1/4-second flashes counted between two-second pauses, after which the code repeats (IOM 'Unit Control Board Flash Codes' page)"
+     ]
+    },
+    {
+     "pattern": "UCB LED: off",
+     "meaning": "No Power or Control Failure (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Check 24 VAC at the board, transformer secondary and board fuse; replace the board if powered with no LED"
+     ]
+    },
+    {
+     "pattern": "UCB LED: N fast flashes then pause",
+     "meaning": "Fault code N - see the '1 flash' through '14 flashes' entries (Simplicity / Simplicity LITE UCB)",
+     "checks": [
+      "Count flashes between pauses; on original Simplicity boards press LAST ERROR once to replay the last five codes (most recent first)"
+     ]
+    },
+    {
+     "pattern": "ICB LED: heartbeat",
+     "meaning": "Normal Operation (ignition control board on gas units)",
+     "checks": [
+      "If the UCB shows 9 flashes but the ICB heartbeats, look at the limit / rollout switches and the heat-section jumper plug"
+     ]
+    },
+    {
+     "pattern": "ICB LED: N flashes",
+     "meaning": "Ignition fault N - see the 'ICB 1 flash' through 'ICB 10 flashes' entries",
+     "checks": [
+      "Read the ICB LED whenever the UCB shows 9 flashes"
+     ]
+    }
+   ],
+   "diagnosticTips": [
+    "The flash-code LED is on the unit control board in the control compartment; codes are counted as flashes between pauses.",
+    "Original Simplicity boards: press and release the LAST ERROR button once (within 5 s) and the LED replays the last five stored fault codes, most recent first; history is also readable over the Modbus/BAS port.",
+    "The complete flash-code table (and the separate Ignition Control Board flash codes on gas units) is printed in the unit installation manual, e.g. ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes / Ignition Control Board Flash Codes', and on the label inside the control box.",
+    "Most lockouts clear by removing the thermostat call (or cycling 24 V control power) once the cause is corrected.",
+    "Original Simplicity and Simplicity LITE boards: the single flash-code LED is on the UCB in the control compartment. Normal operation is a 1 s on / 1 s off heartbeat; fault codes are flashed at 1/4-second intervals with a two-second pause between repeats (IOM 'Unit Control Board Flash Codes' page: 'a two-flash code will flash on and off twice, stay off for two seconds, then repeat'). The same numbering (2 = ASCD ... 14 = EEPROM) is used on original Simplicity (Sunline 2000 / Predator, BP/DM IOMs) and Simplicity LITE (ZE/ZF/ZJ Sun Pro IOMs); 3-5 t single-compressor LITE tables omit the HPS2/LPS2/FS2 and fan-overload rows.",
+    "Original Simplicity boards (Sunline 2000 / Predator): press and release the LAST ERROR button once within five seconds and the LED flashes the last five stored codes, most recent first. Two clearing procedures appear in York literature and likely belong to different board generations: (a) Predator / Sunline BP and DM IOMs - press and release LAST ERROR twice within five seconds to clear the fault history; (b) a later York procedure - press and hold LAST ERROR for at least five seconds; the LED flashes three green times when the memory is cleared, or two green times if no codes were stored. Use the procedure printed on the board label / unit IOM (the document for (b) was not identified in this pass). Fault history is also available over the Modbus/BAS port (York Wireless monitoring / BAS).",
+    "Gas units carry a separate ignition control board (ICB) with its own LED; a UCB 9-flash code means go read the ICB LED (2 = pressure switch open, 3 = pressure switch closed, 5 = flame-loss lockout, 6 = limit open, 7 = rollout open, 8 = flame with gas off, 9 = gas valve, 10 = flame-sense circuit).",
+    "Most Simplicity / LITE lockouts clear by removing the thermostat call (Y or W) or cycling 24 V control power after the cause is corrected; York Central Tech Talk notes the flash code reports the symptom, not the root cause.",
+    "Units with a Simplicity SE / Smart Equipment board (LCD + joystick, text alarms, no flash-code LED) are on the separate 'smart-equipment' platform in this pack - see it for alarm names, ResetLO and RELEARN."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "York ZE036 Installation Manual 5188235-YIM-B-1016 - Simplicity Lite Unit Control Board Flash Codes",
+     "docId": "5188235-YIM-B-1016"
+    },
+    {
+     "title": "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
+     "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/"
+    },
+    {
+     "title": "York Simplicity Controls catalog page (UPGnet)",
+     "url": "https://www.upgnet.com"
+    },
+    {
+     "title": "York ZE036-ZE060 (3-5 t R-410A) Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes' and 'Ignition Control Board Flash Codes' (p.66)",
+     "docId": "5188235-YIM-B-1016 (ManualsLib 1468524 p.66)",
+     "url": "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66"
+    },
+    {
+     "title": "York ZE036-ZE060 Installation Manual (PDF mirror)",
+     "docId": "5188235-YIM-B-1016",
+     "url": "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf"
+    },
+    {
+     "title": "York ZJ078-ZJ150 R-410A Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60; two-compressor rows HPS2/LPS2/FS2, fan overload, OFF)",
+     "docId": "ZJ078-ZJ150 IOM (ManualsLib 1445006 p.60)",
+     "url": "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60"
+    },
+    {
+     "title": "York ZF150 Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60)",
+     "docId": "ZF078-ZF150 IOM (ManualsLib 3265815 p.60)",
+     "url": "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60"
+    },
+    {
+     "title": "Johnson Controls TempMaster ZD Series Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes; Ignition Control Board Flash Codes' (p.65)",
+     "docId": "ManualsLib 1652427 p.65",
+     "url": "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65"
+    },
+    {
+     "title": "York Predator BP120 Installation Manual - 'Unit Control Board Flash Codes' (p.40; original Simplicity table, codes 1-9)",
+     "docId": "ManualsLib 198078 p.40",
+     "url": "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40"
+    },
+    {
+     "title": "York Predator BP078 Installation Manual YIM-C - 'Unit Control Board Flash Codes' (p.49)",
+     "docId": "ManualsLib 1224625 p.49",
+     "url": "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49"
+    },
+    {
+     "title": "York DM090 Installation Manual YIM-B - 'Predator Flash Codes / Unit Control Board Flash Codes' (p.50) and 'Ignition Control Flash Codes' (p.51)",
+     "docId": "ManualsLib 197965 p.50-51",
+     "url": "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50"
+    },
+    {
+     "title": "York Sunline DCG Series Installation Manual YIM-B - 'Ignition Control Board Flash Codes' (p.55)",
+     "docId": "ManualsLib 1706953 p.55",
+     "url": "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55"
+    },
+    {
+     "title": "York International DUQ024-060 Installation Manual - 'Ignition Control Board Flash Codes' (p.28)",
+     "docId": "ManualsLib 892544 p.28",
+     "url": "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28"
+    },
+    {
+     "title": "York Central Tech Talk - 'Simplicity Diagnostics Flash Codes' (2013; FC 9 through FC 14 explained)",
+     "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/"
+    },
+    {
+     "title": "Simplicity SE (SMART Equipment) Controls Technical Guide - Table 2 Title 24 FDD codes, Table 3 refrigeration circuit FDDs",
+     "docId": "5127914-UTG-A-0515",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content"
+    },
+    {
+     "title": "Smart Equipment Control Technical Bulletin - Alarm appendix (critical / service priority / service alarms), Active alarms at start-up",
+     "docId": "LIT-12011998-UTB-B-0418 / 5.0",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0"
+    },
+    {
+     "title": "Smart Equipment Controls Sequence of Operation Technical Bulletin - Unit protection (HPS, LPS, Freezestat alarm, Condensate Overflow Switch), Alarms",
+     "docId": "LIT-12011950 5.0",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms"
+    },
+    {
+     "title": "York Smart Equipment Control Troubleshooting Guide",
+     "docId": "6138895-UTG-A-0721",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
+    },
+    {
+     "title": "York Tech Corner - 'Alarm Reset / Hard Lockout Ver 3.3 or later' (lockout trip counts and ResetLO procedure)",
+     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
+    },
+    {
+     "title": "US Air Conditioning Distributors - 'Performing a relearn or reset lockouts on a Simplicity Smart Equipment board'",
+     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
+    },
+    {
+     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.2) - start-up LED sequence, board navigation",
+     "url": "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf"
+    },
+    {
+     "title": "Simplicity Smart Equipment (SSE) Quick Start Guide",
+     "docId": "1136326-USG-A-0414",
+     "url": "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf"
+    },
+    {
+     "title": "York Tech Corner - 'Board Navigation and New Board Setup 4.0'",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf"
+    },
+    {
+     "title": "Johnson Controls NS Series Network Sensors with Fault Code Capability Installation Instructions (Title 24 economizer FDD code display)",
+     "docId": "24-10094-76",
+     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content"
+    },
+    {
+     "title": "HVAC-Talk thread 'York Rooftop Alarm Codes' (J10ZHE36 flashing 3 = HP#1) (secondary)",
+     "url": "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/"
+    },
+    {
+     "title": "GHAC Knowledgebase - 'Predator - Flashing Code 7' (secondary)",
+     "url": "https://ghac.makekb.com/entry/557/"
+    },
+    {
+     "title": "JustAnswer - York rooftop flash code 10 / FS1 flashing threads (secondary)",
+     "url": "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "York ZE036 Installation Manual 5188235-YIM-B-1016 p.66 (ManualsLib 1468524)",
+    "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
+    "JustAnswer: York rooftop unit flash code 10 / flash code 9 threads (secondary)",
+    "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66",
+    "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf",
+    "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60",
+    "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60",
+    "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65",
+    "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40",
+    "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49",
+    "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50",
+    "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55",
+    "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28",
+    "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
+    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
+    "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf",
+    "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf",
+    "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content",
+    "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/",
+    "https://ghac.makekb.com/entry/557/",
+    "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
+   ]
+  },
+  {
+   "id": "smart-equipment",
+   "name": "Johnson Controls Smart Equipment (Simplicity SE) controller - SE-SPU1001/1002/1011/1012",
+   "description": "Microprocessor unit controller with on-board LCD and joystick (SE-SPU), optional SE-Mobile app / Verasys BAS; alarms are named text alarms (critical / service priority / service, plus FDD alarms), not numeric or flash codes. Fitted to York/Coleman/Luxaire 6.5-12.5 t ZJ/ZH/ZR from 2014 (ZJ IOM 1107662-YIM-B-1014; ACHR News 12 Nov 2014) and to later Sun Core ZX/ZY/ZQ/ZL; the older Simplicity / Simplicity LITE UCB flash codes belong to the separate 'simplicity-ucb' platform. Transcription status: the critical-alarm rows (HPS1-4, LPS1-4, FS1-4, LS1-3, APS, smoke shutdown, economizer offline), the service-priority 'shutdown due to a safety' row, the space-temperature service alarms, the supply-air limit alarm, the five Title 24 economizer FDD alarm names and one refrigeration FDD (Recover Charge) were read from manufacturer sources via search summaries of LIT-12011998 / LIT-12011950 / the ZJ IOM alarm table / the SE product bulletin and York Tech Corner sheets. Still missing from Table 2: the remaining service-priority and service rows, the individual sensor-failure alarms (SAT/RAT/OAT/space/humidity), 4-stage and FDD board offline alarms, and the rest of Table 3 (refrigeration FDDs other than Recover Charge). Coverage is therefore 'partial'.",
+   "appliesTo": [
+    "york-z-series-rtu-r410a",
+    "york-x-series-hp-rtu-r410a"
+   ],
+   "faultCodes": [
+    {
+     "code": "HPS1 / HPS2 / HPS3 / HPS4 lockout (High Pressure Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three HPS1 trips within two hours' (likewise 'Three HPS2 trips within two hours', HPS3, HPS4) - the high-pressure switch of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
      "likelyCauses": [
-      "High pressure switch trips on the named compressor: dirty or blocked condenser coil, condenser fan / ECM fan failure, overcharge, non-condensables, liquid-line restriction, high ambient recirculation",
-      "Intermittent HPS wiring or a weak switch"
+      "Condenser fan not running (motor, capacitor, contactor, CF output) or condenser coil dirty / airflow blocked",
+      "Refrigerant overcharge or non-condensables in the circuit",
+      "High outdoor ambient with restricted condenser air, recirculation of discharge air",
+      "Failed or miswired HPS (switch open with normal head pressure)"
      ],
      "checks": [
-      "Open Details > Alarms (or the SE-MOBILE / MAP view) and note which circuit and how many trips",
-      "Check head pressure against the HPS rating, condenser coil, condenser fan operation and charge",
-      "Hard lockouts are cleared by cycling power or via the ResetLO parameter (see diagnostic tips); York states high pressure lockout occurs after 3 trips in 2 hours"
+      "Source: a single HPS trip shows as 'shutdown due to a safety' (circuit open now); three trips in two hours become 'Locked out due to a safety' and need ResetLO or a power cycle after repair (York Alarm Reset / Hard Lockout doc)",
+      "Field practice: gauge head pressure against outdoor ambient; verify condenser fan(s) run and the coil is clean",
+      "Field practice: with pressures normal, ohm the HPS and its wiring to the UCB HPS input; the safeties override commissioning/test mode, so a tripped HPS also blocks the stage in test (LIT-12011950)"
      ],
      "severity": "lockout",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C1 Locked Out Due to High Pressure - Three HPS1 trips within two hours' ... C4/HPS4); York 'Alarm Reset / Hard Lockout Ver 3.3 or later' (high pressure lockout after 3 trips in 2 hours)",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11; York 'Alarm Reset / Hard Lockout Ver 3.3 or later'",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: C2 Locked Out Due to High Pressure",
-     "meaning": "Critical alarm - C2 Locked Out Due to High Pressure: three HPS2 trips within two hours",
+     "code": "LPS1 / LPS2 / LPS3 / LPS4 lockout (Low Pressure Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three LPS1 trips within one hour' (likewise LPS2, LPS3, LPS4) - the low-pressure switch of that compressor stage opened three times inside a one-hour window and the control locks out that stage.",
      "likelyCauses": [
-      "High pressure switch trips on compressor 2: dirty condenser coil, condenser fan failure, overcharge, non-condensables, restriction",
-      "Intermittent HPS2 wiring or a weak switch"
+      "Low refrigerant charge / leak",
+      "Low evaporator airflow (dirty filters, slipping belt, closed dampers, dirty coil) causing low suction pressure",
+      "Restricted metering device or liquid-line drier",
+      "Failed LPS or open wiring; low ambient cooling without low-ambient controls"
      ],
      "checks": [
-      "Check circuit 2 head pressure, condenser coil and fan, and charge",
-      "Clear the hard lockout by cycling power or via ResetLO after repair"
+      "Source: a single trip reads as 'shutdown due to a safety'; the third trip inside one hour locks the stage out until ResetLO / power cycle (York Alarm Reset / Hard Lockout doc)",
+      "Field practice: gauge suction pressure and superheat against the LPS trip point; check evaporator airflow, filters and belt first",
+      "Field practice: ohm the LPS with the circuit equalized and inspect the LPS wiring to the UCB input",
+      "Source: on firmware before 4.0 ResetLO will not reset a low pressure lockout - cycle unit power; firmware 4.0+ resets it via ResetLO (York 'Alarm Reset / Hard Lockout Ver 3.3 or later')"
      ],
      "severity": "lockout",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C2 Locked Out Due to High Pressure - Three HPS2 trips within two hours')",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Low pressure switch'",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: C1 Locked Out Due to Low Pressure",
-     "meaning": "Critical alarm - C1 Locked Out Due to Low Pressure: three LPS1 trips within one hour (same alarm exists as C2/C3/C4 for LPS2/LPS3/LPS4)",
+     "code": "FS1 / FS2 / FS3 / FS4 lockout (Freeze Switch / freezestat, critical alarm)",
+     "meaning": "Critical alarm: 'Three FS1 trips within two hours' (likewise FS2, FS3, FS4) - the freezestat of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
      "likelyCauses": [
-      "Low pressure switch trips on the named compressor: low charge / leak, restricted filter drier or TXV, low indoor airflow, iced evaporator, low ambient operation without low-ambient control",
-      "Intermittent LPS wiring or a weak switch"
+      "Low evaporator airflow (filters, belt, blower speed, closed dampers) letting the coil frost",
+      "Low refrigerant charge",
+      "Freezestat sensing bulb loose or misplaced on the coil, or failed freezestat",
+      "Cooling running at low return-air temperature (economizer / low load) without low-ambient provisions"
      ],
      "checks": [
-      "Check suction pressure and superheat/subcooling on the named circuit; look for leaks",
-      "Check indoor airflow (filters, blower, coil) and evaporator icing",
-      "York states low pressure lockout occurs after 3 trips in 1 hour; clear by cycling power or via ResetLO after repair"
+      "Secondary (HVAC-Talk, York rooftop): the freeze stat opens at about 26 F coil temperature and closes at about 41 F; three trips in a two-hour window lock out that compressor stage (CR1 / CR2)",
+      "Field practice: measure evaporator airflow / static pressure, suction pressure and superheat while the coil is clear",
+      "Field practice: verify the freezestat is mounted on the coil correctly and check its continuity with the coil above the reset point; clear the lockout with ResetLO or a power cycle after repair"
      ],
      "severity": "lockout",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C1 Locked Out Due to Low Pressure - Three LPS1 trips within one hour' ... C4/LPS4); York 'Alarm Reset / Hard Lockout Ver 3.3 or later'",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Freezestat alarm'",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: C2 Locked Out Due to Low Pressure",
-     "meaning": "Critical alarm - C2 Locked Out Due to Low Pressure: three LPS2 trips within one hour",
+     "code": "LS1 / LS2 / LS3 lockout (gas heat Limit Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three LS1 trips within one hour' (likewise LS2, LS3) - the heat-section limit switch of that heating stage opened three times inside a one-hour window and the control locks out that heating stage.",
      "likelyCauses": [
-      "Low pressure switch trips on compressor 2: low charge / leak, restriction, low airflow, iced evaporator, low ambient",
-      "Intermittent LPS2 wiring or a weak switch"
+      "Insufficient airflow across the heat exchanger (dirty filters, belt, blower speed, blocked supply/return)",
+      "Over-fired burner (gas pressure / manifold pressure too high) or wrong orifice",
+      "Restricted heat exchanger or flue; failed or weak limit switch",
+      "Fan-on-heat delay / blower not running while burner is on"
      ],
      "checks": [
-      "Check circuit 2 suction pressure, superheat/subcooling and airflow",
-      "Clear the hard lockout by cycling power or via ResetLO after repair"
+      "Source: the UCB monitors the MV (gas valve) input and starts the FAN ON HEAT DELAY timer when 24 V appears on MV; heating stages are H1-H3 (LIT-12011950 gas heating sequence)",
+      "Field practice: verify blower runs during heat, measure temperature rise against the nameplate range and check manifold gas pressure",
+      "Field practice: ohm the limit switch cold and inspect the LS wiring to the UCB; clear the lockout with ResetLO or a power cycle after repair"
      ],
      "severity": "lockout",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Critical alarms ('C2 Locked Out Due to Low Pressure - Three LPS2 trips within one hour')",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: Coil Freeze Lockout",
-     "meaning": "Compressor locked out on evaporator coil freeze: York states coil freeze lockout occurs after 3 trips in 2 hours (the SE sequence takes protective action when an evaporator coil sensor EC1-EC4 reads below 42 F; freezestat alarm documented under Unit protection)",
+     "code": "APS lockout (Air Proving Switch, critical alarm)",
+     "meaning": "Critical alarm: 'Three APS trips within 1.5 hours' - the supply-fan air proving input (SF_APS, 'the feedback from the Air Proven Switch or a current sensor') was lost three times inside a 1.5-hour window; 'Supply Fan is required before allowing compressor and heat stage outputs', so cooling and heating are held off.",
      "likelyCauses": [
-      "Evaporator coil running too cold: low indoor airflow (filters, blower, VFD/IntelliSpeed setting, high static), low charge, low return-air temperature or economizer bringing in cold air with cooling on",
-      "Failed or miswired evaporator coil temperature sensor (EC1-EC4) or freezestat"
+      "Supply fan not running (belt broken, motor overload, contactor, VFD fault) or fan running backwards",
+      "APS differential switch tubing disconnected/kinked, switch failed or set too tight; current sensor not seeing motor current",
+      "Extremely dirty filters or blocked ductwork dropping the fan differential below the switch setting"
      ],
      "checks": [
-      "Read the evaporator coil sensor values in Details/Summary > Sensors and compare with the actual coil temperature; check sensor resistance if the reading is wrong",
-      "Check filters, blower operation and airflow setting; verify charge by superheat/subcooling",
-      "Clear the hard lockout by cycling power or via ResetLO after the coil has thawed and the cause is corrected"
+      "Source: the Supply fan status screen shows SF On and the UO9 light On when the fan output is energized; APS status is shown on the same status screens (LIT-12011950 Air proving switch setup / Operation)",
+      "Field practice: with the fan commanded on, confirm rotation, belt and motor amps, then jumper/measure the APS input to separate a fan problem from a switch problem",
+      "Field practice: check APS tubing and setting; clear the lockout with ResetLO or a power cycle once the fan proves"
      ],
      "severity": "lockout",
-     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Coil freeze lockout occurs after 3 trips in 2 hours'); Smart Equipment Controls Sequence of Operation LIT-12011950 'Unit protection - Evaporator coil freeze condition' and 'Freezestat alarm'",
-     "evidence": "manufacturer_doc",
-     "notes": "The exact alarm string shown on the display was not visible in the sources; the lockout rule and the coil-freeze protection are from the manufacturer documents."
-    },
-    {
-     "code": "SE: Limit Switch Lockout (LS1/LS2/LS3)",
-     "meaning": "Heat locked out on limit switch trips: York states limit switch lockout occurs after 3 trips in 1 hour (three LS1, LS2 or LS3 trips within one hour trigger a limit switch lockout)",
-     "likelyCauses": [
-      "High-limit trips on the named heat section: low airflow across the heat exchanger (dirty filters, blower / VFD setting, closed dampers, high static), overfiring, blower delay or failure",
-      "Failed or loose limit switch wiring"
-     ],
-     "checks": [
-      "Check filters, blower and heating airflow setting; measure temperature rise against the nameplate range",
-      "Check manifold pressure / firing rate; ohm the limit switch when cool",
-      "Clear the hard lockout by cycling power or via ResetLO after repair"
-     ],
-     "severity": "lockout",
-     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Limit switch lockout occurs after 3 trips in 1 hour'); York Smart Equipment Control Troubleshooting Guide 6138895-UTG (three LS1, LS2 or LS3 trips within one hour)",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation 'Air proving switch setup'",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: Air Pressure Switch (APS) Lockout",
-     "meaning": "Heat locked out on air (pressure) switch trips: York states air pressure switch (APS) lockout occurs after 3 trips in 1.5 hours (three APS trips within 1.5 hours triggers a lockout alarm)",
+     "code": "Unit Shutdown Due to Smoke (critical alarm)",
+     "meaning": "Critical alarm 'Unit Shutdown Due to Smoke': raised when 'the SD input loses 24 VAC' - the smoke-detector / shutdown input circuit to the UCB has opened and the unit shuts down.",
      "likelyCauses": [
-      "Combustion air pressure switch not proving with the inducer running: blocked flue / vent, blocked or wet switch tubing, weak inducer, failed switch, wind",
-      "Switch closing intermittently during the heat cycle"
+      "Duct smoke detector tripped (real smoke or a dirty/over-sensitive detector)",
+      "Field shutdown / fire-alarm relay contact opened, or SD jumper removed on a unit without a detector",
+      "Broken wire or loose terminal in the SD 24 VAC loop"
      ],
      "checks": [
-      "Measure pressure-switch draw with a manometer against the switch rating; inspect the flue, vent and switch tubing",
-      "Check the inducer motor and wheel; check the switch contacts",
-      "Clear the hard lockout by cycling power or via ResetLO after repair"
-     ],
-     "severity": "lockout",
-     "source": "York 'Alarm Reset / Hard Lockout Ver 3.3 or later' ('Air pressure switch (APS) lockout occurs after 3 trips in 1.5 hours'); York Smart Equipment Control Troubleshooting Guide 6138895-UTG",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "SE: Unit Shutdown Due to Smoke",
-     "meaning": "Critical alarm - Unit Shutdown Due to Smoke (the SD/24V shutdown input opened: smoke detector, condensate overflow and/or user shutdown relay wired in series)",
-     "likelyCauses": [
-      "Duct smoke detector tripped (smoke, dirty detector, or a detector needing reset)",
-      "Condensate overflow switch or a field shutdown contact in the same series loop opened; open wiring in the SD loop"
-     ],
-     "checks": [
-      "Check the smoke detector status and reset it if tripped after the cause is cleared; check the condensate pan / overflow switch",
-      "Verify 24 VAC returns to the board shutdown input through the series loop (SD-24 is the 24 VAC hot out for smoke detector, condensate overflow and/or user shutdown relay switching in series)",
-      "The unit restarts when the input closes; power cycle if it remains latched (field practice)"
+      "Field practice: measure 24 VAC at the UCB SD input; trace the loop through the duct detector(s) and any fire-alarm interlock relay",
+      "Field practice: reset the duct detector and check its sensitivity / cleanliness; confirm the factory jumper is present when no detector is installed",
+      "Source: critical alarms need ResetLO or a power cycle to restore operation after the cause is repaired (York Alarm Reset / Hard Lockout doc)"
      ],
      "severity": "shutdown",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 alarm list ('Unit Shutdown Due to Smoke'); Johnson Controls J ZB Series IOM 'Smart Equipment Unit Control Board' (SD-24 description); LIT-12011950 'Unit protection - Condensate Overflow Switch'",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE: Economizer board Offline",
-     "meaning": "Service alarm - Economizer board goes from Online to Offline (SA bus communication with the economizer controller lost)",
+     "code": "Economizer board goes from Online to Offline (SA bus communication alarm)",
+     "meaning": "Alarm 'Economizer board goes from Online to Offline' - the UCB lost SA-bus communication with the SE-ECO economizer controller that it had previously discovered.",
      "likelyCauses": [
-      "SA bus wiring / connector fault between the UCB and the SE-ECO economizer controller",
-      "Economizer controller unpowered or failed; wrong SA bus address / duplicate device"
+      "24 VAC power lost at the economizer board (24V~ IN COM / HOT)",
+      "SA bus cable unplugged, reversed polarity or wrong addressing between UCB and economizer board",
+      "Economizer board firmware error or failed board"
      ],
      "checks": [
-      "Check the green SA Bus LED on the UCB (flashing = communicating with SA bus devices; steady = awaiting communication)",
-      "Check SA bus cable, connectors and 24 V at the economizer board; confirm the board shows as Online under the device/commissioning menu",
-      "Cycle power and re-run device discovery if the board was replaced (field practice)"
+      "Source: the economizer board power LED lit = 24 VAC present; a 1/10-second on/off flash = networking error (polarity, addressing) or firmware error (reload from USB); SA bus LED lit/flickering = UCB-to-economizer SA bus communication active, off = board awaiting SA bus communication (SE-ECO1001-1 catalog page)",
+      "Source: the UCB green SA bus LED flashes when the UCB has established communication with SA bus devices (Quick Start Guide LIT-12011938)",
+      "Field practice: reseat/replace the SA bus cable, check 24 VAC at the board, then run RELEARN so the UCB rediscovers connected boards"
      ],
      "severity": "warning",
-     "source": "Smart Equipment Control Technical Bulletin LIT-12011998 Alarm appendix - Service alarms ('Economizer board goes from Online to Offline'); Smart Equipment Quick Start Guide (SA Bus LED behavior)",
+     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2; LIT-12011950 Sequence of Operation Table 11 (non-FDD alarms); SE-ECO1001-1 catalog page (LEDs)",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Air temperature sensor failure",
-     "meaning": "Title 24 economizer FDD - Air temperature sensor failure/fault: 'Problem with one of the air temperature sensors. Check Outdoor Air, Return Air, or Supply Air sensors.'",
+     "code": "Shutdown due to a safety (single HPS / LPS / FS / LS / APS trip, service priority alarm)",
+     "meaning": "Service priority fault: the alarm text reads 'shutdown due to a safety' rather than 'Locked out due to a safety'. 'If the alarm says shutdown, it means the circuit is open at that time.' Service Priority Faults 'shut down a portion of the unit operation and count toward maximum shutdowns prior to lockout'; they 'clear themselves once the problem is corrected or the safety resets'.",
      "likelyCauses": [
-      "Open, shorted or out-of-range OAT, RAT or SAT sensor; damaged sensor lead",
-      "Sensor unplugged after service"
+      "The named safety switch (HPS, LPS, freezestat, limit, air proving) is currently open - see the matching lockout entry for causes",
+      "Intermittent wiring at the switch or UCB input"
      ],
      "checks": [
-      "Read OAT/RAT/SAT in the controller sensor menu; a reading at the range limit points to the failed sensor",
-      "Ohm the suspect 10k thermistor against a thermometer reading and check its wiring/connector"
+      "Source: the affected stage restarts by itself when the switch closes; three trips inside the window (HPS/FS two hours, LPS/LS one hour, APS 1.5 hours) escalate to the critical lockout alarm",
+      "Field practice: read the alarm while the switch is still open and measure the switch input to identify which safety is open before it resets"
      ],
      "severity": "warning",
-     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors with Fault Code Capability instructions 24-10094-76 (same code text)",
+     "source": "York Tech Corner 'Alarm Reset / Hard Lockout Ver 3.3 or later' (alarm categories); LIT-12011998 Alarm appendix Table 2 (Service priority alarms)",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Not economizing when it should",
-     "meaning": "Title 24 economizer FDD - Not economizing when it should: 'The economizer is not using outdoor air when it should.'",
+     "code": "Excessive Supply Air Temp Cooling (supply-air temperature limit)",
+     "meaning": "'YORK units have a secondary safety built into the SE control that monitors supply air temperature and will drop stages of cooling or heat if the supply temperature exceeds the setting in the SE control. As the supply temperature returns to within the limitations, stages of heat or cool will be allowed to restart after any anti short cycle timers have expired.' The 'Excessive Supply Air Temp Cooling' alarm is one of the alarms that prevents cooling operation.",
      "likelyCauses": [
-      "Damper actuator not opening (failed actuator, linkage, no signal), economizer disabled or changeover setpoint too low",
-      "Failed OAT / enthalpy sensor making the controller think outdoor air is unsuitable"
+      "Cooling SAT limit reached (default 45 F, adjustable down to 40 F): low airflow, low load, economizer plus mechanical cooling, or oversized staging",
+      "Heating counterpart: SAT above the heating limit (default 140 F; upper adjustment range not stated in the sources - verify on the unit) from low airflow or over-firing",
+      "Supply air sensor misplaced (too close to coil / heat exchanger) or reading wrong"
      ],
      "checks": [
-      "Compare OAT/RAT readings and the changeover setting with actual conditions; command the damper open from the controller and watch it move",
-      "Check actuator power and signal, linkage and damper blades"
+      "Source: limits are set under Details > Control > Clg > Setup and Details > Control > Htg > Setup (Smart Equipment Control Troubleshooting Guide); the safety can be disabled in the SE control (York 'Excessive Supply Temperature')",
+      "Field practice: verify airflow (filters, belt, blower speed, static) and compare the SAT reading with a reference thermometer in the supply duct",
+      "Field practice: on VAV units also review low-limit tempering setpoints (LL_LOWSAT_SP default 65 F, LL_UPSAT_SP default 80 F) before raising the limit"
      ],
      "severity": "warning",
-     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "source": "York Tech Corner 'Excessive Supply Temperature' (Rev1 01092020); LIT-12011950 Sequence of Operation (low limit tempering setpoints)",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Economizing when it should not",
-     "meaning": "Title 24 economizer FDD - Economizing when it should not (economizer using outdoor air when conditions do not permit)",
+     "code": "Space temperature cooling alarm / Space temperature heating alarm (service alarm)",
+     "meaning": "Space temperature cooling alarm: the space temperature exceeds the operating cooling setpoint for more than 60 minutes. Space temperature heating alarm: the space temperature is less than the operating heating setpoint for more than 60 minutes.",
      "likelyCauses": [
-      "Damper stuck open or actuator failed open; changeover setpoint too high",
-      "Failed OAT / enthalpy sensor reading falsely cool"
+      "Unit unable to meet load: locked-out or shut-down stages (see safety alarms), low charge, dirty coils/filters",
+      "Setpoint or schedule change, wrong occupancy source, or space sensor reading wrong / badly located",
+      "Excessive outdoor air (economizer stuck open) or building load beyond capacity"
      ],
      "checks": [
-      "Check the damper position against the commanded position; check the actuator and linkage",
-      "Verify OAT/enthalpy sensor readings and the changeover setting"
+      "Source: this is an informative service alarm - it does not itself shut the unit down (alarm categories per York Alarm Reset / Hard Lockout doc)",
+      "Field practice: check the active alarms list for a safety lockout first, then compare space temperature, setpoints and stage status on the UCB Status screens",
+      "Field practice: verify the space / network sensor reading against a reference thermometer"
      ],
-     "severity": "warning",
-     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes ('Economizing when it should not')",
+     "severity": "info",
+     "source": "LIT-12011950 Smart Equipment Controls Sequence of Operation Technical Bulletin 5.0, 'Space temperature alarming'; LIT-12011998 Alarm appendix (Service alarms)",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Damper not modulating",
-     "meaning": "Title 24 economizer FDD - Damper not modulating: 'The economizer damper is not able to modulate properly. Check damper, linkage to actuator, or the actuator.'",
+     "code": "Air Temp Sensor Fault (FDD alarm)",
+     "meaning": "FDD alarm 'Air Temp Sensor Fault' indicates a problem with one of the air temperature sensors; check the Outdoor Air, Return Air or Supply Air sensors. The FDD also reports a fault when the local supply air temperature (SAT) sensor is disconnected from the unit controller.",
      "likelyCauses": [
-      "Failed or unpowered actuator, broken or slipping linkage, damper blades seized or obstructed",
-      "Loss of feedback / control signal to the actuator"
+      "OAT, RAT or SAT sensor unplugged, open, shorted or corroded connector",
+      "Sensor reading implausible (mounted in sun, in the discharge stream, or in a dead pocket)",
+      "'Phantom' alarm: the sensor is not installed on this unit but its input is still enabled (see Phantom entry)"
      ],
      "checks": [
-      "Command the damper through its range from the controller and watch the blades; check actuator power, signal and feedback",
-      "Free and lubricate the damper and linkage; replace the actuator if it does not track the signal"
+      "Field practice: scroll the Status screens (joystick down through SAT, RAT, OAT) and compare each reading with a reference thermometer; ohm the 10k thermistor against the resistance table in the SE technical guide",
+      "Source: economizing is not performed when the SAT is unreliable and the unit is configured for zone control or demand air temperature control (LIT-12011950)",
+      "Source: FDD faults can be viewed on the UCB local display, the network sensor, a thermostat with the X (fault) output, the MAP gateway or the BAS (SEC Product Bulletin)"
      ],
      "severity": "warning",
-     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); Smart Equipment Controls (SEC) Product Bulletin LIT-12011934 (economizer FDD); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Excess outdoor air",
-     "meaning": "Title 24 economizer FDD - Excess outdoor air: 'The economizer is allowing excess outdoor air inside.'",
+     "code": "Not Economizing When It Should (FDD alarm)",
+     "meaning": "FDD alarm 'Not Economizing When It Should' - the economizer is not using outdoor air when it should (outdoor conditions are suitable for free cooling but the damper is not opening).",
      "likelyCauses": [
-      "Damper not closing to the minimum position (actuator, linkage, minimum position set too high)",
-      "Damper blades or seals damaged; return damper stuck"
+      "Damper actuator failed, linkage disconnected or damper stuck closed",
+      "Changeover setpoint / enthalpy or dry-bulb settings too restrictive; economizer disabled in setup",
+      "OAT / RAT (or humidity) sensor reading wrong so the control believes free cooling is unavailable"
      ],
      "checks": [
-      "Check the minimum position setting and the damper's actual closed position; inspect blades and seals",
-      "Check the actuator and linkage for full travel to the closed stop"
+      "Field practice: command the damper in test/commissioning mode and watch actuator travel; check 24 VAC and the control signal at the actuator",
+      "Field practice: verify the economizer changeover method and setpoints under Details > Economizer, and the OAT/RAT readings",
+      "Source: FDD alarms and economizer sensor fault indications can be enabled or disabled from the display (LIT-12011950 'Disable or Enable FDD Alarms' / 'Disable or Enable Economizer Sensor Fault Indications')"
      ],
      "severity": "warning",
-     "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 2 Title 24 FDD codes; NS Series Network Sensors instructions 24-10094-76",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "SE FDD: Recover Charge",
+     "code": "Economizing When It Should Not (FDD alarm)",
+     "meaning": "FDD alarm 'Economizing When It Should Not' ('economizing when not required') - the economizer is bringing in outdoor air for cooling when outdoor conditions are not suitable.",
+     "likelyCauses": [
+      "Damper stuck open or actuator not closing (linkage, failed actuator, loss of control signal)",
+      "Changeover setpoints set too high / wrong changeover method for the climate",
+      "OAT or RAT sensor error making outdoor air look cooler than it is"
+     ],
+     "checks": [
+      "Field practice: verify damper closes to minimum position when commanded; check actuator feedback and linkage",
+      "Field practice: compare OAT/RAT readings and the changeover setpoint; correct sensor placement",
+      "Source: FDD faults are reported on the UCB display, network sensor, thermostat X output, MAP gateway or BAS (SEC Product Bulletin)"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Damper Not Modulating (FDD alarm)",
+     "meaning": "FDD alarm 'Damper Not Modulating' - the economizer damper is not able to modulate properly; check the damper, the linkage to the actuator, or the actuator.",
+     "likelyCauses": [
+      "Actuator failed, no 24 VAC, or control signal missing / wrong (2-10 V)",
+      "Linkage slipped, damper blades seized or obstructed",
+      "Actuator feedback wiring open so the control cannot confirm position"
+     ],
+     "checks": [
+      "Field practice: drive the damper open and closed from the commissioning / test menu and watch for movement and feedback change",
+      "Field practice: check actuator power, signal and feedback at the economizer board terminals; free up or replace the damper linkage",
+      "Field practice: re-run the economizer commissioning after repair and confirm the FDD alarm clears"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Excess Outdoor Air (FDD alarm)",
+     "meaning": "FDD alarm 'Excess Outdoor Air' - the economizer is allowing excess outdoor air inside (more than the minimum position / ventilation requirement calls for).",
+     "likelyCauses": [
+      "Minimum position set too high or damper not returning to minimum (actuator, linkage, feedback)",
+      "Damper blade seals damaged, damper stuck partly open",
+      "Return-air damper / hood problems, or OAT/RAT/SAT sensor error skewing the outdoor-air fraction calculation"
+     ],
+     "checks": [
+      "Field practice: verify minimum position setting and actual damper position at minimum; inspect blade seals and linkage",
+      "Field practice: check the OAT, RAT and SAT readings the control uses to estimate outdoor-air fraction",
+      "Source: FDD alarms can be disabled/enabled from the display if the ventilation design intentionally exceeds the default expectations (LIT-12011950)"
+     ],
+     "severity": "warning",
+     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Phantom sensor / economizer alarm (sensor not installed)",
+     "meaning": "'Phantom Alarms' are active alarms displayed that represent failures of sensors that are physically not installed on the unit (typically economizer / accessory sensor fault indications).",
+     "likelyCauses": [
+      "Board replaced or reconfigured with sensor/accessory inputs enabled that the unit does not have",
+      "Accessory board or sensor removed after the UCB had discovered it",
+      "Sensor fault indications left enabled for optional economizer sensors"
+     ],
+     "checks": [
+      "Source: the UCB automatically recognizes accessory York SMART controllers and accessory input sensors when they are connected to a powered system - run RELEARN so it rediscovers what is actually connected (US Air Conditioning Distributors 'Relearn or Reset Lockouts' procedure; York Phantom Economizer Alarms)",
+      "Source: use 'Disable or Enable Economizer Sensor Fault Indications' in the display to suppress indications for sensors not fitted (LIT-12011950 Alarms)",
+      "Field practice: confirm on the Status screens which sensor inputs read open/shorted before disabling anything"
+     ],
+     "severity": "info",
+     "source": "York Tech Corner 'Phantom Economizer Alarms' (Rev1 02122020); LIT-12011950 'Disable or Enable Economizer Sensor Fault Indications'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Recover Charge (refrigeration circuit FDD alarm)",
      "meaning": "Refrigeration circuit FDD - Recover Charge: higher than expected subcooling indicates the system may have more refrigerant charge than expected; consider recovering refrigerant",
      "likelyCauses": [
       "Circuit overcharged (charged by weight without accounting for line length, or topped off on a hot day)",
@@ -1324,7 +1764,189 @@
      "source": "Simplicity SE (Smart Equipment) Controls Technical Guide 5127914-UTG Table 3 refrigeration circuit FDDs ('Recover Charge' - higher than expected subcooling)",
      "evidence": "manufacturer_doc",
      "notes": "Only this one Table 3 entry was readable in search results; the FDD board reports other charge/efficiency/capacity diagnostics that are not transcribed here."
+    }
+   ],
+   "diagnosticTips": [
+    "Use the SE-SPU's LCD and joystick (Alarms menu) or the SE-Mobile app / Verasys UI to read active and historical alarms; the alarm names are text, not numeric codes.",
+    "The verbatim alarm tables are in the Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix: Service alarms and FDD alarms) and the Simplicity SE Controls Technical Guide (SE-SPU1001/1002/1011/1012); the 2-stage rooftop guide is 5127914-UTG-B-1116.",
+    "Verasys Alarms Summary Technical Bulletin (Smart Equipment RTU controller section) lists the same alarms as seen from the BAS.",
+    "Compressor lockouts are cleared from the Alarms / Details menu or by cycling power once the cause is corrected.",
+    "Display: the UCB (SE-SPU) has an on-board LCD with a joystick, ENTER and CANCEL buttons. Move the joystick up/down to scroll menu items and press ENTER to open a sub-menu or show a property value; press CANCEL repeatedly to return to the IDLE (home) screen. Joystick down from IDLE scrolls SAT, RAT, OAT and the other sensor readings (Status).",
+    "Alarms: 'Alarms' is a top-level menu on the UCB display; the home screen can display up to 5 active alarms. Alarms are grouped as critical, service priority and service (LIT-12011998 Alarm appendix Table 2); FDD alarms are a separate table (Table 3). The same alarms are visible through the SE-Mobile app / MAP gateway, a network sensor, a thermostat with the X fault output, or the BAS (Verasys / Metasys).",
+    "Reading alarm text: 'shutdown due to a safety' means the safety circuit is open right now (service priority - auto-clears when the safety resets and counts toward the maximum shutdowns before lockout); 'Locked out due to a safety' is a critical alarm (three trips in the window) that stays until reset.",
+    "Clearing a hard lockout (ResetLO): firmware 1.0-3.2: Details > Unit > ResetLO. Firmware 3.3-3.4: from IDLE joystick down to Summary > ENTER > Sensors > ENTER > Unit > ENTER > ResetLO > ENTER. Later firmware: Summary > Unit > ResetLO. Push the joystick right to change OFF to ON and press ENTER; after 3-5 seconds ON changes back to OFF on its own, which means the reset is complete and the lockout is broken. Cycling unit power also clears critical lockouts. If the lockout does not reset, the fault still exists. Firmware before 4.0: ResetLO does NOT clear a low-pressure lockout - cycle power; 4.0+ ResetLO clears LPS lockouts too (York Tech Corner 'Alarm Reset / Hard Lockout Ver 3.3 or later': 'ResetLo will not reset a low pressure lockout in versions prior to 4.0. Version 4.0 will reset a low pressure lockout.').",
+    "RELEARN (make the UCB rediscover connected boards/sensors, clears phantom sensor alarms): firmware 1.0-3.2: from IDLE joystick down to Controller > ENTER > SysCntlrs > ENTER > Misc > ENTER > RELEARN > ENTER (display shows False/True). Perform it with the unit not operating; on 3.3+ the ResetLO function performs the equivalent.",
+    "FDD: economizer FDD is built into the standard software and is enabled in the field from the unit keypad/display; FDD alarms and economizer sensor fault indications can be disabled/enabled from the display (LIT-12011950 Alarms section). FDD faults can be read on the UCB display, MAP gateway or BAS.",
+    "Supply-air limits: the SE control drops cooling/heating stages when SAT exceeds the cooling limit (default 45 F, adjustable down to 40 F) or the heating limit (default 140 F; the upper adjustment range was not stated in the sources - verify on the unit); set under Details > Control > Clg > Setup and Details > Control > Htg > Setup (menu path per the Smart Equipment Control Troubleshooting Guide).",
+    "Safeties override commissioning/test mode: a compressor cannot be energized in test if its HPS is tripped. The supply fan must be proven (APS / current sensor input) before compressor and heat outputs are allowed.",
+    "Verbatim alarm tables: LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix (Critical alarms, Service priority alarms, Service alarms, FDD alarms); LIT-12011950 Sequence of Operation Overview, Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms); Verasys Alarms Summary Technical Bulletin, 'Smart Equipment Rooftop Unit (RTU) Controller' section (BAS view of the same alarms)."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Simplicity SE (Smart Equipment) Controls Technical Guide (SE-SPU1001/1002/1011/1012)",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content"
     },
+    {
+     "title": "Smart Equipment Controls Technical Bulletin LIT-12011998 - Alarm appendix / Service alarms",
+     "docId": "LIT-12011998",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Smart-Equipment-Controller/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Service-alarms"
+    },
+    {
+     "title": "Verasys Alarms Summary Technical Bulletin 4.0 - Smart Equipment Rooftop Unit (RTU) Controller",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Verasys/en-US/Verasys-Alarms-Summary-Technical-Bulletin/4.0/Smart-Equipment-Rooftop-Unit-RTU-Controller"
+    },
+    {
+     "title": "Smart Equipment Controls Technical Guide 2-Stage 5127914-UTG-B-1116",
+     "docId": "5127914-UTG-B-1116"
+    },
+    {
+     "title": "Smart Equipment Control (SEC) Technical Bulletin - Alarm appendix (Table 2 alarms: critical / service priority / service; Table 3 FDD alarms)",
+     "docId": "LIT-12011998 (UTB-A-0714 / UTB-B-0418 / UTB-C-0119)",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content"
+    },
+    {
+     "title": "Smart Equipment Controls Technical Bulletin 5.0 - Alarm appendix / Critical alarms, Service alarms (web)",
+     "docId": "LIT-12011998",
+     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms"
+    },
+    {
+     "title": "Smart Equipment Controls Sequence of Operation Overview Technical Bulletin - Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms), Unit protection (HPS / LPS / Freezestat), Air proving switch setup, Space temperature alarming",
+     "docId": "LIT-12011950 (E-0120)",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf"
+    },
+    {
+     "title": "SMART Equipment Unit Controls Sequence of Operation Overview - Alarms extract (page 63, Table 11 / Table 12)",
+     "docId": "LIT-12011950 extract 'SSE Alarms.pdf'",
+     "url": "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770"
+    },
+    {
+     "title": "YORK Tech Corner - Alarm Reset / Hard Lockout Ver 3.3 or later (Rev1 01252020)",
+     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
+    },
+    {
+     "title": "YORK Tech Corner - Excessive Supply Temperature (Rev1 01092020)",
+     "docId": "excessive-supply-temperature_rev1_01092020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf"
+    },
+    {
+     "title": "YORK Tech Corner - Phantom Economizer Alarms (Rev1 02122020)",
+     "docId": "phantom-economizer-faults_rev1_02122020",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf"
+    },
+    {
+     "title": "Smart Equipment Control Troubleshooting Guide",
+     "docId": "6138895-UTG-A-0521/0721",
+     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
+    },
+    {
+     "title": "Smart Equipment Controls (SEC) Product Bulletin - Economizer controller FDD faults",
+     "docId": "LIT-12011934 / SE-COM1001-0",
+     "url": "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf"
+    },
+    {
+     "title": "Title 24 Impact on Packaged Rooftop Units Application Guide - FDD fault list",
+     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content"
+    },
+    {
+     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.4 and older) - UCB LEDs, start-up sequence, menu navigation",
+     "docId": "LIT-12011938",
+     "url": "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6"
+    },
+    {
+     "title": "SE-ECO1001-1 Economizer Controller catalog page - board LEDs",
+     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content"
+    },
+    {
+     "title": "US Air Conditioning Distributors - Performing a Relearn or Reset Lockouts on a Simplicity Smart Equipment board",
+     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
+    },
+    {
+     "title": "R-410A J**ZJ Series w/ Smart Equipment Installation Manual - Alarms (Table 2)",
+     "url": "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "docs.johnsoncontrols.com - Simplicity SE (Smart Equipment) Controls Technical Guide",
+    "docs.johnsoncontrols.com - Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix)",
+    "docs.johnsoncontrols.com - Verasys Alarms Summary Technical Bulletin 4.0",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content",
+    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf",
+    "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf",
+    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
+    "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf",
+    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content",
+    "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6",
+    "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content",
+    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
+    "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "UCB (SE-SPU) green POWER LED steady on, display backlight lit",
+     "meaning": "24 VAC is applied to the C and 24V terminals; the LED and backlight remain lit as long as power is applied.",
+     "checks": [
+      "Off: check 24 VAC at C / 24V, the control transformer and fuse before suspecting the board"
+     ]
+    },
+    {
+     "pattern": "UCB red FAULT LED lights, goes off briefly, then flashes during start-up",
+     "meaning": "Normal start-up sequence; after start-up completes the Fault LED stops flashing and turns off.",
+     "checks": [
+      "If it keeps flashing after start-up there are active alarms - open the Alarms menu on the display"
+     ]
+    },
+    {
+     "pattern": "UCB red FAULT LED blinking during operation",
+     "meaning": "Active fault(s) present on the control board (for example sensors or options that are not installed or are disconnected).",
+     "checks": [
+      "Read the Alarms menu; if the faults relate to sensors/options not installed, perform RELEARN so the board rediscovers connected devices (US Air Conditioning Distributors relearn procedure)"
+     ]
+    },
+    {
+     "pattern": "UCB green SA BUS LED lights briefly at start-up, then flashes",
+     "meaning": "Flashing indicates the UCB has established communication with SA bus devices (economizer, 4-stage, FDD boards, network sensor).",
+     "checks": [
+      "Off with accessory boards installed: check the SA bus cable, polarity/addressing and 24 VAC at the accessory boards"
+     ]
+    },
+    {
+     "pattern": "Economizer board (SE-ECO1001) POWER LED lit",
+     "meaning": "24 VAC is present at the 24V~ IN COM and HOT pins.",
+     "checks": [
+      "Off: check the 24 VAC feed and connector to the economizer board"
+     ]
+    },
+    {
+     "pattern": "Economizer board POWER LED flashing 1/10 second on / off",
+     "meaning": "Networking error (polarity, addressing, etc.) or a firmware error (likely correctable by re-loading firmware from a USB flash drive).",
+     "checks": [
+      "Check SA bus polarity and addressing; reload firmware via USB per the SE software update guide"
+     ]
+    },
+    {
+     "pattern": "Economizer board SA BUS LED lit / flickering vs. off",
+     "meaning": "Lit or flickering: UCB-to-economizer board SA bus communication is active. Off: the economizer board is awaiting SA bus communication.",
+     "checks": [
+      "Off: check the SA bus cable between UCB and economizer board, then RELEARN"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "intelli-comfort",
+   "name": "York Intelli-Comfort controller (Sunline 2000 D-series 15-25 t) numbered alarms",
+   "description": "Numbered alarms (1-25) shown on the Intelli-Comfort controller display or read over BACnet/Modbus on the 15-25 t Sunline 2000 D-series (DM/DJ 180-300). On BACnet, alarm values above 128 are the alarm code plus 128 (subtract 128). The list is reproduced from an HVAC-Talk thread (single secondary source); alarms 12-18 are listed as not used and alarm 25 was truncated in that source. No dedicated model format exists yet, so this platform is attached by a model regex on the 15-25 t D-series sizes.",
+   "appliesTo": [
+    "^D[A-Z](180|210|240|300)"
+   ],
+   "faultCodes": [
     {
      "code": "Intelli-Comfort alarm 1",
      "meaning": "Compr 1 locked out due to excessive high pressure switch trips",
@@ -1555,7 +2177,30 @@
      "severity": "warning",
      "source": "York Intelli-Comfort alarm list as reproduced in HVAC-Talk 'York Bacnet Alarm Values' - alarm 24 (alarm 25 was truncated in the source and is not included)",
      "evidence": "single_secondary"
-    },
+    }
+   ],
+   "diagnosticTips": [
+    "Alarms are numbered and shown on the controller display or over BACnet/Modbus; on BACnet, alarm values above 128 are the alarm code plus 128 (subtract 128).",
+    "Clear a lockout by cycling power after the cause is corrected (field practice); confirm the procedure in the Intelli-Comfort user guide for the unit."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "HVAC-Talk thread 'York Bacnet Alarm Values' (2012) - reproduces the York Intelli-Comfort alarm list 1-25 (secondary)",
+     "url": "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values"
+    }
+   ],
+   "confidence": "low",
+   "sources": [
+    "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values"
+   ]
+  },
+  {
+   "id": "millennium-simplicity-elite",
+   "name": "York Millennium Simplicity Elite (25/30/40 t) alarm codes",
+   "description": "Numbered alarm default codes from Table 13 of the Millennium Simplicity Elite Series Technical Application and Programming Manual 351579-YTS (25/30/40 t rooftops). Table 13 runs to code 43 (sensor failures for SAT/RAT/OAT/IAQ/space/RH and duct static / building pressure); only codes 1-8 were readable in this pass. No Millennium model format exists in this pack yet, so appliesTo is empty and this platform is not attached to a decode automatically.",
+   "appliesTo": [],
+   "faultCodes": [
     {
      "code": "Millennium Elite alarm 1",
      "meaning": "Compressor number one locked out on High Pressure Control",
@@ -1663,726 +2308,20 @@
      "evidence": "manufacturer_doc"
     }
    ],
-   "ledPatterns": [
-    {
-     "pattern": "Steady ON",
-     "meaning": "Control failure - replace control"
-    },
-    {
-     "pattern": "Heartbeat",
-     "meaning": "Normal operation"
-    },
-    {
-     "pattern": "UCB LED: steady on",
-     "meaning": "Control Failure - Replace Control (Simplicity / Simplicity LITE UCB)",
-     "checks": [
-      "Verify 24 VAC and the board fuse, cycle power once, then replace the board if it stays steady"
-     ]
-    },
-    {
-     "pattern": "UCB LED: heartbeat (1 s on / 1 s off)",
-     "meaning": "Normal Operation (Simplicity / Simplicity LITE UCB)",
-     "checks": [
-      "No fault stored; fault codes are distinguished by a fast ~200 ms on / 200 ms off flash counted between pauses"
-     ]
-    },
-    {
-     "pattern": "UCB LED: off",
-     "meaning": "No Power or Control Failure (Simplicity / Simplicity LITE UCB)",
-     "checks": [
-      "Check 24 VAC at the board, transformer secondary and board fuse; replace the board if powered with no LED"
-     ]
-    },
-    {
-     "pattern": "UCB LED: N fast flashes then pause",
-     "meaning": "Fault code N - see the '1 flash' through '14 flashes' entries (Simplicity / Simplicity LITE UCB)",
-     "checks": [
-      "Count flashes between pauses; on original Simplicity boards press LAST ERROR once to replay the last five codes (most recent first)"
-     ]
-    },
-    {
-     "pattern": "ICB LED: heartbeat",
-     "meaning": "Normal Operation (ignition control board on gas units)",
-     "checks": [
-      "If the UCB shows 9 flashes but the ICB heartbeats, look at the limit / rollout switches and the heat-section jumper plug"
-     ]
-    },
-    {
-     "pattern": "ICB LED: N flashes",
-     "meaning": "Ignition fault N - see the 'ICB 1 flash' through 'ICB 10 flashes' entries",
-     "checks": [
-      "Read the ICB LED whenever the UCB shows 9 flashes"
-     ]
-    },
-    {
-     "pattern": "SE UCB green POWER LED: on",
-     "meaning": "24 VAC present at the C and 24V terminals (display backlight also lit) - Simplicity SE / Smart Equipment UCB",
-     "checks": [
-      "If off, check 24 VAC at the board C/24V terminals, transformer and fuse"
-     ]
-    },
-    {
-     "pattern": "SE UCB red FAULT LED: flashing during the 90-120 s start-up, then off",
-     "meaning": "Normal start-up sequence; the red fault LED lights, goes off briefly, flashes throughout start-up, then stops flashing and turns off - Simplicity SE / Smart Equipment UCB",
-     "checks": [
-      "If it keeps flashing after start-up, read the alarms on the display (Home screen shows up to 5 active alarms) or via SE-MOBILE / MAP Gateway"
-     ]
-    },
-    {
-     "pattern": "SE UCB green SA BUS LED: flashing",
-     "meaning": "UCB has established communication with SA bus devices (economizer, FDD, 4-stage boards) - Simplicity SE / Smart Equipment UCB",
-     "checks": [
-      "Normal; a device that still shows Offline has an addressing or wiring problem on its own leg"
-     ]
-    },
-    {
-     "pattern": "SE UCB green SA BUS LED: steady on",
-     "meaning": "UCB has not established communication and is awaiting communication from SA bus devices (about 15 s after power-up) - Simplicity SE / Smart Equipment UCB",
-     "checks": [
-      "Check SA bus wiring, connectors and power to the economizer / FDD / 4-stage boards; expect the 'Economizer board Offline' type service alarm"
-     ]
-    }
-   ],
    "diagnosticTips": [
-    "The flash-code LED is on the unit control board in the control compartment; codes are counted as flashes between pauses.",
-    "Original Simplicity boards: press and release the LAST ERROR button once (within 5 s) and the LED replays the last five stored fault codes, most recent first; history is also readable over the Modbus/BAS port.",
-    "The complete flash-code table (and the separate Ignition Control Board flash codes on gas units) is printed in the unit installation manual, e.g. ZE036 IOM 5188235-YIM-B-1016 p.66 'Simplicity Lite Unit Control Board Flash Codes / Ignition Control Board Flash Codes', and on the label inside the control box.",
-    "Most lockouts clear by removing the thermostat call (or cycling 24 V control power) once the cause is corrected.",
-    "Original Simplicity and Simplicity LITE boards: the single flash-code LED is on the UCB in the control compartment. Normal operation is a 1 s on / 1 s off heartbeat; fault codes flash fast (about 200 ms on / 200 ms off) and are counted between pauses. The same numbering (2 = ASCD ... 14 = EEPROM) is used on original Simplicity (Sunline 2000 / Predator, BP/DM IOMs) and Simplicity LITE (ZE/ZF/ZJ Sun Pro IOMs); 3-5 t single-compressor LITE tables omit the HPS2/LPS2/FS2 and fan-overload rows.",
-    "Original Simplicity boards (Sunline 2000 / Predator): press and release the LAST ERROR button once within five seconds and the LED flashes the last five stored codes, most recent first; press and release it twice within five seconds to clear the fault history. Fault history is also available over the Modbus/BAS port (York Wireless monitoring / BAS).",
-    "Gas units carry a separate ignition control board (ICB) with its own LED; a UCB 9-flash code means go read the ICB LED (2 = pressure switch open, 3 = pressure switch closed, 5 = flame-loss lockout, 6 = limit open, 7 = rollout open, 8 = flame with gas off, 9 = gas valve, 10 = flame-sense circuit).",
-    "Most Simplicity / LITE lockouts clear by removing the thermostat call (Y or W) or cycling 24 V control power after the cause is corrected; York Central Tech Talk notes the flash code reports the symptom, not the root cause.",
-    "Simplicity SE / Smart Equipment UCB: the board has a 2-line LCD, joystick, ENTER and CANCEL buttons; the Home screen shows the unit mode and up to 5 active alarms. From Home, joystick down to reach the Status / Alarms page; repeatedly pressing CANCEL returns to the Status/Alarms screen. Alarms are grouped as critical (lockouts / shutdowns), service priority and service. The same alarms are available through a network sensor, thermostat X output, the MAP Gateway browser interface, SE-MOBILE (Bluetooth app on newer boards) and BACnet/Modbus/N2 integration.",
-    "Simplicity SE hard-lockout reset (firmware 3.3-3.4, York 'Alarm Reset / Hard Lockout' sheet): from IDLE joystick down to Summary > ENTER, down to Sensors > ENTER, down to Unit > ENTER, down to ResetLO > ENTER, move the joystick right until OFF changes to ON, press ENTER and wait for it to return to OFF. Lockouts can also be broken by cycling power. Lockout rules: high pressure 3 trips in 2 h, low pressure 3 trips in 1 h, coil freeze 3 trips in 2 h, limit switch 3 trips in 1 h, air pressure switch (APS) 3 trips in 1.5 h. On firmware 4.0 use the Board Navigation and New Board Setup 4.0 sheet (York Tech Corner) for the menu path.",
-    "Simplicity SE start-up: the red FAULT LED flashes throughout the 90-120 s start-up and then turns off; the green SA BUS LED flashes once the UCB is talking to its SA bus boards. A FAULT LED still flashing after start-up means an alarm is active - read it on the display.",
-    "Simplicity SE economizer / Title 24 FDD faults (air temperature sensor failure, not economizing when it should, economizing when it should not, damper not modulating, excess outdoor air) are reported on the local LCD, on an NS-series network sensor with fault-code display, via the thermostat X terminal, or through the MAP Gateway.",
-    "Intelli-Comfort / Simplicity Elite (D-series 15-25 t and Millennium 25-40 t): alarms are numbered and shown on the controller display or over BACnet/Modbus; on BACnet, alarm values above 128 are the alarm code plus 128 (subtract 128). Millennium Simplicity Elite Table 13 runs to code 43; only codes 1-8 were readable in this pass."
+    "Read alarms through the Simplicity Elite display / Millennium interface; clear per the manual's 'Troubleshooting a Millennium' section after repair."
    ],
    "coverage": "partial",
    "sourceDocs": [
-    {
-     "title": "York ZE036 Installation Manual 5188235-YIM-B-1016 - Simplicity Lite Unit Control Board Flash Codes",
-     "docId": "5188235-YIM-B-1016"
-    },
-    {
-     "title": "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
-     "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/"
-    },
-    {
-     "title": "York Simplicity Controls catalog page (UPGnet)",
-     "url": "https://www.upgnet.com"
-    },
-    {
-     "title": "York ZE036-ZE060 (3-5 t R-410A) Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes' and 'Ignition Control Board Flash Codes' (p.66)",
-     "docId": "5188235-YIM-B-1016 (ManualsLib 1468524 p.66)",
-     "url": "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66"
-    },
-    {
-     "title": "York ZE036-ZE060 Installation Manual (PDF mirror)",
-     "docId": "5188235-YIM-B-1016",
-     "url": "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf"
-    },
-    {
-     "title": "York ZJ078-ZJ150 R-410A Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60; two-compressor rows HPS2/LPS2/FS2, fan overload, OFF)",
-     "docId": "ZJ078-ZJ150 IOM (ManualsLib 1445006 p.60)",
-     "url": "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60"
-    },
-    {
-     "title": "York ZF150 Sun Pro Installation Manual - 'Unit Control Board Flash Codes' (p.60)",
-     "docId": "ZF078-ZF150 IOM (ManualsLib 3265815 p.60)",
-     "url": "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60"
-    },
-    {
-     "title": "Johnson Controls TempMaster ZD Series Installation Manual - 'Simplicity Lite Unit Control Board Flash Codes; Ignition Control Board Flash Codes' (p.65)",
-     "docId": "ManualsLib 1652427 p.65",
-     "url": "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65"
-    },
-    {
-     "title": "York Predator BP120 Installation Manual - 'Unit Control Board Flash Codes' (p.40; original Simplicity table, codes 1-9)",
-     "docId": "ManualsLib 198078 p.40",
-     "url": "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40"
-    },
-    {
-     "title": "York Predator BP078 Installation Manual YIM-C - 'Unit Control Board Flash Codes' (p.49)",
-     "docId": "ManualsLib 1224625 p.49",
-     "url": "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49"
-    },
-    {
-     "title": "York DM090 Installation Manual YIM-B - 'Predator Flash Codes / Unit Control Board Flash Codes' (p.50) and 'Ignition Control Flash Codes' (p.51)",
-     "docId": "ManualsLib 197965 p.50-51",
-     "url": "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50"
-    },
-    {
-     "title": "York Sunline DCG Series Installation Manual YIM-B - 'Ignition Control Board Flash Codes' (p.55)",
-     "docId": "ManualsLib 1706953 p.55",
-     "url": "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55"
-    },
-    {
-     "title": "York International DUQ024-060 Installation Manual - 'Ignition Control Board Flash Codes' (p.28)",
-     "docId": "ManualsLib 892544 p.28",
-     "url": "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28"
-    },
-    {
-     "title": "York Central Tech Talk - 'Simplicity Diagnostics Flash Codes' (2013; FC 9 through FC 14 explained)",
-     "url": "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/"
-    },
-    {
-     "title": "Simplicity SE (SMART Equipment) Controls Technical Guide - Table 2 Title 24 FDD codes, Table 3 refrigeration circuit FDDs",
-     "docId": "5127914-UTG-A-0515",
-     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content"
-    },
-    {
-     "title": "Smart Equipment Control Technical Bulletin - Alarm appendix (critical / service priority / service alarms), Active alarms at start-up",
-     "docId": "LIT-12011998-UTB-B-0418 / 5.0",
-     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0"
-    },
-    {
-     "title": "Smart Equipment Controls Sequence of Operation Technical Bulletin - Unit protection (HPS, LPS, Freezestat alarm, Condensate Overflow Switch), Alarms",
-     "docId": "LIT-12011950 5.0",
-     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms"
-    },
-    {
-     "title": "York Smart Equipment Control Troubleshooting Guide",
-     "docId": "6138895-UTG-A-0721",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
-    },
-    {
-     "title": "York Tech Corner - 'Alarm Reset / Hard Lockout Ver 3.3 or later' (lockout trip counts and ResetLO procedure)",
-     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
-    },
-    {
-     "title": "US Air Conditioning Distributors - 'Performing a relearn or reset lockouts on a Simplicity Smart Equipment board'",
-     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
-    },
-    {
-     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.2) - start-up LED sequence, board navigation",
-     "url": "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf"
-    },
-    {
-     "title": "Simplicity Smart Equipment (SSE) Quick Start Guide",
-     "docId": "1136326-USG-A-0414",
-     "url": "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf"
-    },
-    {
-     "title": "York Tech Corner - 'Board Navigation and New Board Setup 4.0'",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf"
-    },
     {
      "title": "York Millennium Simplicity Elite Series (25/30/40 t) Technical Application and Programming Manual - Table 13 'Alarm Default Codes' (p.42)",
      "docId": "351579-YTS-B-0608 / 351579-YTS-C-0111 (ManualsLib 1800932 p.42)",
      "url": "https://www.manualslib.com/manual/1800932/York-Millenium-Simplicity-Elite-Series.html?page=42"
-    },
-    {
-     "title": "Johnson Controls NS Series Network Sensors with Fault Code Capability Installation Instructions (Title 24 economizer FDD code display)",
-     "docId": "24-10094-76",
-     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content"
-    },
-    {
-     "title": "HVAC-Talk thread 'York Bacnet Alarm Values' (2012) - reproduces the York Intelli-Comfort alarm list 1-25 (secondary)",
-     "url": "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values"
-    },
-    {
-     "title": "HVAC-Talk thread 'York Rooftop Alarm Codes' (J10ZHE36 flashing 3 = HP#1) (secondary)",
-     "url": "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/"
-    },
-    {
-     "title": "GHAC Knowledgebase - 'Predator - Flashing Code 7' (secondary)",
-     "url": "https://ghac.makekb.com/entry/557/"
-    },
-    {
-     "title": "JustAnswer - York rooftop flash code 10 / FS1 flashing threads (secondary)",
-     "url": "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
     }
    ],
    "confidence": "medium",
    "sources": [
-    "York ZE036 Installation Manual 5188235-YIM-B-1016 p.66 (ManualsLib 1468524)",
-    "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013)",
-    "JustAnswer: York rooftop unit flash code 10 / flash code 9 threads (secondary)",
-    "https://www.manualslib.com/manual/1468524/York-Ze036.html?page=66",
-    "https://fwwebbimage.fwwebb.com/ProductInfo/ZE036-ZE060_Inst.pdf",
-    "https://www.manualslib.com/manual/1445006/York-Zj078.html?page=60",
-    "https://www.manualslib.com/manual/3265815/York-Zf150.html?page=60",
-    "https://www.manualslib.com/manual/1652427/Johnson-Controls-Tempmaster-Zd-Series.html?page=65",
-    "https://www.manualslib.com/manual/198078/York-Predator-Bp120.html?page=40",
-    "https://www.manualslib.com/manual/1224625/York-Predator-Bp078.html?page=49",
-    "https://www.manualslib.com/manual/197965/York-Dm090.html?page=50",
-    "https://www.manualslib.com/manual/1706953/York-Sunline-Dcg-Series.html?page=55",
-    "https://www.manualslib.com/manual/892544/York-International-Duq024-060.html?page=28",
-    "https://yorkcentraltechtalk.wordpress.com/2013/11/15/simplicity-diagnostics-flash-codes/",
-    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content",
-    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0",
-    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Sequence-of-Operation-Technical-Bulletin/5.0/Alarms/Critical-alarms",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
-    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
-    "https://us-ac.com/wp-content/uploads/Quick-Guide-parameters-3.2.pdf",
-    "https://techcommft.blob.core.windows.net/fluidtopics/verasys/SSEQuickStartGuide-1136326-usg-a-0414.pdf",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/config/board-navigation-and-new-board-setup-40_rev5_02042021.pdf",
-    "https://www.manualslib.com/manual/1800932/York-Millenium-Simplicity-Elite-Series.html?page=42",
-    "https://docs.johnsoncontrols.com/bas/api/khub/documents/~O6hRFkl~kZgeyJUixJbbw/content",
-    "https://hvac-talk.com/vbb/threads/1005021-York-Bacnet-Alarm-Values",
-    "https://www.hvac-talk.com/threads/york-rooftop-alarm-codes.2205708/",
-    "https://ghac.makekb.com/entry/557/",
-    "https://www.justanswer.com/hvac/s0oj9-you-rtu-york-flashing.html"
-   ]
-  },
-  {
-   "id": "smart-equipment",
-   "name": "Johnson Controls Smart Equipment (Simplicity SE) controller - SE-SPU1001/1002/1011/1012",
-   "description": "Microprocessor unit controller with on-board LCD and joystick (SE-SPU), optional SE-Mobile app / Verasys BAS; alarms are named text alarms (service and FDD alarms), not numeric codes. Fitted to York/Coleman/Luxaire Z-series and later rooftops from about 2014. Smart Equipment alarm table NOT transcribed: the enrichment run for this platform had no working source access (WebSearch budget exhausted before the agent started; WebFetch/curl blocked; no cached LIT-12011998 / LIT-12011950 / Verasys alarm-summary material on disk). Per the verification protocol no alarm meanings were added from memory. The existing four paraphrased entries remain LOW confidence / 'inferred' and must be verified or replaced from the LIT-12011998 Alarm appendix (Service alarms, FDD alarms) and the Verasys Alarms Summary Technical Bulletin in a follow-up run. Smart Equipment alarms are text alarms on the LCD / app / BAS, not numeric codes or flash codes; the older Simplicity / Simplicity Lite UCB flash codes (e.g. 4 flashes HPS1 lockout) belong to the separate simplicity-ucb platform, not to SE. Transcription status: the critical-alarm rows (HPS1-4, LPS1-4, FS1-4, LS1-3, APS, smoke shutdown, economizer offline) and the five FDD alarm names were seen in manufacturer sources via search summaries of LIT-12011998 / LIT-12011950 / the ZJ IOM alarm table and the SE product bulletin. The complete service-priority and service alarm rows of Table 2 (individual sensor-failure alarms, 4-stage / FDD board offline, f",
-   "appliesTo": [
-    "york-z-series-rtu-r410a",
-    "york-x-series-hp-rtu-r410a"
-   ],
-   "faultCodes": [
-    {
-     "code": "HPS1 / HPS2 / HPS3 / HPS4 lockout (High Pressure Switch, critical alarm)",
-     "meaning": "Critical alarm: 'Three HPS1 trips within two hours' (likewise 'Three HPS2 trips within two hours', HPS3, HPS4) - the high-pressure switch of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
-     "likelyCauses": [
-      "Condenser fan not running (motor, capacitor, contactor, CF output) or condenser coil dirty / airflow blocked",
-      "Refrigerant overcharge or non-condensables in the circuit",
-      "High outdoor ambient with restricted condenser air, recirculation of discharge air",
-      "Failed or miswired HPS (switch open with normal head pressure)"
-     ],
-     "checks": [
-      "Source: a single HPS trip shows as 'shutdown due to a safety' (circuit open now); three trips in two hours become 'Locked out due to a safety' and need ResetLO or a power cycle after repair (York Alarm Reset / Hard Lockout doc)",
-      "Field practice: gauge head pressure against outdoor ambient; verify condenser fan(s) run and the coil is clean",
-      "Field practice: with pressures normal, ohm the HPS and its wiring to the UCB HPS input; the safeties override commissioning/test mode, so a tripped HPS also blocks the stage in test (LIT-12011950)"
-     ],
-     "severity": "lockout",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11; York 'Alarm Reset / Hard Lockout Ver 3.3 or later'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LPS1 / LPS2 / LPS3 / LPS4 lockout (Low Pressure Switch, critical alarm)",
-     "meaning": "Critical alarm: 'Three LPS1 trips within one hour' (likewise LPS2, LPS3, LPS4) - the low-pressure switch of that compressor stage opened three times inside a one-hour window and the control locks out that stage.",
-     "likelyCauses": [
-      "Low refrigerant charge / leak",
-      "Low evaporator airflow (dirty filters, slipping belt, closed dampers, dirty coil) causing low suction pressure",
-      "Restricted metering device or liquid-line drier",
-      "Failed LPS or open wiring; low ambient cooling without low-ambient controls"
-     ],
-     "checks": [
-      "Source: a single trip reads as 'shutdown due to a safety'; the third trip inside one hour locks the stage out until ResetLO / power cycle (York Alarm Reset / Hard Lockout doc)",
-      "Field practice: gauge suction pressure and superheat against the LPS trip point; check evaporator airflow, filters and belt first",
-      "Field practice: ohm the LPS with the circuit equalized and inspect the LPS wiring to the UCB input"
-     ],
-     "severity": "lockout",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Low pressure switch'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "FS1 / FS2 / FS3 / FS4 lockout (Freeze Switch / freezestat, critical alarm)",
-     "meaning": "Critical alarm: 'Three FS1 trips within two hours' (likewise FS2, FS3, FS4) - the freezestat of that compressor stage opened three times inside a two-hour window and the control locks out that stage.",
-     "likelyCauses": [
-      "Low evaporator airflow (filters, belt, blower speed, closed dampers) letting the coil frost",
-      "Low refrigerant charge",
-      "Freezestat sensing bulb loose or misplaced on the coil, or failed freezestat",
-      "Cooling running at low return-air temperature (economizer / low load) without low-ambient provisions"
-     ],
-     "checks": [
-      "Secondary (HVAC-Talk, York rooftop): the freeze stat opens at about 26 F coil temperature and closes at about 41 F; three trips in a two-hour window lock out that compressor stage (CR1 / CR2)",
-      "Field practice: measure evaporator airflow / static pressure, suction pressure and superheat while the coil is clear",
-      "Field practice: verify the freezestat is mounted on the coil correctly and check its continuity with the coil above the reset point; clear the lockout with ResetLO or a power cycle after repair"
-     ],
-     "severity": "lockout",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11 and 'Unit protection / Freezestat alarm'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LS1 / LS2 / LS3 lockout (gas heat Limit Switch, critical alarm)",
-     "meaning": "Critical alarm: 'Three LS1 trips within one hour' (likewise LS2, LS3) - the heat-section limit switch of that heating stage opened three times inside a one-hour window and the control locks out that heating stage.",
-     "likelyCauses": [
-      "Insufficient airflow across the heat exchanger (dirty filters, belt, blower speed, blocked supply/return)",
-      "Over-fired burner (gas pressure / manifold pressure too high) or wrong orifice",
-      "Restricted heat exchanger or flue; failed or weak limit switch",
-      "Fan-on-heat delay / blower not running while burner is on"
-     ],
-     "checks": [
-      "Source: the UCB monitors the MV (gas valve) input and starts the FAN ON HEAT DELAY timer when 24 V appears on MV; heating stages are H1-H3 (LIT-12011950 gas heating sequence)",
-      "Field practice: verify blower runs during heat, measure temperature rise against the nameplate range and check manifold gas pressure",
-      "Field practice: ohm the limit switch cold and inspect the LS wiring to the UCB; clear the lockout with ResetLO or a power cycle after repair"
-     ],
-     "severity": "lockout",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "APS lockout (Air Proving Switch, critical alarm)",
-     "meaning": "Critical alarm: 'Three APS trips within 1.5 hours' - the supply-fan air proving input (SF_APS, 'the feedback from the Air Proven Switch or a current sensor') was lost three times inside a 1.5-hour window; 'Supply Fan is required before allowing compressor and heat stage outputs', so cooling and heating are held off.",
-     "likelyCauses": [
-      "Supply fan not running (belt broken, motor overload, contactor, VFD fault) or fan running backwards",
-      "APS differential switch tubing disconnected/kinked, switch failed or set too tight; current sensor not seeing motor current",
-      "Extremely dirty filters or blocked ductwork dropping the fan differential below the switch setting"
-     ],
-     "checks": [
-      "Source: the Supply fan status screen shows SF On and the UO9 light On when the fan output is energized; APS status is shown on the same status screens (LIT-12011950 Air proving switch setup / Operation)",
-      "Field practice: with the fan commanded on, confirm rotation, belt and motor amps, then jumper/measure the APS input to separate a fan problem from a switch problem",
-      "Field practice: check APS tubing and setting; clear the lockout with ResetLO or a power cycle once the fan proves"
-     ],
-     "severity": "lockout",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation 'Air proving switch setup'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Unit Shutdown Due to Smoke (critical alarm)",
-     "meaning": "Critical alarm 'Unit Shutdown Due to Smoke': raised when 'the SD input loses 24 VAC' - the smoke-detector / shutdown input circuit to the UCB has opened and the unit shuts down.",
-     "likelyCauses": [
-      "Duct smoke detector tripped (real smoke or a dirty/over-sensitive detector)",
-      "Field shutdown / fire-alarm relay contact opened, or SD jumper removed on a unit without a detector",
-      "Broken wire or loose terminal in the SD 24 VAC loop"
-     ],
-     "checks": [
-      "Field practice: measure 24 VAC at the UCB SD input; trace the loop through the duct detector(s) and any fire-alarm interlock relay",
-      "Field practice: reset the duct detector and check its sensitivity / cleanliness; confirm the factory jumper is present when no detector is installed",
-      "Source: critical alarms need ResetLO or a power cycle to restore operation after the cause is repaired (York Alarm Reset / Hard Lockout doc)"
-     ],
-     "severity": "shutdown",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2 (Critical alarms); LIT-12011950 Sequence of Operation Table 11",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Economizer board goes from Online to Offline (SA bus communication alarm)",
-     "meaning": "Alarm 'Economizer board goes from Online to Offline' - the UCB lost SA-bus communication with the SE-ECO economizer controller that it had previously discovered.",
-     "likelyCauses": [
-      "24 VAC power lost at the economizer board (24V~ IN COM / HOT)",
-      "SA bus cable unplugged, reversed polarity or wrong addressing between UCB and economizer board",
-      "Economizer board firmware error or failed board"
-     ],
-     "checks": [
-      "Source: the economizer board power LED lit = 24 VAC present; a 1/10-second on/off flash = networking error (polarity, addressing) or firmware error (reload from USB); SA bus LED lit/flickering = UCB-to-economizer SA bus communication active, off = board awaiting SA bus communication (SE-ECO1001-1 catalog page)",
-      "Source: the UCB green SA bus LED flashes when the UCB has established communication with SA bus devices (Quick Start Guide LIT-12011938)",
-      "Field practice: reseat/replace the SA bus cable, check 24 VAC at the board, then run RELEARN so the UCB rediscovers connected boards"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix Table 2; LIT-12011950 Sequence of Operation Table 11 (non-FDD alarms); SE-ECO1001-1 catalog page (LEDs)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Shutdown due to a safety (single HPS / LPS / FS / LS / APS trip, service priority alarm)",
-     "meaning": "Service priority fault: the alarm text reads 'shutdown due to a safety' rather than 'Locked out due to a safety'. 'If the alarm says shutdown, it means the circuit is open at that time.' Service Priority Faults 'shut down a portion of the unit operation and count toward maximum shutdowns prior to lockout'; they 'clear themselves once the problem is corrected or the safety resets'.",
-     "likelyCauses": [
-      "The named safety switch (HPS, LPS, freezestat, limit, air proving) is currently open - see the matching lockout entry for causes",
-      "Intermittent wiring at the switch or UCB input"
-     ],
-     "checks": [
-      "Source: the affected stage restarts by itself when the switch closes; three trips inside the window (HPS/FS two hours, LPS/LS one hour, APS 1.5 hours) escalate to the critical lockout alarm",
-      "Field practice: read the alarm while the switch is still open and measure the switch input to identify which safety is open before it resets"
-     ],
-     "severity": "warning",
-     "source": "York Tech Corner 'Alarm Reset / Hard Lockout Ver 3.3 or later' (alarm categories); LIT-12011998 Alarm appendix Table 2 (Service priority alarms)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Excessive Supply Air Temp Cooling (supply-air temperature limit)",
-     "meaning": "'YORK units have a secondary safety built into the SE control that monitors supply air temperature and will drop stages of cooling or heat if the supply temperature exceeds the setting in the SE control. As the supply temperature returns to within the limitations, stages of heat or cool will be allowed to restart after any anti short cycle timers have expired.' The 'Excessive Supply Air Temp Cooling' alarm is one of the alarms that prevents cooling operation.",
-     "likelyCauses": [
-      "Cooling SAT limit reached (default 45 F, adjustable down to 40 F): low airflow, low load, economizer plus mechanical cooling, or oversized staging",
-      "Heating counterpart: SAT above the heating limit (default 140 F, adjustable to 180 F) from low airflow or over-firing",
-      "Supply air sensor misplaced (too close to coil / heat exchanger) or reading wrong"
-     ],
-     "checks": [
-      "Source: limits are set under Details > Cooling > Setup and Details > Heating > Setup; the safety can be disabled in the SE control (York 'Excessive Supply Temperature')",
-      "Field practice: verify airflow (filters, belt, blower speed, static) and compare the SAT reading with a reference thermometer in the supply duct",
-      "Field practice: on VAV units also review low-limit tempering setpoints (LL_LOWSAT_SP default 65 F, LL_UPSAT_SP default 80 F) before raising the limit"
-     ],
-     "severity": "warning",
-     "source": "York Tech Corner 'Excessive Supply Temperature' (Rev1 01092020); LIT-12011950 Sequence of Operation (low limit tempering setpoints)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Space temperature cooling alarm / Space temperature heating alarm (service alarm)",
-     "meaning": "Space temperature cooling alarm: the space temperature exceeds the operating cooling setpoint for more than 60 minutes. Space temperature heating alarm: the space temperature is less than the operating heating setpoint for more than 60 minutes.",
-     "likelyCauses": [
-      "Unit unable to meet load: locked-out or shut-down stages (see safety alarms), low charge, dirty coils/filters",
-      "Setpoint or schedule change, wrong occupancy source, or space sensor reading wrong / badly located",
-      "Excessive outdoor air (economizer stuck open) or building load beyond capacity"
-     ],
-     "checks": [
-      "Source: this is an informative service alarm - it does not itself shut the unit down (alarm categories per York Alarm Reset / Hard Lockout doc)",
-      "Field practice: check the active alarms list for a safety lockout first, then compare space temperature, setpoints and stage status on the UCB Status screens",
-      "Field practice: verify the space / network sensor reading against a reference thermometer"
-     ],
-     "severity": "info",
-     "source": "LIT-12011950 Smart Equipment Controls Sequence of Operation Technical Bulletin 5.0, 'Space temperature alarming'; LIT-12011998 Alarm appendix (Service alarms)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Air Temp Sensor Fault (FDD alarm)",
-     "meaning": "FDD alarm 'Air Temp Sensor Fault' indicates a problem with one of the air temperature sensors; check the Outdoor Air, Return Air or Supply Air sensors. The FDD also reports a fault when the local supply air temperature (SAT) sensor is disconnected from the unit controller.",
-     "likelyCauses": [
-      "OAT, RAT or SAT sensor unplugged, open, shorted or corroded connector",
-      "Sensor reading implausible (mounted in sun, in the discharge stream, or in a dead pocket)",
-      "'Phantom' alarm: the sensor is not installed on this unit but its input is still enabled (see Phantom entry)"
-     ],
-     "checks": [
-      "Field practice: scroll the Status screens (joystick down through SAT, RAT, OAT) and compare each reading with a reference thermometer; ohm the 10k thermistor against the resistance table in the SE technical guide",
-      "Source: economizing is not performed when the SAT is unreliable and the unit is configured for zone control or demand air temperature control (LIT-12011950)",
-      "Source: FDD faults can be viewed on the UCB local display, the network sensor, a thermostat with the X (fault) output, the MAP gateway or the BAS (SEC Product Bulletin)"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); Smart Equipment Controls (SEC) Product Bulletin LIT-12011934 (economizer FDD); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Not Economizing When It Should (FDD alarm)",
-     "meaning": "FDD alarm 'Not Economizing When It Should' - the economizer is not using outdoor air when it should (outdoor conditions are suitable for free cooling but the damper is not opening).",
-     "likelyCauses": [
-      "Damper actuator failed, linkage disconnected or damper stuck closed",
-      "Changeover setpoint / enthalpy or dry-bulb settings too restrictive; economizer disabled in setup",
-      "OAT / RAT (or humidity) sensor reading wrong so the control believes free cooling is unavailable"
-     ],
-     "checks": [
-      "Field practice: command the damper in test/commissioning mode and watch actuator travel; check 24 VAC and the control signal at the actuator",
-      "Field practice: verify the economizer changeover method and setpoints under Details > Economizer, and the OAT/RAT readings",
-      "Source: FDD alarms and economizer sensor fault indications can be enabled or disabled from the display (LIT-12011950 'Disable or Enable FDD Alarms' / 'Disable or Enable Economizer Sensor Fault Indications')"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Economizing When It Should Not (FDD alarm)",
-     "meaning": "FDD alarm 'Economizing When It Should Not' ('economizing when not required') - the economizer is bringing in outdoor air for cooling when outdoor conditions are not suitable.",
-     "likelyCauses": [
-      "Damper stuck open or actuator not closing (linkage, failed actuator, loss of control signal)",
-      "Changeover setpoints set too high / wrong changeover method for the climate",
-      "OAT or RAT sensor error making outdoor air look cooler than it is"
-     ],
-     "checks": [
-      "Field practice: verify damper closes to minimum position when commanded; check actuator feedback and linkage",
-      "Field practice: compare OAT/RAT readings and the changeover setpoint; correct sensor placement",
-      "Source: FDD faults are reported on the UCB display, network sensor, thermostat X output, MAP gateway or BAS (SEC Product Bulletin)"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Damper Not Modulating (FDD alarm)",
-     "meaning": "FDD alarm 'Damper Not Modulating' - the economizer damper is not able to modulate properly; check the damper, the linkage to the actuator, or the actuator.",
-     "likelyCauses": [
-      "Actuator failed, no 24 VAC, or control signal missing / wrong (2-10 V)",
-      "Linkage slipped, damper blades seized or obstructed",
-      "Actuator feedback wiring open so the control cannot confirm position"
-     ],
-     "checks": [
-      "Field practice: drive the damper open and closed from the commissioning / test menu and watch for movement and feedback change",
-      "Field practice: check actuator power, signal and feedback at the economizer board terminals; free up or replace the damper linkage",
-      "Field practice: re-run the economizer commissioning after repair and confirm the FDD alarm clears"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Excess Outdoor Air (FDD alarm)",
-     "meaning": "FDD alarm 'Excess Outdoor Air' - the economizer is allowing excess outdoor air inside (more than the minimum position / ventilation requirement calls for).",
-     "likelyCauses": [
-      "Minimum position set too high or damper not returning to minimum (actuator, linkage, feedback)",
-      "Damper blade seals damaged, damper stuck partly open",
-      "Return-air damper / hood problems, or OAT/RAT/SAT sensor error skewing the outdoor-air fraction calculation"
-     ],
-     "checks": [
-      "Field practice: verify minimum position setting and actual damper position at minimum; inspect blade seals and linkage",
-      "Field practice: check the OAT, RAT and SAT readings the control uses to estimate outdoor-air fraction",
-      "Source: FDD alarms can be disabled/enabled from the display if the ventilation design intentionally exceeds the default expectations (LIT-12011950)"
-     ],
-     "severity": "warning",
-     "source": "LIT-12011998 Alarm appendix Table 3 (FDD alarms); LIT-12011950 Table 12 (FDD alarms); JCI Title 24 Impact on Packaged Rooftop Units Application Guide",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Phantom sensor / economizer alarm (sensor not installed)",
-     "meaning": "'Phantom Alarms' are active alarms displayed that represent failures of sensors that are physically not installed on the unit (typically economizer / accessory sensor fault indications).",
-     "likelyCauses": [
-      "Board replaced or reconfigured with sensor/accessory inputs enabled that the unit does not have",
-      "Accessory board or sensor removed after the UCB had discovered it",
-      "Sensor fault indications left enabled for optional economizer sensors"
-     ],
-     "checks": [
-      "Source: the UCB automatically recognizes accessory York SMART controllers and accessory input sensors when they are connected to a powered system - run RELEARN so it rediscovers what is actually connected (US Air Conditioning Distributors 'Relearn or Reset Lockouts' procedure; York Phantom Economizer Alarms)",
-      "Source: use 'Disable or Enable Economizer Sensor Fault Indications' in the display to suppress indications for sensors not fitted (LIT-12011950 Alarms)",
-      "Field practice: confirm on the Status screens which sensor inputs read open/shorted before disabling anything"
-     ],
-     "severity": "info",
-     "source": "York Tech Corner 'Phantom Economizer Alarms' (Rev1 02122020); LIT-12011950 'Disable or Enable Economizer Sensor Fault Indications'",
-     "evidence": "manufacturer_doc"
-    }
-   ],
-   "diagnosticTips": [
-    "Use the SE-SPU's LCD and joystick (Alarms menu) or the SE-Mobile app / Verasys UI to read active and historical alarms; the alarm names are text, not numeric codes.",
-    "The verbatim alarm tables are in the Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix: Service alarms and FDD alarms) and the Simplicity SE Controls Technical Guide (SE-SPU1001/1002/1011/1012); the 2-stage rooftop guide is 5127914-UTG-B-1116.",
-    "Verasys Alarms Summary Technical Bulletin (Smart Equipment RTU controller section) lists the same alarms as seen from the BAS.",
-    "Compressor lockouts are cleared from the Alarms / Details menu or by cycling power once the cause is corrected.",
-    "Display: the UCB (SE-SPU) has an on-board LCD with a joystick, ENTER and CANCEL buttons. Move the joystick up/down to scroll menu items and press ENTER to open a sub-menu or show a property value; press CANCEL repeatedly to return to the IDLE (home) screen. Joystick down from IDLE scrolls SAT, RAT, OAT and the other sensor readings (Status).",
-    "Alarms: 'Alarms' is a top-level menu on the UCB display; the home screen can display up to 5 active alarms. Alarms are grouped as critical, service priority and service (LIT-12011998 Alarm appendix Table 2); FDD alarms are a separate table (Table 3). The same alarms are visible through the SE-Mobile app / MAP gateway, a network sensor, a thermostat with the X fault output, or the BAS (Verasys / Metasys).",
-    "Reading alarm text: 'shutdown due to a safety' means the safety circuit is open right now (service priority - auto-clears when the safety resets and counts toward the maximum shutdowns before lockout); 'Locked out due to a safety' is a critical alarm (three trips in the window) that stays until reset.",
-    "Clearing a hard lockout (ResetLO): firmware 1.0-3.2: Details > Unit > ResetLO. Firmware 3.3-3.4: from IDLE joystick down to Summary > ENTER > Sensors > ENTER > Unit > ENTER > ResetLO > ENTER. Later firmware: Summary > Unit > ResetLO. Push the joystick right to change OFF to ON and press ENTER; after 3-5 seconds ON changes back to OFF on its own, which means the reset is complete and the lockout is broken. Cycling unit power also clears critical lockouts. If the lockout does not reset, the fault still exists.",
-    "RELEARN (make the UCB rediscover connected boards/sensors, clears phantom sensor alarms): firmware 1.0-3.2: from IDLE joystick down to Controller > ENTER > SysCntlrs > ENTER > Misc > ENTER > RELEARN > ENTER (display shows False/True). Perform it with the unit not operating; on 3.3+ the ResetLO function performs the equivalent.",
-    "FDD: economizer FDD is built into the standard software and is enabled in the field from the unit keypad/display; FDD alarms and economizer sensor fault indications can be disabled/enabled from the display (LIT-12011950 Alarms section). FDD faults can be read on the UCB display, MAP gateway or BAS.",
-    "Supply-air limits: the SE control drops cooling/heating stages when SAT exceeds the cooling limit (default 45 F, adjustable to 40 F) or heating limit (default 140 F, adjustable to 180 F); set under Details > Cooling > Setup and Details > Heating > Setup.",
-    "Safeties override commissioning/test mode: a compressor cannot be energized in test if its HPS is tripped. The supply fan must be proven (APS / current sensor input) before compressor and heat outputs are allowed.",
-    "Verbatim alarm tables: LIT-12011998 Smart Equipment Control Technical Bulletin, Alarm appendix (Critical alarms, Service priority alarms, Service alarms, FDD alarms); LIT-12011950 Sequence of Operation Overview, Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms); Verasys Alarms Summary Technical Bulletin, 'Smart Equipment Rooftop Unit (RTU) Controller' section (BAS view of the same alarms)."
-   ],
-   "coverage": "partial",
-   "sourceDocs": [
-    {
-     "title": "Simplicity SE (Smart Equipment) Controls Technical Guide (SE-SPU1001/1002/1011/1012)",
-     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/Fg~imuxYeayAtP5KBhPvvA/content"
-    },
-    {
-     "title": "Smart Equipment Controls Technical Bulletin LIT-12011998 - Alarm appendix / Service alarms",
-     "docId": "LIT-12011998",
-     "url": "https://docs.johnsoncontrols.com/bas/r/Smart-Equipment-Controller/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Service-alarms"
-    },
-    {
-     "title": "Verasys Alarms Summary Technical Bulletin 4.0 - Smart Equipment Rooftop Unit (RTU) Controller",
-     "url": "https://docs.johnsoncontrols.com/bas/r/Verasys/en-US/Verasys-Alarms-Summary-Technical-Bulletin/4.0/Smart-Equipment-Rooftop-Unit-RTU-Controller"
-    },
-    {
-     "title": "Smart Equipment Controls Technical Guide 2-Stage 5127914-UTG-B-1116",
-     "docId": "5127914-UTG-B-1116"
-    },
-    {
-     "title": "Smart Equipment Control (SEC) Technical Bulletin - Alarm appendix (Table 2 alarms: critical / service priority / service; Table 3 FDD alarms)",
-     "docId": "LIT-12011998 (UTB-A-0714 / UTB-B-0418 / UTB-C-0119)",
-     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content"
-    },
-    {
-     "title": "Smart Equipment Controls Technical Bulletin 5.0 - Alarm appendix / Critical alarms, Service alarms (web)",
-     "docId": "LIT-12011998",
-     "url": "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms"
-    },
-    {
-     "title": "Smart Equipment Controls Sequence of Operation Overview Technical Bulletin - Alarms (Table 11 non-FDD alarms, Table 12 FDD alarms), Unit protection (HPS / LPS / Freezestat), Air proving switch setup, Space temperature alarming",
-     "docId": "LIT-12011950 (E-0120)",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf"
-    },
-    {
-     "title": "SMART Equipment Unit Controls Sequence of Operation Overview - Alarms extract (page 63, Table 11 / Table 12)",
-     "docId": "LIT-12011950 extract 'SSE Alarms.pdf'",
-     "url": "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770"
-    },
-    {
-     "title": "YORK Tech Corner - Alarm Reset / Hard Lockout Ver 3.3 or later (Rev1 01252020)",
-     "docId": "reset-lockouts-ver-33-and-later_rev1_01252020",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf"
-    },
-    {
-     "title": "YORK Tech Corner - Excessive Supply Temperature (Rev1 01092020)",
-     "docId": "excessive-supply-temperature_rev1_01092020",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf"
-    },
-    {
-     "title": "YORK Tech Corner - Phantom Economizer Alarms (Rev1 02122020)",
-     "docId": "phantom-economizer-faults_rev1_02122020",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf"
-    },
-    {
-     "title": "Smart Equipment Control Troubleshooting Guide",
-     "docId": "6138895-UTG-A-0521/0721",
-     "url": "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf"
-    },
-    {
-     "title": "Smart Equipment Controls (SEC) Product Bulletin - Economizer controller FDD faults",
-     "docId": "LIT-12011934 / SE-COM1001-0",
-     "url": "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf"
-    },
-    {
-     "title": "Title 24 Impact on Packaged Rooftop Units Application Guide - FDD fault list",
-     "url": "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content"
-    },
-    {
-     "title": "Smart Equipment Controls Quick Start Guide (firmware 3.4 and older) - UCB LEDs, start-up sequence, menu navigation",
-     "docId": "LIT-12011938",
-     "url": "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6"
-    },
-    {
-     "title": "SE-ECO1001-1 Economizer Controller catalog page - board LEDs",
-     "url": "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content"
-    },
-    {
-     "title": "US Air Conditioning Distributors - Performing a Relearn or Reset Lockouts on a Simplicity Smart Equipment board",
-     "url": "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf"
-    },
-    {
-     "title": "R-410A J**ZJ Series w/ Smart Equipment Installation Manual - Alarms (Table 2)",
-     "url": "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
-    }
-   ],
-   "confidence": "medium",
-   "sources": [
-    "docs.johnsoncontrols.com - Simplicity SE (Smart Equipment) Controls Technical Guide",
-    "docs.johnsoncontrols.com - Smart Equipment Controls Technical Bulletin LIT-12011998 (Alarm appendix)",
-    "docs.johnsoncontrols.com - Verasys Alarms Summary Technical Bulletin 4.0",
-    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/3ncCcYHxFBsHtpbyZsaiQg/content",
-    "https://docs.johnsoncontrols.com/bas/r/Johnson-Controls/en-US/Smart-Equipment-Controls-Technical-Bulletin/5.0/Alarm-appendix/Critical-alarms",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/engineering/sequence-of-operations-sse--50.pdf",
-    "https://img1.wsimg.com/blobby/go/87b5ce53-86c3-40cd-80fa-3a515d4b10eb/downloads/SSE%20Alarms.pdf?ver=1609854010770",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/reset-lockouts-ver-33-and-later_rev1_01252020.pdf",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/excessive-supply-temperature_rev1_01092020.pdf",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/phantom-economizer-faults_rev1_02122020.pdf",
-    "https://www.york.com/-/media/project/jci-global/york-sites/united-states-york/tech-corner/documents/diagnostics/smart-equipment-troubleshooting-guide.pdf",
-    "https://www.cochranesupply.com/media/assets/product/documents/Johnson/SE-COM1001-0.pdf",
-    "https://docs.johnsoncontrols.com/ductedsystems/api/khub/documents/IPoF_zsQEu_l0BRWJ68p3A/content",
-    "https://manuals.plus/m/3551114e076c571fed5b4ec7c19a3c1c2186d1a7417bd8b30836a826ee27c5e6",
-    "https://docs.johnsoncontrols.com/bas/api/khub/documents/T7q_r0P21V4TVurxjJrq1g/content",
-    "https://us-ac.com/wp-content/uploads/SSE-Reset-Lockouts-or-Relearn.pdf",
-    "https://www.johnsoncontrols.com/-/media/jci/be/united-states/hvac-equipment/rooftop-units/files/installation/be_installguide_rooftopseries10zj.pdf"
-   ],
-   "ledPatterns": [
-    {
-     "pattern": "UCB (SE-SPU) green POWER LED steady on, display backlight lit",
-     "meaning": "24 VAC is applied to the C and 24V terminals; the LED and backlight remain lit as long as power is applied.",
-     "checks": [
-      "Off: check 24 VAC at C / 24V, the control transformer and fuse before suspecting the board"
-     ]
-    },
-    {
-     "pattern": "UCB red FAULT LED lights, goes off briefly, then flashes during start-up",
-     "meaning": "Normal start-up sequence; after start-up completes the Fault LED stops flashing and turns off.",
-     "checks": [
-      "If it keeps flashing after start-up there are active alarms - open the Alarms menu on the display"
-     ]
-    },
-    {
-     "pattern": "UCB red FAULT LED blinking during operation",
-     "meaning": "Active fault(s) present on the control board (for example sensors or options that are not installed or are disconnected).",
-     "checks": [
-      "Read the Alarms menu; if the faults relate to sensors/options not installed, perform RELEARN so the board rediscovers connected devices (US Air Conditioning Distributors relearn procedure)"
-     ]
-    },
-    {
-     "pattern": "UCB green SA BUS LED lights briefly at start-up, then flashes",
-     "meaning": "Flashing indicates the UCB has established communication with SA bus devices (economizer, 4-stage, FDD boards, network sensor).",
-     "checks": [
-      "Off with accessory boards installed: check the SA bus cable, polarity/addressing and 24 VAC at the accessory boards"
-     ]
-    },
-    {
-     "pattern": "Economizer board (SE-ECO1001) POWER LED lit",
-     "meaning": "24 VAC is present at the 24V~ IN COM and HOT pins.",
-     "checks": [
-      "Off: check the 24 VAC feed and connector to the economizer board"
-     ]
-    },
-    {
-     "pattern": "Economizer board POWER LED flashing 1/10 second on / off",
-     "meaning": "Networking error (polarity, addressing, etc.) or a firmware error (likely correctable by re-loading firmware from a USB flash drive).",
-     "checks": [
-      "Check SA bus polarity and addressing; reload firmware via USB per the SE software update guide"
-     ]
-    },
-    {
-     "pattern": "Economizer board SA BUS LED lit / flickering vs. off",
-     "meaning": "Lit or flickering: UCB-to-economizer board SA bus communication is active. Off: the economizer board is awaiting SA bus communication.",
-     "checks": [
-      "Off: check the SA bus cable between UCB and economizer board, then RELEARN"
-     ]
-    }
+    "https://www.manualslib.com/manual/1800932/York-Millenium-Simplicity-Elite-Series.html?page=42"
    ]
   }
  ],
@@ -2397,9 +2336,9 @@
      "name": "Unit control board (Simplicity / Simplicity LITE) or SE-SPU (Smart Equipment)"
     },
     {
-     "designator": "1M / 2M",
+     "designator": "M / 1M / 2M (verify label on diagram)",
      "name": "Compressor contactors, circuit 1 / 2",
-     "notes": "York wiring legends label contactors 'M' (motor contactor); verify on the unit diagram."
+     "notes": "Compressor contactor label NOT transcribed from a York IOM legend; the only York-specific labelling found was 'M, M1 & M2' compressor-contactor outputs on CZF split units. Read the legend on the unit's wiring diagram (e.g. 'Wiring Diagrams R-410A ZE/XN Series 3-6 ton' 6046556-BTS-A-1220, or the DM036 IOM 'Typical Wiring Diagrams; Simplicity Lite Control Board' page)."
     },
     {
      "designator": "HPS",
@@ -2452,8 +2391,8 @@
     },
     {
      "designator": "LAS",
-     "name": "Low ambient switch (compressor lockout below ~45 F)",
-     "notes": "Referenced by flash code 10 on Simplicity boards."
+     "name": "Low ambient switch (normally open; closes ~45 F, opens ~55 F)",
+     "notes": "With the LAS closed the compressors cycle 10 min on / 5 min off (no-economizer default) or are held off while the economizer free-cools; flash code 10 is a notice, not a lockout (York Central Tech Talk 'Simplicity Diagnostics Flash Codes')."
     }
    ],
    "safetyDevices": [
@@ -2482,7 +2421,8 @@
    ],
    "notes": [
     "LOW confidence: designators and sequence are generic York packaged-unit practice from memory, NOT transcribed from an IOM wiring legend in this session. Use the legend on the unit's wiring diagram (inside the control-box door) as authoritative.",
-    "Smart Equipment units add SAT/RAT/OAT sensors, per-circuit pressure switch inputs and a BAS/Modbus/N2 port on the SE-SPU; thermostat inputs still land on R/C/G/Y1/Y2/W1/W2/OCC."
+    "Smart Equipment units add SAT/RAT/OAT sensors, per-circuit pressure switch inputs and a BAS/Modbus/N2 port on the SE-SPU; thermostat inputs still land on R/C/G/Y1/Y2/W1/W2/OCC.",
+    "Legend sources to transcribe in a later pass: 'Wiring Diagrams R-410A ZE/XN Series 3-6 ton' (6046556-BTS-A-1220, Dec 2020, files.hvacnavigator.com) and the DM036 IOM 'Typical Wiring Diagrams; Simplicity Lite Control Board' page (ManualsLib 1513447 p.59)."
    ],
    "confidence": "low",
    "evidence": "inferred",
@@ -2493,35 +2433,43 @@
  ],
  "commonIssues": [
   {
-   "symptom": "Unit dead or erratic - LED steady on / no heartbeat (Sunline 2000 / Predator with original Simplicity board)",
+   "symptom": "Original Simplicity board failure (Sunline 2000 / Predator / 3-6 t Sunline package units): blower will not run even with the thermostat fan switched ON, so heat locks out on the high limit (no-heat call); or unit dead / erratic with the LED steady on or no heartbeat",
    "likelyCauses": [
-    "Failed original Simplicity control board (well-known field failure on 1998-2009 D-series units)",
+    "Failed original Simplicity control board (HVAC-Talk 'York Sunline unit circuit board failure': repeated board failures on York 3-6 t Sunline package units across multiple jobs, presenting as the blower not starting and heat locking out on limit)",
+    "Blower contactor coil failing / drawing the board output down (a factory rep in the same thread advised replacing the blower contactor together with the board)",
     "Blown board fuse from a shorted 24 V field wire",
     "Transformer failure"
    ],
    "checks": [
     "Verify 24 VAC at R-C and the board fuse",
+    "With G called, check for 24 V at the board's blower output and at the blower contactor coil; ohm the contactor coil - replace the blower contactor with the board if it is suspect",
     "Check for a shorted thermostat cable or economizer wiring before replacing the board",
-    "If steady-on LED persists with good supply, replace the UCB (retrofit kits exist)"
+    "If the LED is steady on, or the blower output never energizes with good supply, replace the UCB (replacement kits reported in the thread: S1-33109150001 / S1-33109150002, S1-33103005000 - verify the kit for the unit with the distributor)"
    ],
    "appliesTo": "york-(d-series|sunline2000)",
    "confidence": "low",
-   "evidence": "inferred"
+   "evidence": "single_secondary",
+   "sources": [
+    "HVAC-Talk thread 'York Sunline unit circuit board failure' (1273311)"
+   ]
   },
   {
-   "symptom": "Compressors will not run in cool weather; flash code 10 on the board",
+   "symptom": "Compressors cycle 10 min on / 5 min off, or stay off while the economizer free-cools, in cool weather; flash code 10 on the board",
    "likelyCauses": [
-    "Low ambient switch closed (normal below ~45 F)",
+    "Low ambient switch closed (normal: normally open, closes ~45 F, opens ~55 F) - flash code 10 is a notice, not a lockout (York Central Tech Talk)",
+    "Economizer software switch set wrong for the installed equipment (ON = compressors held off during free cooling; OFF = 10 on / 5 off cycling)",
     "Failed low ambient switch"
    ],
    "checks": [
     "Note outdoor ambient; above 55 F the switch should be open",
-    "Ohm the LAS and its wiring to the UCB"
+    "Ohm the LAS and its wiring to the UCB",
+    "Confirm the economizer switch setting on the board matches whether an economizer is installed"
    ],
    "appliesTo": "york-(z-series|d-series)",
    "confidence": "low",
-   "evidence": "single_secondary",
+   "evidence": "multi_secondary",
    "sources": [
+    "York Central Tech Talk 'Simplicity Diagnostics Flash Codes' (2013)",
     "JustAnswer York rooftop flash code 10 thread"
    ]
   },
@@ -2601,10 +2549,11 @@
   "notes": "Consumer relations e-mail cg-upgconsumerrelations@jci.com. Coleman, Luxaire, Fraser-Johnston and Champion literature uses the same document numbering (nnnnnnn-YIM/XIM/CIM-...)."
  },
  "notes": [
-  "Coverage summary: serial rules are the strongest part of this pack (three formats, many agreeing decoders). Model formats decode category, series letter and tonnage only; the positions after the tonnage (heat type/input, voltage, options) were NOT transcribed from a nomenclature page in this session and are left undecoded rather than guessed.",
-  "Control platforms are partial: only the Simplicity LITE LED states confirmed from the ZE036 IOM plus one secondary flash code, and paraphrased Smart Equipment alarm names flagged low. Simplicity Elite (Millennium), original Simplicity full flash table, IGC flash codes, JCI IQ boards and Sun Premier 25-80 t fault tables are not included - see 'unresolved' in the build report.",
+  "Coverage summary: serial rules are the strongest part of this pack (three formats, many agreeing decoders). Model formats decode category, series letter, tonnage and (Z/D-series) the heat-type letter and heat code; voltage, options and revision positions were NOT transcribed from a nomenclature page and are left undecoded rather than guessed. Sun Core ZX/ZY/ZQ/ZL (2020+) is recognised but its 04-14 size codes are not converted to tons.",
+  "Control platforms are partial: simplicity-ucb carries the UCB flash table (steady/heartbeat/off, 1-14) and ICB table (1-10) from IOM search summaries; smart-equipment carries the critical alarms, selected service/FDD alarms; intelli-comfort (15-25 t D-series, single secondary source) and millennium-simplicity-elite (codes 1-8 of 43) are separate platforms. JCI IQ boards and Sun Premier 25-80 t fault tables are not included.",
   "Electrical and common-issue sections are generic field practice from memory and are marked low/inferred; treat the unit's wiring-diagram legend as authoritative.",
-  "Web-search budget was exhausted during authoring; a second pass with the JCI documentation portal should raise the model-format and control-platform coverage."
+  "Web-search budget was exhausted during authoring; a second pass with the JCI documentation portal should raise the model-format and control-platform coverage.",
+  "Residential York/Coleman/Luxaire nomenclature (YHJF/YCJF splits, P*HU/P*UR furnaces, AHX air handlers, e.g. YHJF18S41S1A, AHX24B3XH21A, P4HUB16N06401A, H2DB024S06B) is not decoded by this pack; only the serial date applies to those plates."
  ],
  "sources": [
   "York Serial Numbers ID - From History to October 2004 (York/UPG serial ID sheet, usair-eng.com/Serialnumber.pdf)",
@@ -2621,7 +2570,10 @@
   "York DJ 210 Technical Manual (product nomenclature); York D3CG090 Installation Instructions",
   "Technical Guide R-410A ZH/ZJ/ZR Series 5167795-YTG-O-0120; Technical Guide R-410A ZE/ZF/ZR/XN/XP Series 3-5 ton",
   "Simplicity SE (Smart Equipment) Controls Technical Guide; Smart Equipment Controls Technical Bulletin LIT-12011998; Verasys Alarms Summary Technical Bulletin 4.0",
-  "york.com - Technical Support Commercial / Contact pages (phone numbers)"
+  "york.com - Technical Support Commercial / Contact pages (phone numbers)",
+  "building-center.org York page (parenthesised leading letter on legacy serials)",
+  "York Central Tech Talk - Simplicity Diagnostics Flash Codes (2013): FC 10 notice / LAS behaviour",
+  "HVAC-Talk 'York Sunline unit circuit board failure' (1273311)"
  ],
  "confidence": "medium",
  "lastReviewed": "2026-09-26"

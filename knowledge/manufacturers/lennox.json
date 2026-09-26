@@ -51,7 +51,7 @@
      "51": "Columbus, OH",
      "53": "Des Moines, IA",
      "54": "Fort Worth, TX",
-     "55": "Stone Mountain, GA",
+     "55": "Stone Mountain, GA (Heatcraft)",
      "56": "Stuttgart, AR",
      "58": "Marshalltown, IA",
      "63": "Toronto, ON"
@@ -78,6 +78,13 @@
       "year": 2006,
       "month": 5
      }
+    },
+    {
+     "serial": "5207K24862",
+     "expect": {
+      "year": 2007,
+      "month": 10
+     }
     }
    ],
    "confidence": "medium",
@@ -92,7 +99,7 @@
    "notes": [
     "Year = characters 3-4 (two digits). Pivot 70: 73-99 -> 1973-1999, 00-69 -> 2000s. The format has been in continuous use since 1973 so a two-digit year is unambiguous within the era.",
     "Month letter skips I: A=Jan ... H=Aug, J=Sep, K=Oct, L=Nov, M=Dec. A serial with I or N-Z in position 5 is not this format (re-read the plate).",
-    "Plant map covers only the codes documented by the secondary sources; the building-center example 1606B13871 carries plant 16, which is not in that list. Unknown plant codes still decode (year/month) but the plant is reported as the raw code.",
+    "Plant map covers only the codes documented by the secondary sources (51/53/54/55/56/58/63, confirmed by thedailythrive.org and furnace.direct / Parts Town; one lists 55 as 'Heatcraft', consistent with Stone Mountain, GA). Observed but unmapped plant codes: 16 (building-center example 1606B13871) and 52 (InspectorHandbook example 5207K24862 = Oct 2007) - the decoder reports the raw code. Unknown plant codes still decode (year/month).",
     "Confidence is medium (three independent secondary decoders agree); Lennox's own 'Model and Serial Nomenclature' PDF (lennox.com/lib/legacy-res/pdfs/lennox_model_and_serial_nomenclature.pdf) is the primary source but could not be read in this session - promote to high once a warranty lookup on LennoxPros (Resources > Warranty lookup by serial) confirms three dated examples.",
     "Residential and commercial Lennox units share this serial style; the difference is only the plant code (commercial rooftops are typically 56 Stuttgart AR or 58 Marshalltown IA).",
     "Cross-check: the compressor date code and the refrigerant printed on the nameplate (R-22 before ~2008-2010 on rooftops, R-410A after, R-454B from 2025) should agree with the decoded year."
@@ -150,7 +157,8 @@
     "LOW CONFIDENCE: only one secondary source (PickHVAC) describes this style, and Building Intelligence Center states the 10-character plant/year/month style has been used exclusively since 1973 - the two sources disagree on whether this style exists. Treat any decode as a hint and confirm the year from the nameplate style and refrigerant (R-22 era).",
     "The two examples are CONSTRUCTED to exercise the published rule; they are not real nameplates. Replace with dated nameplate photos when available.",
     "The month-letter map (A-M skipping I) is assumed to match the 1973+ style; PickHVAC only confirms D = April.",
-    "No collision with the 10-character style: this style starts with a letter and is 9 characters long; the 1973+ style is all digits except position 5."
+    "No collision with the 10-character style: this style starts with a letter and is 9 characters long; the 1973+ style is all digits except position 5.",
+    "Only PickHVAC describes this style; Building Intelligence Center says the 10-character style has been exclusive since 1973 - when a serial matches both styles, prefer the 10-character decode. No second independent source was found in a verification pass of eight serial-related searches (a search-summary sample C89274AAC decodes to 1989-01 under this rule)."
    ]
   }
  ],
@@ -162,7 +170,7 @@
    "productType": "packaged_rtu",
    "eraStart": 2009,
    "eraEnd": 2025,
-   "regex": "^(L)([GC])(H)(\\d{3})([SHU])(4)([BDEM])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(L)([GC])(H)(\\d{3})([SHU])(4)([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -227,9 +235,11 @@
       "B": "Belt drive, constant air volume (CAV)",
       "E": "Direct drive, multi-stage air volume (MSAV)",
       "M": "Belt drive, multi-stage air volume (MSAV)",
-      "D": "Direct drive, constant air volume"
+      "D": "Direct drive, constant air volume",
+      "T": "Belt drive, multi-stage air volume (MSAV)",
+      "V": "Belt drive, variable air volume (VAV)"
      },
-     "notes": "B (belt CAV) and E (direct-drive MSAV) confirmed from LennoxPros catalog titles for LGH120H4BH and LGH036H4ES; M (belt MSAV) from the LGH120H4B/M listing; D is unconfirmed (verify on the Lennox rooftop model number identifier sheet 38Z29)."
+     "notes": "B (belt CAV) and E (direct-drive MSAV) confirmed from LennoxPros catalog titles for LGH120H4BH and LGH036H4ES; M (belt MSAV) from the LGH120H4B/M listing; D is unconfirmed (verify on the Lennox rooftop model number identifier sheet 38Z29). T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -239,9 +249,11 @@
       "S": "Gas heat - standard input",
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input",
-      "N": "No factory-installed heat (electric/electric)"
+      "N": "No factory-installed heat (electric/electric)",
+      "P": "Gas heat - standard input, modulating",
+      "R": "Gas heat - high input, modulating"
      },
-     "notes": "H = high heat confirmed by the LGH120H4BH catalog listing (240,000 Btuh input). S/M inferred from Lennox convention; N = no heat confirmed on Raider ZCA nomenclature. Electric-heat kW codes on LCH units are not mapped."
+     "notes": "H = high heat confirmed by the LGH120H4BH catalog listing (240,000 Btuh input). S/M inferred from Lennox convention; N = no heat confirmed on Raider ZCA nomenclature. Electric-heat kW codes on LCH units are not mapped. On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code. P/R (modulating) from the Lennox LGH 20-50 ton EHB sheets (S = standard 2-stage, H = high 2-stage, P = standard modulating, R = high modulating). A trailing W on single-phase LennoxPros listings (LGH036H4EW, KGB036S4EW) lands in this position as the raw code W; its meaning is unconfirmed."
     },
     {
      "group": 9,
@@ -259,7 +271,7 @@
       "G": "460/3/60",
       "J": "575/3/60"
      },
-     "notes": "Voltage letters confirmed on the Raider ZCA/ZCB nomenclature sheet and LennoxPros listings (Y = 208-230 V 3 ph, G = 460 V 3 ph). 50 Hz export codes are not mapped."
+     "notes": "Voltage letters confirmed on the Raider ZCA/ZCB nomenclature sheet and LennoxPros listings (Y = 208-230 V 3 ph, G = 460 V 3 ph). 50 Hz export codes are not mapped. LennoxPros single-phase listings also end in W (LGH036H4EW, KGB036S4EW); whether W is a voltage code or a single-phase heat variant is unconfirmed - read the nameplate volts. W is not mapped until the 38Z29 identifier sheet is read."
     }
    ],
    "refrigerant": "R-410A",
@@ -308,6 +320,19 @@
       "efficiency": "High efficiency",
       "refrigerant": "R-410A"
      }
+    },
+    {
+     "model": "LCH072H4BJ3Y",
+     "expect": {
+      "unit_type": "Electric/electric packaged rooftop (optional electric heat)",
+      "tonnage": "6",
+      "efficiency": "High efficiency",
+      "refrigerant": "R-410A",
+      "airflow": "Belt drive, constant air volume (CAV)",
+      "heat_type": "J",
+      "revision": "3",
+      "voltage": "208-230/3/60"
+     }
     }
    ],
    "notes": [
@@ -315,7 +340,8 @@
     "Service literature and engineering handbooks abbreviate the model (LGH120H4B, LGH036H4ES); the decoder accepts these partial strings.",
     "Examples LGH120H4BH1G and LGH036H4ES1Y extend confirmed partial catalog strings (LGH120H4BH 460 V; LGH036H4ES 208-230 V 3 ph) with the minor-design digit and voltage letter; LCH150H4BN1G is constructed from the nomenclature. Verify against a real nameplate before relying on the last two positions.",
     "Energence units shipped with the Prodigy (M2) unit controller from 2009, Prodigy 2.0 (M3) from ~2013, and Lennox CORE (M4) on later production; check the controller label (A55) inside the control compartment.",
-    "Sizes 036-300 = 3-25 tons; larger Energence (13-50 ton) use the same string with codes 156-600."
+    "Sizes 036-300 = 3-25 tons; larger Energence (13-50 ton) use the same string with codes 156-600.",
+    "LCH072H4BJ3Y is a real listing (6 ton, 30 kW electric heat, 208/230 V 3 ph): the J in the heat position is the electric-heat kW code, reported raw because this map covers gas heat only."
    ],
    "confidence": "medium",
    "evidence": "multi_secondary",
@@ -324,17 +350,18 @@
     "Lennox LGH Energence Rooftop Units Engineering Handbook, Bulletin No. 210557, March 2021 (tech.lennoxintl.com/.../ehb_lgh_cbox_2103.pdf)",
     "LennoxPros catalog listings LGH120H4BH (10 ton, high efficiency, 240,000 Btuh, belt drive-CAV, 460 V 3 ph) and LGH036H4ES (3 ton, direct drive-MSAV, 208-230 V 3 ph)",
     "Lennox Raider ZCA/ZCB installation instructions nomenclature (device.report) - voltage letters P/Y/G/J, refrigerant 4 = R-410A, minor design 1/2/3, N = no heat, blower B/T",
-    "Lennox Rooftop Model Number Identifier Sheet 38Z29 (lennox.com/dA/4463733165/38Z29_Rooftop+Model+Number+Identifier+Sheet_LR.pdf) - referenced, not read in this session"
+    "Lennox Rooftop Model Number Identifier Sheet 38Z29 (lennox.com/dA/4463733165/38Z29_Rooftop+Model+Number+Identifier+Sheet_LR.pdf) - referenced, not read in this session",
+    "Lennox LGH 20-50 ton Engineering Handbooks (tech.lennoxintl.com ehb_lgh_dbox_2309.pdf, ehb_lgh_ebox_1906.pdf) - blower M = MSAV belt, V = VAV belt; heat S/H 2-stage, P/R modulating"
    ],
    "lastVerified": "2026-09-26"
   },
   {
-   "id": "lennox-model-l-xion-lgt-lgx",
-   "family": "Model L (LGT/LCT/LHT/LDT) and Xion (LGX/LCX/LHX) packaged rooftops (2-30 ton)",
-   "description": "Current-generation Lennox rooftops: Model L (2021+, R-410A '4' then R-454B '5' from 2025) with the CORE unit controller, and Xion (7.5-12.5 ton, R-454B, CORE Lite). Same string layout as Energence; third letter T = Model L, X = Xion.",
+   "id": "lennox-enlight-xion-lgt-lgx",
+   "family": "Enlight (LGT/LCT/LHT/LDT) and Xion (LGX/LCX/LHX) packaged rooftops (2-30 ton)",
+   "description": "Lennox Enlight rooftops (LGT/LCT/LHT/LDT, 2021+, R-410A '4' then R-454B '5' from 2025; CORE unit controller) and Xion (LGX/LCX/LHX, 7.5-12.5 ton, R-454B, CORE Lite). Same string layout as Energence; third letter T = Enlight, X = Xion. Model L is the separate LGM/LCM family (see lennox-model-l-lgm-lcm).",
    "productType": "packaged_rtu",
    "eraStart": 2021,
-   "regex": "^(L)([GCHD])([TX])(\\d{3})([SHU])([45])([BDEM])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(L)([GCHD])([TX])(\\d{3})([SHU])([45])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -360,9 +387,10 @@
      "name": "Product family",
      "attribute": "series",
      "map": {
-      "T": "Model L",
+      "T": "Enlight (LGT/LCT/LHT/LDT)",
       "X": "Xion"
-     }
+     },
+     "notes": "T = Enlight per the Lennox EHB model-ID page (ehb_lgt_abox_uln_a2l_2409: 'L G T 060 H 5 E A 1 Y - Brand/Family L = Enlight'; LGT EHB titles 'LGT Enlight Rooftop Units'). Model L is the LGM/LCM family, not LGT."
     },
     {
      "group": 4,
@@ -370,9 +398,11 @@
      "attribute": "tonnage",
      "transform": "mbh_to_tons",
      "map": {
+      "302": "25",
       "074": "6",
       "092": "7.5"
-     }
+     },
+     "notes": "074 = 6 ton, 092 = 7.5 ton, 302 = 25 ton (LGT302H/360H are the 25 and 30 ton sizes per Lennox 100143.pdf and the LHT EHB string 'L H T 302 H 5 M N 1 Y'); all other codes are MBH/12."
     },
     {
      "group": 5,
@@ -402,9 +432,11 @@
       "B": "Belt drive, constant air volume (CAV)",
       "E": "Direct drive, multi-stage air volume (MSAV)",
       "M": "Belt drive, multi-stage air volume (MSAV)",
-      "D": "Direct drive, constant air volume"
+      "D": "Direct drive, constant air volume",
+      "T": "Belt drive, multi-stage air volume (MSAV)",
+      "V": "Belt drive, variable air volume (VAV)"
      },
-     "notes": "Map carried over from Energence; not re-verified on the Model L identifier sheet."
+     "notes": "Map carried over from Energence; not re-verified on the Model L identifier sheet. T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -415,7 +447,8 @@
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input",
       "N": "No factory-installed heat"
-     }
+     },
+     "notes": "On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code."
     },
     {
      "group": 9,
@@ -455,7 +488,7 @@
     {
      "model": "LGT036H5ES1Y",
      "expect": {
-      "series": "Model L",
+      "series": "Enlight (LGT/LCT/LHT/LDT)",
       "tonnage": "3",
       "efficiency": "High efficiency",
       "refrigerant": "R-454B",
@@ -466,26 +499,216 @@
      "model": "LCT150H4BN1G",
      "expect": {
       "unit_type": "Electric/electric packaged rooftop (optional electric heat)",
-      "series": "Model L",
+      "series": "Enlight (LGT/LCT/LHT/LDT)",
       "tonnage": "12.5",
       "refrigerant": "R-410A",
       "voltage": "460/3/60"
+     }
+    },
+    {
+     "model": "LGT302H5VS1Y",
+     "expect": {
+      "unit_type": "Gas/electric packaged rooftop",
+      "series": "Enlight (LGT/LCT/LHT/LDT)",
+      "tonnage": "25",
+      "efficiency": "High efficiency",
+      "refrigerant": "R-454B",
+      "airflow": "Belt drive, variable air volume (VAV)",
+      "heat_type": "Gas heat - standard input",
+      "revision": "1",
+      "voltage": "208-230/3/60"
+     }
+    },
+    {
+     "model": "LHT302H5MN1Y",
+     "expect": {
+      "unit_type": "Heat pump packaged rooftop",
+      "series": "Enlight (LGT/LCT/LHT/LDT)",
+      "tonnage": "25",
+      "refrigerant": "R-454B",
+      "airflow": "Belt drive, multi-stage air volume (MSAV)",
+      "heat_type": "No factory-installed heat",
+      "voltage": "208-230/3/60"
      }
     }
    ],
    "notes": [
     "Default refrigerant depends on the digit after the efficiency letter: 4 = R-410A (2021-2024 production), 5 = R-454B (A2L; 2025+). A2L units carry refrigerant detection sensors - check the nameplate refrigerant before connecting gauges.",
-    "LGX120S5MS1Y is a real string from the Lennox Xion product specification; the LGT/LCT examples are constructed from the nomenclature and need catalog confirmation.",
-    "Enlight-branded rooftops could not be verified this session; if a nameplate shows a third letter other than T/X, decode by position using the same layout and report low confidence.",
-    "Model L and Xion ship with the Lennox CORE (M4) or CORE Lite unit controller; alarm codes are in the CORE application guide 485115 Table 11."
+    "LGX120S5MS1Y (Xion product specification), LGT302H5VS1Y (ehb_lgt_dbox_a2l_2409 header) and LHT302H5MN1Y (ehb_lht_dbox_a2l_2505 model-ID string) are real Lennox strings; the LGT036/LCT150 examples are constructed from the nomenclature and need catalog confirmation.",
+    "T = Enlight (Lennox EHB model-ID page); Model L is the separate LGM/LCM family. Lennox lists Model L (LGM/LCM), Enlight (LGT/LCT/LHT/LDT), Xion (LGX/LCX/LHX) and Raider as four distinct rooftop lines (comparison sheet 37J72).",
+    "Enlight and Xion ship with the Lennox CORE (M4) or CORE Lite unit controller; alarm codes are in the CORE application guide 485115 Table 11. Ultra-low-NOx LGT units carry A in the heat position (LGT060H5EA1Y) - reported raw."
    ],
    "confidence": "medium",
    "evidence": "multi_secondary",
    "sources": [
-    "Lennox LGT Model L Engineering Handbook (A2L), lennox.com/dA/19bc05b85c/ehb_lgt_abox_a2l_2501.pdf - model number identification page",
+    "Lennox LGT Enlight Rooftop Units Engineering Handbooks (lennox.com/dA/19bc05b85c/ehb_lgt_abox_a2l_2501.pdf; ehb_lgt_abox_uln_a2l_2409.pdf model-ID page 'Brand/Family L = Enlight'; ehb_lgt_cbox_2411.pdf 'LGT Enlight Rooftop Units Standard and High Efficiency'; ehb_lgt_dbox_a2l_2409.pdf)",
     "Lennox Xion Rooftop Units product specification (manuals.plus mirror) - example LGX 120 S5MS1Y, R-454B, CORE Lite controller",
     "Lennox Commercial 'Model L Rooftop HVAC Units' product page (lennox.com/commercial/products/rooftop-units/model-l) - LGT/LCT/LHT/LDT and LGX/LCX/LHX families, CORE / CORE Lite controllers",
-    "Lennox Rooftop Model Number Identifier Sheet 38Z29 - referenced, not read in this session"
+    "Lennox Rooftop Model Number Identifier Sheet 38Z29 - referenced, not read in this session",
+    "Lennox 100143.pdf 'LGT302H / 360H (25 and 30 ton)' service literature; LHT EHB ehb_lht_dbox_a2l_2505 ('L H T 302 H 5 M N 1 Y')"
+   ],
+   "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "lennox-model-l-lgm-lcm",
+   "family": "Model L LGM/LCM ultra-high-efficiency packaged rooftop (3-25 ton, 2021+)",
+   "description": "Lennox Model L rooftops (LGM gas/electric, LCM electric/electric) with the CORE unit controller as standard. L = Lennox, G/C = unit type, M = Model L family, 3-digit nominal cooling MBH, U = ultra-high efficiency, refrigerant digit (4 = R-410A on 2021-2024 units, 5 = R-454B), blower letter (E/P direct-drive DirectPlus, M belt MSAV), heat letter, minor design digit, voltage letter, optional factory option codes.",
+   "productType": "packaged_rtu",
+   "eraStart": 2021,
+   "regex": "^(L)([GC])(M)(\\d{3})(U)([45])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "attribute": "other",
+     "map": {
+      "L": "Lennox"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Unit type",
+     "attribute": "unit_type",
+     "map": {
+      "G": "Gas/electric packaged rooftop",
+      "C": "Electric/electric packaged rooftop (optional electric heat)"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Product family",
+     "attribute": "series",
+     "map": {
+      "M": "Model L (LGM/LCM)"
+     },
+     "notes": "M = Model L per the Lennox LGM/LCM EHB model-ID page ('L C M 240 U 5 M N 1 Y MODEL L ROOFTOP UNITS'); LGM/LCM 3-25 ton."
+    },
+    {
+     "group": 4,
+     "name": "Nominal cooling capacity (MBH)",
+     "attribute": "tonnage",
+     "transform": "mbh_to_tons",
+     "map": {
+      "302": "25",
+      "074": "6",
+      "092": "7.5"
+     },
+     "notes": "EHB sizes: 036 = 3, 048 = 4, 060 = 5, 074 = 6 tons (3-6 ton A-box); 156 = 13 ton (LGM/LCM156U); 302 = 25 ton; other codes are MBH/12."
+    },
+    {
+     "group": 5,
+     "name": "Cooling efficiency",
+     "attribute": "efficiency",
+     "map": {
+      "U": "Ultra-high efficiency"
+     },
+     "notes": "Model L is offered only as ultra-high efficiency (U)."
+    },
+    {
+     "group": 6,
+     "name": "Refrigerant type",
+     "attribute": "refrigerant",
+     "map": {
+      "4": "R-410A",
+      "5": "R-454B"
+     },
+     "notes": "5 = R-454B on the A2L EHBs (ehb_lgm_abox_a2l_2507 etc.); 4 = R-410A on 2021-2024 units."
+    },
+    {
+     "group": 7,
+     "name": "Blower type",
+     "attribute": "airflow",
+     "map": {
+      "E": "Direct drive, single-zone VAV (DirectPlus)",
+      "P": "Direct drive, VAV (DirectPlus)",
+      "M": "Belt drive, multi-stage air volume (MSAV)"
+     },
+     "notes": "E/P/M from the Lennox LGM/LCM model-ID page (E = SZVAV DirectPlus direct drive, P = VAV DirectPlus direct drive, M = MSAV belt drive). Other letters are reported raw."
+    },
+    {
+     "group": 8,
+     "name": "Heat input / factory heat",
+     "attribute": "heat_type",
+     "map": {
+      "S": "Gas heat - standard input",
+      "M": "Gas heat - medium input",
+      "H": "Gas heat - high input",
+      "N": "No factory-installed heat"
+     },
+     "notes": "Gas heat letters carried from the shared Lennox rooftop convention (EHB titles show LGM240U5MS2Y = S, LGM120U5EM3Y = M; LGM060U5EB1Y carries B, meaning unconfirmed - reported raw). On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code."
+    },
+    {
+     "group": 9,
+     "name": "Minor design sequence",
+     "attribute": "revision"
+    },
+    {
+     "group": 10,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "P": "208-230/1/60",
+      "Y": "208-230/3/60",
+      "G": "460/3/60",
+      "J": "575/3/60"
+     },
+     "notes": "Y/G/J confirmed on the LGM/LCM EHB strings; P (single phase) is not offered on Model L sizes seen but is kept for the shared layout."
+    }
+   ],
+   "refrigerant": "R-454B",
+   "controlPlatformIds": [
+    "core"
+   ],
+   "examples": [
+    {
+     "model": "LGM060U5EB1Y",
+     "expect": {
+      "unit_type": "Gas/electric packaged rooftop",
+      "series": "Model L (LGM/LCM)",
+      "tonnage": "5",
+      "efficiency": "Ultra-high efficiency",
+      "refrigerant": "R-454B",
+      "airflow": "Direct drive, single-zone VAV (DirectPlus)",
+      "revision": "1",
+      "voltage": "208-230/3/60"
+     }
+    },
+    {
+     "model": "LCM240U5MN1Y",
+     "expect": {
+      "unit_type": "Electric/electric packaged rooftop (optional electric heat)",
+      "series": "Model L (LGM/LCM)",
+      "tonnage": "20",
+      "refrigerant": "R-454B",
+      "airflow": "Belt drive, multi-stage air volume (MSAV)",
+      "heat_type": "No factory-installed heat",
+      "voltage": "208-230/3/60"
+     }
+    },
+    {
+     "model": "LGM120U5EM3Y",
+     "expect": {
+      "tonnage": "10",
+      "refrigerant": "R-454B",
+      "heat_type": "Gas heat - medium input",
+      "revision": "3",
+      "voltage": "208-230/3/60"
+     }
+    }
+   ],
+   "notes": [
+    "Example strings are taken verbatim from Lennox EHB titles/model-ID pages (LGM060U5EB1Y ehb_lgm_abox_a2l_2507; LGM120U5EM3Y ehb_lgm_bbox_a2l_2507; LCM060U5EN1Y ehb_lcm_abox_a2l_2507; LGM240U5MS2Y / LCM240U5MN1Y ehb_lgm_cbox_a2l_2409 / ehb_lcm_cbox_a2l_2409).",
+    "The CORE Control System is standard on all Model L (LGM/LCM) rooftops; alarm codes are in the CORE application guide 485115 Table 11.",
+    "Model L is a different product line from Enlight (LGT/LCT/LHT/LDT) - see lennox-enlight-xion-lgt-lgx."
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Lennox LGM Model L Rooftop Units Engineering Handbook, A-box A2L (tech.lennoxintl.com ehb_lgm_abox_a2l_2507.pdf) - model-ID page, string LGM060U5EB1Y",
+    "Lennox LGM Model L Engineering Handbook, B-box A2L (ehb_lgm_bbox_a2l_2507.pdf) - LGM120U5EM3Y",
+    "Lennox LCM Model L Engineering Handbook, A-box A2L (ehb_lcm_abox_a2l_2507.pdf) - LCM060U5EN1Y",
+    "Lennox LGM/LCM Model L Engineering Handbooks, C-box A2L (ehb_lgm_cbox_a2l_2409.pdf; lennox.com/dA/371fcbbc67/ehb_lcm_cbox_a2l_2409.pdf 'L C M 240 U 5 M N 1 Y MODEL L ROOFTOP UNITS')",
+    "Lennox LCM Model L Ultra-High Efficiency Rooftop Units 13-25 ton EHB (tech.lennoxintl.com ehb_lcm_cbox_2104.pdf); LGM Series Service Literature (lennox.com/dA/7badeab555/100036.pdf); 508465-03.pdf 'LGM/LCM156U (13 TON)'"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -496,7 +719,7 @@
    "productType": "packaged_rtu",
    "eraStart": 1996,
    "eraEnd": 2010,
-   "regex": "^(L)([GCH])([ACE])(\\d{3})([SH])([124])([BDM])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(L)([GCH])([ACE])(\\d{3})([SH])([124])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -563,9 +786,11 @@
      "map": {
       "B": "Belt drive",
       "D": "Direct drive",
-      "M": "Belt drive, multi-stage air volume"
+      "M": "Belt drive, multi-stage air volume",
+      "T": "Belt drive, multi-stage air volume (MSAV)",
+      "V": "Belt drive, variable air volume (VAV)"
      },
-     "notes": "Partial; verify on the L Series engineering handbook nomenclature page."
+     "notes": "Partial; verify on the L Series engineering handbook nomenclature page. T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -576,7 +801,8 @@
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input",
       "N": "No factory-installed heat"
-     }
+     },
+     "notes": "On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code."
     },
     {
      "group": 9,
@@ -631,10 +857,10 @@
     "Default refrigerant R-22 applies to units with 1 or 2 in the digit position (1996-2008); units with 4 are R-410A (2008-2010). Confirm on the nameplate.",
     "L Series units use the IMC (Integrated Modular Control, A55 M1-x board) with 2-digit error codes; the L Connection network is the BAS layer.",
     "LGA120H2B and LGA120H4B are real configurations listed on ManualsLib for the LGA120; LCA102S2B is constructed from the nomenclature.",
-    "Confidence medium: the string layout is consistent with the later Lennox rooftop nomenclature and two catalog strings, but the L Series nomenclature page itself was not read this session."
+    "LOW CONFIDENCE / single_secondary: the position-by-position layout is inferred from the later Lennox rooftop nomenclature plus two ManualsLib catalog strings (LGA120H2B, LGA120H4B). Lennox sources found (9525-L6, ehb_lg_07to12_0808, ehb_abox_0599, L Series engineering data) confirm only 'Major Design Sequence A = First Generation', that LGA/LCA*H4 units are R-410A and that earlier LG units are R-22; none states what the digit 1 or 2 encodes. Promote only after the L Series EHB model-ID page (tech.lennoxintl.com ehb_lg_07to12_0808.pdf p.1) is transcribed."
    ],
-   "confidence": "medium",
-   "evidence": "multi_secondary",
+   "confidence": "low",
+   "evidence": "single_secondary",
    "sources": [
     "Lennox L Series Engineering Data, LG 7.5-12.5 ton (tech.lennoxintl.com/.../ehb_lg_07to12_0808.pdf) and LC 13-25 ton (ehb_lc_13to25_0904.pdf) - referenced",
     "Lennox LGA/LGC LCA/LCC 21-30 ton Service Literature, Corp. 9913-L7 (1999)",
@@ -649,7 +875,7 @@
    "description": "Lennox Landmark standard-efficiency rooftops (also sold as Allied Commercial K-Series). K = Landmark, G/C/H = unit type, A/B = generation, 3-digit MBH, efficiency letter, 4 = R-410A, blower letter (D direct drive on 024-060, B belt drive), heat letter, minor design digit, voltage letter.",
    "productType": "packaged_rtu",
    "eraStart": 2009,
-   "regex": "^(K)([GCHD])([AB])(\\d{3})([SH])([45])([BDET])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(K)([GCHD])([AB])(\\d{3})([SH])([45])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -715,9 +941,10 @@
       "B": "Belt drive",
       "D": "Direct drive",
       "T": "Belt drive, 2-speed",
-      "E": "Direct drive, multi-stage air volume"
+      "E": "Direct drive, multi-stage air volume",
+      "V": "Belt drive, variable air volume (VAV)"
      },
-     "notes": "Direct drive is standard on 024-060 sizes (036 also offered belt drive) per Lennox KGA service literature; B/T letters confirmed on the Raider sheet, D/E carried from Lennox convention."
+     "notes": "Direct drive is standard on 024-060 sizes (036 also offered belt drive) per Lennox KGA service literature; B/T letters confirmed on the Raider sheet, D/E carried from Lennox convention. T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -728,7 +955,8 @@
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input",
       "N": "No factory-installed heat"
-     }
+     },
+     "notes": "On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code. A trailing W on single-phase LennoxPros listings (LGH036H4EW, KGB036S4EW) lands in this position as the raw code W; its meaning is unconfirmed."
     },
     {
      "group": 9,
@@ -744,7 +972,8 @@
       "Y": "208-230/3/60",
       "G": "460/3/60",
       "J": "575/3/60"
-     }
+     },
+     "notes": "LennoxPros single-phase listings also end in W (KGB036S4EW '208-230 VAC 1 Ph', alongside KGB036S4DP '230 V 1 ph'); whether W is a voltage code or a single-phase heat variant is unconfirmed - read the nameplate volts. W is not mapped until the 38Z29 identifier sheet is read."
     }
    ],
    "refrigerant": "R-410A",
@@ -789,11 +1018,11 @@
   },
   {
    "id": "lennox-raider-zga-zca-zha",
-   "family": "Raider ZGA/ZCA/ZHA and ZGB/ZCB/ZHB packaged rooftop, 3-12.5 ton (2010+)",
-   "description": "Lennox Raider value rooftops (also Allied Commercial Z-Series). Nomenclature per the ZCA/ZCB installation sheet: Z = Raider, C/G/H = unit type, A/B = generation, capacity 036-150, S = standard efficiency, 4 = R-410A, blower B (belt) or T (belt, 2-speed), heat letter (N = no heat), minor design 1/2/3, voltage P/Y/G/J.",
+   "family": "Raider ZGA/ZCA/ZHA, ZGB/ZCB/ZHB and ZGD/ZCD (2025+) packaged rooftop, 3-12.5 ton (2010+)",
+   "description": "Lennox Raider value rooftops (also Allied Commercial Z-Series). Nomenclature per the ZCA/ZCB installation sheet: Z = Raider, C/G/H = unit type, A/B/D = generation (D = 2025+ R-454B third generation ZGD/ZCD), capacity 036-150, S = standard efficiency, 4 = R-410A, blower B (belt) or T (belt, 2-speed), heat letter (N = no heat), minor design 1/2/3, voltage P/Y/G/J.",
    "productType": "packaged_rtu",
    "eraStart": 2010,
-   "regex": "^(Z)([GCH])([AB])(\\d{3})([SH])([45])([BDET])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(Z)([GCH])([ABD])(\\d{3})([SH])([45])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -819,8 +1048,10 @@
      "attribute": "other",
      "map": {
       "A": "1st generation",
-      "B": "2nd generation"
-     }
+      "B": "2nd generation",
+      "D": "3rd generation (ZGD/ZCD, R-454B)"
+     },
+     "notes": "D = third generation per Lennox installation instructions 508704-01 (2025: ZGD/ZCD036 3-ton, ZGD/ZCD048 4-ton, ZGD/ZCD060) and the Raider Quick Reference Guide 454B (37J74)."
     },
     {
      "group": 4,
@@ -859,8 +1090,10 @@
       "B": "Belt drive",
       "T": "Belt drive, 2-speed",
       "D": "Direct drive",
-      "E": "Direct drive, multi-stage air volume"
-     }
+      "E": "Direct drive, multi-stage air volume",
+      "V": "Belt drive, variable air volume (VAV)"
+     },
+     "notes": "T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -871,7 +1104,8 @@
       "S": "Gas heat - standard input",
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input"
-     }
+     },
+     "notes": "On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code."
     },
     {
      "group": 9,
@@ -927,29 +1161,42 @@
       "airflow": "Belt drive, 2-speed",
       "voltage": "208-230/1/60"
      }
+    },
+    {
+     "model": "ZCD036S5EN1Y",
+     "expect": {
+      "unit_type": "Electric/electric packaged rooftop (optional electric heat)",
+      "tonnage": "3",
+      "refrigerant": "R-454B",
+      "airflow": "Direct drive, multi-stage air volume",
+      "heat_type": "No factory-installed heat",
+      "voltage": "208-230/3/60"
+     }
     }
    ],
    "notes": [
     "Every character of the ZCA example follows the published ZCA/ZCB nomenclature sheet; the ZGB gas example assumes the same S/M/H heat letters as other Lennox rooftops (not confirmed on the ZGA/ZGB sheet).",
-    "Raider units use conventional controls (contactors, defrost/ignition boards) rather than a Prodigy/CORE unit controller."
+    "Raider units use conventional controls (contactors, defrost/ignition boards) rather than a Prodigy/CORE unit controller.",
+    "ZCD036S5EN1Y follows the third-generation (R-454B) Raider layout from 508704-01; the E blower letter meaning is carried from the shared convention, not from the ZCD sheet."
    ],
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
     "Lennox ZCA/ZCB 3-6 ton Installation Instructions, Model Number Identification (device.report mirror of Lennox doc)",
     "Lennox ZGA/ZGB Engineering Handbook (tech.lennoxintl.com/.../ehb_zgb_zga_bbox_2103.pdf) and ZHA/ZHB EHB Bulletin 210749 (Jan 2019)",
-    "Lennox ZCA Series Service Literature, Corp. 1308-L2 (2013)"
+    "Lennox ZCA Series Service Literature, Corp. 1308-L2 (2013)",
+    "Lennox ZGD/ZCD 3-5 ton Installation Instructions 508704-01 (2025, R-454B); Lennox Raider Quick Reference Guide 454B (37J74)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "lennox-strategos-sga-sca-sha",
-   "family": "Strategos / S-Class SGA/SCA/SHA, SGH/SCH, SCC packaged rooftop, 3-24 ton (2004-2019)",
-   "description": "Lennox Strategos rooftops. S = Strategos, G/C/H = unit type, third letter = major design sequence (A, C, H seen in literature), 3-digit MBH, efficiency letter, refrigerant digit, then optional blower/heat/minor-design/voltage characters.",
+   "family": "Strategos / S-Class SGA/SCA/SHA, SGB/SCB, SGC/SCC, SGH/SCH packaged rooftop, 3-24 ton (2004-2019)",
+   "description": "Lennox Strategos rooftops. S = Strategos, G/C/H = unit type, third letter = major design sequence (A, B, C, H seen in literature), 3-digit MBH, efficiency letter, refrigerant digit, then optional blower/heat/minor-design/voltage characters.",
    "productType": "packaged_rtu",
    "eraStart": 2004,
    "eraEnd": 2019,
-   "regex": "^(S)([GCH])([ACH])(\\d{3})([SHU])([24])([BDEM])?([SMHN])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(S)([GCH])([ABCH])(\\d{3})([SHU])([24])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -975,9 +1222,11 @@
      "attribute": "other",
      "map": {
       "A": "1st generation (SGA/SCA)",
-      "C": "3rd generation (SCC)",
-      "H": "Later generation (SGH/SCH)"
-     }
+      "C": "3rd generation (SGC/SCC)",
+      "H": "Later generation (SGH/SCH)",
+      "B": "2nd generation (SGB/SCB, 24 ton)"
+     },
+     "notes": "A/B from Lennox 0718e.pdf 'SGA/SGB SERIES' (2007) and the SGA/SCA 036-240, SGB/SCB 288 (24 ton) literature; C from tech.lennoxintl.com ehb_sg_03to24_1907.pdf 'SGC Strategos Rooftop Units 60 HZ' (so C exists on gas units too, not only SCC)."
     },
     {
      "group": 4,
@@ -1016,8 +1265,11 @@
       "B": "Belt drive",
       "D": "Direct drive",
       "E": "Direct drive, multi-stage air volume",
-      "M": "Belt drive, multi-stage air volume"
-     }
+      "M": "Belt drive, multi-stage air volume",
+      "T": "Belt drive, multi-stage air volume (MSAV)",
+      "V": "Belt drive, variable air volume (VAV)"
+     },
+     "notes": "T (belt MSAV) and V (belt VAV) added from the Lennox LGH 20-50 ton EHB (ehb_lgh_dbox_2309 / ehb_lgh_ebox_1906: M = MSAV belt, V = VAV belt) and LennoxPros BX337 (LGH074H4TH 'Belt Drive-MSAV'). The regex accepts any letter here; letters not in the map are reported raw."
     },
     {
      "group": 8,
@@ -1028,7 +1280,8 @@
       "M": "Gas heat - medium input",
       "H": "Gas heat - high input",
       "N": "No factory-installed heat"
-     }
+     },
+     "notes": "On electric/electric LCH/LCT/LCX/LCM units the same position is the factory electric-heat kW code (LCH manual: N none, E 15 kW, J 30 kW, K 45 kW, L 60 kW, P 90 kW, S 120 kW) and must not be read as gas heat - the map below applies to gas/electric (G) units only. Unknown letters are reported as the raw code."
     },
     {
      "group": 9,
@@ -1070,6 +1323,14 @@
       "refrigerant": "R-410A",
       "voltage": "460/3/60"
      }
+    },
+    {
+     "model": "SGB288H4B",
+     "expect": {
+      "unit_type": "Gas/electric packaged rooftop",
+      "tonnage": "24",
+      "refrigerant": "R-410A"
+     }
     }
    ],
    "notes": [
@@ -1081,7 +1342,8 @@
    "sources": [
     "Lennox SGA/SCA Installation Instructions, Corp. 0424-L11 (2004)",
     "Lennox Strategos Rooftop Units 3-24 ton Engineering Handbook (tech.lennoxintl.com/.../ehb_sc_03to24_1907.pdf)",
-    "Lennox SGH & SCH 036-240 Strategos Installation Instructions (manualzz mirror)"
+    "Lennox SGH & SCH 036-240 Strategos Installation Instructions (manualzz mirror)",
+    "Lennox 0718e.pdf 'SGA/SGB SERIES' (2007) unit information; SGA/SCA 036-240, SGB/SCB 288 rooftop literature (manualzz); Lennox SGC Strategos Rooftop Units EHB (tech.lennoxintl.com ehb_sg_03to24_1907.pdf)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1091,7 +1353,7 @@
    "description": "T = T-Class product line, S = split-system air conditioner / P = split-system heat pump, third letter = major design sequence, 3-digit nominal cooling MBH, efficiency letter (S standard, H high), 4 = R-410A, part-load capability letter, optional coil-type letter, minor design digit, voltage letter.",
    "productType": "split_condensing_unit",
    "eraStart": 2008,
-   "regex": "^(T)([SP])([A-Z])(\\d{3})([SHU])([45])([A-Z])([A-Z])?(\\d)([PYGJ])(?:[-A-Z0-9/ ]*)?$",
+   "regex": "^(T)([SP])([A-Z])(\\d{3})([SHU])([45])([A-Z])?([A-Z])?(\\d)?([PYGJ])?(?:[-A-Z0-9/ ]*)?$",
    "segments": [
     {
      "group": 1,
@@ -1113,7 +1375,7 @@
     {
      "group": 3,
      "name": "Major design sequence",
-     "attribute": "other"
+     "notes": "Kept as a segment only (no attribute) so it does not collide with the coil-type letter in attributes.other."
     },
     {
      "group": 4,
@@ -1148,13 +1410,13 @@
      "group": 7,
      "name": "Part-load capability",
      "attribute": "stages",
-     "notes": "Letter meanings not confirmed this session (catalog strings show S here). Report raw code."
+     "notes": "Letter meanings not confirmed this session. D appears on '1 Stage, 11 IEER' listings (TSA120S4DN1G, LennoxPros 45W13) and S on 12 IEER listings (TSA120S4SN1Y 45W08, TSA090S4SN1J 77D41) - meaning still unconfirmed. Report raw code."
     },
     {
      "group": 8,
      "name": "Coil type",
-     "attribute": "other",
-     "notes": "Present on later strings (TSA120S4SN1Y); absent on earlier ones (TSA090S4S1Y). Letter meanings not confirmed."
+     "attribute": "cabinet",
+     "notes": "Present on later strings (TSA120S4SN1Y); absent on earlier ones (TSA090S4S1Y) and on catalog abbreviations (TSA036S4). Letter meanings not confirmed; reported under 'cabinet' only to keep it separate from the major-design letter."
     },
     {
      "group": 9,
@@ -1204,10 +1466,27 @@
       "efficiency": "High efficiency",
       "voltage": "460/3/60"
      }
+    },
+    {
+     "model": "TSA036S4",
+     "expect": {
+      "unit_type": "Split-system air conditioner (condensing unit)",
+      "tonnage": "3",
+      "efficiency": "Standard efficiency",
+      "refrigerant": "R-410A"
+     }
+    },
+    {
+     "model": "TSA120S4DN1G",
+     "expect": {
+      "tonnage": "10",
+      "refrigerant": "R-410A",
+      "voltage": "460/3/60"
+     }
     }
    ],
    "notes": [
-    "TSA120S4SN1Y (10 ton, 230 V 3 ph) and TSA090S4S1Y are real LennoxPros / catalog strings; TPA036H4S1G is constructed.",
+    "TSA120S4SN1Y (10 ton, 230 V 3 ph, LennoxPros 45W08), TSA090S4SN1J (77D41), TSA120S4DN1G (45W13) and TSA090S4S1Y are real LennoxPros / catalog strings; TSA036S4 (also TSA042S4/TSA048S4/TSA060S4) is the ManualsLib catalog abbreviation; TPA036H4S1G is constructed. The minor-design digit and voltage letter are optional so abbreviated strings decode.",
     "Matched indoor unit is the TAA air handler (see lennox-tclass-taa-air-handler). CBA/CBX air handlers are residential Merit/Elite products, not the commercial match.",
     "Older TSA*H4 (2008, Corp. 0809-L6) units are high-efficiency R-410A; all T-Class outdoor units are R-410A unless the digit is 5."
    ],
@@ -1247,7 +1526,7 @@
     {
      "group": 3,
      "name": "Major design sequence",
-     "attribute": "other"
+     "notes": "Kept as a segment only (no attribute) so it does not collide with the configuration letter in attributes.other."
     },
     {
      "group": 4,
@@ -1339,7 +1618,7 @@
   {
    "id": "prodigy",
    "name": "Lennox Prodigy (M2) / Prodigy 2.0 (M3) unit controller",
-   "description": "Microprocessor unit controller with LCD and push-button menu fitted to Energence (and late Strategos) rooftops: Prodigy M2 (2009-2013, doc 506215-01 / application guide 506457) and Prodigy 2.0 M3 (2013+, setup guide 507241-07, application guide 507242-07). Alarm/event codes are numeric; selected alarms close the service relay contacts (DO1). Coverage is partial: this file transcribes roughly 100 of the Prodigy 2.0 Table 65 rows that could be seen through search excerpts. Rows not yet captured: 1, 3, 7, 9-11, 21, 31, 46-49, 80, 87-92, 94-100, 131-135, 138, 140-142, 144-165, 170-177, 186, 190+ (some of these are RESERVED: 70-72, 84, 104-105, 112-119 (M3), 127, 178-181). Codes 17, 18, 19 (compressor 3/4 high-pressure strike entries), 40, 54, 55 and 60 have display text reconstructed from the documented row pattern; the guide states events 12-19 are the high-pressure/high-temperature events. Verify exact wording against Table 65 (ManualsLib 1251298 pages 153-156 or 507242-07 PDF). The Prodigy 2.0 application guide narrative and Table 65 disagree on 'alarm 60' (narrative: gas valve cycled on heat section 2; table sequence: heat section 2 primary limit S99, with 69 as the heat-2 gas-valve strike). Table numbering is used here. Prodigy M2 (Prodigy 1.0, application guide 506457 / setup guide 506215) uses the same numbering for the common codes (2, 4, 5, 6, 8, 20, 74, 93 confirmed) but has its own controller-hardware codes 112, 114 and 118 that are reserved on the M3. Thermal protecti",
+   "description": "Microprocessor unit controller with LCD and push-button menu fitted to Energence (and late Strategos) rooftops: Prodigy M2 (2009-2013, setup guide 506215-01 / application guide 506457) and Prodigy 2.0 M3 (2013+, setup guide 507241-07, application guide 507242-07). Alarm/event codes are numeric; selected alarms close the service relay contacts (DO1). Coverage is partial: roughly 100 of the Prodigy 2.0 Table 65 rows were transcribed through search excerpts of the guide (see the coverage note in diagnosticTips for the rows still missing and the rows whose display text is reconstructed). The application guide narrative and Table 65 disagree on alarm 60 (narrative: gas valve cycled on heat section 2; table: heat section 2 primary limit S99, with 69 as the heat-2 gas-valve strike) - table numbering is used here. Prodigy M2 uses the same numbering for the common codes (2, 4, 5, 6, 8, 20, 74, 93 confirmed) plus its own controller-hardware codes 112, 114 and 118, which are reserved on the M3.",
    "appliesTo": [
     "lennox-energence-lgh-lch",
     "lennox-strategos-sga-sca-sha"
@@ -1518,8 +1797,8 @@
      ],
      "severity": "lockout",
      "source": "Prodigy 2.0 Application Guide 507242 Table 65 ('Events 12-19 could also be caused by a high temperature condition on some compressors'); high pressure switches S4, S7, S28, S96",
-     "evidence": "manufacturer_doc",
-     "notes": "Display text follows the documented 12/13 and 14/15 pattern for compressor 3 (S28); the guide states events 12-19 are the high-pressure/high-temperature events. Verify exact wording in Table 65."
+     "evidence": "single_secondary",
+     "notes": "Display wording reconstructed from the documented row pattern, not seen verbatim in a Table 65 excerpt - verify against Table 65 (ManualsLib 1251298 pp.153-156 / 507242-07). Display text follows the documented 12/13 and 14/15 pattern for compressor 3 (S28); the guide states events 12-19 are the high-pressure/high-temperature events. Verify exact wording in Table 65."
     },
     {
      "code": "18",
@@ -1532,8 +1811,8 @@
      ],
      "severity": "warning",
      "source": "Prodigy 2.0 Application Guide 507242 Table 65 and 'High Pressure Switches (S4, S7, S28 and S96)' section (ManualsLib 1593305 p.16)",
-     "evidence": "manufacturer_doc",
-     "notes": "Display text follows the documented pattern for compressor 4 (S96); verify exact wording in Table 65."
+     "evidence": "single_secondary",
+     "notes": "Display wording reconstructed from the documented row pattern, not seen verbatim in a Table 65 excerpt - verify against Table 65 (ManualsLib 1251298 pp.153-156 / 507242-07). Display text follows the documented pattern for compressor 4 (S96); verify exact wording in Table 65."
     },
     {
      "code": "19",
@@ -1546,8 +1825,8 @@
      ],
      "severity": "lockout",
      "source": "Prodigy 2.0 Application Guide 507242 Table 65 ('Events 12-19 ... high pressure / high temperature')",
-     "evidence": "manufacturer_doc",
-     "notes": "Display text inferred from the 12-19 pattern; verify exact wording in Table 65."
+     "evidence": "single_secondary",
+     "notes": "Display wording reconstructed from the documented row pattern, not seen verbatim in a Table 65 excerpt - verify against Table 65 (ManualsLib 1251298 pp.153-156 / 507242-07). Display text inferred from the 12-19 pattern; verify exact wording in Table 65."
     },
     {
      "code": "20",
@@ -1955,8 +2234,8 @@
      ],
      "severity": "lockout",
      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 54-55 heat section 1, 'Heat section 1 flame roll out burner 1 switch is open. Check gas roll out switch S47'; parallel entry 64 'HEAT 2 ROLLOUT OPEN S69')",
-     "evidence": "manufacturer_doc",
-     "notes": "One summary of Table 65 rendered rows 54-55 as 'HEAT 1 LIMIT OPEN'; the row text seen is the roll-out description. Verify the exact display label."
+     "evidence": "single_secondary",
+     "notes": "Display wording reconstructed from the documented row pattern, not seen verbatim in a Table 65 excerpt - verify against Table 65 (ManualsLib 1251298 pp.153-156 / 507242-07). One summary of Table 65 rendered rows 54-55 as 'HEAT 1 LIMIT OPEN'; the row text seen is the roll-out description. Verify the exact display label."
     },
     {
      "code": "55",
@@ -1969,8 +2248,8 @@
      ],
      "severity": "lockout",
      "source": "Prodigy 2.0 Application Guide 507242 Table 65 (codes 54-55; parallel entry 65 'STRIKE 3 ROLLOUT OPEN S69')",
-     "evidence": "manufacturer_doc",
-     "notes": "Label inferred from the heat-2 pair 64/65; verify exact wording."
+     "evidence": "single_secondary",
+     "notes": "Display wording reconstructed from the documented row pattern, not seen verbatim in a Table 65 excerpt - verify against Table 65 (ManualsLib 1251298 pp.153-156 / 507242-07). Label inferred from the heat-2 pair 64/65; verify exact wording."
     },
     {
      "code": "56",
@@ -2823,8 +3102,8 @@
      "notes": "Two search summaries of the same page cited this row as 189 and as 190; verify the code number in Table 65."
     },
     {
-     "code": "ERRATIC POWER",
-     "meaning": "Erratic Power - Set whenever service is turned off due to detection of power loss (loss-of-power detection, single-phase units). Check power connections. User can clear the alarm via the user interface.",
+     "code": "1",
+     "meaning": "ERRATIC POWER - Erratic Power - Set whenever service is turned off due to detection of power loss (loss-of-power detection, single-phase units). Check power connections. User can clear the alarm via the user interface.",
      "likelyCauses": [
       "Loose or corroded power connections, failing disconnect or contactor",
       "Utility power interruptions / brownouts"
@@ -2836,7 +3115,7 @@
      "severity": "warning",
      "source": "Prodigy 2.0 Application Guide 507242 'Loss of Power Detection (Single-Phase Units Only)' (ManualsLib 1593305 p.17) and Table 65",
      "evidence": "manufacturer_doc",
-     "notes": "Numeric code not captured; on the M3 the related numeric alarm is 128 '24VAC POWER LOSS'."
+     "notes": "Alarm number 1 per the M-series numbering (CORE Table 11 'Erratic Power (Alarm 1)'; IMC code 1 'Power loss for two cycles'); the related M3 numeric alarm for a full loss of control power is 128 '24VAC POWER LOSS'."
     },
     {
      "code": "112",
@@ -2849,8 +3128,8 @@
      ],
      "severity": "shutdown",
      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Table 8 Alarm Codes",
-     "evidence": "manufacturer_doc",
-     "notes": "On the Prodigy 2.0 M3, codes 112-119 are reserved."
+     "evidence": "single_secondary",
+     "notes": "Not seen in a search excerpt of the Prodigy M2 guide 506215-01 (neuco IS-59W47) this session; keep as low-confidence until confirmed in its Table 8. On the Prodigy 2.0 M3, codes 112-119 are reserved."
     },
     {
      "code": "114",
@@ -2869,7 +3148,7 @@
     },
     {
      "code": "118",
-     "meaning": "NO DISPLAY - DISPLAY NOT DETECTED (Prodigy M2 only).",
+     "meaning": "NO DISPLAY - DISPLAY NOT DETECTED.",
      "likelyCauses": [
       "Display module unplugged or failed; ribbon cable damaged"
      ],
@@ -2878,22 +3157,21 @@
      ],
      "severity": "warning",
      "source": "Prodigy M2 Installation & Setup Guide 506215-01 Table 8",
-     "evidence": "manufacturer_doc",
-     "notes": "On the Prodigy 2.0 M3, codes 112-119 are reserved."
+     "evidence": "single_secondary",
+     "notes": "Not seen in a search excerpt of the Prodigy M2 guide 506215-01 this session; CORE (M4) also lists 118 NO DISPLAY as a current alarm, so this is not M2-only. Reserved on the Prodigy 2.0 M3 (112-119)."
     }
    ],
    "diagnosticTips": [
     "Alarms and events are listed in the Prodigy 2.0 Application Guide 507242 Table 65/66 (Alarm and Event Codes); alarms marked with * close the service relay DO1. Prodigy (M2) uses Application Guide 506457.",
-    "Lockouts (e.g. STRIKE 3 ON BLOWER, compressor strike-3 lockouts) are cleared manually through the controller's user interface (Service/Settings menu) after the fault is corrected; cycling power also clears most lockouts but not the stored alarm history.",
+    "Lockouts ('STRIKE 3 ...' alarms) are cleared from the Service menu (Service > Lockouts / clear lockouts) after the fault is corrected; the number of strikes defaults to 3 (parameter 43 for blower; parameter 98 for high pressure/high temp, 99 for low pressure, 81 for freeze-stat). Even if an alternate occurrence count is set, the alarm text still says 'STRIKE 3'.",
     "Use the LennoxPros 'Error Code Lookup' tool (Technical Tools on LennoxPros.com or the LennoxPros app) to look up any Prodigy alarm number with troubleshooting steps.",
-    "Lennox Technical Support: 800-453-6669 (commercial, 7am-5pm Central).",
+    "Lennox Commercial Technical Support: 800-453-6669 (800-4-LENNOX), 9am-6pm CT; National Accounts 800-367-6285, 8am-5pm CT (lennox.com/commercial/connect).",
     "The M3 has an LCD with menu buttons on the controller face (unit control box). Active alarms take over the screen; press BACK to dismiss the full-screen alarm - the condition still exists and up to two alarm codes stay displayed along the right side of the screen above the thermostat-demand status.",
     "Alarm history: error codes are stored and can be recalled later from the Alarms menu (Settings/Service); the Prodigy M2 Installation & Setup Guide covers viewing and silencing alarms via the user interface.",
     "Test mode: SERVICE > TEST lets you run individual outputs (blower, compressors, heat, damper, exhaust); press SELECT to disable the active test when done. The heartbeat LED is steady green while in test/configuration mode.",
-    "Lockouts ('STRIKE 3 ...' alarms) are cleared from the Service menu (Service > Lockouts / clear lockouts) after the fault is corrected; the number of strikes defaults to 3 (parameter 43 for blower; parameter 98 for high pressure/high temp, 99 for low pressure, 81 for freeze-stat). Even if an alternate occurrence count is set, the alarm text still says 'STRIKE 3'.",
     "Alarms marked with * in Table 65 close the service relay output DO1 (service alarm output) when configured.",
     "Phase/voltage detection (Config ID 2, position 5): N = not installed, 1 = internal Lennox detection, 2/3 = external A42 phase monitor on DI-2 / DI-3. Wrong DI-2 configuration with detection enabled on three-phase units causes demand hold and a 3-minute restart.",
-    "Use the LennoxPros Error Code Lookup tool (Technical Tools on LennoxPros.com / LennoxPros app) to look up any Prodigy alarm number with troubleshooting steps."
+    "Coverage note: Table 65 rows not yet captured: 3, 7, 9-11, 21, 31, 46-49, 80, 87-92, 94-100, 131-135, 138, 140-142, 144-165, 170-177, 186, 190+ (reserved on the M3: 70-72, 84, 104-105, 112-119, 127, 178-181). Rows 17, 18, 19, 54 and 55 have display text reconstructed from the row pattern (evidence single_secondary); rows 40 and 60 were confirmed. The guide states events 12-19 are the high-pressure/high-temperature events."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -3015,37 +3293,17 @@
      "checks": [
       "No RX activity: check network wiring, termination, MAC/baud settings"
      ]
-    },
-    {
-     "pattern": "SERVICE (red) flashing 1 s on / 1 s off",
-     "meaning": "Node is not configured; application loaded (LonTalk module)",
-     "checks": [
-      "Commission the node on the LonWorks network"
-     ]
-    },
-    {
-     "pattern": "SERVICE (red) steady off",
-     "meaning": "Node is completely configured",
-     "checks": [
-      "No action"
-     ]
-    },
-    {
-     "pattern": "SERVICE (red) constant on",
-     "meaning": "Node is configured; no application",
-     "checks": [
-      "Load the application / replace the network module"
-     ]
     }
    ]
   },
   {
    "id": "core",
    "name": "Lennox CORE Control System (M4 unit controller) and CORE Lite",
-   "description": "Current Lennox unit controller (M4) with a colour touchscreen-style menu on Model L, late Energence and other rooftops; CORE Lite is the reduced version on Xion. Numeric alarm codes with a display message and an event action (cause + solution) are listed in the CORE Application Guide 485115 Table 11 'CORE Control System Alarm and Event Codes'. Coverage is partial: only codes seen in a search excerpt are listed. Codes with evidence 'manufacturer_doc' were seen in a CORE (M4) document excerpt; codes with 'single_secondary'/'multi_secondary' were seen only in the Lennox Prodigy M2/M3 alarm tables, which share the same alarm numbering that CORE Table 11 inherits (spot-checked identical for 1, 4, 5, 13-15, 22-23, 42-43, 82-83, 85). Verify those against Table 11 before relying on them. Several CORE alarms were captured by message but not by number (ADD ON BOARD PROBLEM, OAC ERROR, No 24VAC relay power A61/TB34-1, RT6/RT17 sensor alarms); they are entered with the display text as the code. Expected but unconfirmed numbering by pattern: 16/17 HIGH PRESS S28 COMP3 and strike-3; 18/19 HIGH PRESS S96 COMP4 and strike-3 (the message 'HIGH PRESS S96 OPEN COMP4' was seen in a CORE excerpt without its number); 25 STRIKE 3 comp 2 S87/S88; 26-29 low press S97/S98 comps 3-4; 30-37 freezestat S49/S50/S53 comps 1-3; 45-56 heat section 1 limit S10/S21, rollout S47 and CAI S18 alarms; 121-126 phase/voltage alarms. CORE Lite (508676-01) uses the same alarm numbering as CORE for the functions it sup",
+   "description": "Current Lennox unit controller (M4) on Model L (LGM/LCM), Enlight, late Energence and other rooftops, with a four-character seven-segment LED on the board, an optional display and the CORE Service App; CORE Lite is the reduced version on Xion. Numeric alarm codes with a display message and an event action (cause + solution) are listed in the CORE Application Guide 485115 Table 11 'CORE Control System Alarm and Event Codes' (also Setup Guide 508111-01 p.37+). Coverage is partial. Codes with evidence 'manufacturer_doc' were seen in a CORE (M4) document excerpt; codes with 'single_secondary'/'multi_secondary' were copied from the Prodigy 2.0 (M3) Table 65 transcription, which uses the same alarm numbering CORE inherits (spot-checked identical for 1, 4, 5, 13-15, 22-23, 42-43, 82-83, 85) - verify those against Table 11 before relying on them. Alarms captured by message but not by number (ADD ON BOARD PROBLEM, OAC ERROR, No 24VAC relay power A61/TB34-1, RT6/RT17 sensor alarms) are entered with the display text as the code. Expected by pattern but unconfirmed: 16/17 (S28 comp 3), 18/19 (S96 comp 4; 'HIGH PRESS S96 OPEN COMP4' seen without its number), 25, 26-29, 30-37, 45-56 and 121-126. CORE Lite (508676-01) uses the same numbering for the functions it supports.",
    "appliesTo": [
-    "lennox-model-l-xion-lgt-lgx",
-    "lennox-energence-lgh-lch"
+    "lennox-enlight-xion-lgt-lgx",
+    "lennox-energence-lgh-lch",
+    "lennox-model-l-lgm-lcm"
    ],
    "faultCodes": [
     {
@@ -3213,7 +3471,7 @@
     },
     {
      "code": "24",
-     "meaning": "COMP 2 LOW PRESS S88 - compressor 2 de-energized because low-pressure switch S88 opened. Event action (by analogy with alarm 22): check charge, filters, airflow and coil.",
+     "meaning": "COMP 2 LOW PRESS S88 - compressor 2 de-energized because low-pressure switch S88 opened. Event action: check charge, filters, airflow and coil.",
      "likelyCauses": [
       "Low refrigerant charge or leak",
       "Dirty filters, iced evaporator or restricted airflow",
@@ -3227,9 +3485,9 @@
       "Verify low-pressure switch continuity and the low-pressure ignore/shunt timer settings (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox M-series application guide low-pressure switch section: 'When a compressor is de-energized due to an open low pressure switch, alarm 22 (S87 switch) or 24 (S88 switch) is issued' (Prodigy 2.0 506457 p.17; same text used for CORE)",
-     "evidence": "multi_secondary",
-     "notes": "Display text assumed parallel to alarm 22; strike-3 lockout for comp 2 is expected at alarm 25 (not confirmed)."
+     "source": "Lennox M-series application guide low-pressure switch section: 'When a compressor is de-energized due to an open low pressure switch, alarm 22 (S87 switch) or 24 (S88 switch) is issued' (Prodigy 2.0 Application Guide 507242 low-pressure switch section; same text expected in the CORE guide but not confirmed)",
+     "evidence": "single_secondary",
+     "notes": "Not verified against CORE Table 11: the number 24 = S88 comes from the Prodigy 2.0 guide's low-pressure switch text ('alarm 22 (S87 switch) or 24 (S88 switch) is issued'); the display text and event action are taken from alarm 22. Strike-3 lockout for comp 2 is expected at alarm 25 (not confirmed)."
     },
     {
      "code": "42",
@@ -3482,7 +3740,8 @@
      ],
      "severity": "info",
      "source": "Lennox M-series (Prodigy/CORE) alarm table via search excerpt - source document not positively identified",
-     "evidence": "single_secondary"
+     "evidence": "single_secondary",
+     "notes": "Not verified against CORE Table 11; wording from an unidentified M-series alarm-table excerpt. The Prodigy 2.0 Table 65 entries are 'RETURN AIR OVER HEAT LIMIT RT16' / 'RETURN AIR UNDER COOL LIMIT RT16'."
     },
     {
      "code": "41",
@@ -3497,7 +3756,8 @@
      ],
      "severity": "info",
      "source": "Lennox M-series (Prodigy/CORE) alarm table via search excerpt - source document not positively identified",
-     "evidence": "single_secondary"
+     "evidence": "single_secondary",
+     "notes": "Not verified against CORE Table 11; wording from an unidentified M-series alarm-table excerpt. The Prodigy 2.0 Table 65 entries are 'RETURN AIR OVER HEAT LIMIT RT16' / 'RETURN AIR UNDER COOL LIMIT RT16'."
     },
     {
      "code": "44",
@@ -3529,7 +3789,7 @@
       "Clear the lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3548,7 +3808,7 @@
       "Clear the strike-3 lockout from the Service menu after repair (manual)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3567,7 +3827,7 @@
       "Clear the strike-3 lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3584,7 +3844,7 @@
       "Check manifold pressure and blower speed/VFD setting (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3602,7 +3862,7 @@
       "Clear the lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3619,7 +3879,7 @@
       "Check manifold pressure and blower speed/VFD setting (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
      "evidence": "single_secondary"
     },
     {
@@ -3637,7 +3897,7 @@
       "Clear the lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
      "evidence": "single_secondary"
     },
     {
@@ -3654,7 +3914,7 @@
       "Reset the manual rollout switch only after finding the cause (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
      "evidence": "single_secondary"
     },
     {
@@ -3670,7 +3930,7 @@
       "Clear the lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
      "evidence": "single_secondary"
     },
     {
@@ -3686,7 +3946,7 @@
       "Check inducer operation, vent and switch tubing (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document (paraphrased in search excerpt)",
      "evidence": "single_secondary"
     },
     {
@@ -3702,12 +3962,12 @@
       "Clear the lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
      "code": "68",
-     "meaning": "HEAT 2 NO PROOF GAS VALVE GV2 - heat section 2 ignition control did not prove flame / gas valve GV2.",
+     "meaning": "HEAT 2 NO PROOF GAS VALVE GV3 - heat section 2 ignition control did not prove flame / gas valve GV3.",
      "likelyCauses": [
       "No gas supply or low gas pressure",
       "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
@@ -3721,12 +3981,13 @@
       "Clear the strike-3 lockout from the Service menu after repair (manual)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
-     "evidence": "single_secondary"
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "evidence": "single_secondary",
+     "notes": "Heat section 2 valve is GV3 in the Prodigy 2.0 Table 65 transcription (and IMC code 45/68); not transcribed from CORE Table 11 - verify there."
     },
     {
      "code": "69",
-     "meaning": "STRIKE 3 NO PROOF GAS VALVE GV2 - heat section 2 locked out after three no-proof failures.",
+     "meaning": "STRIKE 3 NO PROOF GAS VALVE GV3 - heat section 2 locked out after three no-proof failures.",
      "likelyCauses": [
       "No gas supply or low gas pressure",
       "Ignition control (A3/A12) not proving flame: flame sensor, igniter, polarity/ground",
@@ -3740,8 +4001,9 @@
       "Clear the strike-3 lockout from the Service menu after repair (manual)"
      ],
      "severity": "lockout",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
-     "evidence": "single_secondary"
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "evidence": "single_secondary",
+     "notes": "Heat section 2 valve is GV3 in the Prodigy 2.0 Table 65 transcription (and IMC code 45/68); not transcribed from CORE Table 11 - verify there."
     },
     {
      "code": "76",
@@ -3756,7 +4018,7 @@
       "Verify sensor supply voltage and output signal (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3771,7 +4033,7 @@
       "Measure sensor resistance against the thermistor table and inspect the connector at the controller (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3784,7 +4046,7 @@
       "Check reheat settings in the controller configuration (manual)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3797,7 +4059,7 @@
       "Check Humiditrol settings in the controller configuration (manual)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document; alarm 85 'INCORRECT HUMIDITROL' also cited in the CORE setup-manual excerpt",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document; alarm 85 'INCORRECT HUMIDITROL' also cited in the CORE setup-manual excerpt",
      "evidence": "multi_secondary"
     },
     {
@@ -3813,7 +4075,7 @@
       "Verify the thermostat/BAS output logic (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3828,7 +4090,7 @@
       "If it recurs, check control power/grounding and replace the controller (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3842,7 +4104,7 @@
       "If it recurs, replace the controller (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3858,7 +4120,7 @@
       "Measure the sensor 4-20 mA / voltage output (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3874,7 +4136,7 @@
       "Measure the sensor output (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3889,7 +4151,7 @@
       "Inspect network wiring, polarity and termination (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3903,7 +4165,7 @@
       "Check the setpoint and EMS programming (manual)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3917,7 +4179,7 @@
       "Check the transducer power, output and tubing to the duct (field practice)"
      ],
      "severity": "warning",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3933,7 +4195,7 @@
       "Verify the static sensor reading against a manometer (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3948,7 +4210,7 @@
       "Trace the 24 V circuit for open safeties or loose connections (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3964,7 +4226,7 @@
       "Check motor amps, wiring and drive cooling (field practice)"
      ],
      "severity": "shutdown",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3977,7 +4239,7 @@
       "Disengage bypass at the MSAV menu once the VFD is repaired (manual)"
      ],
      "severity": "info",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     },
     {
@@ -3990,16 +4252,14 @@
       "Enable VFD bypass in the configuration/MSAV menu if bypass is installed (manual)"
      ],
      "severity": "info",
-     "source": "Lennox Prodigy 2.0 (M3) Application Guide 506457, 'M3 Unit Controller Alarm and Event Codes' table - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
+     "source": "Lennox Prodigy 2.0 (M3) Application Guide 507242 Table 65 'Prodigy 2.0 Alarm and Event Codes' (ManualsLib 1251298 pp.147-156) - same alarm numbering as CORE Table 11; this code was NOT individually confirmed in a CORE document",
      "evidence": "single_secondary"
     }
    ],
    "diagnosticTips": [
     "Alarm codes are shown on the CORE display with a message and an event action; the full list with cause/solution is Table 11 of the CORE Application Guide 485115 (and the CORE Lite guide 508676-01). Model L specifics are in the CORE Information Guide 508111-03.",
-    "Compressor lockouts (strike-3 alarms) are cleared from the Service menu after correcting the fault.",
     "Initial configuration, test/service modes and network setup are in the CORE Unit Controller Setup Guide 508111-01.",
-    "The LennoxPros Error Code Lookup tool covers CORE alarm numbers.",
-    "Local interface: the M4 CORE board has a four-character seven-segment LED that shows status codes (see ledPatterns) and active alarm numbers; full alarm text, time of occurrence and troubleshooting text are shown in the CORE Service App (Bluetooth mobile app, 'Alarms' section) and on the optional display. Alarm history and logs can also be pulled through the USB port.",
+    "Local interface: the M4 CORE board has a four-character seven-segment LED that shows status codes by display priority (see ledPatterns, from the CORE Application Guide 485115 'Local Interface - Four Character Seven-Segment LED' table) and active alarm numbers; full alarm text, time of occurrence and troubleshooting text are shown in the CORE Service App (Bluetooth mobile app, 'Alarms' section) and on the optional display. Alarm history and logs can also be pulled through the USB port.",
     "Alarm numbers, display messages and event actions (cause + solution) are Table 11 'CORE Control System Alarm and Event Codes' in the CORE Unit Controller Setup Guide 508111-01 (page 37 onward) and section 26.3 of the Application Guide 485115; the CORE Lite equivalent is section 19.3 of guide 508676-01.",
     "Alarms marked * in Table 11 close the service relay contacts (DO1). The contacts stay closed until the controller resets, or the alarm condition clears and the alarm status is read via an explicit S-BUS command.",
     "Compressor strike-3 lockouts (high pressure, low pressure, freezestat) are cleared from the Service menu after correcting the fault. Alarm 83 INCORRECT SETTINGS clears only by resetting or power-cycling the controller.",
@@ -4053,8 +4313,8 @@
      "url": "https://www.lennox.com/dA/a685dd6f45/508685-01.pdf"
     },
     {
-     "title": "Lennox Prodigy 2.0 (M3) Application Guide - M3 Unit Controller Alarm and Event Codes (same numbering; corroboration only)",
-     "docId": "506457 / manualslib 1251298 p.147-156",
+     "title": "Lennox Prodigy 2.0 (M3) Application Guide - Table 65 Alarm and Event Codes (same numbering; corroboration only)",
+     "docId": "507242 / manualslib 1251298 p.147-156",
      "url": "https://www.manualslib.com/manual/1251298/Lennox-Prodigy2-0.html?page=147"
     },
     {
@@ -4079,92 +4339,131 @@
    ],
    "ledPatterns": [
     {
-     "pattern": "7-segment: Eror",
-     "meaning": "Status code 6 - Off on alarm.",
+     "pattern": "7-segment: boot",
+     "meaning": "Display priority 0 - controller booting.",
      "checks": [
-      "Read the active alarm list on the display or CORE Service App and look up the alarm number"
+      "Wait for boot to finish"
+     ]
+    },
+    {
+     "pattern": "7-segment: FFt",
+     "meaning": "Display priority 1 - factory test.",
+     "checks": []
+    },
+    {
+     "pattern": "7-segment: A173",
+     "meaning": "Display priority 4 - smoke (A173 smoke detector input).",
+     "checks": [
+      "Check the smoke detector A173 and its wiring; alarm 4 SMOKE"
      ]
     },
     {
      "pattern": "7-segment: d300",
-     "meaning": "Status code 7 - Delay, up to 5 minutes (compressor minimum off / anti-short-cycle delay).",
+     "meaning": "Display priority 7 - delay, up to 5 minutes (compressor minimum off / anti-short-cycle delay).",
      "checks": [
       "Wait for the delay to expire; if it recurs constantly, check for short cycling (field practice)"
      ]
     },
     {
      "pattern": "7-segment: d020",
-     "meaning": "Status code 8 - Delay, up to 20 seconds.",
+     "meaning": "Display priority 8 - delay, up to 20 seconds.",
      "checks": [
       "Normal timing delay"
      ]
     },
     {
+     "pattern": "7-segment: dhUM",
+     "meaning": "Display priority 9 - dehumidification.",
+     "checks": []
+    },
+    {
+     "pattern": "7-segment: ShEd",
+     "meaning": "Display priority 10 - load shed.",
+     "checks": []
+    },
+    {
      "pattern": "7-segment: Prht",
-     "meaning": "Status code 10 - Morning warm-up.",
+     "meaning": "Display priority 11 - morning warm-up (pre-heat).",
      "checks": []
     },
     {
      "pattern": "7-segment: Strt",
-     "meaning": "Status code 11 - Start up.",
+     "meaning": "Display priority 12 - start up.",
      "checks": []
     },
     {
      "pattern": "7-segment: FdhU",
-     "meaning": "Status code 12 - Fresh air (outdoor air) reheat.",
+     "meaning": "Display priority 13 - fresh air (outdoor air) dehumidification / reheat.",
+     "checks": []
+    },
+    {
+     "pattern": "7-segment: FAh",
+     "meaning": "Display priority 14 - fresh air heating.",
      "checks": []
     },
     {
      "pattern": "7-segment: dC12",
-     "meaning": "Status code 14 - Defrost, compressors 1 and 2 (heat pump).",
+     "meaning": "Display priority 15 - defrost, compressors 1 and 2 (heat pump).",
      "checks": []
     },
     {
      "pattern": "7-segment: dC1",
-     "meaning": "Status code 16 - Defrost, compressor 1.",
+     "meaning": "Display priority 16 - defrost, compressor 1.",
      "checks": []
     },
     {
      "pattern": "7-segment: dC2",
-     "meaning": "Status code 17 - Defrost, compressor 2.",
+     "meaning": "Display priority 17 - defrost, compressor 2.",
+     "checks": []
+    },
+    {
+     "pattern": "7-segment: EMht",
+     "meaning": "Display priority 18 - emergency heat.",
      "checks": []
     },
     {
      "pattern": "7-segment: MXht",
-     "meaning": "Status code 19 - MAX heating.",
+     "meaning": "Display priority 19 - MAX heating.",
      "checks": []
     },
     {
      "pattern": "7-segment: hXXX",
-     "meaning": "Status code 20 - Heating (XXX = stage/percent).",
+     "meaning": "Display priority 20 - heating (XXX = stage/percent).",
      "checks": []
     },
     {
      "pattern": "7-segment: PrCL",
-     "meaning": "Status code 21 - Pre-cool.",
+     "meaning": "Display priority 21 - pre-cool.",
      "checks": []
     },
     {
      "pattern": "7-segment: CXXX",
-     "meaning": "Status code 26 - Cooling (XXX = stage/percent).",
+     "meaning": "Display priority 26 - cooling (XXX = stage/percent). Priority number not re-verified against the 485115 table.",
      "checks": []
     },
     {
      "pattern": "7-segment: bXXS",
-     "meaning": "Status code 27 - Blower on, OAS (outdoor air / occupied ventilation).",
+     "meaning": "Display priority 27 - blower on, OAS (outdoor air / occupied ventilation). Priority number not re-verified against the 485115 table.",
      "checks": []
     },
     {
      "pattern": "7-segment: bXX",
-     "meaning": "Status code 28 - Blower on.",
+     "meaning": "Display priority 28 - blower on. Priority number not re-verified against the 485115 table.",
      "checks": []
+    },
+    {
+     "pattern": "7-segment: alarm number",
+     "meaning": "Active alarm numbers are shown on the same four-character LED; read the alarm list on the display or CORE Service App and look the number up in Table 11.",
+     "checks": [
+      "Look up the alarm number in faultCodes / CORE Table 11"
+     ]
     }
    ]
   },
   {
    "id": "imc",
    "name": "Lennox IMC (Integrated Modular Control) M1-x unit controller",
-   "description": "Board-mounted microprocessor controller (A55, versions M1-4 through M1-8) on L Series and S-Class (Strategos) gas/electric, electric/electric and heat pump rooftops (c. 1997-2012). Displays and stores 2-digit error codes; configured by DIP switches; optional IMC BACnet module and L Connection network. ENRICHMENT NOT PERFORMED: the session's WebSearch budget (200/200) was already exhausted when this sidecar was built, so no source could be consulted. Per the verification protocol (fault codes only from the controller manual, never from memory) this sidecar carries only the two codes that already had documented source evidence in the existing pack entry; nothing new was added. The full IMC Table 4 error-code table (codes 1 through ~100+, including 59, 73, 74, 92, 93) remains untranscribed. A follow-up run with search budget should transcribe it from the M1-7 v5.02 / M1-8 IMC Application Guide (Table 4 / Figure 16) and set coverage accordingly. The IMC uses a 2-digit 7-segment display on the A55 board rather than blink-code LEDs, so ledPatterns is intentionally empty pending a sourced description of the board's status LEDs. Transcribed from the M1-7 Version 5.02 Table 4 IMC Error Codes via search-engine excerpts of the manualzz text index and the lennoxeurope PDF; the same code numbering is used on the M1-8 (Version 6 door label lists codes 1-127). Coverage is \"partial\" because codes 103 and 105 could not be captured cleanly (search excerpts conflated them with 104 and 107) and ",
+   "description": "Board-mounted microprocessor controller (A55, versions M1-4 through M1-8) on L Series and S-Class (Strategos) gas/electric, electric/electric and heat pump rooftops (c. 1997-2012). Error codes are shown on a 3-digit LED readout on the A55 board (it shows 8.8.8 at power-up) and stored for recall through the pushbutton and MODE DIP switches; configured by DIP switches and ECTO parameters; optional IMC BACnet module and L Connection network. Codes 1-127 were transcribed from the M1-7 Version 5.02 manual Table 4 'IMC Error Codes' via search-engine excerpts of the manualzz text index and the lennoxeurope PDF; the M1-8 Version 6 door label uses the same numbering (codes 1-127). Coverage is partial only because codes 103 and 105 could not be captured cleanly (search excerpts conflated them with 104 and 107) and the gap numbers 7-9, 30-31, 42-43, 70-72 and 111-126 (believed reserved) were not seen verbatim, so they are not listed.",
    "appliesTo": [
     "lennox-l-series-lga-lca-lha",
     "lennox-strategos-sga-sca-sha"
@@ -4234,7 +4533,7 @@
      "severity": "info",
      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
+     "notes": "Reserved code in the M1-7 v5.02 table (seen verbatim). Other gap numbers (7-9, 30-31, 42-43, 70-72, 111-126) are believed reserved but were not seen and are not listed."
     },
     {
      "code": "4",
@@ -4277,36 +4576,6 @@
      "severity": "info",
      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "7",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "8",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "9",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
     },
     {
      "code": "10",
@@ -4567,26 +4836,6 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "30",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "31",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
      "code": "32",
      "meaning": "S49 (Freezestat 1) is open. Compr. 1 off.",
      "likelyCauses": [
@@ -4721,26 +4970,6 @@
      "severity": "warning",
      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "42",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "43",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
     },
     {
      "code": "44",
@@ -5096,36 +5325,6 @@
      "severity": "lockout",
      "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
      "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "70",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "71",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
-    },
-    {
-     "code": "72",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved code in the M1-7 v5.02 table."
     },
     {
      "code": "73",
@@ -5603,166 +5802,6 @@
      "evidence": "manufacturer_doc"
     },
     {
-     "code": "111",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "112",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "113",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "114",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "115",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "116",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "117",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "118",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "119",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "120",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "121",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "122",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "123",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "124",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "125",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
-     "code": "126",
-     "meaning": "Reserved.",
-     "likelyCauses": [],
-     "checks": [],
-     "severity": "info",
-     "source": "Lennox IMC M1-7 Version 5.02 Integrated Modular Control (IMC) manual, Table 4 IMC Error Codes (manualzz 10426901 / 11141999 text index; lennoxeurope IMC V7 PDF)",
-     "evidence": "manufacturer_doc",
-     "notes": "Reserved in the M1-7 v5.02 table (111-126). The M1-8 Version 6 door label may assign some of these; not verified."
-    },
-    {
      "code": "127",
      "meaning": "Error buffer overflow.",
      "likelyCauses": [
@@ -5777,10 +5816,8 @@
     }
    ],
    "diagnosticTips": [
-    "Error codes are shown on the A55 IMC board's 2-digit display and stored for later recall (IMC manual Table 4 and Figure 16 list every code; M1-7 v5.02 is at webmanuals.lennoxeurope.com / manualzz 'IMC V7').",
-    "Codes seen in the field but not transcribed here: 59 (sensor-related), 73/74, 92 (DIP-switch configuration) and 93 - look them up in Table 4 or the LennoxPros Error Code Lookup tool before acting.",
+    "Error codes are shown on the A55 IMC board's 3-digit LED readout and stored for later recall (IMC manual Table 4 and Figure 16 list every code; M1-7 v5.02 is at webmanuals.lennoxeurope.com / manualzz 'IMC V7').",
     "The IMC shunts the low-pressure switches (S87/S88) during compressor start until pressure stabilizes, so a low-pressure trip logged after the delay is a real refrigerant/airflow problem.",
-    "Lennox Technical Support 800-453-6669 is referenced in the IMC documentation.",
     "Where to look: the A55 (M1-7/M1-8) board in the unit control box carries a multi-digit LED readout, a single pushbutton, a green heartbeat LED and MODE DIP switches (UNIT TEST, RECALL, ECTO, TEMP, OPT2, SHIFT). Active error codes are shown on the readout; every code is also stored for recall.",
     "Read stored codes: set the MODE DIP RECALL switch ON, then short-push the pushbutton; stored codes display in reverse order (most recent first) with each short push. A zero means nothing is stored. Set RECALL back OFF when done.",
     "Clear stored codes: with RECALL ON, hold the pushbutton down until 0 is displayed, then turn RECALL OFF.",
@@ -5791,7 +5828,7 @@
     "Trip counters: most \"opened 3 (default) times\" thresholds are set by ECTO parameters (e.g. 1.12/4.14 high pressure, 1.13/4.15 freezestat, 4.04, 3.04, 3.09); a unit configured with a different count will lock out sooner or later than the table states.",
     "The IMC ignores the low-pressure switches during compressor start-up, so a stored low-pressure code (22-29) reflects a real trip after the delay.",
     "Sensor codes 73-78 and 91-99: RT6/RT16/RT17 are 2-wire thermistors, A2 zone sensors are a 2-wire thermistor with a 1k series resistor; measure resistance at the board terminals against the temperature-resistance chart before replacing.",
-    "LennoxPros.com Error Code Lookup tool (Technical Tools) covers IMC codes; Lennox Technical Support 800-453-6669."
+    "LennoxPros.com Error Code Lookup tool (Technical Tools) covers IMC codes; Lennox Commercial Technical Support 800-453-6669 (9am-6pm CT)."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -5909,7 +5946,7 @@
  ],
  "electrical": [
   {
-   "familyRegex": "lennox-(energence|model-l|l-series|strategos|landmark|raider)",
+   "familyRegex": "lennox-(energence|enlight|model-l|l-series|strategos|landmark|raider)",
    "familyLabel": "Lennox commercial packaged rooftops (L Series, Strategos, Energence, Model L, Landmark, Raider)",
    "controlVoltage": "24 VAC from control transformer T1 (line voltage 208-230/460/575 V 3 ph or 208-230 V 1 ph per model voltage letter)",
    "components": [
@@ -5940,43 +5977,43 @@
     },
     {
      "designator": "S52",
-     "name": "Blower airflow proving switch",
-     "notes": "Referenced by the Prodigy 2.0 'STRIKE 3 ON BLOWER' alarm; function per Lennox convention - verify on the unit legend."
+     "name": "Blower airflow proving switch (must close within 16 s of blower start)",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). Referenced by IMC code 5 / Prodigy-CORE alarm 5 and STRIKE 3 ON BLOWER."
     },
     {
      "designator": "T1",
-     "name": "Control transformer (24 VAC)",
-     "notes": "Lennox convention; not re-verified on a legend this session."
+     "name": "Control transformer (24 VAC), 70 VA, secondary protected by circuit breaker CB8",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf)."
     },
     {
      "designator": "B1",
-     "name": "Indoor (supply) blower motor",
-     "notes": "Lennox convention; verify on the unit legend."
+     "name": "Compressor 1 motor",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). B2 = compressor 2; B13/B14 = compressors 3/4 on four-compressor units (verifier reading of the same legend - check the unit legend)."
     },
     {
      "designator": "B3",
-     "name": "Compressor 1 motor",
-     "notes": "Lennox convention; verify."
+     "name": "Indoor (supply) blower motor",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). ('B3 Motor, Blower'; wiring diagrams 538550-01 / 537485-02 agree)."
     },
     {
      "designator": "B4",
      "name": "Outdoor (condenser) fan motor 1",
-     "notes": "Lennox convention; verify."
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). B4 and B5 are the condenser fans, energized by contactor K68."
     },
     {
      "designator": "S7",
      "name": "High pressure switch, compressor 2",
-     "notes": "Lennox convention; verify."
+     "notes": "Named in IMC codes 14-15 / Prodigy-CORE alarms 14-15 transcribed in controls[]; confirm on the unit legend."
     },
     {
      "designator": "A2",
-     "name": "Economizer controller / damper actuator control",
-     "notes": "Lennox convention; verify."
+     "name": "Zone / room temperature sensor (2-wire thermistor with 1k series resistor)",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). ('The room sensor (A2) is a two-wire thermistor with 1k series resistor'); IMC code 74 = 'Zone sensor (A2) problem'."
     },
     {
      "designator": "A3",
-     "name": "Ignition control (gas heat)",
-     "notes": "Lennox convention; verify."
+     "name": "Gas heat burner / ignition control",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf)."
     },
     {
      "designator": "GV1",
@@ -5985,8 +6022,8 @@
     },
     {
      "designator": "S10",
-     "name": "Primary (high temperature) limit, gas heat",
-     "notes": "Lennox convention; verify."
+     "name": "Primary (high temperature) limit, gas heat section 1",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). Referenced by IMC code 50 / Prodigy-CORE alarm 50."
     },
     {
      "designator": "RT6",
@@ -6005,8 +6042,103 @@
     },
     {
      "designator": "A42",
-     "name": "Phase / voltage monitor (3-phase units)",
-     "notes": "Lennox convention; verify. Prodigy 2.0 and CORE also perform phase/voltage detection in software (alarm 1 erratic power)."
+     "name": "Phase / voltage monitor - safety input (3-phase units)",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). Referenced by IMC code 20 / Prodigy alarm 20. Prodigy 2.0 and CORE also perform phase/voltage detection in software (alarm 1 erratic power, 121-126)."
+    },
+    {
+     "designator": "B2",
+     "name": "Compressor 2 motor",
+     "notes": "Per the 100074 legend pattern (B1 compressor 1, B2 compressor 2); verify on the unit legend."
+    },
+    {
+     "designator": "B5",
+     "name": "Outdoor (condenser) fan motor 2",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). Energized with B4 by K68."
+    },
+    {
+     "designator": "K68",
+     "name": "Condenser fan contactor (B4/B5)",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf)."
+    },
+    {
+     "designator": "CB8",
+     "name": "Control transformer T1 secondary circuit breaker, 3.5 A",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf)."
+    },
+    {
+     "designator": "S42",
+     "name": "Blower motor overload relay (three-phase thermal overload relay in line with the blower motor)",
+     "notes": "Confirmed on the Lennox Unit Information wiring legend (100074.pdf). Referenced by IMC code 20 / Prodigy-CORE alarms 42-43."
+    },
+    {
+     "designator": "A56",
+     "name": "Economizer control board (EM1) on IMC units",
+     "notes": "Lennox L Connection / IMC BACnet documentation (ehb_lconnection_lseries_1110.pdf, 0808a.pdf). Energence/Prodigy economizer designator not confirmed - read the LGH wiring legend."
+    },
+    {
+     "designator": "S18",
+     "name": "Combustion air inducer proof switch, heat section 1",
+     "notes": "Named in the IMC Table 4 (codes 56-57) and Prodigy/CORE alarm 56-57 texts transcribed in controls[]; confirm on the unit legend."
+    },
+    {
+     "designator": "S45",
+     "name": "Combustion air inducer proof switch, heat section 2",
+     "notes": "Named in IMC codes 66-67 / Prodigy alarms 66-67; confirm on the unit legend."
+    },
+    {
+     "designator": "S21",
+     "name": "Secondary heat limit, heat section 1",
+     "notes": "Named in IMC codes 52-53 / Prodigy alarms 52-53; confirm on the unit legend."
+    },
+    {
+     "designator": "S99",
+     "name": "Primary heat limit, heat section 2",
+     "notes": "Named in IMC codes 60-61 / Prodigy alarms 60-61; confirm on the unit legend."
+    },
+    {
+     "designator": "S100",
+     "name": "Secondary heat limit, heat section 2",
+     "notes": "Named in IMC codes 62-63 / Prodigy alarms 62-63; confirm on the unit legend."
+    },
+    {
+     "designator": "S27",
+     "name": "Dirty filter switch",
+     "notes": "Named in IMC code 6 / Prodigy-CORE alarm 6; confirm on the unit legend."
+    },
+    {
+     "designator": "S47",
+     "name": "Flame rollout switch, heat section 1 (manual reset)",
+     "notes": "Named in IMC codes 54-55 / Prodigy alarms 54-55; confirm on the unit legend."
+    },
+    {
+     "designator": "S69",
+     "name": "Flame rollout switch, heat section 2 (manual reset)",
+     "notes": "Named in IMC codes 64-65 / Prodigy alarms 64-65; confirm on the unit legend."
+    },
+    {
+     "designator": "S149",
+     "name": "Drain pan overflow switch",
+     "notes": "Named in IMC code 20 / Prodigy alarm 30 DRAIN PAN OVERFLOW S149; confirm on the unit legend."
+    },
+    {
+     "designator": "A17",
+     "name": "Smoke detector input",
+     "notes": "Named in IMC code 4 ('A17 input indicates smoke alarm'); CORE units use A173. Confirm on the unit legend."
+    },
+    {
+     "designator": "A24",
+     "name": "Outdoor air CFM sensor (OAC)",
+     "notes": "Named in IMC code 99 / CORE 'OAC ERROR'; confirm on the unit legend."
+    },
+    {
+     "designator": "S28",
+     "name": "High pressure switch, compressor 3",
+     "notes": "Named in IMC codes 16-17 / Prodigy alarms 16-17; confirm on the unit legend."
+    },
+    {
+     "designator": "S96",
+     "name": "High pressure switch, compressor 4",
+     "notes": "Named in IMC codes 18-19 / Prodigy alarms 18-19; confirm on the unit legend."
     }
    ],
    "safetyDevices": [
@@ -6028,12 +6160,12 @@
     "DO1": "Service relay output (closes on selected alarms; Prodigy 2.0/CORE)"
    },
    "sequenceOfOperation": [
-    "Cooling (unit-controller units): on Y1 (or network demand) A55 energizes the blower (B1) and, after proving airflow via S52, energizes compressor contactor K1 (compressor B3) and the outdoor fan (B4); low-pressure switches S87/S88 are shunted during start-up. Y2 brings on the second compressor/stage. High-pressure switch S4/S7 trips de-energize the compressor; three trips = strike-3 lockout (alarm 13).",
+    "Cooling (unit-controller units): on Y1 (or network demand) A55 energizes the indoor blower (B3) and, after proving airflow via S52, energizes compressor contactor K1 (compressor B1) and the condenser fans (B4/B5 via K68); low-pressure switches S87/S88 are shunted during start-up. Y2 brings on the second compressor/stage (B2). High-pressure switch S4/S7 trips de-energize the compressor; three trips = strike-3 lockout (alarm 13).",
     "Heating (gas): on W1 the ignition control A3 checks limits (S10, rollout) and the combustion-air pressure switch, runs the combustion blower prepurge, energizes the spark/igniter and gas valve GV1, and proves flame; the blower starts after the heat-on delay. W2 adds the second heat stage. Repeated ignition failures produce a heat lockout alarm on the unit controller.",
-    "Economizer: A2 / unit controller modulates outdoor-air dampers for free cooling when outdoor conditions are suitable; mechanical cooling is staged behind it."
+    "Economizer: the unit controller (A55; economizer board A56 EM1 on IMC units) modulates the outdoor-air damper actuator for free cooling when outdoor conditions are suitable; mechanical cooling is staged behind it. The zone sensor A2 supplies the space temperature."
    ],
    "notes": [
-    "Only A55, K1, S4, S87 and S88 were confirmed against Lennox documents this session (wiring diagram 538043-03 and service literature 100087); the remaining designators follow the Lennox commercial numbering convention (A = controls/boards, B = motors, K = relays/contactors, S = switches, RT = temperature sensors, T = transformers, GV = gas valves) and must be checked against the legend printed on the unit's wiring diagram (inside the control compartment door).",
+    "Confirmed against Lennox documents: A55, K1, S4, S87, S88 (wiring diagram 538043-03 and service literature 100087) and B1, B3, B4/B5, K68, T1/CB8, A2, A3, S10, S52, S42, A42 (Unit Information legend 100074). Designators marked 'named in IMC/Prodigy codes' are taken from the alarm texts transcribed in controls[] (manufacturer documents), not from a legend; check every designator against the legend printed on the unit's wiring diagram (inside the control compartment door). Lennox numbering convention: A = controls/boards, B = motors, K = relays/contactors, S = switches, RT = temperature sensors, T = transformers, CB = circuit breakers, GV = gas valves.",
     "The sequence of operation is generic to Lennox unit-controller rooftops; the model-specific sequence is in the unit's service literature ('Unit Information') and IOM.",
     "Landmark/Raider units without a unit controller use conventional 24 V thermostat wiring through relays and a defrost/ignition board."
    ],
@@ -6042,7 +6174,9 @@
    "sources": [
     "Lennox Commercial Wiring Diagram 538043-03 (lennox.com/dA/6a08183ad7/538043-03.pdf) - K1 single pole contactor, S4 high pressure switch",
     "Lennox Unit Information service literature 100087 (lennox.com/dA/c7c4a21f62/100087.pdf) - S87/S88 low pressure switches wired to A55; A55 shunts LP switches during start-up",
-    "Lennox Prodigy 2.0 Application Guide 507242 (S52 blower alarm reference)"
+    "Lennox Prodigy 2.0 Application Guide 507242 (S52 blower alarm reference)",
+    "Lennox Unit Information service literature 100074 (lennox.com/dA/46e02c60e7/100074.pdf) - wiring legend: B1 compressor 1, B3 blower motor, B4/B5 condenser fans via K68, T1 70 VA transformer with CB8 3.5 A, A2 room sensor, A3 burner control, S10, S42, S52, A42",
+    "Lennox wiring diagrams 538550-01 / 537485-02 (B1 compressor 1, B3 blower)"
    ]
   }
  ],
@@ -6050,10 +6184,12 @@
   {
    "symptom": "Compressor keeps running / will not shut off during high outdoor humidity on a Prodigy 2.0 unit",
    "likelyCauses": [
+    "BAS/network dehumidification setpoints set unreasonably low by previous technicians, keeping the compressor on (documented resolution in the cited HVAC-Talk thread 2243831; the Lennox-recommended M3 board swap did not fix it)",
     "Dehumidification (Humiditrol / reheat) or humidity-based control parameter keeping mechanical cooling on when the outdoor humidity sensor reads above the setpoint (reported field pattern, forum-level evidence)",
     "Faulty or mis-scaled outdoor/return humidity sensor"
    ],
    "checks": [
+    "Review the BAS/network dehumidification setpoints before replacing the M3 board",
     "Check the humidity sensor readings on the Prodigy display against a calibrated meter",
     "Review dehumidification settings and disable to confirm the behaviour changes",
     "Check Prodigy firmware level and controller parameters against the setup guide"
@@ -6062,7 +6198,8 @@
    "confidence": "low",
    "evidence": "single_secondary",
    "sources": [
-    "HVAC-Talk thread 'Lennox prodigy 2.0' (hvac-talk.com/threads/lennox-prodigy-2-0.2187821/)"
+    "HVAC-Talk thread 'Lennox prodigy 2.0' (hvac-talk.com/threads/lennox-prodigy-2-0.2187821/)",
+    "HVAC-Talk thread 'Lennox Prodigy 2.0 Issue' (hvac-talk.com/threads/lennox-prodigy-2-0-issue.2243831/) - resolved by correcting BAS dehumidification setpoints"
    ]
   },
   {
@@ -6098,7 +6235,7 @@
     "Clean coil; check S4 trip/reset points",
     "Clear the lockout from the Service menu (CORE/Prodigy) or reset the IMC after repair"
    ],
-   "appliesTo": "lennox-(energence|model-l|l-series|strategos)",
+   "appliesTo": "lennox-(energence|enlight|model-l|l-series|strategos)",
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
@@ -6117,7 +6254,7 @@
     "Check filters, blower operation and evaporator coil",
     "Check S87/S88 continuity and setpoint"
    ],
-   "appliesTo": "lennox-(energence|model-l|l-series|strategos)",
+   "appliesTo": "lennox-(energence|enlight|model-l|l-series|strategos)",
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
@@ -6165,32 +6302,10 @@
     "PNNL 'Best Practices for Air-Side Economizers Operation and Maintenance' (stuck dampers, sensor failures, linkages, actuators, settings)",
     "Lennox Economizer for Energence rooftop units instruction (manuals.plus mirror)"
    ]
-  },
-  {
-   "symptom": "Unit not cooling - general packaged rooftop failures",
-   "likelyCauses": [
-    "Failed run capacitor or contactor",
-    "Worn belts / blower motor",
-    "Clogged condenser coil",
-    "Refrigerant leak",
-    "Stuck economizer"
-   ],
-   "checks": [
-    "Check capacitor uF and contactor contacts",
-    "Inspect belts and blower motor amps",
-    "Inspect/clean condenser coil",
-    "Check superheat/subcooling for charge",
-    "Inspect economizer damper position"
-   ],
-   "confidence": "low",
-   "evidence": "multi_secondary",
-   "sources": [
-    "Alex Air & Heating 'Rooftop HVAC Unit Repair' and Oxmaint 'RTU Not Cooling' - generic rooftop failure patterns (not Lennox-specific)"
-   ]
   }
  ],
  "support": {
-  "phone": "800-453-6669 (800-4-LENNOX), 7am-5pm Central; National Accounts 800-367-6285",
+  "phone": "800-453-6669 (800-4-LENNOX), 9am-6pm CT; National Accounts 800-367-6285, 8am-5pm CT",
   "url": "https://www.lennox.com/commercial/connect",
   "literatureUrl": "https://www.lennox.com/commercial/resources/product-documentation",
   "literatureSearchHint": "On LennoxPros.com go to Resources > Document Library and search by the full model number (e.g. LGH120H4BH1G) or serial number; filter by 'Installation Instructions' (IOM), 'Service Literature' (Unit Information, includes wiring legend) or 'Wiring Diagram'. PDFs are hosted at tech.lennoxintl.com and lennox.com/dA/. Engineering handbooks with the model number identification page are named ehb_<family>_*.pdf (e.g. ehb_lgh_cbox_2103.pdf).",
@@ -6199,8 +6314,8 @@
  "notes": [
   "Nameplate: the factory MODEL NO. and SERIAL NO. are on the unit rating plate on the compressor/control side; the serial is always 10 characters on 1973+ equipment. Catalog numbers such as L1318 or 45W08 are LennoxPros stock numbers, not model numbers.",
   "Lennox rooftop nomenclature (2009+) is positional: brand letter, unit type (G gas/electric, C electric/electric, H heat pump, D dual fuel), generation/family letter, 3-digit nominal cooling MBH, efficiency (S/H/U), refrigerant (4 = R-410A, 5 = R-454B), blower type, heat input (gas S/M/H, N none), minor design digit, voltage (P 208-230/1, Y 208-230/3, G 460/3, J 575/3), then optional factory-installed option codes.",
-  "Family names verified this session: L Series LGA/LCA/LHA (and LGC/LCC), Strategos SGA/SCA + SGH/SCH/SCC, Energence LGH/LCH, Model L LGT/LCT/LHT/LDT, Xion LGX/LCX/LHX (not XGA/XCA), Landmark KGA/KCA/KHA + KGB/KCB/KHB/KDB, Raider ZGA/ZCA/ZHA + ZGB/ZCB/ZHB, T-Class TSA/TPA/TAA. CBA/CBH/CBX are residential air handlers; 'Elite' ELS/ELC and 'Enlight' could not be verified.",
-  "Web search budget ran out before the Prodigy/CORE/IMC alarm tables and the 38Z29 model number identifier sheet could be transcribed; controls coverage is therefore 'partial' with only source-confirmed codes, and most electrical designators are flagged as convention-based. These are the first items to expand on the next review.",
+  "Family names verified: L Series LGA/LCA/LHA (and LGC/LCC), Strategos SGA/SCA + SGB/SCB + SGC/SCC + SGH/SCH, Energence LGH/LCH, Enlight LGT/LCT/LHT/LDT, Model L LGM/LCM, Xion LGX/LCX/LHX (not XGA/XCA), Landmark KGA/KCA/KHA + KGB/KCB/KHB/KDB, Raider ZGA/ZCA/ZHA + ZGB/ZCB/ZHB + ZGD/ZCD, T-Class TSA/TPA/TAA. Lennox lists Model L, Enlight, Xion and Raider as four distinct lines (comparison sheet 37J72). CBA/CBH/CBX are residential air handlers; 'Elite' ELS/ELC could not be verified.",
+  "Residual gaps after the verification pass: Prodigy 2.0 Table 65 rows listed as 'not yet captured' in the prodigy coverage note; CORE codes copied from the Prodigy tables are only spot-checked against CORE Table 11 (24, 40, 41 and the 38-132 block are not individually confirmed); IMC codes 103 and 105 were not captured cleanly; the 38Z29 rooftop model number identifier sheet and the L Series EHB model-ID page are still unread (T-Class part-load/coil letters, Landmark/Raider D/E blower letters and the trailing W on single-phase listings remain unconfirmed).",
   "Lennox Commercial Controls System (LCCS) and L Connection Network are BAS/network layers, not unit controllers; alarm codes come from the unit controller (IMC/Prodigy/CORE)."
  ],
  "sources": [
@@ -6214,7 +6329,7 @@
   "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/ehb_lgh_cbox_2103.pdf (LGH Energence EHB, Bulletin 210557)",
   "https://www.lennoxpros.com/lgh120h4b,-gaselectric,-packaged-rooftop-unit,-high-efficiency,-13-ieer,-10-ton,-240,000-btuh,-r-410a,-energence/p/L1318",
   "https://www.lennoxpros.com/lgh036h4es-pkgge3t65kb230-3ecnbrhm/p/L0061",
-  "https://www.lennox.com/dA/19bc05b85c/ehb_lgt_abox_a2l_2501.pdf (LGT Model L EHB, A2L)",
+  "https://www.lennox.com/dA/19bc05b85c/ehb_lgt_abox_a2l_2501.pdf (LGT Enlight EHB, A2L)",
   "https://www.lennox.com/commercial/products/rooftop-units/model-l",
   "https://www.lennox.com/commercial/products/rooftop-units/xion",
   "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/ehb_lg_07to12_0808.pdf (L Series LG EHB)",
@@ -6249,7 +6364,12 @@
   "https://m.lennoxpros.com/news/error-code-lookup-1810",
   "https://www.hvac-talk.com/threads/lennox-prodigy-2-0.2187821/",
   "https://www.hvac-talk.com/threads/lennox-prodigy-2-0-issue.2243831/",
-  "https://www.pnnl.gov/projects/om-best-practices/air-side-economizers"
+  "https://www.pnnl.gov/projects/om-best-practices/air-side-economizers",
+  "https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/ehb_lcm_cbox_2104.pdf (LCM Model L Ultra-High Efficiency Rooftop Units 13-25 ton EHB)",
+  "https://www.lennox.com/dA/371fcbbc67/ehb_lcm_cbox_a2l_2409.pdf (LCM Model L EHB, A2L - model-ID page)",
+  "https://www.lennox.com/dA/7badeab555/100036.pdf (LGM Series service literature)",
+  "https://www.lennox.com/dA/b48f676de5/100143.pdf (LGT302H/360H 25 and 30 ton service literature)",
+  "https://www.lennox.com/dA/46e02c60e7/100074.pdf (Lennox Unit Information - wiring legend: B1 compressor 1, B3 blower, A2 zone sensor, T1/CB8, K68/B4/B5)"
  ],
  "confidence": "medium",
  "lastReviewed": "2026-09-26"
