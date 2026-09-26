@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { loadConfig as loadAnthropicProfile } from "@anthropic-ai/sdk/lib/credentials";
 import { loadConfig, loadDotEnv } from "./config.ts";
 import { openDatabase } from "./db/index.ts";
 import { createRepos } from "./db/repos.ts";
@@ -36,15 +37,30 @@ const db = openDatabase(config.dbPath);
 const repos = createRepos(db);
 const kb = loadKnowledge(config.knowledgeDir);
 
+/**
+ * Whether the SDK would find credentials outside the environment: the active `ant auth login` profile
+ * (`<config_dir>/configs/<profile>.json`, or the OIDC-federation variables). This is the same first step
+ * of the SDK's default credential chain, without any network call. A broken profile counts as absent
+ * (the SDK would fail on the first request anyway) and is logged so the tech knows why demo mode is on.
+ */
+export async function hasStoredApiProfile(): Promise<boolean> {
+  try {
+    return (await loadAnthropicProfile()) !== null;
+  } catch (err) {
+    console.error(`  Stored Anthropic profile could not be read: ${err instanceof Error ? err.message : String(err)}`);
+    return false;
+  }
+}
+
 const fakeRequested = /^(1|true|yes)$/i.test(process.env.CLAUDE_FAKE ?? "");
-const demo = fakeRequested || !hasApiCredentialsInEnv();
+const demo = fakeRequested || !(hasApiCredentialsInEnv() || (await hasStoredApiProfile()));
 let client: MessagesStreamer;
 if (demo) {
   console.log("=".repeat(72));
   console.log(
     fakeRequested
       ? "  DEMO MODE: CLAUDE_FAKE=1 — the assistant runs on canned responses (no API calls)."
-      : "  DEMO MODE: no ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN in the environment.\n  The assistant runs on canned responses. Set ANTHROPIC_API_KEY in .env for the real model.",
+      : "  DEMO MODE: no ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN in the environment and no `ant auth login` profile.\n  The assistant runs on canned responses. Set ANTHROPIC_API_KEY in .env (or run `ant auth login`) for the real model.",
   );
   console.log("=".repeat(72));
   client = createFakeClient();

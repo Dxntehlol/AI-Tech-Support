@@ -39,6 +39,91 @@ function parseSseFrames(buffer) {
   return { events, rest };
 }
 
+/** The server heartbeats every 15 s; a stream with no bytes for this long is treated as half-open. */
+const SSE_IDLE_MS = 45000;
+
+/**
+ * Read an SSE body until it ends, aborts, or falls silent for `idleMs` (a half-open socket after a Wi-Fi→LTE
+ * hand-off keeps reader.read() pending forever; the ': ping' comments reset the watchdog). Every parsed event is
+ * passed to onEvent. Resolves {terminal, idle}: `terminal` is the done/error event if one arrived, `idle` is true
+ * when the watchdog cancelled the reader.
+ */
+async function pumpSse(reader, onEvent, { idleMs = SSE_IDLE_MS, timers = globalThis } = {}) {
+  const decoder = new TextDecoder();
+  let buf = "";
+  let terminal = null;
+  let idle = false;
+  const handle = (events) => {
+    for (const ev of events) {
+      onEvent(ev);
+      if (ev && (ev.type === "done" || ev.type === "error")) terminal = ev;
+    }
+  };
+  for (;;) {
+    let timer = null;
+    const watchdog = new Promise((resolve) => {
+      timer = timers.setTimeout(() => resolve({ idle: true }), idleMs);
+    });
+    let result;
+    try {
+      result = await Promise.race([reader.read(), watchdog]);
+    } finally {
+      timers.clearTimeout(timer);
+    }
+    if (result && result.idle) {
+      idle = true;
+      try {
+        await reader.cancel();
+      } catch {
+        /* already closed */
+      }
+      break;
+    }
+    if (result.done) break;
+    buf += decoder.decode(result.value, { stream: true });
+    const parsed = parseSseFrames(buf);
+    buf = parsed.rest;
+    handle(parsed.events);
+  }
+  buf += decoder.decode();
+  handle(parseSseFrames(buf + "\n\n").events);
+  return { terminal, idle };
+}
+
+/** Everything reconcile() cares about, as one comparable string: busy flag, message ids/seqs, title, attached unit. */
+function conversationFingerprint(data) {
+  const conv = (data && data.conversation) || null;
+  const unit = (data && data.unit) || null;
+  const messages = Array.isArray(data && data.messages) ? data.messages : [];
+  const ids = messages.map((m) => `${m.id}:${m.seq}:${(m.tools && m.tools.length) || 0}:${(m.text || "").length}`);
+  return [
+    data && data.busy ? "busy" : "idle",
+    conv ? `${conv.id || ""}|${conv.title || ""}|${conv.updated_at || ""}` : "",
+    unit ? `${unit.id || ""}|${unit.updated_at || ""}` : "",
+    ids.join(","),
+  ].join("\n");
+}
+
+/** Drop the optimistic local echo of a message the server did not accept. */
+function dropLocalEcho(messages, localId) {
+  return messages.filter((m) => m.id !== localId);
+}
+
+/** True when a fetch Response came from the real server, not the service worker's cache fallback or offline stub. */
+function serverReachable(res) {
+  if (!res) return false;
+  const cache = res.headers && typeof res.headers.get === "function" ? res.headers.get("x-hvac-cache") : null;
+  if (cache === "hit") return false;
+  if (res.status === 503) return false; // the service worker answers 503 when the network is down
+  return true;
+}
+
+/** Backoff for re-checking /api/health while the "server unreachable" banner is up: 5, 10, 20, 40, 60, 60… s. */
+function healthRetryDelay(attempt) {
+  const n = Math.max(0, Math.floor(Number(attempt) || 0));
+  return Math.min(60000, 5000 * 2 ** n);
+}
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -452,6 +537,7 @@ function boot() {
       if (e && e.name === "AbortError") throw e;
       throw new ApiFailure("network", `Network error: ${e && e.message ? e.message : "request failed"}`, 0);
     }
+    if (state.serverDown && serverReachable(res)) updateOnline(false);
     if (res.status === 401) {
       authRequired();
       throw new ApiFailure("auth", "Sign-in required — enter the access password in Settings.", 401);
@@ -791,12 +877,30 @@ function boot() {
   }
 
   /* ---------- online / offline ---------- */
+  let healthRetryTimer = null;
+  let healthRetryAttempt = 0;
+  function scheduleHealthRetry() {
+    if (healthRetryTimer) return;
+    healthRetryTimer = setTimeout(() => {
+      healthRetryTimer = null;
+      if (!state.serverDown) return;
+      healthRetryAttempt += 1;
+      loadHealth();
+    }, healthRetryDelay(healthRetryAttempt));
+  }
   function updateOnline(serverDown = state.serverDown) {
     const off = navigator.onLine === false;
     state.serverDown = !!serverDown;
     els.offline.hidden = !(off || serverDown);
     const text = els.offline.querySelector("span");
     if (text) text.textContent = off ? "Offline — chat needs a connection. Calculators and cached data still work." : "Server unreachable — chat is paused. Calculators and cached data still work.";
+    // The banner must not outlive the outage: keep probing /api/health with backoff until it answers.
+    if (state.serverDown && !off) scheduleHealthRetry();
+    else {
+      healthRetryAttempt = 0;
+      if (healthRetryTimer) clearTimeout(healthRetryTimer);
+      healthRetryTimer = null;
+    }
   }
   window.addEventListener("online", () => {
     updateOnline();
@@ -1112,13 +1216,13 @@ function boot() {
     markActiveRows();
   }
 
-  function applyConversation(data) {
+  function applyConversation(data, { keepScroll = false } = {}) {
     state.conversation = data.conversation || null;
     state.unit = data.unit || null;
     state.ctx = null;
     state.messages = Array.isArray(data.messages) ? data.messages : [];
     state.busy = !!data.busy;
-    state.stickToBottom = true;
+    if (!keepScroll) state.stickToBottom = true;
     renderMessages();
     renderHeader();
     if (state.busy && !state.streaming) {
@@ -1147,11 +1251,19 @@ function boot() {
     markActiveRows();
   }
 
+  /** What the transcript currently shows, in the same shape GET /api/conversations/:id returns. */
+  function currentFingerprint() {
+    return conversationFingerprint({ conversation: state.conversation, unit: state.unit, messages: state.messages, busy: state.busy });
+  }
   async function reconcile() {
     if (!state.conversationId || state.streaming) return;
+    const id = state.conversationId;
     try {
-      const data = await apiJson(`/api/conversations/${encodeURIComponent(state.conversationId)}`);
-      applyConversation(data);
+      const data = await apiJson(`/api/conversations/${encodeURIComponent(id)}`);
+      if (state.conversationId !== id || state.streaming) return;
+      // Re-render only when the server has something new; otherwise the tech keeps their scroll position
+      // and any expanded tool details (nothing changed, so nothing moves).
+      if (conversationFingerprint(data) !== currentFingerprint()) applyConversation(data, { keepScroll: true });
       loadConversations();
     } catch {
       /* stay as-is; the offline banner covers connectivity */
@@ -1203,7 +1315,7 @@ function boot() {
     return conv.id;
   }
 
-  async function sendMessage(text, images) {
+  async function sendMessage(text, images, { onAccepted } = {}) {
     const trimmed = (text || "").trim();
     if (!trimmed && !(images && images.length)) return;
     if (state.streaming) return toast("Wait for the current response (or press Stop).");
@@ -1222,13 +1334,17 @@ function boot() {
     state.messages.push(local);
     state.stickToBottom = true;
     renderMessages();
-    els.composerInput.value = "";
-    autoGrow();
-    clearPendingImages();
 
     const body = { text: trimmed };
     if (images && images.length) body.images = images.map((i) => ({ media_type: i.media_type, data: i.data }));
-    await streamTurn(convId, body);
+    // The composer text and photos are cleared only once the server has accepted the message (2xx). On a
+    // 409 busy, a 4xx/5xx envelope or a network failure before headers they stay put so the tech can retry,
+    // and the optimistic echo is removed so the transcript matches what the server holds.
+    const accepted = await streamTurn(convId, body, { onAccepted });
+    if (!accepted && state.messages.includes(local)) {
+      state.messages = dropLocalEcho(state.messages, local.id);
+      if (!state.streaming) renderMessages();
+    }
   }
 
   function setStreaming(on) {
@@ -1241,7 +1357,8 @@ function boot() {
     else if (state.route.screen !== "readings") releaseWake();
   }
 
-  async function streamTurn(convId, body) {
+  /** Returns true when the server accepted the message (2xx) — even if the stream later dropped. */
+  async function streamTurn(convId, body, { onAccepted } = {}) {
     const ac = new AbortController();
     state.abort = ac;
     setStreaming(true);
@@ -1355,6 +1472,7 @@ function boot() {
 
     let terminal = null;
     let busy409 = false;
+    let accepted = false;
     try {
       const res = await api(`/api/conversations/${encodeURIComponent(convId)}/messages`, { method: "POST", json: body, signal: ac.signal, headers: { Accept: "text/event-stream" } });
       if (res.status === 409) {
@@ -1362,28 +1480,16 @@ function boot() {
       } else if (!res.ok) {
         const err = await readError(res);
         showError(err.code, err.message);
-      } else if (!res.body) {
-        showError("internal", "Streaming is not supported by this browser.");
       } else {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = "";
-        for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const parsed = parseSseFrames(buf);
-          buf = parsed.rest;
-          for (const ev of parsed.events) {
-            onEvent(ev);
-            if (ev && (ev.type === "done" || ev.type === "error")) terminal = ev;
-          }
-        }
-        buf += decoder.decode();
-        const tail = parseSseFrames(buf + "\n\n");
-        for (const ev of tail.events) {
-          onEvent(ev);
-          if (ev && (ev.type === "done" || ev.type === "error")) terminal = ev;
+        accepted = true;
+        if (typeof onAccepted === "function") onAccepted();
+        if (!res.body) {
+          showError("internal", "Streaming is not supported by this browser.");
+        } else {
+          // Heartbeat watchdog: a half-open socket (Wi-Fi→LTE hand-off, backgrounded phone) would otherwise
+          // keep reader.read() pending for minutes with streaming=true, blocking Send and reconcile.
+          // A watchdog-cancelled (idle) stream ends here with no terminal event and falls into the reconcile/poll path.
+          terminal = (await pumpSse(res.body.getReader(), onEvent)).terminal;
         }
       }
     } catch (e) {
@@ -1406,7 +1512,11 @@ function boot() {
       state.busy = true;
       showBusyBanner();
       startPolling();
-      return;
+      return false;
+    }
+    if (!accepted) {
+      live.remove();
+      return false;
     }
     // Reconcile with the server's canonical state (ids, folded tool results, title changes).
     if (state.conversationId === convId) {
@@ -1418,13 +1528,15 @@ function boot() {
       }
     }
     if (!terminal && !ac.signal.aborted) {
-      // Stream dropped without a terminal event: the server keeps running; poll until it finishes.
+      // Stream dropped (or went silent past the heartbeat) without a terminal event: the server keeps running;
+      // poll until it finishes.
       if (state.busy) {
         showBusyBanner();
         startPolling();
       }
     }
     loadConversations();
+    return true;
   }
 
   async function stopStream(silent) {
@@ -1454,7 +1566,19 @@ function boot() {
     }
   });
   function submitComposer() {
-    sendMessage(els.composerInput.value, state.pendingImages.slice());
+    const text = els.composerInput.value;
+    const images = state.pendingImages.slice();
+    sendMessage(text, images, {
+      onAccepted: () => {
+        // Clear what was sent; keep anything typed while the request was in flight.
+        const cur = els.composerInput.value;
+        els.composerInput.value = cur === text ? "" : cur.startsWith(text) ? cur.slice(text.length) : cur;
+        autoGrow();
+        // Drop only the photos that went with this message; anything attached since stays.
+        state.pendingImages = state.pendingImages.filter((img) => !images.includes(img));
+        renderPreviews();
+      },
+    });
   }
   els.btnSend.addEventListener("click", submitComposer);
 
@@ -1519,10 +1643,6 @@ function boot() {
         h("button", { type: "button", "aria-label": "Remove photo", onclick: () => { state.pendingImages.splice(i, 1); renderPreviews(); } }, icon("close", "icon")),
       ));
     });
-  }
-  function clearPendingImages() {
-    state.pendingImages = [];
-    renderPreviews();
   }
 
   function loadImageEl(file) {
@@ -2978,7 +3098,8 @@ globalThis.HVAC_UI = {
   parseSseFrames, escapeHtml, relTime, dayLabel, groupUnitsBySite, unitLabel, unitBadgeText, sortFindings, isHypothesis,
   needsNameplateVerify, toNum, buildMeasurements, composeReadingsMessage, composeCalcMessage, pickList, fmtNum,
   parseHash, groupSearchHits, filterUnits, timeOfDay,
-  DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION,
+  pumpSse, conversationFingerprint, dropLocalEcho, serverReachable, healthRetryDelay,
+  DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION, SSE_IDLE_MS,
 };
 
 if (typeof document !== "undefined" && typeof window !== "undefined") {

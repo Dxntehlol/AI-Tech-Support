@@ -504,7 +504,8 @@ GET  /api/units/:id                 {unit, decoded, findings, conversations}   P
 POST /api/decode {model, serial?, manufacturer?}   DecodeResult
 GET  /api/search?q=&unit_id=&site=&since=&limit=   SearchHit[] (messages + findings + units)
 GET  /api/findings?unit_id=&conversation_id=       POST /api/findings   DELETE /api/findings/:id
-GET  /api/export                                   JSON of units, conversations, messages (no image data), findings
+GET  /api/export                                   JSON of units, conversations, messages (no image data), findings;
+                                                  `complete`/`truncated[]`/`limit` say whether any collection hit the per-list cap
 GET  /api/reference/refrigerants
 GET  /api/reference/pt?refrigerant=&psig=|temp_f=&elevation_ft=   (bubble, dew, midpoint, glide, safety class, notes)
 POST /api/calc/superheat-subcooling  {DxMeasurements-like; snake_case or camelCase}

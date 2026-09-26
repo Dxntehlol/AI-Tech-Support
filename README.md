@@ -150,8 +150,8 @@ Then:
 ## Development
 
 ```bash
-npm run check            # typecheck sources and tests
-npm test                 # unit tests (node --test)
+npm run check            # typecheck sources, server tests and web-client tests
+npm test                 # unit tests (node --test): src/**/*.test.ts and web/*.test.ts
 npm run check:knowledge  # validate every knowledge pack and decode every example
 npm run gen:refrigerants # regenerate PT tables (needs: pip install CoolProp)
 ```
@@ -167,4 +167,5 @@ format ships with worked examples that run as tests, and every fault code carrie
 ## Backup
 
 `sqlite3 data/hvac.sqlite '.backup data/backup.sqlite'` is WAL-safe; `GET /api/export` returns a
-JSON export of units, conversations, messages (without photos) and findings.
+JSON export of units, conversations, messages (without photos) and findings. The envelope's
+`complete` flag is false when a collection hit the export cap, so a partial backup never looks whole.

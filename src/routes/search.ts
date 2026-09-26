@@ -19,14 +19,24 @@ export function searchRouter(deps: AppDeps): Router {
   return r;
 }
 
-/** GET /api/export → JSON of units, conversations, messages (image data omitted) and findings. */
+/**
+ * Most rows a single repo list returns (repos.clampLimit caps every list here). Export asks for the cap
+ * and reports, per collection, whether it was hit, so a backup that could be incomplete says so instead of
+ * silently dropping the oldest rows.
+ */
+export const EXPORT_LIST_CAP = 1000;
+
+/**
+ * GET /api/export → JSON of units, conversations, messages (image data omitted) and findings.
+ * `truncated` lists the collections that filled the cap (and so may be incomplete); `complete` is its negation.
+ */
 export function exportRouter(deps: AppDeps): Router {
   const r = Router();
   r.get("/", (_req, res) => {
     const { repos } = deps;
     const now = deps.now ? deps.now() : new Date();
-    const units = repos.units.list({ includeArchived: true, limit: 1000 });
-    const conversations = repos.conversations.list({ limit: 1000 });
+    const units = repos.units.list({ includeArchived: true, limit: EXPORT_LIST_CAP });
+    const conversations = repos.conversations.list({ limit: EXPORT_LIST_CAP });
     const messages: unknown[] = [];
     for (const c of conversations) {
       for (const m of repos.messages.list(c.id)) {
@@ -42,10 +52,29 @@ export function exportRouter(deps: AppDeps): Router {
         });
       }
     }
-    const findings = repos.findings.list({ limit: 1000 });
+    const findings = repos.findings.list({ limit: EXPORT_LIST_CAP });
+    const truncated = (
+      [
+        ["units", units.length],
+        ["conversations", conversations.length],
+        ["findings", findings.length],
+      ] as const
+    )
+      .filter(([, n]) => n >= EXPORT_LIST_CAP)
+      .map(([name]) => name);
     const stamp = now.toISOString().slice(0, 10);
     res.setHeader("Content-Disposition", `attachment; filename="hvac-export-${stamp}.json"`);
-    res.json({ exportedAt: now.toISOString(), version: 1, units, conversations, messages, findings });
+    res.json({
+      exportedAt: now.toISOString(),
+      version: 1,
+      complete: truncated.length === 0,
+      truncated,
+      limit: EXPORT_LIST_CAP,
+      units,
+      conversations,
+      messages,
+      findings,
+    });
   });
   return r;
 }

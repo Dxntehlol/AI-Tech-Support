@@ -439,10 +439,10 @@ html.kb-open .tabbar { display: none; }
 /* Search field */
 .search-field { position: relative; display: flex; align-items: center; }
 .search-field .icon { position: absolute; left: 12px; color: var(--text-muted); width: 20px; height: 20px; pointer-events: none; }
-.search-field input { width: 100%; min-height: 44px; padding: 8px 40px 8px 40px; border-radius: var(--r-pill); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); font-size: 16px; }
+.search-field input { width: 100%; min-height: 44px; padding: 8px 44px 8px 40px; border-radius: var(--r-pill); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); font-size: 16px; }
 .search-field input:focus { outline: none; border-color: var(--accent); background: var(--surface-0); }
 .search-field input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
-.search-field .clear { position: absolute; right: 4px; width: 36px; height: 36px; min-width: 36px; }
+.search-field .clear { position: absolute; right: 0; width: 44px; height: 44px; min-width: 44px; border-radius: var(--r-pill); }
 
 /* Stat tiles */
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: var(--sp-2); }
@@ -479,7 +479,7 @@ html.kb-open .tabbar { display: none; }
 .banner-info { background: var(--info-soft); border-color: transparent; color: var(--info-text); }
 .banner-warn { background: var(--warning-soft); border-color: transparent; color: var(--warning-text); }
 .banner-ok { background: var(--success-soft); border-color: transparent; color: var(--success-text); }
-.banner .icon-btn { width: 36px; height: 36px; min-width: 36px; color: inherit; }
+.banner .icon-btn { width: 44px; height: 44px; min-width: 44px; margin: -4px 0 -4px -4px; color: inherit; }
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + var(--safe-b) + 16px + var(--kb-inset)); transform: translateX(-50%);
   max-width: min(92vw, 420px); padding: 12px 18px; border-radius: var(--r-pill);
@@ -626,13 +626,18 @@ html.kb-open .tabbar { display: none; }
 .composer textarea { flex: 1 1 auto; min-width: 0; min-height: 40px; max-height: 40dvh; padding: 9px 0; margin: 0; border: 0; background: transparent; color: var(--text-primary); font-size: 16px; line-height: 1.4; resize: none; outline: none; }
 .composer textarea::placeholder { color: var(--text-muted); }
 .composer-field .icon-btn { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; color: var(--text-muted); }
+@media (pointer: coarse) { .composer-field .icon-btn { width: 44px; height: 44px; min-width: 44px; margin: -2px; } }
 .composer-row > .icon-btn-accent, .composer-row > .icon-btn-danger { width: 48px; height: 48px; min-width: 48px; border-radius: 50%; }
 .composer-row > .icon-btn { flex: none; }
-.image-previews { display: flex; gap: 8px; padding: 0 0 8px; overflow-x: auto; }
+.image-previews { display: flex; gap: 8px; padding: 8px 8px 8px 0; overflow-x: auto; }
 .preview { position: relative; flex: none; }
-.preview img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--r-1); border: 1px solid var(--border); }
-.preview button { position: absolute; top: -6px; right: -6px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--surface-0); background: var(--danger-solid); color: #fff; display: flex; align-items: center; justify-content: center; }
-.preview button .icon { width: 14px; height: 14px; }
+.preview img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--r-1); border: 1px solid var(--border); display: block; }
+/* Remove photo: a 44 px hit box hugging the thumbnail's top-right corner (gloves), with a 26 px disc as the visual. */
+.preview button { position: absolute; top: -8px; right: -8px; width: 44px; height: 44px; min-width: 44px; padding: 0; border: 0; background: transparent; color: #fff; }
+.preview button::before { content: ""; position: absolute; top: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--surface-0); background: var(--danger-solid); }
+.preview button .icon { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; }
+.preview button:focus-visible { outline: none; }
+.preview button:focus-visible::before { box-shadow: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--focus); }
 
 /* ============================================================================================
  * 6. Units screen

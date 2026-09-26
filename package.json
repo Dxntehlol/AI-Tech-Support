@@ -6,12 +6,12 @@
   "type": "module",
   "engines": { "node": ">=22.18.0" },
   "scripts": {
-    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.web-test.json",
     "check:knowledge": "node --disable-warning=ExperimentalWarning scripts/check-knowledge.ts",
     "build": "tsc",
     "start": "node --disable-warning=ExperimentalWarning dist/server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch src/server.ts",
-    "test": "node --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\"",
+    "test": "node --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\" \"web/*.test.ts\"",
     "gen:refrigerants": "python3 scripts/gen_refrigerants.py"
   },
   "dependencies": {

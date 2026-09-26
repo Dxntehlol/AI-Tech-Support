@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { posix } from "node:path";
 import type { RequestHandler } from "express";
 import { sendError } from "./util.ts";
 
@@ -13,11 +14,31 @@ const CORS_MAX_AGE_S = 600;
 const PUBLIC_EXACT = new Set(["/api/health", "/config.js", "/manifest.webmanifest", "/sw.js"]);
 const PUBLIC_PREFIXES = ["/icons/"];
 
+/**
+ * The request path as the static file server will resolve it: percent-decoded, with `.`/`..` segments
+ * and duplicate slashes collapsed (`/icons/../app.js`, `/icons/%2e%2e/app.js` and `/icons/..%2fapp.js`
+ * all become `/app.js`). Express leaves `req.path` raw and serve-static normalizes afterwards, so any
+ * path-based exemption must be decided on this form. Returns null when the path cannot be decoded.
+ */
+export function normalizeRequestPath(path: string): string | null {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    return null;
+  }
+  const normalized = posix.normalize(decoded.startsWith("/") ? decoded : `/${decoded}`);
+  if (normalized.split("/").includes("..")) return null;
+  return normalized;
+}
+
 /** True for the handful of paths served without a password (see PUBLIC_EXACT / PUBLIC_PREFIXES). */
 export function isPublicPath(path: string): boolean {
-  const p = path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+  const normalized = normalizeRequestPath(path);
+  if (normalized === null) return false;
+  const p = normalized.length > 1 && normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
   if (PUBLIC_EXACT.has(p)) return true;
-  return PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return PUBLIC_PREFIXES.some((prefix) => normalized.startsWith(prefix));
 }
 
 /** Lower-cased, trailing-slash-free allowlist for O(1) origin lookups. */
@@ -54,7 +75,8 @@ export function passwordFromAuthorization(header: string | undefined): string | 
 
 /**
  * HTTP auth: `Basic` (any username) or `Bearer <APP_PASSWORD>` (native shells / PWA Settings screen),
- * both compared in constant time. Exempt: CORS preflights and the public paths (`isPublicPath`).
+ * both compared in constant time. Exempt: CORS preflights and the public paths (`isPublicPath`, decided on
+ * the decoded + normalized path so dot segments cannot smuggle protected files under a public prefix).
  * Passthrough when no password is configured. A 401 always carries WWW-Authenticate so browsers can
  * prompt; native clients read the JSON envelope and open Settings instead.
  */

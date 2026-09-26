@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "rootDir": "web", "lib": ["es2023", "dom"] },
+  "include": ["web/*.test.ts"],
+  "exclude": ["node_modules", "dist"]
+}

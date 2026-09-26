@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Server } from "node:http";
-import type { AddressInfo } from "node:net";
+import { connect, type AddressInfo } from "node:net";
 import type Anthropic from "@anthropic-ai/sdk";
 import { PROJECT_ROOT, loadConfig } from "./config.ts";
 import { loadKnowledge } from "./knowledge/loader.ts";
@@ -16,7 +16,8 @@ import { isTurnRunning } from "./agent/chat.ts";
 import type { AppConfig, ChatEvent, DisplayMessage, KnowledgeBase } from "./types.ts";
 import { createApp, renderConfigJs, type AppDeps } from "./app.ts";
 import { detectImageType, foldMessages, parseImages, parseMeasurements, summarizeToolResult } from "./routes/util.ts";
-import { isPublicPath, passwordFromAuthorization, secretsMatch } from "./routes/auth.ts";
+import { isPublicPath, normalizeRequestPath, passwordFromAuthorization, secretsMatch } from "./routes/auth.ts";
+import { EXPORT_LIST_CAP } from "./routes/search.ts";
 import { openStreamCount } from "./routes/conversations.ts";
 
 const NOW = new Date("2026-09-26T12:00:00Z");
@@ -109,6 +110,24 @@ async function withServer(opts: Opts, fn: (ctx: Ctx) => Promise<void>): Promise<
     await new Promise<void>((resolve) => server.close(() => resolve()));
     db.close();
   }
+}
+
+/**
+ * A GET over a raw socket, so the request target reaches the server verbatim: `fetch` (WHATWG URL) resolves
+ * `..` and `%2e%2e` segments client-side and would never send the paths the auth exemption must reject.
+ */
+function rawGet(port: number, target: string): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const sock = connect(port, "127.0.0.1", () => sock.write(`GET ${target} HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nConnection: close\r\n\r\n`));
+    let buf = "";
+    sock.setEncoding("utf8");
+    sock.on("data", (d: string) => (buf += d));
+    sock.on("error", reject);
+    sock.on("end", () => {
+      const status = Number(/^HTTP\/1\.[01] (\d{3})/.exec(buf)?.[1] ?? 0);
+      resolve({ status, body: buf.slice(buf.indexOf("\r\n\r\n") + 4) });
+    });
+  });
 }
 
 /** Parse an SSE body into its JSON events (heartbeat comments ignored). */
@@ -348,6 +367,39 @@ describe("security", () => {
     });
   });
 
+  test("dot segments under the public /icons/ prefix cannot reach protected files", async () => {
+    await withServer({ config: { appPassword: "s3cret", webDir: pwaDir } }, async (c) => {
+      // Raw targets: serve-static resolves these to /app.js, /index.html, /vendor/… after the auth check ran.
+      for (const target of [
+        "/icons/../app.js",
+        "/icons/%2e%2e/app.js",
+        "/icons/..%2fapp.js",
+        "/icons/..%2Fapp.js",
+        "/icons/%2e%2e%2fapp.js",
+        "/icons/../index.html",
+        "/icons/../",
+        "/icons/..",
+        "/icons/x/../../vendor/marked.min.js",
+        "//icons/../app.js",
+        "/icons/../../package.json",
+        "/icons/%2e%2e/api/units",
+      ]) {
+        const res = await rawGet(c.port, target);
+        assert.equal(res.status, 401, target);
+        assert.equal(res.body.includes("console.log('app')"), false, target);
+        assert.equal(res.body.includes("shell"), false, target);
+      }
+      // Undecodable percent-encoding is not public either.
+      assert.equal((await rawGet(c.port, "/icons/%zz/icon-192.png")).status, 401);
+      // Genuine icon paths keep working, also when spelled with a `.` segment or percent-encoded letters.
+      for (const target of ["/icons/icon-192.png", "/icons/./icon-192.png", "/icons/%69con-192.png", "/icons//icon-192.png"]) {
+        assert.equal((await rawGet(c.port, target)).status, 200, target);
+      }
+      // A missing icon is still a 404 (not 401) so the client can tell "not installed" from "locked".
+      assert.equal((await rawGet(c.port, "/icons/./missing.png")).status, 404);
+    });
+  });
+
   test("auth helpers", () => {
     assert.equal(passwordFromAuthorization(`Basic ${Buffer.from("u:p:w").toString("base64")}`), "p:w");
     assert.equal(passwordFromAuthorization("Bearer tok"), "tok");
@@ -361,6 +413,19 @@ describe("security", () => {
     for (const p of ["/", "/index.html", "/app.js", "/api/units", "/api/healthz", "/icons", "/iconsx/a.png", "/sw.js.map", "/api/health/x"]) {
       assert.equal(isPublicPath(p), false, p);
     }
+    // Public-path decisions are made on the decoded, dot-segment-free path (what serve-static will open).
+    for (const p of ["/icons/../app.js", "/icons/%2e%2e/app.js", "/icons/..%2fapp.js", "/icons/..%2Findex.html", "/icons/..", "/icons/../", "/icons/a/../../app.js", "/icons/%zz"]) {
+      assert.equal(isPublicPath(p), false, p);
+    }
+    for (const p of ["/icons/./a.png", "/icons/%69con.png", "/icons//a.png", "/icons/a/../b.png", "/api/health/./"]) {
+      assert.equal(isPublicPath(p), true, p);
+    }
+    assert.equal(normalizeRequestPath("/icons/%2e%2e/app.js"), "/app.js");
+    assert.equal(normalizeRequestPath("/icons/..%2fapp.js"), "/app.js");
+    assert.equal(normalizeRequestPath("/icons/./a/../b.png"), "/icons/b.png");
+    assert.equal(normalizeRequestPath("//icons/../app.js"), "/app.js");
+    assert.equal(normalizeRequestPath("icons/../app.js"), "/app.js");
+    assert.equal(normalizeRequestPath("/icons/%zz"), null);
   });
 
   test("Origin mismatch → 403; same host and allowlisted origins pass; GET ignores Origin", async () => {
@@ -589,6 +654,25 @@ describe("findings", () => {
 
       await expectError(await c.json("PATCH", `/api/findings/${f.id}`, { status: "bogus" }), 400, "validation");
       await expectError(await c.json("PATCH", `/api/findings/${f.id}`, {}), 400, "validation");
+      // A present-but-empty status on PATCH is a 400, never a silent flip to "resolved".
+      const reopened = await c.json("PATCH", `/api/findings/${f.id}`, { status: "open" });
+      assert.equal(reopened.status, 200);
+      for (const status of ["", null]) {
+        await expectError(await c.json("PATCH", `/api/findings/${f.id}`, { status }), 400, "validation");
+        await expectError(await c.json("PATCH", `/api/findings/${f.id}`, { cause: "Leak", status }), 400, "validation");
+        const still = ((await (await c.get(`/api/findings/${f.id}`)).json()) as { finding: Record<string, unknown> }).finding;
+        assert.equal(still.status, "open", `status ${JSON.stringify(status)}`);
+        assert.equal(still.cause, "Undercharge");
+      }
+      // On create, an omitted/empty status still defaults to "resolved" (the tech is logging a finished job).
+      for (const body of [{ symptom: "Dirty filter" }, { symptom: "Dirty filter", status: null }, { symptom: "Dirty filter", status: "" }]) {
+        const made = await c.json("POST", "/api/findings", body);
+        assert.equal(made.status, 201);
+        const mf = ((await made.json()) as { finding: Record<string, unknown> }).finding;
+        assert.equal(mf.status, "resolved");
+        await c.json("DELETE", `/api/findings/${mf.id as string}`);
+      }
+      await expectError(await c.json("POST", "/api/findings", { symptom: "x", status: "bogus" }), 400, "validation");
       await expectError(await c.json("POST", "/api/findings", { cause: "no symptom" }), 400, "validation");
       await expectError(await c.json("POST", "/api/findings", { symptom: "x", unit_id: "nope" }), 400, "validation");
       await expectError(await c.json("POST", "/api/findings", { symptom: "x", unit_id: "0123456789abcdef" }), 404, "not_found");
@@ -809,7 +893,7 @@ describe("search and export", () => {
       const res = await c.get("/api/export");
       assert.equal(res.status, 200);
       assert.match(res.headers.get("content-disposition") ?? "", /attachment; filename="hvac-export-2026-09-26\.json"/);
-      const ex = (await res.json()) as { exportedAt: string; units: unknown[]; conversations: unknown[]; messages: { content: { type: string }[] }[]; findings: unknown[] };
+      const ex = (await res.json()) as { exportedAt: string; complete: boolean; truncated: string[]; limit: number; units: unknown[]; conversations: unknown[]; messages: { content: { type: string }[] }[]; findings: unknown[] };
       assert.equal(ex.exportedAt, NOW.toISOString());
       assert.equal(ex.units.length, 2);
       assert.equal(ex.conversations.length, 1);
@@ -817,6 +901,23 @@ describe("search and export", () => {
       assert.equal(ex.messages.length, 1);
       assert.deepEqual(ex.messages[0]!.content.map((b) => b.type), ["image_omitted", "text"]);
       assert.equal(JSON.stringify(ex).includes(PNG_1PX), false);
+      assert.equal(ex.complete, true);
+      assert.deepEqual(ex.truncated, []);
+      assert.equal(ex.limit, EXPORT_LIST_CAP);
+    });
+  });
+
+  test("export says which collections hit the list cap instead of silently dropping rows", async () => {
+    await withServer({}, async (c) => {
+      const unit = c.repos.units.create({ unit_tag: "RTU-1" });
+      for (let i = 0; i < EXPORT_LIST_CAP + 5; i++) c.repos.findings.create({ unit_id: unit.id, symptom: `Finding ${i}` });
+      const res = await c.get("/api/export");
+      assert.equal(res.status, 200);
+      const ex = (await res.json()) as { complete: boolean; truncated: string[]; findings: unknown[]; units: unknown[] };
+      assert.equal(ex.findings.length, EXPORT_LIST_CAP);
+      assert.equal(ex.units.length, 1);
+      assert.equal(ex.complete, false);
+      assert.deepEqual(ex.truncated, ["findings"]);
     });
   });
 });

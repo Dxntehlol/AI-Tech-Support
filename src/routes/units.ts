@@ -150,7 +150,6 @@ function parseFindingFields(b: Body, out: Record<string, unknown>): void {
     else if (typeof v === "string" || (Array.isArray(v) && v.every((t) => typeof t === "string" || typeof t === "number"))) out.tags = v;
     else throw badRequest("tags must be a string or an array of strings.");
   }
-  if ("status" in b) out.status = optEnum(b.status, "status", FINDING_STATUSES) ?? "resolved";
   if ("confirmed" in b) {
     const c = optBoolean(b.confirmed, "confirmed");
     if (c !== undefined) out.confirmed = c ? 1 : 0;
@@ -167,6 +166,8 @@ export function parseFindingCreate(b: Body): FindingInput {
   out.unit_id = optionalId(b.unit_id, "unit_id");
   out.conversation_id = optionalId(b.conversation_id, "conversation_id");
   parseFindingFields(b, out);
+  // A new finding defaults to "resolved" (the tech is usually logging a finished job); null/"" mean "default".
+  if ("status" in b) out.status = optEnum(b.status, "status", FINDING_STATUSES) ?? "resolved";
   if ("origin" in b) out.origin = optEnum(b.origin, "origin", FINDING_ORIGINS) ?? "tech";
   return out as FindingInput;
 }
@@ -175,6 +176,12 @@ export function parseFindingPatch(b: Body): FindingPatch {
   const out: Record<string, unknown> = {};
   if ("symptom" in b) out.symptom = requireString(b.symptom, "symptom", 4000);
   parseFindingFields(b, out);
+  // On an update there is no default: a present but empty status would silently flip open/monitor to resolved.
+  if ("status" in b) {
+    const status = optEnum(b.status, "status", FINDING_STATUSES);
+    if (status === undefined) throw badRequest(`status must be one of: ${FINDING_STATUSES.join(", ")}.`);
+    out.status = status;
+  }
   if (Object.keys(out).length === 0) throw badRequest("Nothing to update: send confirmed, status, cause, resolution, follow_up or another finding field.");
   return out as FindingPatch;
 }
