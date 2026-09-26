@@ -1,0 +1,24 @@
+{
+  "id": "hvac-field-assistant",
+  "name": "HVAC Field Assistant",
+  "short_name": "HVAC Assist",
+  "description": "Refrigeration-cycle diagnostics, nameplate decoding, electrical procedures and per-unit job memory for commercial HVAC technicians.",
+  "start_url": "./#chat",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e1012",
+  "theme_color": "#0e1012",
+  "lang": "en",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "New conversation", "url": "./#chat/new", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Readings", "url": "./#readings", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Units", "url": "./#units", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

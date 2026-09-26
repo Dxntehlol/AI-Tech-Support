@@ -2,10 +2,14 @@
  *
  * Talks to the HTTP API described in DESIGN.md. Every request goes through api()/apiJson()
  * (configurable base + optional Bearer token). Chat replies stream over SSE via fetch + POST.
+ * Screens are routed through location.hash (#chat/<id>, #unit/<id>, #readings, #history, #settings)
+ * so browser/OS back gestures work in the PWA and native shells.
  * Pure helpers are exported on globalThis.HVAC_UI so they can be unit-tested outside a browser;
  * boot() only runs when a DOM is present.
  */
 "use strict";
+
+const APP_VERSION = "0.1.0";
 
 /* ------------------------------------------------------------------------------------------
  * Pure helpers (no DOM)
@@ -79,6 +83,12 @@ function dayLabel(iso, now = Date.now()) {
   return new Date(t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
+function timeOfDay(iso) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  return new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
 /** Group units by site (null/empty → "No site"), sites sorted, units sorted by tag/model. */
 function groupUnitsBySite(units) {
   const groups = new Map();
@@ -104,6 +114,17 @@ function unitLabel(u) {
 function unitBadgeText(u) {
   if (!u) return "";
   return u.unit_tag || u.model || u.nickname || "";
+}
+
+/** Case-insensitive unit filter over site/customer/tag/nickname/model/serial/manufacturer. */
+function filterUnits(units, q) {
+  const needle = String(q || "").trim().toLowerCase();
+  if (!needle) return units;
+  const terms = needle.split(/\s+/).filter(Boolean);
+  return units.filter((u) => {
+    const hay = [u.site, u.customer, u.unit_tag, u.nickname, u.model, u.serial, u.manufacturer, u.brand, u.refrigerant].filter(Boolean).join(" ").toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
 }
 
 const STATUS_ORDER = { open: 0, monitor: 1, resolved: 2 };
@@ -235,6 +256,7 @@ function composeCalcMessage(title, inputs, result) {
   if (result && typeof result === "object") {
     const values = result.values && typeof result.values === "object" ? result.values : result;
     for (const [k, v] of Object.entries(values)) {
+      if (k === "source" || k === "cachedAt" || k === "estimated") continue;
       if (typeof v === "number") outParts.push(`${k} ${fmtNum(v, 2)}`);
       else if (typeof v === "string" && k !== "kind" && k !== "refrigerant") outParts.push(`${k} ${v}`);
     }
@@ -244,6 +266,78 @@ function composeCalcMessage(title, inputs, result) {
   const notes = [].concat(result?.interpretation || [], result?.notes || [], result?.warnings || []).filter((x) => typeof x === "string");
   if (notes.length) text += `. ${notes.join(" ")}`;
   return text;
+}
+
+/** Parse a location.hash into a route. */
+function parseHash(raw) {
+  const s = String(raw || "").replace(/^#\/?/, "");
+  const parts = s.split("/").map((p) => {
+    try {
+      return decodeURIComponent(p);
+    } catch {
+      return p;
+    }
+  }).filter(Boolean);
+  const isId = (x) => typeof x === "string" && /^[0-9a-f]{16}$/.test(x);
+  const r = { screen: "chat", conv: null, unit: null, sheet: null, pane: "dx", isNew: false };
+  switch (parts[0]) {
+    case undefined:
+    case "chat":
+      r.screen = "chat";
+      if (parts[1] === "new") r.isNew = true;
+      else if (isId(parts[1])) r.conv = parts[1];
+      break;
+    case "units":
+      r.screen = "units";
+      if (parts[1] === "decode") r.sheet = "decode";
+      break;
+    case "unit":
+      r.screen = "units";
+      if (isId(parts[1])) r.unit = parts[1];
+      if (parts[2] === "actions") r.sheet = "actions";
+      else if (parts[2] === "edit") r.sheet = "decode";
+      break;
+    case "readings":
+      r.screen = "readings";
+      if (parts[1] === "calcs") r.pane = "calcs";
+      break;
+    case "history":
+      r.screen = "history";
+      break;
+    case "settings":
+      r.screen = "settings";
+      break;
+    default:
+      r.screen = "chat";
+  }
+  return r;
+}
+
+/** Group search hits: message hits by conversation, finding hits by unit, unit hits together. */
+function groupSearchHits(hits, unitsById = new Map()) {
+  const groups = new Map();
+  for (const hit of hits) {
+    let key;
+    let title;
+    let kind;
+    if (hit.kind === "message") {
+      key = `c:${hit.conversationId || hit.id}`;
+      title = hit.conversationTitle || "Conversation";
+      kind = "conversation";
+    } else if (hit.kind === "finding") {
+      key = hit.unitId ? `u:${hit.unitId}` : hit.conversationId ? `c:${hit.conversationId}` : "f:none";
+      const u = hit.unitId ? unitsById.get(hit.unitId) : null;
+      title = u ? unitLabel(u) : hit.unitId ? "Unit" : hit.conversationTitle || "Findings";
+      kind = "unit";
+    } else {
+      key = "units";
+      title = "Units";
+      kind = "units";
+    }
+    if (!groups.has(key)) groups.set(key, { key, title, kind, conversationId: hit.conversationId, unitId: hit.unitId, hits: [] });
+    groups.get(key).hits.push(hit);
+  }
+  return [...groups.values()].sort((a, b) => Math.min(...a.hits.map((h) => h.rank)) - Math.min(...b.hits.map((h) => h.rank)));
 }
 
 const FALLBACK_REFRIGERANTS = [
@@ -271,6 +365,7 @@ function boot() {
   const doc = document;
   const $ = (id) => doc.getElementById(id);
   const html = doc.documentElement;
+  const CALC = globalThis.HVAC_CALC || null;
 
   /* ---------- storage ---------- */
   const store = {
@@ -291,7 +386,7 @@ function boot() {
     },
   };
 
-  /* ---------- DOM helper ---------- */
+  /* ---------- DOM helpers ---------- */
   function h(tag, attrs, ...children) {
     const el = doc.createElement(tag);
     if (attrs) {
@@ -311,24 +406,17 @@ function boot() {
     }
     return el;
   }
-  function svgIcon(path) {
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = doc.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  /** Inline icon referencing a <symbol> in index.html. */
+  function icon(name, cls = "icon") {
+    const svg = doc.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", cls);
     svg.setAttribute("aria-hidden", "true");
-    const p = doc.createElementNS(ns, "path");
-    p.setAttribute("d", path);
-    svg.append(p);
+    const use = doc.createElementNS(SVG_NS, "use");
+    use.setAttribute("href", `#i-${name}`);
+    svg.append(use);
     return svg;
   }
-  const ICON = {
-    trash: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
-    close: "M6 6l12 12M18 6L6 18",
-    unit: "M3 5h18v14H3zM7 9h10M7 13h6",
-    chat: "M4 5h16v11H8l-4 4z",
-    finding: "M9 12l2 2 4-4M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
-    share: "M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V3M8 7l4-4 4 4",
-  };
 
   /* ---------- API ---------- */
   class ApiFailure extends Error {
@@ -365,8 +453,8 @@ function boot() {
       throw new ApiFailure("network", `Network error: ${e && e.message ? e.message : "request failed"}`, 0);
     }
     if (res.status === 401) {
-      openSettings();
-      throw new ApiFailure("auth", "Sign-in required — enter the app password in Settings.", 401);
+      authRequired();
+      throw new ApiFailure("auth", "Sign-in required — enter the access password in Settings.", 401);
     }
     return res;
   }
@@ -392,11 +480,20 @@ function boot() {
     if (res.status === 204) return null;
     const text = await res.text();
     if (!text) return null;
-    return JSON.parse(text);
+    const json = JSON.parse(text);
+    if (res.headers.get("x-hvac-cache") === "hit" && json && typeof json === "object" && !Array.isArray(json)) {
+      json.source = "cache";
+      const at = res.headers.get("x-hvac-cached-at");
+      json.notes = [...(Array.isArray(json.notes) ? json.notes : []), `Served from the offline cache${at ? ` (fetched ${new Date(at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })})` : ""} — reconnect to refresh.`];
+    }
+    return json;
   }
+
+  const isNetworkError = (e) => !!e && (e.code === "network" || e.code === "offline" || e.status === 0 || e.status === 503);
 
   /* ---------- state ---------- */
   const state = {
+    route: parseHash(""),
     conversationId: null,
     conversation: null,
     unit: null, // unit attached to the current conversation
@@ -407,10 +504,12 @@ function boot() {
     pollTimer: null,
     units: [],
     unitsById: new Map(),
+    unitsQuery: "",
     conversations: [],
     convFilterUnitId: null,
-    panelUnit: null, // unit shown in the unit panel {unit, decoded, findings, conversations}
-    decoded: null, // last decode result shown in the panel
+    panelUnit: null, // unit shown in the unit detail {unit, decoded, findings, conversations}
+    decoded: null, // last decode result shown in the decode sheet
+    editingUnitId: null, // decode sheet in edit mode for this unit
     pendingImages: [], // {media_type, data, url}
     stickToBottom: true,
     refrigerants: FALLBACK_REFRIGERANTS,
@@ -418,46 +517,57 @@ function boot() {
     wakeLock: null,
     wantWake: false,
     health: null,
+    authNeeded: false,
+    serverDown: false,
+    installPrompt: null,
+    swWaiting: null,
+    lastAppliedHash: null,
   };
 
   const els = {
-    sidebar: $("sidebar"), unitpanel: $("unitpanel"), backdrop: $("backdrop"),
+    app: $("app"),
+    screenUnits: $("screen-units"), screenReadings: $("screen-readings"),
     messages: $("messages"), emptyState: $("empty-state"), quickChips: $("quick-chips"), banners: $("banners"),
-    composerInput: $("composer-input"), btnSend: $("btn-send"), btnStop: $("btn-stop"), btnAttach: $("btn-attach"),
-    fileInput: $("file-input"), fileCamera: $("file-camera"), previews: $("image-previews"),
-    search: $("search"), searchResults: $("search-results"), unitsList: $("units-list"), convList: $("conv-list"),
-    convFilter: $("conv-filter"), btnConvFilterClear: $("btn-conv-filter-clear"),
-    chatTitle: $("chat-title"), chatUnit: $("chat-unit"), topbarTitle: $("topbar-title"), topbarSub: $("topbar-sub"),
-    btnConvDelete: $("btn-conv-delete"),
-    unitForm: $("unit-form"), unitFormError: $("unit-form-error"), decodeCard: $("decode-card"), unitHeader: $("unit-header"),
-    unitActions: $("unit-actions"), findingsSection: $("findings-section"), findingsList: $("findings-list"),
-    unitConvsSection: $("unit-convs-section"), unitConvsList: $("unit-convs-list"),
-    btnSaveUnit: $("btn-save-unit"), btnAttachUnit: $("btn-attach-unit"), btnNewConvUnit: $("btn-new-conv-unit"),
-    btnArchiveUnit: $("btn-archive-unit"), btnClearUnit: $("btn-clear-unit"),
-    sheetReadings: $("sheet-readings"), readingsForm: $("readings-form"), readingsResult: $("readings-result"), readingsError: $("readings-error"),
-    btnReadingsSend: $("btn-readings-send"), btnReadingsClose: $("btn-readings-close"),
-    sheetSettings: $("sheet-settings"), settingsForm: $("settings-form"), settingsError: $("settings-error"), healthInfo: $("health-info"),
-    demoBadge: $("demo-badge"), toast: $("toast"), offline: $("offline-banner"), tabbar: $("tabbar"),
-    linkExport: $("link-export"),
+    composerInput: $("composer-input"), btnSend: $("btn-send"), btnStop: $("btn-stop"), btnAttach: $("btn-attach"), btnCamera: $("btn-camera"),
+    fileInput: $("file-input"), fileCamera: $("file-camera"), fileCameraSend: $("file-camera-send"), previews: $("image-previews"),
+    chatTitle: $("chat-title"), chatSub: $("chat-sub"), btnChatUnit: $("btn-chat-unit"), btnConvDelete: $("btn-conv-delete"),
+    convList: $("conv-list"), convListSide: $("conv-list-side"), convFilter: $("conv-filter"), convFilterSide: $("conv-filter-side"),
+    search: $("search"), searchResults: $("search-results"), historyBrowse: $("history-browse"), btnSearchClear: $("btn-search-clear"),
+    unitsList: $("units-list"), unitsSearch: $("units-search"), unitTitle: $("unit-title"), unitSub: $("unit-sub"),
+    unitDetail: $("unit-detail"), unitEmpty: $("unit-empty"), unitContent: $("unit-content"), btnUnitMore: $("btn-unit-more"),
+    sheetDecode: $("sheet-decode"), unitForm: $("unit-form"), unitFormError: $("unit-form-error"), decodeCard: $("decode-card"), decodeTitle: $("decode-title"),
+    btnSaveUnit: $("btn-save-unit"), btnDecode: $("btn-decode"), btnDecodePhoto: $("btn-decode-photo"),
+    sheetUnitActions: $("sheet-unit-actions"), unitActionsList: $("unit-actions-list"), unitActionsTitle: $("unit-actions-title"),
+    readingsForm: $("readings-form"), readingsResult: $("readings-result"), readingsError: $("readings-error"), readingsUnitChip: $("readings-unit-chip"), readingsSub: $("readings-sub"),
+    btnReadingsSend: $("btn-readings-send"), btnReadingsClear: $("btn-readings-clear"),
+    settingsForm: $("settings-form"), settingsError: $("settings-error"), settingsNotice: $("settings-notice"), healthInfo: $("health-info"),
+    settingsStatusText: $("settings-status-text"), settingsStatus: $("settings-status"),
+    demoBadge: $("demo-badge"), demoBadgeSettings: $("demo-badge-settings"), toast: $("toast"), offline: $("offline-banner"), backdrop: $("backdrop"),
+    btnExport: $("btn-export"), btnInstall: $("btn-install"), btnUpdate: $("btn-update"), installHint: $("install-hint"), offlineInfo: $("offline-info"), appVersion: $("app-version"),
   };
 
   const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || "ontouchstart" in window;
   const isWide = () => window.matchMedia("(min-width: 900px)").matches;
+  const isStandalone = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
 
   /* ---------- theme ---------- */
-  function applyTheme(pref) {
-    if (pref === "light" || pref === "dark") html.setAttribute("data-theme", pref);
-    else html.removeAttribute("data-theme");
-    const dark = effectiveTheme() === "dark";
-    const meta = doc.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", dark ? "#17191c" : "#f4f5f7");
-    const sel = $("s-theme");
-    if (sel) sel.value = pref === "light" || pref === "dark" ? pref : "auto";
-  }
+  const THEME_COLORS = { dark: "#0b0d10", light: "#ffffff" };
   function effectiveTheme() {
     const t = html.getAttribute("data-theme");
     if (t === "light" || t === "dark") return t;
     return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  function applyTheme(pref) {
+    if (pref === "light" || pref === "dark") html.setAttribute("data-theme", pref);
+    else html.removeAttribute("data-theme");
+    const eff = effectiveTheme();
+    for (const meta of doc.querySelectorAll('meta[name="theme-color"]')) {
+      const media = meta.getAttribute("media") || "";
+      const own = media.includes("light") ? "light" : "dark";
+      meta.setAttribute("content", pref === "light" || pref === "dark" ? THEME_COLORS[eff] : THEME_COLORS[own]);
+    }
+    const radio = doc.querySelector(`#theme-seg input[value="${pref === "light" || pref === "dark" ? pref : "auto"}"]`);
+    if (radio) radio.checked = true;
   }
   function toggleTheme() {
     const next = effectiveTheme() === "dark" ? "light" : "dark";
@@ -472,7 +582,12 @@ function boot() {
       /* older Safari */
     }
   }
-  $("btn-theme").addEventListener("click", toggleTheme);
+  for (const b of doc.querySelectorAll(".btn-theme")) b.addEventListener("click", toggleTheme);
+  $("theme-seg").addEventListener("change", (e) => {
+    const v = e.target && e.target.value;
+    store.set("hvac.theme", v === "auto" ? null : v);
+    applyTheme(v);
+  });
 
   /* ---------- toast ---------- */
   let toastTimer = null;
@@ -485,106 +600,162 @@ function boot() {
     }, 2600);
   }
 
-  /* ---------- drawers, sheets, tabs ---------- */
-  function setDrawer(side, open) {
-    doc.body.classList.toggle(side === "left" ? "drawer-left" : "drawer-right", open);
-    if (open) doc.body.classList.remove(side === "left" ? "drawer-right" : "drawer-left");
-    $("btn-menu").setAttribute("aria-expanded", String(doc.body.classList.contains("drawer-left")));
-    $("btn-unit").setAttribute("aria-expanded", String(doc.body.classList.contains("drawer-right")));
-    updateBackdrop();
+  /* ---------- router ---------- */
+  function currentHash() {
+    return location.hash || "#chat";
   }
-  function closeDrawers() {
-    doc.body.classList.remove("drawer-left", "drawer-right");
-    $("btn-menu").setAttribute("aria-expanded", "false");
-    $("btn-unit").setAttribute("aria-expanded", "false");
-    updateBackdrop();
+  function navigate(hash, { replace = false } = {}) {
+    if (!hash.startsWith("#")) hash = `#${hash}`;
+    if (hash === currentHash()) {
+      applyRoute();
+      return;
+    }
+    const depth = (history.state && typeof history.state.depth === "number" ? history.state.depth : 0) + (replace ? 0 : 1);
+    try {
+      if (replace) history.replaceState({ depth }, "", hash);
+      else history.pushState({ depth }, "", hash);
+    } catch {
+      location.hash = hash;
+      return;
+    }
+    applyRoute();
   }
-  function openSheet(sheet) {
-    closeSheets();
-    sheet.hidden = false;
-    updateBackdrop();
-    const first = sheet.querySelector("input, select, textarea");
-    if (first && !isTouch) first.focus();
-    if (sheet === els.sheetReadings) requestWake();
-    setTab(sheet === els.sheetReadings ? "readings" : sheet === els.sheetSettings ? "settings" : "chat");
+  /** Rewrite the URL without re-rendering (e.g. after a new conversation gets its id). */
+  function setHashSilently(hash) {
+    if (!hash.startsWith("#")) hash = `#${hash}`;
+    if (hash === currentHash()) return;
+    try {
+      history.replaceState(history.state, "", hash);
+    } catch {
+      /* ignore */
+    }
+    state.lastAppliedHash = hash;
+    state.route = parseHash(hash);
+  }
+  function parentHash(r) {
+    if (r.screen === "units") return r.unit ? `#unit/${r.unit}` : "#units";
+    if (r.screen === "chat") return r.conv ? `#chat/${r.conv}` : "#chat";
+    if (r.screen === "readings") return r.pane === "calcs" ? "#readings/calcs" : "#readings";
+    return `#${r.screen}`;
+  }
+  function goBack(fallback) {
+    if (history.state && history.state.depth > 0) history.back();
+    else navigate(fallback, { replace: true });
   }
   function closeSheets() {
-    if (!els.sheetReadings.hidden) releaseWake();
-    els.sheetReadings.hidden = true;
-    els.sheetSettings.hidden = true;
-    updateBackdrop();
-    setTab("chat");
+    if (state.route.sheet) goBack(parentHash(state.route));
   }
-  function updateBackdrop() {
-    const open = (!isWide() && (doc.body.classList.contains("drawer-left") || doc.body.classList.contains("drawer-right"))) ||
-      !els.sheetReadings.hidden || !els.sheetSettings.hidden;
-    els.backdrop.hidden = !open;
-  }
-  function setTab(name) {
-    for (const t of els.tabbar.querySelectorAll(".tab")) {
-      if (t.dataset.tab === name) t.setAttribute("aria-current", "page");
+  window.addEventListener("popstate", applyRoute);
+  window.addEventListener("hashchange", applyRoute);
+
+  function setTabs(screen) {
+    for (const t of doc.querySelectorAll(".tab[data-tab]")) {
+      if (t.dataset.tab === screen) t.setAttribute("aria-current", "page");
       else t.removeAttribute("aria-current");
     }
   }
-  els.backdrop.addEventListener("click", () => {
-    closeDrawers();
-    closeSheets();
-  });
-  $("btn-menu").addEventListener("click", () => setDrawer("left", !doc.body.classList.contains("drawer-left")));
-  $("btn-unit").addEventListener("click", () => setDrawer("right", !doc.body.classList.contains("drawer-right")));
-  $("btn-close-sidebar").addEventListener("click", closeDrawers);
-  $("btn-close-unit").addEventListener("click", closeDrawers);
-  els.btnReadingsClose.addEventListener("click", closeSheets);
-  $("btn-settings-close").addEventListener("click", closeSheets);
-  els.tabbar.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tab");
-    if (!btn) return;
-    const tab = btn.dataset.tab;
-    if (tab === "chat") {
-      closeDrawers();
-      closeSheets();
-    } else if (tab === "units") {
-      closeSheets();
-      setDrawer("right", true);
-      setTab("units");
-    } else if (tab === "history") {
-      closeSheets();
-      setDrawer("left", true);
-      setTab("history");
-    } else if (tab === "readings") {
-      closeDrawers();
-      openReadings();
-    } else if (tab === "settings") {
-      closeDrawers();
-      openSettings();
+
+  function applyRoute() {
+    const hash = currentHash();
+    const r = parseHash(hash);
+    const prev = state.route;
+    state.route = r;
+    state.lastAppliedHash = hash;
+    els.app.dataset.screen = r.screen;
+    setTabs(r.screen);
+
+    // sheets
+    hideSheet(els.sheetDecode);
+    hideSheet(els.sheetUnitActions);
+    els.backdrop.hidden = true;
+    if (r.sheet === "decode") showDecodeSheet(r.unit);
+    else if (r.sheet === "actions" && r.unit) showUnitActions(r.unit);
+
+    // screens
+    if (r.screen === "chat") {
+      if (r.isNew) {
+        if (state.streaming) toast("Wait for the current response first.");
+        else resetConversation();
+        setHashSilently("#chat");
+      } else if (r.conv && r.conv !== state.conversationId) {
+        openConversation(r.conv);
+      } else if (!r.conv && state.conversationId) {
+        setHashSilently(`#chat/${state.conversationId}`);
+      }
+      if (prev.screen !== "chat" && !isTouch) els.composerInput.focus({ preventScroll: true });
+    } else if (r.screen === "units") {
+      els.screenUnits.dataset.view = r.unit ? "detail" : "list";
+      if (r.unit && (!state.panelUnit || state.panelUnit.unit.id !== r.unit)) loadUnitPanel(r.unit);
+      markActiveRows();
+    } else if (r.screen === "readings") {
+      els.screenReadings.dataset.pane = r.pane;
+      const radio = doc.querySelector(`input[name="readings-pane"][value="${r.pane}"]`);
+      if (radio) radio.checked = true;
+      if (state.unit) prefillReadingsFromUnit(state.unit);
+      renderReadingsUnitChip();
+      requestWake();
+    } else if (r.screen === "settings") {
+      fillSettings();
     }
-  });
+    if (r.screen !== "readings" && !state.streaming) releaseWake();
+    if (r.screen !== "chat") stopPollingIfHidden();
+  }
+  function stopPollingIfHidden() {
+    /* polling keeps running in the background so the chat is fresh when the tech comes back */
+  }
+
+  /* ---------- sheets ---------- */
+  function showSheet(sheet) {
+    sheet.hidden = false;
+    els.backdrop.hidden = false;
+    const first = sheet.querySelector("input:not([type=hidden]):not(.sr-only), select, textarea, button.row");
+    if (first && !isTouch) first.focus();
+  }
+  function hideSheet(sheet) {
+    sheet.hidden = true;
+  }
+  els.backdrop.addEventListener("click", closeSheets);
+  for (const b of doc.querySelectorAll(".btn-sheet-close")) b.addEventListener("click", closeSheets);
   doc.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeDrawers();
-      closeSheets();
-    }
+    if (e.key === "Escape" && state.route.sheet) closeSheets();
   });
-  window.addEventListener("resize", updateBackdrop);
+  for (const b of doc.querySelectorAll("[data-back]")) b.addEventListener("click", () => goBack(b.dataset.back));
+  doc.querySelectorAll("a.tab").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = a.getAttribute("href");
+      const screen = a.dataset.tab;
+      // Re-tapping the active tab returns to that section's root (list / current chat).
+      if (screen === "chat" && state.conversationId) navigate(`#chat/${state.conversationId}`);
+      else navigate(target);
+    });
+  });
 
   /* keyboard inset (composer above the on-screen keyboard) */
   if (window.visualViewport) {
     const vv = window.visualViewport;
     const onVv = () => {
       const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      html.style.setProperty("--kb-inset", inset > 40 ? `${inset}px` : "0px");
+      const open = inset > 40;
+      html.style.setProperty("--kb-inset", open ? `${inset}px` : "0px");
+      html.classList.toggle("kb-open", open);
     };
     vv.addEventListener("resize", onVv);
     vv.addEventListener("scroll", onVv);
   }
 
   /* ---------- online / offline ---------- */
-  function updateOnline() {
-    els.offline.hidden = navigator.onLine !== false;
+  function updateOnline(serverDown = state.serverDown) {
+    const off = navigator.onLine === false;
+    state.serverDown = !!serverDown;
+    els.offline.hidden = !(off || serverDown);
+    const text = els.offline.querySelector("span");
+    if (text) text.textContent = off ? "Offline — chat needs a connection. Calculators and cached data still work." : "Server unreachable — chat is paused. Calculators and cached data still work.";
   }
   window.addEventListener("online", () => {
     updateOnline();
     reconcile();
+    loadHealth();
   });
   window.addEventListener("offline", updateOnline);
   updateOnline();
@@ -610,6 +781,18 @@ function boot() {
     }
   }
 
+  /* ---------- auth ---------- */
+  function authRequired() {
+    state.authNeeded = true;
+    for (const d of doc.querySelectorAll(".settings-dot")) d.hidden = false;
+    showSettingsNotice("This server needs the access password. Enter it below and save.");
+    if (state.route.screen !== "settings") navigate("#settings");
+  }
+  function showSettingsNotice(text) {
+    els.settingsNotice.hidden = !text;
+    els.settingsNotice.querySelector(".banner-body").textContent = text || "";
+  }
+
   /* ---------- banners ---------- */
   function clearBanner(kind) {
     for (const b of els.banners.querySelectorAll(`[data-kind="${kind}"]`)) b.remove();
@@ -619,16 +802,16 @@ function boot() {
     const body = h("div", { class: "banner-body" }, ...content);
     const banner = h("div", { class: `banner ${cls}`, role: cls === "banner-error" ? "alert" : "status", dataset: { kind } }, body);
     if (opts.dismiss !== false) {
-      banner.append(h("button", { class: "icon-btn", type: "button", "aria-label": "Dismiss", onclick: () => banner.remove() }, svgIcon(ICON.close)));
+      banner.append(h("button", { class: "icon-btn", type: "button", "aria-label": "Dismiss", onclick: () => banner.remove() }, icon("close", "icon icon-sm")));
     }
     els.banners.append(banner);
     return banner;
   }
   function showError(code, message) {
-    showBanner("error", "banner-error", [h("code", { text: code || "error" }), " ", h("span", { text: message || "Something went wrong." })]);
+    showBanner("error", "banner-error", [h("code", { text: code || "error" }), h("span", { text: message || "Something went wrong." })]);
   }
   function showBusyBanner() {
-    showBanner("busy", "banner-info", [h("span", { class: "spinner" }), " ", h("span", { text: "Response in progress on the server — reconnecting…" })], { dismiss: false });
+    showBanner("busy", "banner-info", [h("span", { class: "spinner", style: "vertical-align:-3px;margin-right:8px" }), h("span", { text: "Response in progress on the server — reconnecting…" })], { dismiss: false });
   }
 
   /* ---------- markdown ---------- */
@@ -679,11 +862,20 @@ function boot() {
     return `data:${img.media_type || "image/jpeg"};base64,${img.data}`;
   }
 
+  function toolIconFor(name) {
+    if (/decode|find_unit|update_unit|get_unit/.test(name || "")) return "units";
+    if (/refrigerant|superheat|diagnose/.test(name || "")) return "gauge";
+    if (/electrical|calc/.test(name || "")) return "bolt";
+    if (/fault/.test(name || "")) return "alert";
+    if (/search|history/.test(name || "")) return "history";
+    if (/finding|conversation/.test(name || "")) return "finding";
+    return "tool";
+  }
   function toolChip(t) {
     const chip = h("details", { class: `tool-chip ${t.ok === true ? "ok" : t.ok === false ? "err" : "running"}`, dataset: { toolId: t.id } });
-    const status = t.ok === true ? "✓" : t.ok === false ? "✗" : "";
+    const iconBox = h("span", { class: "tool-icon" }, t.ok === undefined ? h("span", { class: "spinner" }) : icon(t.ok ? "check" : "close", "icon"));
     const summary = h("summary", null,
-      t.ok === undefined ? h("span", { class: "spinner" }) : h("span", { class: "tool-status", text: status }),
+      iconBox,
       h("span", { class: "tool-label", text: t.label || t.name || "tool" }),
       h("span", { class: "tool-summary", text: t.summary || (t.ok === undefined ? "running…" : "") }),
     );
@@ -694,7 +886,7 @@ function boot() {
       inputText = String(t.input);
     }
     const body = h("div", { class: "tool-body" },
-      h("div", { class: "tool-body-title", text: "Input" }),
+      h("div", { class: "tool-body-title", text: `${toolIconFor(t.name) === "tool" ? "Tool" : t.name || "Tool"} input` }),
       h("pre", { text: inputText }),
       h("div", { class: "tool-body-title", text: "Result" }),
       h("pre", { class: "tool-result", text: t.summary || (t.ok === undefined ? "…" : "") }),
@@ -706,15 +898,15 @@ function boot() {
   function updateToolChip(chip, { ok, summary }) {
     chip.classList.remove("running", "ok", "err");
     chip.classList.add(ok ? "ok" : "err");
-    const sum = chip.querySelector("summary");
-    const spinner = sum.querySelector(".spinner");
-    if (spinner) spinner.replaceWith(h("span", { class: "tool-status", text: ok ? "✓" : "✗" }));
-    sum.querySelector(".tool-summary").textContent = summary || "";
+    const box = chip.querySelector(".tool-icon");
+    box.textContent = "";
+    box.append(icon(ok ? "check" : "close", "icon"));
+    chip.querySelector(".tool-summary").textContent = summary || "";
     chip.querySelector(".tool-result").textContent = summary || "";
   }
 
   function renderMessage(m) {
-    const time = h("div", { class: "msg-time", text: relTime(m.createdAt) });
+    const time = h("div", { class: "msg-time", text: timeOfDay(m.createdAt) || relTime(m.createdAt) });
     if (m.role === "user") {
       const wrap = h("div", { class: "msg msg-user", dataset: { id: m.id } });
       if (m.images && m.images.length) {
@@ -751,7 +943,8 @@ function boot() {
   }
 
   function scrollToBottom() {
-    els.messages.scrollTop = els.messages.scrollHeight;
+    const el = els.messages;
+    el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
   }
   els.messages.addEventListener("scroll", () => {
     const el = els.messages;
@@ -762,32 +955,45 @@ function boot() {
   function renderHeader() {
     const title = state.conversation ? state.conversation.title || "New conversation" : "New conversation";
     els.chatTitle.textContent = title;
-    els.topbarTitle.textContent = title;
-    els.chatUnit.textContent = "";
-    els.topbarSub.textContent = "";
+    els.chatSub.textContent = "";
     if (state.unit) {
-      const label = [unitBadgeText(state.unit), state.unit.manufacturer, state.unit.site].filter(Boolean).join(" · ");
-      els.chatUnit.append(h("span", { class: "badge", text: unitBadgeText(state.unit) }), h("span", { text: [state.unit.manufacturer, state.unit.model !== unitBadgeText(state.unit) ? state.unit.model : "", state.unit.site].filter(Boolean).join(" · ") }));
-      els.topbarSub.textContent = label;
-    } else if (state.conversation) {
-      els.chatUnit.append(h("button", { class: "text-btn", type: "button", text: "Attach a unit", onclick: () => { closeSheets(); setDrawer("right", true); } }));
+      els.chatSub.append(h("span", { class: "badge", text: unitBadgeText(state.unit) }), h("span", { text: [state.unit.manufacturer, state.unit.model !== unitBadgeText(state.unit) ? state.unit.model : "", state.unit.site].filter(Boolean).join(" · ") }));
+      els.btnChatUnit.setAttribute("aria-label", `Open unit ${unitLabel(state.unit)}`);
+      els.btnChatUnit.classList.add("has-unit");
+    } else {
+      if (state.conversation) els.chatSub.append(h("span", { class: "muted", text: "No unit attached" }));
+      els.btnChatUnit.setAttribute("aria-label", "Attach a unit");
+      els.btnChatUnit.classList.remove("has-unit");
     }
     els.btnConvDelete.hidden = !state.conversation;
+    doc.title = state.conversation && state.conversation.title ? `${state.conversation.title} · HVAC Field Assistant` : "HVAC Field Assistant";
   }
+  els.btnChatUnit.addEventListener("click", () => {
+    if (state.unit) navigate(`#unit/${state.unit.id}`);
+    else {
+      navigate("#units");
+      toast("Pick a unit, then tap Attach to conversation");
+    }
+  });
 
   /* ---------- load conversation ---------- */
   async function openConversation(id, { silent = false } = {}) {
     if (state.streaming && state.conversationId !== id) {
-      if (!confirm("A response is still streaming. Leave this conversation?")) return;
+      if (!confirm("A response is still streaming. Leave this conversation?")) {
+        setHashSilently(`#chat/${state.conversationId}`);
+        return;
+      }
       stopStream(true);
     }
     stopPolling();
     state.conversationId = id;
     store.set("hvac.lastConversation", id);
-    closeDrawers();
     if (!silent) {
       clearBanner("error");
-      els.messages.append(h("div", { class: "skeleton", dataset: { skeleton: "1" } }));
+      for (const n of [...els.messages.children]) if (n !== els.emptyState) n.remove();
+      els.emptyState.hidden = true;
+      els.quickChips.hidden = true;
+      els.messages.append(h("div", { class: "skeleton", dataset: { skeleton: "1" } }), h("div", { class: "skeleton", dataset: { skeleton: "1" }, style: "min-height:96px" }));
     }
     try {
       const data = await apiJson(`/api/conversations/${encodeURIComponent(id)}`);
@@ -798,8 +1004,10 @@ function boot() {
       if (e.code === "not_found" || e.status === 404) {
         store.set("hvac.lastConversation", null);
         resetConversation();
+        setHashSilently("#chat");
         return;
       }
+      renderMessages();
       showError(e.code, e.message);
     }
     markActiveRows();
@@ -819,8 +1027,8 @@ function boot() {
     } else if (!state.busy) {
       clearBanner("busy");
     }
-    if (state.unit && (!state.panelUnit || state.panelUnit.unit.id !== state.unit.id)) loadUnitPanel(state.unit.id, { quiet: true });
-    updateUnitActions();
+    renderReadingsUnitChip();
+    markActiveRows();
   }
 
   function resetConversation() {
@@ -832,9 +1040,10 @@ function boot() {
     state.busy = false;
     store.set("hvac.lastConversation", null);
     clearBanner("busy");
+    clearBanner("error");
     renderMessages();
     renderHeader();
-    updateUnitActions();
+    renderReadingsUnitChip();
     markActiveRows();
   }
 
@@ -889,6 +1098,7 @@ function boot() {
     store.set("hvac.lastConversation", conv.id);
     if (unitId && !state.unit) state.unit = state.unitsById.get(unitId) || (state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit.unit : null);
     renderHeader();
+    if (state.route.screen === "chat") setHashSilently(`#chat/${conv.id}`);
     loadConversations();
     return conv.id;
   }
@@ -898,7 +1108,9 @@ function boot() {
     if (!trimmed && !(images && images.length)) return;
     if (state.streaming) return toast("Wait for the current response (or press Stop).");
     if (state.busy) return toast("A response is still in progress on the server.");
+    if (navigator.onLine === false) return toast("You're offline — chat needs a connection.");
     clearBanner("error");
+    if (state.route.screen !== "chat") navigate(state.conversationId ? `#chat/${state.conversationId}` : "#chat");
     let convId;
     try {
       convId = await ensureConversation();
@@ -926,7 +1138,7 @@ function boot() {
     els.emptyState.hidden = true;
     els.quickChips.hidden = true;
     if (on) requestWake();
-    else if (els.sheetReadings.hidden) releaseWake();
+    else if (state.route.screen !== "readings") releaseWake();
   }
 
   async function streamTurn(convId, body) {
@@ -936,11 +1148,16 @@ function boot() {
 
     // live assistant element: text segments and tool chips appended in stream order
     const live = h("div", { class: "msg msg-assistant streaming" });
+    const cursor = h("span", { class: "cursor", "aria-hidden": "true" });
+    const typing = h("div", { class: "notice" }, h("span", { class: "spinner" }), "Thinking…");
+    live.append(typing, cursor);
     els.messages.append(live);
+    if (state.stickToBottom) scrollToBottom();
     let seg = null;
     let segText = "";
     let raf = 0;
     const chips = new Map();
+    const keepCursorLast = () => live.append(cursor);
     const flush = () => {
       raf = 0;
       if (!seg) return;
@@ -948,6 +1165,7 @@ function boot() {
       fresh.classList.add("md-seg");
       seg.replaceWith(fresh);
       seg = fresh;
+      keepCursorLast();
       if (state.stickToBottom) scrollToBottom();
     };
     const schedule = () => {
@@ -955,11 +1173,13 @@ function boot() {
     };
     const onEvent = (ev) => {
       if (!ev || typeof ev !== "object") return;
+      if (typing.isConnected && (ev.type === "delta" || ev.type === "tool_start")) typing.remove();
       switch (ev.type) {
         case "delta":
           if (!seg) {
             seg = h("div", { class: "md md-seg" });
             live.append(seg);
+            keepCursorLast();
             segText = "";
           }
           segText += ev.text || "";
@@ -974,6 +1194,7 @@ function boot() {
           const chip = toolChip({ id: ev.id, name: ev.name, input: ev.input, label: ev.label });
           chips.set(ev.id, chip);
           live.append(chip);
+          keepCursorLast();
           if (state.stickToBottom) scrollToBottom();
           break;
         }
@@ -984,6 +1205,7 @@ function boot() {
         }
         case "notice":
           live.append(h("div", { class: "notice", text: ev.text || "" }));
+          keepCursorLast();
           if (state.stickToBottom) scrollToBottom();
           break;
         case "unit_attached":
@@ -992,6 +1214,7 @@ function boot() {
               if (state.panelUnit && state.panelUnit.unit.id === ev.unitId) {
                 state.unit = state.panelUnit.unit;
                 renderHeader();
+                renderReadingsUnitChip();
               }
             });
             toast("Unit attached to this conversation");
@@ -1045,6 +1268,8 @@ function boot() {
     } finally {
       if (raf) cancelAnimationFrame(raf);
       flush();
+      typing.remove();
+      cursor.remove();
       live.classList.remove("streaming");
       state.abort = null;
       setStreaming(false);
@@ -1111,8 +1336,7 @@ function boot() {
     const ta = els.composerInput;
     ta.value = ta.value.trim() ? `${ta.value.trimEnd()}\n${text}` : text;
     autoGrow();
-    closeSheets();
-    closeDrawers();
+    navigate(state.conversationId ? `#chat/${state.conversationId}` : "#chat");
     ta.focus();
     toast("Added to the message — press Send");
   }
@@ -1124,8 +1348,12 @@ function boot() {
     els.fileInput.value = "";
     els.fileInput.click();
   });
-  els.fileInput.addEventListener("change", async () => {
-    const files = [...(els.fileInput.files || [])];
+  els.btnCamera.addEventListener("click", () => {
+    if (state.pendingImages.length >= MAX_IMAGES) return toast(`Up to ${MAX_IMAGES} photos per message`);
+    els.fileCamera.value = "";
+    els.fileCamera.click();
+  });
+  async function addFiles(files) {
     for (const f of files) {
       if (state.pendingImages.length >= MAX_IMAGES) {
         toast(`Up to ${MAX_IMAGES} photos per message`);
@@ -1138,9 +1366,11 @@ function boot() {
       }
     }
     renderPreviews();
-  });
-  els.fileCamera.addEventListener("change", async () => {
-    const f = els.fileCamera.files && els.fileCamera.files[0];
+  }
+  els.fileInput.addEventListener("change", () => addFiles([...(els.fileInput.files || [])]));
+  els.fileCamera.addEventListener("change", () => addFiles([...(els.fileCamera.files || [])]));
+  els.fileCameraSend.addEventListener("change", async () => {
+    const f = els.fileCameraSend.files && els.fileCameraSend.files[0];
     if (!f) return;
     try {
       const img = await resizeImage(f);
@@ -1149,6 +1379,10 @@ function boot() {
       toast(`Could not read image: ${e.message || e}`);
     }
   });
+  function openCameraForDecode() {
+    els.fileCameraSend.value = "";
+    els.fileCameraSend.click();
+  }
 
   function renderPreviews() {
     els.previews.textContent = "";
@@ -1156,7 +1390,7 @@ function boot() {
     state.pendingImages.forEach((img, i) => {
       els.previews.append(h("div", { class: "preview" },
         h("img", { src: img.url, alt: `Photo ${i + 1}` }),
-        h("button", { type: "button", "aria-label": "Remove photo", onclick: () => { state.pendingImages.splice(i, 1); renderPreviews(); } }, svgIcon(ICON.close)),
+        h("button", { type: "button", "aria-label": "Remove photo", onclick: () => { state.pendingImages.splice(i, 1); renderPreviews(); } }, icon("close", "icon")),
       ));
     });
   }
@@ -1202,10 +1436,9 @@ function boot() {
     if (!btn) return;
     const q = btn.dataset.quick;
     if (q === "decode") {
-      els.fileCamera.value = "";
-      els.fileCamera.click();
+      openCameraForDecode();
     } else if (q === "readings") {
-      openReadings();
+      navigate("#readings");
     } else if (q === "fault") {
       els.composerInput.value = "Look up fault code ";
       autoGrow();
@@ -1217,7 +1450,7 @@ function boot() {
     }
   });
 
-  /* ---------- sidebar: conversations ---------- */
+  /* ---------- conversations (history tab + chat side column) ---------- */
   async function loadConversations() {
     const qs = new URLSearchParams();
     if (state.convFilterUnitId) qs.set("unit_id", state.convFilterUnitId);
@@ -1234,8 +1467,10 @@ function boot() {
         }
       }
     } catch (e) {
-      els.convList.textContent = "";
-      els.convList.append(h("div", { class: "list-empty", text: `Could not load: ${e.message}` }));
+      for (const list of [els.convList, els.convListSide]) {
+        list.textContent = "";
+        list.append(h("div", { class: "list-empty", text: `Could not load: ${e.message}` }));
+      }
     }
   }
 
@@ -1245,21 +1480,48 @@ function boot() {
     return txt ? h("span", { class: "badge", text: txt }) : null;
   }
 
+  function conversationRow(c, { compact = false } = {}) {
+    const row = h("button", { class: `row${c.id === state.conversationId ? " active" : ""}`, type: "button", role: "listitem", dataset: { convId: c.id }, onclick: () => navigate(`#chat/${c.id}`) },
+      compact ? null : h("div", { class: "row-lead" }, icon("chat")),
+      h("div", { class: "row-body" },
+        h("div", { class: "row-title", text: c.title || "New conversation" }),
+        h("div", { class: "row-sub" }, convUnitBadge(c), h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") })),
+      ),
+    );
+    const del = h("button", { class: "icon-btn", type: "button", "aria-label": `Delete conversation ${c.title || ""}`, onclick: () => deleteConversation(c) }, icon("trash", "icon icon-sm"));
+    return h("div", { class: "row-item" }, row, del);
+  }
+
   function renderConversations() {
-    els.convList.textContent = "";
-    if (!state.conversations.length) {
-      els.convList.append(h("div", { class: "list-empty", text: state.convFilterUnitId ? "No conversations on this unit yet." : "No conversations yet." }));
-      return;
+    for (const [list, compact] of [[els.convList, false], [els.convListSide, true]]) {
+      list.textContent = "";
+      if (!state.conversations.length) {
+        list.append(h("div", { class: "empty" },
+          h("div", { class: "empty-icon" }, icon("chat")),
+          h("div", { class: "empty-title", text: state.convFilterUnitId ? "No conversations on this unit" : "No conversations yet" }),
+          h("p", { class: "empty-sub", text: "Start a job from the Chat tab — every conversation and finding lands here, searchable." }),
+          h("button", { class: "btn btn-primary", type: "button", onclick: () => navigate("#chat/new") }, icon("plus"), "New conversation"),
+        ));
+        continue;
+      }
+      let lastDay = "";
+      for (const c of state.conversations) {
+        const k = dayKey(c.updated_at || c.created_at);
+        if (!compact && k && k !== lastDay) {
+          list.append(h("div", { class: "group-head" }, h("span", { text: dayLabel(c.updated_at || c.created_at) })));
+          lastDay = k;
+        }
+        list.append(conversationRow(c, { compact }));
+      }
     }
-    for (const c of state.conversations) {
-      const row = h("button", { class: `row${c.id === state.conversationId ? " active" : ""}`, type: "button", role: "listitem", dataset: { convId: c.id }, onclick: () => openConversation(c.id) },
-        h("div", { class: "row-body" },
-          h("div", { class: "row-title", text: c.title || "New conversation" }),
-          h("div", { class: "row-sub" }, convUnitBadge(c), h("span", { text: relTime(c.updated_at || c.created_at) })),
-        ),
-      );
-      const del = h("button", { class: "icon-btn", type: "button", "aria-label": `Delete conversation ${c.title || ""}`, onclick: () => deleteConversation(c) }, svgIcon(ICON.trash));
-      els.convList.append(h("div", { class: "row-item" }, row, del));
+    renderConvFilter();
+  }
+  function renderConvFilter() {
+    const unit = state.convFilterUnitId ? state.unitsById.get(state.convFilterUnitId) : null;
+    for (const el of [els.convFilter, els.convFilterSide]) {
+      el.hidden = !unit;
+      el.textContent = "";
+      if (unit) el.append(h("span", { text: "Showing" }), h("span", { class: "badge", text: unitLabel(unit) }), h("button", { class: "text-btn", type: "button", text: "All", style: "margin-left:auto", onclick: () => setConvFilter(null) }));
     }
   }
 
@@ -1267,7 +1529,10 @@ function boot() {
     if (!confirm(`Delete "${c.title || "this conversation"}"? This cannot be undone.`)) return;
     try {
       await apiJson(`/api/conversations/${encodeURIComponent(c.id)}`, { method: "DELETE" });
-      if (state.conversationId === c.id) resetConversation();
+      if (state.conversationId === c.id) {
+        resetConversation();
+        if (state.route.screen === "chat") setHashSilently("#chat");
+      }
       toast("Conversation deleted");
       loadConversations();
       if (state.panelUnit) loadUnitPanel(state.panelUnit.unit.id, { quiet: true });
@@ -1278,27 +1543,23 @@ function boot() {
   els.btnConvDelete.addEventListener("click", () => state.conversation && deleteConversation(state.conversation));
 
   function markActiveRows() {
-    for (const r of els.convList.querySelectorAll(".row")) r.classList.toggle("active", r.dataset.convId === state.conversationId);
-    for (const r of els.unitsList.querySelectorAll(".row")) r.classList.toggle("active", !!state.panelUnit && r.dataset.unitId === state.panelUnit.unit.id);
+    for (const r of doc.querySelectorAll(".row[data-conv-id]")) r.classList.toggle("active", r.dataset.convId === state.conversationId);
+    for (const r of els.unitsList.querySelectorAll(".row")) r.classList.toggle("active", !!state.panelUnit && state.route.screen === "units" && r.dataset.unitId === state.panelUnit.unit.id);
   }
 
-  $("btn-new-conv").addEventListener("click", () => {
-    if (state.streaming) return toast("Wait for the current response first.");
-    resetConversation();
-    closeDrawers();
-    els.composerInput.focus();
-  });
+  for (const b of doc.querySelectorAll(".btn-new-conv")) {
+    b.addEventListener("click", () => {
+      if (state.streaming) return toast("Wait for the current response first.");
+      navigate("#chat/new");
+    });
+  }
 
   function setConvFilter(unit) {
     state.convFilterUnitId = unit ? unit.id : null;
-    els.convFilter.hidden = !unit;
-    els.btnConvFilterClear.hidden = !unit;
-    els.convFilter.textContent = unit ? `Showing ${unitLabel(unit)}` : "";
     loadConversations();
   }
-  els.btnConvFilterClear.addEventListener("click", () => setConvFilter(null));
 
-  /* ---------- sidebar: units ---------- */
+  /* ---------- units list ---------- */
   async function loadUnits() {
     try {
       const json = await apiJson("/api/units?limit=200");
@@ -1311,168 +1572,56 @@ function boot() {
       els.unitsList.append(h("div", { class: "list-empty", text: `Could not load: ${e.message}` }));
     }
   }
-  $("btn-units-refresh").addEventListener("click", loadUnits);
+  $("btn-units-refresh").addEventListener("click", () => {
+    loadUnits().then(() => toast("Units refreshed"));
+  });
+  els.unitsSearch.addEventListener("input", () => {
+    state.unitsQuery = els.unitsSearch.value;
+    renderUnits();
+  });
+
+  function unitSubtitle(u) {
+    return [u.manufacturer || u.brand, u.model && u.model !== unitLabel(u) ? u.model : "", u.refrigerant, u.tonnage ? `${u.tonnage} ton` : ""].filter(Boolean).join(" · ");
+  }
 
   function renderUnits() {
     els.unitsList.textContent = "";
     if (!state.units.length) {
-      els.unitsList.append(h("div", { class: "list-empty", text: "No units saved yet. Decode a nameplate to add one." }));
+      els.unitsList.append(h("div", { class: "empty" },
+        h("div", { class: "empty-icon" }, icon("units")),
+        h("div", { class: "empty-title", text: "No units yet" }),
+        h("p", { class: "empty-sub", text: "Decode a nameplate to save the first unit. Every finding and conversation attaches to it." }),
+        h("button", { class: "btn btn-primary", type: "button", onclick: () => navigate("#units/decode") }, icon("scan"), "Decode a nameplate"),
+      ));
       return;
     }
-    for (const [site, list] of groupUnitsBySite(state.units)) {
-      els.unitsList.append(h("div", { class: "site-group-title", text: site }));
-      for (const u of list) {
-        const sub = [u.manufacturer, u.model && u.model !== unitLabel(u) ? u.model : "", u.refrigerant, u.tonnage ? `${u.tonnage} t` : ""].filter(Boolean).join(" · ");
-        els.unitsList.append(h("button", { class: `row${state.panelUnit && state.panelUnit.unit.id === u.id ? " active" : ""}`, type: "button", role: "listitem", dataset: { unitId: u.id }, onclick: () => selectUnit(u) },
-          h("div", { class: "row-lead" }, svgIcon(ICON.unit)),
-          h("div", { class: "row-body" }, h("div", { class: "row-title", text: unitLabel(u) }), h("div", { class: "row-sub" }, h("span", { text: sub }))),
-        ));
-      }
-    }
-  }
-
-  async function selectUnit(u) {
-    setConvFilter(u);
-    await loadUnitPanel(u.id);
-    if (!isWide()) setDrawer("right", true);
-    else closeDrawers();
-  }
-
-  /* ---------- sidebar: search ---------- */
-  let searchTimer = null;
-  let searchSeq = 0;
-  els.search.addEventListener("input", () => {
-    clearTimeout(searchTimer);
-    const q = els.search.value.trim();
-    if (q.length < 2) {
-      els.searchResults.hidden = true;
-      els.searchResults.textContent = "";
+    const list = filterUnits(state.units, state.unitsQuery);
+    if (!list.length) {
+      els.unitsList.append(h("div", { class: "list-empty", text: "No units match." }));
       return;
     }
-    searchTimer = setTimeout(() => runSearch(q), 250);
-  });
-  async function runSearch(q) {
-    const seq = ++searchSeq;
-    els.searchResults.hidden = false;
-    els.searchResults.textContent = "";
-    els.searchResults.append(h("div", { class: "skeleton" }));
-    try {
-      const json = await apiJson(`/api/search?q=${encodeURIComponent(q)}&limit=30`);
-      if (seq !== searchSeq) return;
-      const hits = pickList(json, "hits");
-      els.searchResults.textContent = "";
-      if (!hits.length) {
-        els.searchResults.append(h("div", { class: "list-empty", text: "No matches." }));
-        return;
-      }
-      for (const hit of hits) {
-        const title = hit.kind === "unit" ? "Unit" : hit.kind === "finding" ? "Finding" : hit.conversationTitle || "Message";
-        els.searchResults.append(h("button", { class: "row", type: "button", role: "listitem", onclick: () => openSearchHit(hit) },
-          h("div", { class: "row-body" },
-            h("div", { class: "row-sub" }, h("span", { class: `kind-badge ${hit.kind}`, text: hit.kind }), h("span", { class: "row-title", text: title })),
-            h("div", { class: "snippet", text: hit.snippet || "" }),
-            h("div", { class: "row-sub" }, h("span", { text: relTime(hit.createdAt) })),
-          ),
+    for (const [site, units] of groupUnitsBySite(list)) {
+      els.unitsList.append(h("div", { class: "site-head" }, h("span", null, icon("site", "icon icon-sm"), " ", site), h("span", { class: "muted", text: `${units.length}` })));
+      const card = h("div", { class: "list-card", role: "list" });
+      for (const u of units) {
+        card.append(h("button", { class: `row${state.panelUnit && state.panelUnit.unit.id === u.id && state.route.screen === "units" ? " active" : ""}`, type: "button", role: "listitem", dataset: { unitId: u.id }, onclick: () => navigate(`#unit/${u.id}`) },
+          h("div", { class: "row-lead" }, icon("units")),
+          h("div", { class: "row-body" }, h("div", { class: "row-title", text: unitLabel(u) }), h("div", { class: "row-sub" }, h("span", { text: unitSubtitle(u) || "No details yet" }))),
+          h("div", { class: "row-meta" }, u.last_service_at ? h("span", { text: relTime(u.last_service_at) }) : null, icon("chevron", "icon icon-sm row-chevron")),
         ));
       }
-    } catch (e) {
-      if (seq !== searchSeq) return;
-      els.searchResults.textContent = "";
-      els.searchResults.append(h("div", { class: "list-empty", text: `Search failed: ${e.message}` }));
+      els.unitsList.append(card);
     }
   }
-  function openSearchHit(hit) {
-    if (hit.kind === "message" && hit.conversationId) return openConversation(hit.conversationId);
-    if (hit.kind === "unit") return loadUnitPanel(hit.id).then(() => (isWide() ? closeDrawers() : setDrawer("right", true)));
-    if (hit.kind === "finding") {
-      if (hit.unitId) return loadUnitPanel(hit.unitId).then(() => (isWide() ? closeDrawers() : setDrawer("right", true)));
-      if (hit.conversationId) return openConversation(hit.conversationId);
-    }
-    return undefined;
-  }
 
-  /* ---------- unit panel ---------- */
-  function unitFormValues() {
-    const fd = new FormData(els.unitForm);
-    const v = {};
-    for (const [k, val] of fd.entries()) v[k] = String(val).trim();
-    return v;
-  }
-  function fillUnitForm(u) {
-    const f = els.unitForm.elements;
-    f.manufacturer.value = u.manufacturer || u.brand || "";
-    f.model.value = u.model || "";
-    f.serial.value = u.serial || "";
-    f.unit_tag.value = u.unit_tag || "";
-    f.nickname.value = u.nickname || "";
-    f.site.value = u.site || "";
-    f.customer.value = u.customer || "";
-    f.elevation_ft.value = u.elevation_ft ?? "";
-  }
-  function showUnitFormError(msg) {
-    els.unitFormError.hidden = !msg;
-    els.unitFormError.textContent = msg || "";
-  }
-
-  els.unitForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const v = unitFormValues();
-    if (!v.model) return showUnitFormError("Enter the model number to decode.");
-    showUnitFormError("");
-    const btn = $("btn-decode");
-    btn.disabled = true;
-    try {
-      const body = { model: v.model };
-      if (v.serial) body.serial = v.serial;
-      if (v.manufacturer) body.manufacturer = v.manufacturer;
-      const decoded = await apiJson("/api/decode", { method: "POST", json: body });
-      state.decoded = decoded;
-      renderDecodeCard(decoded);
-      requestWake();
-    } catch (err) {
-      showUnitFormError(`${err.code}: ${err.message}`);
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  els.btnClearUnit.addEventListener("click", () => {
-    els.unitForm.reset();
-    state.panelUnit = null;
-    state.decoded = null;
-    els.decodeCard.hidden = true;
-    els.decodeCard.textContent = "";
-    els.unitHeader.hidden = true;
-    els.findingsSection.hidden = true;
-    els.unitConvsSection.hidden = true;
-    showUnitFormError("");
-    updateUnitActions();
-    markActiveRows();
-  });
-
-  els.btnSaveUnit.addEventListener("click", async () => {
-    const v = unitFormValues();
-    if (!v.model && !v.unit_tag && !v.nickname) return showUnitFormError("Enter at least a model, unit tag or nickname.");
-    showUnitFormError("");
-    const body = {};
-    for (const k of ["model", "serial", "manufacturer", "unit_tag", "nickname", "site", "customer"]) if (v[k]) body[k] = v[k];
-    const elev = toNum(v.elevation_ft);
-    if (elev !== undefined) body.elevation_ft = elev;
-    els.btnSaveUnit.disabled = true;
-    try {
-      const saved = await apiJson("/api/units", { method: "POST", json: body });
-      const unit = saved && saved.unit ? saved.unit : saved;
-      toast("Unit saved");
-      await loadUnits();
-      if (unit && unit.id) await loadUnitPanel(unit.id);
-    } catch (err) {
-      showUnitFormError(`${err.code}: ${err.message}`);
-    } finally {
-      els.btnSaveUnit.disabled = false;
-    }
-  });
-
+  /* ---------- unit detail ---------- */
   async function loadUnitPanel(unitId, { quiet = false } = {}) {
+    if (!quiet && state.route.screen === "units") {
+      els.unitEmpty.hidden = true;
+      els.unitContent.hidden = false;
+      els.unitContent.textContent = "";
+      els.unitContent.append(h("div", { class: "skeleton", style: "min-height:180px" }), h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
+    }
     try {
       const data = await apiJson(`/api/units/${encodeURIComponent(unitId)}`);
       const unit = data.unit || data;
@@ -1485,51 +1634,193 @@ function boot() {
         }
       }
       state.panelUnit = { unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations") };
-      state.decoded = decoded;
       state.unitsById.set(unit.id, unit);
-      fillUnitForm(unit);
-      renderUnitHeader(unit);
-      if (decoded) renderDecodeCard(decoded);
-      else {
-        els.decodeCard.hidden = true;
-        els.decodeCard.textContent = "";
-      }
-      renderFindings();
-      renderUnitConversations();
-      updateUnitActions();
-      prefillReadingsFromUnit(unit);
+      renderUnitDetail();
       markActiveRows();
       if (state.unit && state.unit.id === unit.id) {
         state.unit = unit;
         renderHeader();
       }
     } catch (e) {
-      if (!quiet) showUnitFormError(`${e.code}: ${e.message}`);
+      if (!quiet) {
+        els.unitContent.textContent = "";
+        els.unitContent.append(h("div", { class: "field-error", role: "alert", text: `${e.code}: ${e.message}` }));
+      }
     }
   }
 
-  function renderUnitHeader(u) {
-    els.unitHeader.hidden = false;
-    els.unitHeader.textContent = "";
-    els.unitHeader.append(
-      h("div", { class: "uh-tag", text: [u.unit_tag, u.nickname].filter(Boolean).join(" · ") || "Unit" }),
-      h("div", { class: "uh-model", text: [u.manufacturer || u.brand, u.model].filter(Boolean).join(" ") || "No model on record" }),
-      h("div", { class: "uh-sub", text: [u.site, u.customer, u.serial ? `S/N ${u.serial}` : "", u.refrigerant, u.tonnage ? `${u.tonnage} ton` : "", u.voltage ? `${u.voltage}${u.phase ? "/" + u.phase : ""}` : ""].filter(Boolean).join(" · ") }),
+  const ATTR_LABEL = {
+    unit_type: "Unit type", series: "Series", tonnage: "Nominal tons", refrigerant: "Refrigerant", voltage: "Voltage/phase/Hz",
+    heat_type: "Heat type", heat_capacity: "Heat capacity", efficiency: "Efficiency", controls: "Controls", revision: "Revision",
+    compressor_type: "Compressor", stages: "Stages", airflow: "Airflow", cabinet: "Cabinet", options: "Options", other: "Other",
+  };
+  const CONF_CLASS = { high: "chip-ok", medium: "chip-warn", low: "chip-danger" };
+  const CONF_LABEL = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" };
+
+  function attr(label, value) {
+    if (value === null || value === undefined || value === "") return null;
+    return h("div", { class: "attr" }, h("div", { class: "attr-label", text: label }), h("div", { class: "attr-value", text: String(value) }));
+  }
+
+  function renderUnitDetail() {
+    const pu = state.panelUnit;
+    els.unitEmpty.hidden = !!pu;
+    els.unitContent.hidden = !pu;
+    els.btnUnitMore.hidden = !pu;
+    els.unitContent.textContent = "";
+    if (!pu) {
+      els.unitTitle.textContent = "Unit";
+      els.unitSub.textContent = "";
+      return;
+    }
+    const u = pu.unit;
+    const d = pu.decoded;
+    els.unitTitle.textContent = unitLabel(u);
+    els.unitSub.textContent = [u.site, u.customer].filter(Boolean).join(" · ");
+    const attached = !!(state.unit && state.unit.id === u.id);
+    const bestSerial = d && d.serial && d.serial[0];
+    const bestModel = d && d.model && d.model[0];
+    let age = "";
+    if (bestSerial && bestSerial.manufactureDate) age = `${bestSerial.manufactureDate}${bestSerial.ageYears !== undefined ? ` · ${fmtNum(bestSerial.ageYears)} yr` : ""}`;
+    else if (u.install_year) age = String(u.install_year);
+    let charge = "";
+    if (u.charge_json) {
+      try {
+        const c = JSON.parse(u.charge_json);
+        charge = typeof c === "object" && c ? Object.entries(c).map(([k, v]) => `${k}: ${v}`).join(", ") : String(c);
+      } catch {
+        charge = u.charge_json;
+      }
+    }
+
+    // Nameplate card
+    const plate = h("div", { class: "nameplate" },
+      h("div", { class: "np-head" },
+        h("div", { class: "np-tag", text: [u.unit_tag, u.nickname].filter(Boolean).join(" · ") || "Unit" }),
+        h("div", { class: "np-model", text: u.model || "No model on record" }),
+        h("div", { class: "np-mfr", text: u.manufacturer || u.brand || "Manufacturer unknown" }),
+        bestModel && bestModel.family ? h("div", { class: "np-family", text: bestModel.family }) : null,
+        u.serial ? h("div", { class: "np-serial" }, h("span", { class: "muted", text: "S/N" }), h("span", { text: u.serial })) : null,
+      ),
+      h("div", { class: "np-body" },
+        (u.site || u.customer) ? h("div", { class: "np-site" }, icon("site", "icon icon-sm"), h("span", { text: [u.site, u.customer, u.location_note].filter(Boolean).join(" · ") })) : null,
+        h("div", { class: "chip-row" },
+          bestModel ? h("span", { class: `chip ${CONF_CLASS[bestModel.confidence] || ""}`, text: `Model · ${CONF_LABEL[bestModel.confidence] || bestModel.confidence}` }) : null,
+          bestSerial ? h("span", { class: `chip ${CONF_CLASS[bestSerial.confidence] || ""}`, text: `Serial · ${CONF_LABEL[bestSerial.confidence] || bestSerial.confidence}${bestSerial.ambiguous ? " (ambiguous)" : ""}` }) : null,
+          needsNameplateVerify(d) ? h("span", { class: "chip chip-warn" }, icon("alert", "icon"), "Verify on nameplate") : null,
+          attached ? h("span", { class: "chip chip-accent" }, icon("link", "icon"), "In this conversation") : null,
+        ),
+        h("div", { class: "attr-grid" },
+          attr("Refrigerant", u.refrigerant), attr("Tonnage", u.tonnage ? `${u.tonnage} ton` : null), attr("Voltage", u.voltage && u.phase && !String(u.voltage).includes(String(u.phase)) ? `${u.voltage} · ${u.phase}-ph` : u.voltage || (u.phase ? `${u.phase}-phase` : null)),
+          attr("Controls", u.control_platform), attr("Heat", u.heat_type), attr("Metering", u.metering_device ? (METERING_LABEL[u.metering_device] || u.metering_device) : null),
+          attr("Manufactured", age), attr("Circuits", u.circuits), attr("Charge", charge), attr("Elevation", u.elevation_ft !== null && u.elevation_ft !== undefined ? `${u.elevation_ft} ft` : null),
+        ),
+        u.notes ? h("p", { class: "dc-summary", text: u.notes }) : null,
+      ),
+      h("div", { class: "np-actions" },
+        h("button", { class: "btn btn-primary", type: "button", onclick: attachOrStart }, icon(attached ? "chat" : "link"), attached ? "Open chat" : state.conversationId ? "Attach to chat" : "Start chat"),
+        h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
+        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
+        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
+      ),
     );
+    els.unitContent.append(plate);
+
+    // Decode details
+    if (d) {
+      const card = h("div", { class: "card" }, h("div", { class: "card-title", text: "Decoded from the nameplate" }));
+      card.append(renderDecodeCard(d, { compact: false }));
+      els.unitContent.append(card);
+    }
+
+    // Findings timeline
+    const findings = sortFindings(pu.findings || []);
+    const fcard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Findings (${findings.length})` })));
+    if (!findings.length) fcard.append(h("div", { class: "list-empty", text: "No findings on this unit yet. The assistant offers to save one after a fix is verified." }));
+    else fcard.append(h("div", { class: "timeline" }, ...findings.map(findingItem)));
+    els.unitContent.append(fcard);
+
+    // Conversations on this unit
+    const convs = pu.conversations || [];
+    const ccard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Conversations (${convs.length})` }), h("button", { class: "text-btn", type: "button", text: "New", onclick: startConversationOnUnit })));
+    if (!convs.length) ccard.append(h("div", { class: "list-empty", text: "No conversations on this unit yet." }));
+    else {
+      const list = h("div", { class: "list", role: "list" });
+      for (const c of convs) {
+        list.append(h("button", { class: "row", type: "button", role: "listitem", dataset: { convId: c.id }, onclick: () => navigate(`#chat/${c.id}`) },
+          h("div", { class: "row-lead" }, icon("chat")),
+          h("div", { class: "row-body" }, h("div", { class: "row-title", text: c.title || "New conversation" }), h("div", { class: "row-sub" }, h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") }))),
+          icon("chevron", "icon icon-sm row-chevron"),
+        ));
+      }
+      ccard.append(list);
+    }
+    els.unitContent.append(ccard);
+    els.unitDetail.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  function updateUnitActions() {
-    const pu = state.panelUnit;
-    els.unitActions.hidden = !pu;
-    if (!pu) return;
-    const attached = !!(state.unit && state.unit.id === pu.unit.id);
-    els.btnAttachUnit.textContent = attached ? "Attached to this conversation" : state.conversationId ? "Attach to conversation" : "Start conversation on this unit";
-    els.btnAttachUnit.disabled = attached;
+  function findingItem(f) {
+    const hyp = isHypothesis(f);
+    const statusCls = f.status === "open" ? "chip-danger" : f.status === "monitor" ? "chip-warn" : "chip-ok";
+    const item = h("div", { class: `tl-item ${f.status || "open"}${hyp ? " hypothesis" : ""}`, role: "listitem" },
+      h("div", { class: "tl-head" },
+        h("span", { class: `chip ${statusCls}`, text: f.status || "open" }),
+        hyp ? h("span", { class: "chip chip-info", text: "Hypothesis — unconfirmed" }) : null,
+        Number(f.confirmed) ? h("span", { class: "chip chip-ok" }, icon("check", "icon"), "Confirmed") : null,
+        f.circuit ? h("span", { class: "chip", text: `Circuit ${f.circuit}` }) : null,
+        h("span", { class: "row-meta", text: relTime(f.service_date || f.created_at) }),
+      ),
+      h("div", { class: "tl-symptom", text: f.symptom }),
+    );
+    if (f.cause) item.append(h("div", { class: "tl-line" }, h("b", { text: "Cause: " }), f.cause));
+    if (f.resolution) item.append(h("div", { class: "tl-line" }, h("b", { text: "Fix: " }), f.resolution));
+    if (f.refrigerant_added_lbs) item.append(h("div", { class: "tl-line" }, h("b", { text: "Refrigerant added: " }), `${f.refrigerant_added_lbs} lb ${f.refrigerant || ""}`));
+    if (f.follow_up) item.append(h("div", { class: "tl-line" }, h("b", { text: "Follow-up: " }), f.follow_up));
+    const actions = h("div", { class: "tl-actions" });
+    if (!Number(f.confirmed)) actions.append(h("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => patchFinding(f, { confirmed: 1 }, "Finding confirmed") }, icon("check", "icon icon-sm"), "Confirm"));
+    if (f.status !== "resolved") actions.append(h("button", { class: "btn btn-sm", type: "button", text: "Mark resolved", onclick: () => patchFinding(f, { status: "resolved" }, "Marked resolved") }));
+    if (f.status === "open") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Monitor", onclick: () => patchFinding(f, { status: "monitor" }, "Set to monitor") }));
+    if (f.status === "resolved") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Reopen", onclick: () => patchFinding(f, { status: "open" }, "Reopened") }));
+    actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", onclick: () => shareFinding(f) }, icon("share", "icon icon-sm"), navigator.share ? "Share" : "Copy"));
+    item.append(actions);
+    return item;
   }
 
-  els.btnAttachUnit.addEventListener("click", async () => {
+  async function patchFinding(f, patch, msg) {
+    try {
+      await apiJson(`/api/findings/${encodeURIComponent(f.id)}`, { method: "PATCH", json: patch });
+      toast(msg);
+      if (state.panelUnit) loadUnitPanel(state.panelUnit.unit.id, { quiet: true });
+    } catch (e) {
+      showError(e.code, e.message);
+      if (state.route.screen !== "chat") toast(`${e.code}: ${e.message}`);
+    }
+  }
+  function findingText(f) {
+    const u = state.panelUnit ? state.panelUnit.unit : null;
+    return [u ? `${unitLabel(u)} (${[u.manufacturer, u.model].filter(Boolean).join(" ")})` : "", `Symptom: ${f.symptom}`, f.cause ? `Cause: ${f.cause}` : "", f.resolution ? `Fix: ${f.resolution}` : "", f.service_date ? `Date: ${f.service_date}` : ""].filter(Boolean).join("\n");
+  }
+  async function shareFinding(f) {
+    const text = findingText(f);
+    if (navigator.share) {
+      navigator.share({ title: "HVAC finding", text }).catch(() => {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Copied to clipboard");
+    } catch {
+      toast("Copy not available in this browser");
+    }
+  }
+  function unitText(u) {
+    return [`${unitLabel(u)}`, [u.manufacturer, u.model].filter(Boolean).join(" "), u.serial ? `S/N ${u.serial}` : "", [u.site, u.customer].filter(Boolean).join(" · "), [u.refrigerant, u.tonnage ? `${u.tonnage} ton` : "", u.voltage].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
+  }
+
+  async function attachOrStart() {
     const pu = state.panelUnit;
     if (!pu) return;
+    if (state.unit && state.unit.id === pu.unit.id) return navigate(`#chat/${state.conversationId}`);
     try {
       if (!state.conversationId) {
         await ensureConversation(pu.unit.id);
@@ -1540,16 +1831,17 @@ function boot() {
         state.unit = pu.unit;
       }
       renderHeader();
-      updateUnitActions();
+      renderReadingsUnitChip();
       loadConversations();
       toast(`Attached ${unitLabel(pu.unit)}`);
-      if (!isWide()) closeDrawers();
+      navigate(`#chat/${state.conversationId}`);
     } catch (e) {
       showError(e.code, e.message);
+      toast(`${e.code}: ${e.message}`);
     }
-  });
+  }
 
-  els.btnNewConvUnit.addEventListener("click", async () => {
+  async function startConversationOnUnit() {
     const pu = state.panelUnit;
     if (!pu) return;
     if (state.streaming) return toast("Wait for the current response first.");
@@ -1558,15 +1850,16 @@ function boot() {
       await ensureConversation(pu.unit.id);
       state.unit = pu.unit;
       renderHeader();
-      updateUnitActions();
-      closeDrawers();
-      els.composerInput.focus();
+      renderReadingsUnitChip();
+      navigate(`#chat/${state.conversationId}`);
+      if (!isTouch) els.composerInput.focus();
     } catch (e) {
       showError(e.code, e.message);
+      toast(`${e.code}: ${e.message}`);
     }
-  });
+  }
 
-  els.btnArchiveUnit.addEventListener("click", async () => {
+  async function archiveUnit() {
     const pu = state.panelUnit;
     if (!pu) return;
     if (!confirm(`Archive ${unitLabel(pu.unit)}? Its findings and conversations are kept; the unit leaves the list.`)) return;
@@ -1574,42 +1867,172 @@ function boot() {
       await apiJson(`/api/units/${encodeURIComponent(pu.unit.id)}`, { method: "DELETE" });
       toast("Unit archived");
       if (state.convFilterUnitId === pu.unit.id) setConvFilter(null);
-      els.btnClearUnit.click();
-      loadUnits();
+      state.panelUnit = null;
+      renderUnitDetail();
+      await loadUnits();
+      navigate("#units", { replace: true });
     } catch (e) {
       showError(e.code, e.message);
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+
+  /* unit actions sheet */
+  els.btnUnitMore.addEventListener("click", () => {
+    if (state.panelUnit) navigate(`#unit/${state.panelUnit.unit.id}/actions`);
+  });
+  function showUnitActions(unitId) {
+    const pu = state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit : null;
+    const u = pu ? pu.unit : state.unitsById.get(unitId);
+    els.unitActionsTitle.textContent = u ? unitLabel(u) : "Unit";
+    const list = els.unitActionsList;
+    list.textContent = "";
+    const attached = !!(u && state.unit && state.unit.id === u.id);
+    const action = (ic, title, sub, fn, cls = "") => h("button", { class: `row ${cls}`, type: "button", onclick: () => { closeSheets(); setTimeout(fn, 0); } },
+      h("div", { class: "row-lead" }, icon(ic)), h("div", { class: "row-body" }, h("div", { class: "row-title", text: title }), sub ? h("div", { class: "row-sub" }, h("span", { text: sub })) : null), icon("chevron", "icon icon-sm row-chevron"));
+    list.append(
+      action("link", attached ? "Open the chat" : state.conversationId ? "Attach to this conversation" : "Start a conversation", attached ? "This unit is attached to the current chat" : "Job memory follows the unit", attachOrStart),
+      action("plus", "New conversation on this unit", null, startConversationOnUnit),
+      action("gauge", "Enter readings", "Prefilled with refrigerant and elevation", () => { if (u) prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); }),
+      action("history", "Show its conversations", "Filter History to this unit", () => { if (u) setConvFilter(u); navigate("#history"); }),
+      action("edit", "Edit or re-decode", "Change model, serial, tag, site…", () => navigate(`#unit/${unitId}/edit`)),
+      action("share", navigator.share ? "Share unit" : "Copy unit details", null, async () => {
+        if (!u) return;
+        const text = unitText(u);
+        if (navigator.share) navigator.share({ title: unitLabel(u), text }).catch(() => {});
+        else {
+          try { await navigator.clipboard.writeText(text); toast("Copied"); } catch { toast("Copy not available"); }
+        }
+      }),
+      action("archive", "Archive unit", "Findings and conversations are kept", archiveUnit, "danger"),
+    );
+    showSheet(els.sheetUnitActions);
+  }
+
+  /* ---------- decode sheet ---------- */
+  function unitFormValues() {
+    const fd = new FormData(els.unitForm);
+    const v = {};
+    for (const [k, val] of fd.entries()) v[k] = String(val).trim();
+    return v;
+  }
+  function fillUnitForm(u) {
+    const f = els.unitForm.elements;
+    f.manufacturer.value = (u && (u.manufacturer || u.brand)) || "";
+    f.model.value = (u && u.model) || "";
+    f.serial.value = (u && u.serial) || "";
+    f.unit_tag.value = (u && u.unit_tag) || "";
+    f.nickname.value = (u && u.nickname) || "";
+    f.site.value = (u && u.site) || "";
+    f.customer.value = (u && u.customer) || "";
+    f.elevation_ft.value = u && u.elevation_ft !== null && u.elevation_ft !== undefined ? String(u.elevation_ft) : "";
+  }
+  function showUnitFormError(msg) {
+    els.unitFormError.hidden = !msg;
+    els.unitFormError.textContent = msg || "";
+  }
+  function showDecodeSheet(unitId) {
+    const editing = unitId && state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit.unit : unitId ? state.unitsById.get(unitId) : null;
+    state.editingUnitId = editing ? editing.id : null;
+    els.decodeTitle.textContent = editing ? `Edit ${unitLabel(editing)}` : "Decode a nameplate";
+    els.btnSaveUnit.textContent = editing ? "Save changes" : "Save unit";
+    els.btnDecodePhoto.hidden = !!editing;
+    fillUnitForm(editing);
+    showUnitFormError("");
+    els.decodeCard.hidden = true;
+    els.decodeCard.textContent = "";
+    state.decoded = editing && state.panelUnit && state.panelUnit.decoded ? state.panelUnit.decoded : null;
+    if (state.decoded) renderDecodePreview(state.decoded);
+    showSheet(els.sheetDecode);
+  }
+  $("btn-unit-add").addEventListener("click", () => navigate("#units/decode"));
+  $("btn-unit-add-2").addEventListener("click", () => navigate("#units/decode"));
+  els.btnDecodePhoto.addEventListener("click", () => {
+    closeSheets();
+    openCameraForDecode();
+  });
+
+  els.unitForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const v = unitFormValues();
+    if (!v.model) return showUnitFormError("Enter the model number to decode.");
+    showUnitFormError("");
+    els.btnDecode.disabled = true;
+    try {
+      const body = { model: v.model };
+      if (v.serial) body.serial = v.serial;
+      if (v.manufacturer) body.manufacturer = v.manufacturer;
+      const decoded = await apiJson("/api/decode", { method: "POST", json: body });
+      state.decoded = decoded;
+      renderDecodePreview(decoded);
+    } catch (err) {
+      showUnitFormError(`${err.code}: ${err.message}`);
+    } finally {
+      els.btnDecode.disabled = false;
     }
   });
 
-  const CONF_CLASS = { high: "chip-ok", medium: "chip-warn", low: "chip-danger" };
-  const ATTR_LABEL = {
-    unit_type: "Unit type", series: "Series", tonnage: "Nominal tons", refrigerant: "Refrigerant", voltage: "Voltage/phase/Hz",
-    heat_type: "Heat type", heat_capacity: "Heat capacity", efficiency: "Efficiency", controls: "Controls", revision: "Revision",
-    compressor_type: "Compressor", stages: "Stages", airflow: "Airflow", cabinet: "Cabinet", options: "Options", other: "Other",
-  };
+  function renderDecodePreview(d) {
+    els.decodeCard.hidden = false;
+    els.decodeCard.textContent = "";
+    els.decodeCard.append(renderDecodeCard(d, { compact: true }));
+    els.decodeCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 
-  function renderDecodeCard(d) {
-    const card = els.decodeCard;
-    card.hidden = false;
-    card.textContent = "";
+  els.btnSaveUnit.addEventListener("click", async () => {
+    const v = unitFormValues();
+    if (!v.model && !v.unit_tag && !v.nickname) return showUnitFormError("Enter at least a model, unit tag or nickname.");
+    showUnitFormError("");
+    const body = {};
+    for (const k of ["model", "serial", "manufacturer", "unit_tag", "nickname", "site", "customer"]) if (v[k]) body[k] = v[k];
+    const elev = toNum(v.elevation_ft);
+    if (elev !== undefined) body.elevation_ft = elev;
+    els.btnSaveUnit.disabled = true;
+    try {
+      let unit;
+      if (state.editingUnitId) {
+        for (const k of ["model", "serial", "manufacturer", "unit_tag", "nickname", "site", "customer"]) if (!v[k]) body[k] = null;
+        if (elev === undefined) body.elevation_ft = null;
+        const saved = await apiJson(`/api/units/${encodeURIComponent(state.editingUnitId)}`, { method: "PATCH", json: body });
+        unit = saved && saved.unit ? saved.unit : saved;
+        toast("Unit updated");
+      } else {
+        const saved = await apiJson("/api/units", { method: "POST", json: body });
+        unit = saved && saved.unit ? saved.unit : saved;
+        toast(saved && saved.existing ? "Unit already on file — opened" : "Unit saved");
+      }
+      state.panelUnit = null;
+      await loadUnits();
+      if (unit && unit.id) navigate(`#unit/${unit.id}`, { replace: true });
+      else navigate("#units", { replace: true });
+    } catch (err) {
+      showUnitFormError(`${err.code}: ${err.message}`);
+    } finally {
+      els.btnSaveUnit.disabled = false;
+    }
+  });
+
+  /** Decode result → DOM. compact: preview inside the decode sheet; full: unit detail card. */
+  function renderDecodeCard(d, { compact }) {
+    const frag = doc.createDocumentFragment();
     const bestModel = d.model && d.model[0];
     const bestSerial = d.serial && d.serial[0];
     const mfr = (d.manufacturerCandidates && d.manufacturerCandidates[0] && d.manufacturerCandidates[0].manufacturer) || d.input?.manufacturer || "Unknown manufacturer";
 
-    card.append(h("div", { class: "dc-head" },
-      h("div", { class: "dc-mfr", text: mfr }),
-      h("div", { class: "dc-family", text: bestModel ? bestModel.family : d.input?.model || "" }),
-      h("div", { class: "dc-type", text: bestModel ? String(bestModel.productType || "").replace(/_/g, " ") : "No model format matched" }),
-    ));
+    if (compact) {
+      frag.append(
+        h("div", { class: "np-tag", text: mfr }),
+        h("div", { class: "np-family", style: "font-weight:700;color:var(--text-primary)", text: bestModel ? bestModel.family : d.input?.model || "" }),
+        h("div", { class: "muted small", text: bestModel ? String(bestModel.productType || "").replace(/_/g, " ") : "No model format matched" }),
+      );
+    }
+    const chips = h("div", { class: "chip-row", style: "margin:10px 0" });
+    if (bestModel) chips.append(h("span", { class: `chip ${CONF_CLASS[bestModel.confidence] || ""}`, text: `Model · ${bestModel.confidence}` }));
+    if (bestSerial) chips.append(h("span", { class: `chip ${CONF_CLASS[bestSerial.confidence] || ""}`, text: `Serial · ${bestSerial.confidence}${bestSerial.ambiguous ? " (ambiguous)" : ""}` }));
+    if (needsNameplateVerify(d)) chips.append(h("span", { class: "chip chip-warn" }, icon("alert", "icon"), "Verify on nameplate"));
+    if (compact || !bestModel) frag.append(chips);
 
-    const body = h("div", { class: "dc-body" });
-    const chips = h("div", { class: "dc-chips" });
-    if (bestModel) chips.append(h("span", { class: `chip ${CONF_CLASS[bestModel.confidence] || ""}`, text: `Model: ${bestModel.confidence}` }));
-    if (bestSerial) chips.append(h("span", { class: `chip ${CONF_CLASS[bestSerial.confidence] || ""}`, text: `Serial: ${bestSerial.confidence}${bestSerial.ambiguous ? " (ambiguous)" : ""}` }));
-    if (needsNameplateVerify(d)) chips.append(h("span", { class: "chip chip-warn", text: "Verify on nameplate" }));
-    body.append(chips);
-
-    if (d.summary) body.append(h("p", { class: "dc-summary", text: d.summary }));
+    if (d.summary) frag.append(h("p", { class: "dc-summary", text: d.summary }));
 
     const rows = [];
     if (bestModel && bestModel.attributes) {
@@ -1623,127 +2046,141 @@ function boot() {
       if (bestSerial.plant) rows.push(["Plant", bestSerial.plant]);
     }
     if (rows.length) {
-      body.append(h("table", { class: "attr-table" }, h("tbody", null, ...rows.map(([k, v]) => h("tr", null, h("th", { scope: "row", text: k }), h("td", { text: v }))))));
-    }
-
-    if (bestModel && bestModel.segments && bestModel.segments.length) {
-      const det = h("details", null, h("summary", { class: "dc-section-title", text: `Nomenclature breakdown (${bestModel.segments.length})` }),
-        h("table", { class: "attr-table" }, h("tbody", null, ...bestModel.segments.map((s) => h("tr", null, h("th", { scope: "row", text: `${s.name} · ${s.code}` }), h("td", { text: s.meaning || "—" }))))));
-      body.append(det);
-    }
-
-    if (d.controls && d.controls.length) {
-      body.append(h("div", { class: "dc-section-title", text: "Control platforms" }));
-      body.append(h("div", null, ...d.controls.map((c) => h("div", { class: "platform" },
-        h("span", { text: c.name }),
-        h("span", { class: "chip", text: `${(c.faultCodes || []).length} codes${c.coverage ? ` · ${c.coverage}` : ""}` }),
-      ))));
+      frag.append(h("div", { class: "attr-grid", style: "margin-top:12px" }, ...rows.map(([k, v]) => attr(k, v))));
     }
 
     if (d.warnings && d.warnings.length) {
-      body.append(h("div", { class: "dc-warn" }, h("ul", null, ...d.warnings.map((w) => h("li", { text: w })))));
+      frag.append(h("div", { class: "dc-warn", style: "margin-top:12px" }, h("ul", null, ...d.warnings.map((w) => h("li", { text: w })))));
     }
 
+    const details = h("div", { style: "margin-top:12px" });
+    if (bestModel && bestModel.segments && bestModel.segments.length) {
+      details.append(h("details", { class: "disclosure" }, h("summary", { text: `Nomenclature breakdown (${bestModel.segments.length})` }),
+        h("div", { class: "disclosure-body" }, h("table", { class: "attr-table" }, h("tbody", null, ...bestModel.segments.map((s) => h("tr", null, h("th", { scope: "row", text: `${s.name} · ${s.code}` }), h("td", { text: s.meaning || "—" }))))))));
+    }
+    if (d.controls && d.controls.length) {
+      details.append(h("details", { class: "disclosure", open: !compact }, h("summary", { text: `Control platforms (${d.controls.length})` }),
+        h("div", { class: "disclosure-body" }, ...d.controls.map((c) => h("div", { class: "platform" }, h("span", { text: c.name }), h("span", { class: `chip ${c.coverage === "complete" ? "chip-ok" : ""}`, text: `${(c.faultCodes || []).length} codes${c.coverage ? ` · ${c.coverage}` : ""}` }))))));
+    }
     const notes = [].concat(bestSerial?.notes || [], bestModel?.notes || []);
-    if (notes.length) {
-      body.append(h("details", null, h("summary", { class: "dc-section-title", text: "Notes" }), h("ul", { class: "dc-list" }, ...notes.map((n) => h("li", { text: n })))));
-    }
-
+    if (notes.length) details.append(h("details", { class: "disclosure" }, h("summary", { text: "Decoder notes" }), h("div", { class: "disclosure-body" }, h("ul", { class: "dc-list" }, ...notes.map((n) => h("li", { text: n }))))));
     if (d.commonIssues && d.commonIssues.length) {
-      body.append(h("details", null, h("summary", { class: "dc-section-title", text: `Known issues (${d.commonIssues.length})` }),
-        h("ul", { class: "dc-list" }, ...d.commonIssues.map((ci) => h("li", null, h("b", { text: ci.symptom }), ` — ${(ci.likelyCauses || []).join("; ")}`)))));
+      details.append(h("details", { class: "disclosure" }, h("summary", { text: `Known issues (${d.commonIssues.length})` }),
+        h("div", { class: "disclosure-body" }, h("ul", { class: "dc-list" }, ...d.commonIssues.map((ci) => h("li", null, h("b", { text: ci.symptom }), ` — ${(ci.likelyCauses || []).join("; ")}`))))));
     }
-
-    if (d.evidenceSummary) body.append(h("p", { class: "dc-summary", text: `Evidence: ${d.evidenceSummary}` }));
+    if (d.electrical && d.electrical.length && !compact) {
+      details.append(h("details", { class: "disclosure" }, h("summary", { text: "Electrical (designators, safeties)" }),
+        h("div", { class: "disclosure-body" }, ...d.electrical.map((fe) => h("div", null,
+          h("div", { class: "form-subhead", text: `${fe.familyLabel}${fe.controlVoltage ? ` · ${fe.controlVoltage}` : ""}` }),
+          h("table", { class: "attr-table" }, h("tbody", null, ...(fe.components || []).map((c) => h("tr", null, h("th", { scope: "row", text: c.designator }), h("td", { text: `${c.name}${c.notes ? ` — ${c.notes}` : ""}` }))))),
+          fe.safetyDevices && fe.safetyDevices.length ? h("p", { class: "dc-summary", style: "margin-top:8px", text: `Safeties: ${fe.safetyDevices.join(", ")}` }) : null,
+        )))));
+    }
+    if (d.evidenceSummary) details.append(h("details", { class: "disclosure" }, h("summary", { text: "Evidence and sources" }), h("div", { class: "disclosure-body" }, h("p", { class: "dc-summary small", text: d.evidenceSummary }))));
+    if (details.childElementCount) frag.append(details);
 
     const litUrl = d.support && (d.support.literatureUrl || d.support.url);
-    const support = h("div", { class: "btn-row" });
-    if (litUrl && /^https?:\/\//i.test(litUrl)) support.append(h("a", { class: "btn", href: litUrl, target: "_blank", rel: "noopener noreferrer", text: "Literature" }));
-    if (d.support && d.support.phone) support.append(h("a", { class: "btn", href: `tel:${d.support.phone.replace(/[^\d+]/g, "")}`, text: `Support ${d.support.phone}` }));
-    if (support.childElementCount) body.append(support);
-    if (d.support && d.support.literatureSearchHint) body.append(h("p", { class: "dc-summary", text: d.support.literatureSearchHint }));
-
-    card.append(body);
+    const support = h("div", { class: "btn-row", style: "margin-top:12px" });
+    if (litUrl && /^https?:\/\//i.test(litUrl)) support.append(h("a", { class: "btn", href: litUrl, target: "_blank", rel: "noopener noreferrer" }, icon("book"), "Literature"));
+    let phoneNote = "";
+    if (d.support && d.support.phone) {
+      const m = /\+?\d[\d\s().-]{6,}\d/.exec(d.support.phone);
+      const number = m ? m[0].trim() : d.support.phone;
+      phoneNote = m ? d.support.phone.replace(m[0], "").replace(/^[\s(,:-]+|[\s),]+$/g, "").trim() : "";
+      support.append(h("a", { class: "btn", href: `tel:${number.replace(/[^\d+]/g, "")}` }, icon("phone"), `Call ${number}`));
+    }
+    if (support.childElementCount) frag.append(support);
+    if (phoneNote) frag.append(h("p", { class: "hint", text: `Support line: ${phoneNote}` }));
+    if (d.support && d.support.literatureSearchHint) frag.append(h("p", { class: "hint", text: d.support.literatureSearchHint }));
+    return frag;
   }
 
-  function renderFindings() {
-    const pu = state.panelUnit;
-    els.findingsSection.hidden = !pu;
-    els.findingsList.textContent = "";
-    if (!pu) return;
-    const findings = sortFindings(pu.findings || []);
-    if (!findings.length) {
-      els.findingsList.append(h("div", { class: "list-empty", text: "No findings on this unit yet." }));
+  /* ---------- history: search ---------- */
+  let searchTimer = null;
+  let searchSeq = 0;
+  els.search.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    const q = els.search.value.trim();
+    els.btnSearchClear.hidden = !q;
+    if (q.length < 2) {
+      els.searchResults.hidden = true;
+      els.searchResults.textContent = "";
+      els.historyBrowse.hidden = false;
       return;
     }
-    for (const f of findings) {
-      const hyp = isHypothesis(f);
-      const statusCls = f.status === "open" ? "chip-danger" : f.status === "monitor" ? "chip-warn" : "chip-ok";
-      const card = h("div", { class: `finding${hyp ? " hypothesis" : ""}`, role: "listitem" },
-        h("div", { class: "finding-head" },
-          h("span", { class: `chip ${statusCls}`, text: f.status || "open" }),
-          hyp ? h("span", { class: "chip chip-info", text: "Hypothesis — unconfirmed" }) : null,
-          Number(f.confirmed) ? h("span", { class: "chip chip-ok", text: "Confirmed" }) : null,
-          f.circuit ? h("span", { class: "chip", text: `Circuit ${f.circuit}` }) : null,
-          h("span", { class: "row-meta", text: relTime(f.service_date || f.created_at) }),
-        ),
-        h("div", { class: "finding-symptom", text: f.symptom }),
-      );
-      if (f.cause) card.append(h("div", { class: "finding-line" }, h("b", { text: "Cause: " }), f.cause));
-      if (f.resolution) card.append(h("div", { class: "finding-line" }, h("b", { text: "Fix: " }), f.resolution));
-      if (f.refrigerant_added_lbs) card.append(h("div", { class: "finding-line" }, h("b", { text: "Refrigerant added: " }), `${f.refrigerant_added_lbs} lb ${f.refrigerant || ""}`));
-      if (f.follow_up) card.append(h("div", { class: "finding-line" }, h("b", { text: "Follow-up: " }), f.follow_up));
-      const actions = h("div", { class: "finding-actions" });
-      if (!Number(f.confirmed)) {
-        actions.append(h("button", { class: "btn btn-sm btn-primary", type: "button", text: "Confirm", onclick: () => confirmFinding(f) }));
-      }
-      if (navigator.share) {
-        actions.append(h("button", { class: "btn btn-sm", type: "button", onclick: () => shareFinding(f) }, svgIcon(ICON.share), "Share"));
-      }
-      card.append(actions);
-      els.findingsList.append(card);
-    }
-  }
-
-  async function confirmFinding(f) {
+    searchTimer = setTimeout(() => runSearch(q), 250);
+  });
+  els.btnSearchClear.addEventListener("click", () => {
+    els.search.value = "";
+    els.search.dispatchEvent(new Event("input"));
+    els.search.focus();
+  });
+  async function runSearch(q) {
+    const seq = ++searchSeq;
+    els.searchResults.hidden = false;
+    els.historyBrowse.hidden = true;
+    els.searchResults.textContent = "";
+    els.searchResults.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
     try {
-      await apiJson(`/api/findings/${encodeURIComponent(f.id)}`, { method: "PATCH", json: { confirmed: 1 } });
-      toast("Finding confirmed");
-      if (state.panelUnit) loadUnitPanel(state.panelUnit.unit.id, { quiet: true });
+      const json = await apiJson(`/api/search?q=${encodeURIComponent(q)}&limit=30`);
+      if (seq !== searchSeq) return;
+      const hits = pickList(json, "hits");
+      els.searchResults.textContent = "";
+      if (!hits.length) {
+        els.searchResults.append(h("div", { class: "empty" }, h("div", { class: "empty-icon" }, icon("search")), h("div", { class: "empty-title", text: "No matches" }), h("p", { class: "empty-sub", text: `Nothing in conversations, findings or units matches “${q}”.` })));
+        return;
+      }
+      for (const g of groupSearchHits(hits, state.unitsById)) {
+        const card = h("div", { class: "list-card", role: "list", style: "margin-bottom:12px" });
+        const headIcon = g.kind === "conversation" ? "chat" : g.kind === "unit" ? "units" : "search";
+        card.append(h("div", { class: "group-head" }, icon(headIcon, "icon icon-sm"), h("span", { text: g.title }), h("span", { class: "muted", text: `${g.hits.length} hit${g.hits.length === 1 ? "" : "s"}` })));
+        for (const hit of g.hits) {
+          const kindLabel = hit.kind === "unit" ? "Unit" : hit.kind === "finding" ? "Finding" : "Message";
+          const leadCls = hit.kind === "finding" ? "ok" : hit.kind === "unit" ? "info" : "";
+          card.append(h("button", { class: "row", type: "button", role: "listitem", onclick: () => openSearchHit(hit) },
+            h("div", { class: `row-lead ${leadCls}` }, icon(hit.kind === "unit" ? "units" : hit.kind === "finding" ? "finding" : "chat")),
+            h("div", { class: "row-body" },
+              h("div", { class: "row-sub" }, h("span", { class: "chip", text: kindLabel }), h("span", { text: relTime(hit.createdAt) })),
+              h("div", { class: "snippet", text: hit.snippet || "" }),
+            ),
+            icon("chevron", "icon icon-sm row-chevron"),
+          ));
+        }
+        els.searchResults.append(card);
+      }
     } catch (e) {
-      showError(e.code, e.message);
+      if (seq !== searchSeq) return;
+      els.searchResults.textContent = "";
+      els.searchResults.append(h("div", { class: "field-error", role: "alert", text: `Search failed: ${e.message}` }));
     }
   }
-  function shareFinding(f) {
-    const u = state.panelUnit ? state.panelUnit.unit : null;
-    const text = [u ? `${unitLabel(u)} (${[u.manufacturer, u.model].filter(Boolean).join(" ")})` : "", `Symptom: ${f.symptom}`, f.cause ? `Cause: ${f.cause}` : "", f.resolution ? `Fix: ${f.resolution}` : "", f.service_date ? `Date: ${f.service_date}` : ""].filter(Boolean).join("\n");
-    navigator.share({ title: "HVAC finding", text }).catch(() => {});
-  }
-
-  function renderUnitConversations() {
-    const pu = state.panelUnit;
-    const list = pu ? pu.conversations : [];
-    els.unitConvsSection.hidden = !pu || !list.length;
-    els.unitConvsList.textContent = "";
-    for (const c of list) {
-      els.unitConvsList.append(h("button", { class: "row", type: "button", role: "listitem", onclick: () => openConversation(c.id) },
-        h("div", { class: "row-lead" }, svgIcon(ICON.chat)),
-        h("div", { class: "row-body" }, h("div", { class: "row-title", text: c.title || "New conversation" }), h("div", { class: "row-sub" }, h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") }))),
-      ));
+  function openSearchHit(hit) {
+    if (hit.kind === "message" && hit.conversationId) return navigate(`#chat/${hit.conversationId}`);
+    if (hit.kind === "unit") return navigate(`#unit/${hit.id}`);
+    if (hit.kind === "finding") {
+      if (hit.unitId) return navigate(`#unit/${hit.unitId}`);
+      if (hit.conversationId) return navigate(`#chat/${hit.conversationId}`);
     }
+    return undefined;
   }
 
-  /* ---------- readings sheet ---------- */
-  function openReadings() {
-    if (state.unit) prefillReadingsFromUnit(state.unit);
-    openSheet(els.sheetReadings);
+  /* ---------- readings ---------- */
+  function renderReadingsUnitChip() {
+    const u = state.unit;
+    els.readingsUnitChip.hidden = !u;
+    els.readingsUnitChip.textContent = u ? unitLabel(u) : "";
+    els.readingsSub.textContent = u ? `${[u.manufacturer, u.model].filter(Boolean).join(" ")} · ${u.refrigerant || "refrigerant?"}` : "";
   }
-  function prefillReadingsFromUnit(u) {
+  function prefillReadingsFromUnit(u, { force = false } = {}) {
     const f = els.readingsForm.elements;
-    if (u.refrigerant && !f.refrigerant.value) setSelectValue(f.refrigerant, u.refrigerant);
-    if (u.metering_device && ["txv", "fixed", "eev", "unknown"].includes(u.metering_device)) f.meteringDevice.value = u.metering_device;
-    if (u.elevation_ft !== null && u.elevation_ft !== undefined && !f.elevationFt.value) f.elevationFt.value = String(u.elevation_ft);
-    for (const el of doc.querySelectorAll(".elevation-input")) if (!el.value && u.elevation_ft !== null && u.elevation_ft !== undefined) el.value = String(u.elevation_ft);
+    if (u.refrigerant && (force || !f.refrigerant.dataset.touched)) setSelectValue(f.refrigerant, u.refrigerant);
+    if (u.metering_device && ["txv", "fixed", "eev", "unknown"].includes(u.metering_device)) {
+      const radio = els.readingsForm.querySelector(`input[name="meteringDevice"][value="${u.metering_device}"]`);
+      if (radio) radio.checked = true;
+    }
+    if (u.elevation_ft !== null && u.elevation_ft !== undefined && (force || !f.elevationFt.value)) f.elevationFt.value = String(u.elevation_ft);
+    for (const el of doc.querySelectorAll(".elevation-input")) if ((force || !el.value) && u.elevation_ft !== null && u.elevation_ft !== undefined) el.value = String(u.elevation_ft);
+    for (const sel of doc.querySelectorAll("#calculators .refrigerant-select")) if (u.refrigerant && (force || !sel.dataset.touched)) setSelectValue(sel, u.refrigerant);
   }
   function setSelectValue(sel, value) {
     const norm = String(value).replace(/[\s-]/g, "").toUpperCase();
@@ -1756,12 +2193,36 @@ function boot() {
     sel.append(h("option", { value, text: value }));
     sel.value = value;
   }
+  for (const sel of doc.querySelectorAll(".refrigerant-select")) sel.addEventListener("change", () => { sel.dataset.touched = "1"; });
   function readingsValues() {
     const fd = new FormData(els.readingsForm);
     const v = {};
     for (const [k, val] of fd.entries()) v[k] = String(val);
     return v;
   }
+  doc.querySelectorAll('input[name="readings-pane"]').forEach((r) => r.addEventListener("change", () => navigate(r.value === "calcs" ? "#readings/calcs" : "#readings", { replace: true })));
+  els.btnReadingsClear.addEventListener("click", () => {
+    if (state.route.pane === "calcs") {
+      for (const form of doc.querySelectorAll("#calculators form")) {
+        form.reset();
+        const box = form.querySelector(".calc-result");
+        box.hidden = true;
+        box.textContent = "";
+        form.querySelector(".btn-send").disabled = true;
+      }
+      populateRefrigerantSelects();
+      toast("Calculators cleared");
+      return;
+    }
+    els.readingsForm.reset();
+    populateRefrigerantSelects();
+    els.readingsResult.hidden = true;
+    els.readingsResult.textContent = "";
+    els.readingsError.hidden = true;
+    state.lastDx = null;
+    if (state.unit) prefillReadingsFromUnit(state.unit, { force: true });
+    toast("Readings cleared");
+  });
 
   els.readingsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1772,16 +2233,28 @@ function boot() {
       els.readingsError.textContent = "Pick a refrigerant.";
       return;
     }
+    if (m.suctionPsig === undefined && m.liquidPsig === undefined && m.outdoorDbF === undefined && m.compressorAmps === undefined && m.supplyDbF === undefined) {
+      els.readingsError.hidden = false;
+      els.readingsError.textContent = "Enter at least one reading — suction/liquid pressure with line temps gives the most.";
+      return;
+    }
     const btn = $("btn-diagnose");
     btn.disabled = true;
+    els.readingsResult.hidden = false;
+    els.readingsResult.textContent = "";
+    els.readingsResult.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton", style: "min-height:120px" }));
     try {
       const result = await apiJson("/api/calc/diagnose", { method: "POST", json: m });
       state.lastDx = result;
       renderDxResult(result);
       requestWake();
     } catch (err) {
+      els.readingsResult.hidden = true;
+      els.readingsResult.textContent = "";
       els.readingsError.hidden = false;
-      els.readingsError.textContent = `${err.code}: ${err.message}`;
+      els.readingsError.textContent = isNetworkError(err)
+        ? "Diagnosis needs a connection. The superheat/subcooling and electrical calculators still work offline."
+        : `${err.code}: ${err.message}`;
     } finally {
       btn.disabled = false;
     }
@@ -1791,34 +2264,50 @@ function boot() {
   const DERIVED_LABEL = {
     evapSatF: ["Evap sat", "°F"], condSatF: ["Cond sat", "°F"], superheatF: ["Superheat", "°F"], subcoolingF: ["Subcooling", "°F"],
     targetSuperheatF: ["Target SH", "°F"], targetSubcoolingF: ["Target SC", "°F"], condenserSplitF: ["Cond split", "°F"], evapTdF: ["Evap TD", "°F"],
-    deltaTF: ["Delta-T", "°F"], indoorCoilTdF: ["Indoor coil TD", "°F"], compressionRatio: ["Compression ratio", ""], dischargeSuperheatF: ["Discharge SH", "°F"],
-    ampsPercentRla: ["Amps % RLA", "%"], currentImbalancePercent: ["Current imbalance", "%"], drierTempDropF: ["Drier drop", "°F"], standingExcessPsi: ["Standing excess", "psi"], patmPsia: ["Patm", "psia"],
+    deltaTF: ["Delta-T", "°F"], indoorCoilTdF: ["Indoor coil TD", "°F"], compressionRatio: ["Comp. ratio", ""], dischargeSuperheatF: ["Discharge SH", "°F"],
+    ampsPercentRla: ["Amps % RLA", "%"], currentImbalancePercent: ["Amp imbalance", "%"], drierTempDropF: ["Drier drop", "°F"], standingExcessPsi: ["Standing excess", "psi"], patmPsia: ["Patm", "psia"],
   };
+  const DERIVED_ORDER = ["superheatF", "targetSuperheatF", "subcoolingF", "targetSubcoolingF", "evapSatF", "condSatF", "deltaTF", "targetDeltaTF", "condenserSplitF", "evapTdF", "indoorCoilTdF", "compressionRatio", "dischargeSuperheatF", "ampsPercentRla", "currentImbalancePercent", "drierTempDropF", "standingExcessPsi", "patmPsia"];
+
+  function statTile(label, value, unit, cls = "") {
+    return h("div", { class: `stat ${cls}` }, h("div", { class: "stat-label", text: label }), h("div", { class: "stat-value" }, value, unit ? h("small", { text: unit }) : null));
+  }
+  function derivedStats(derived) {
+    const tiles = [];
+    for (const k of DERIVED_ORDER) {
+      const v = derived[k];
+      if (k === "targetDeltaTF") {
+        if (v && typeof v === "object") tiles.push(statTile("Target ΔT", `${v.min}–${v.max}`, "°F"));
+        continue;
+      }
+      if (typeof v !== "number" || !DERIVED_LABEL[k]) continue;
+      const [label, unit] = DERIVED_LABEL[k];
+      let cls = "";
+      if (k === "superheatF" && typeof derived.targetSuperheatF === "number") cls = v - derived.targetSuperheatF > 5 ? "hi" : derived.targetSuperheatF - v > 5 ? "lo" : "";
+      if (k === "subcoolingF" && typeof derived.targetSubcoolingF === "number") cls = v - derived.targetSubcoolingF > 4 ? "hi" : derived.targetSubcoolingF - v > 4 ? "lo" : "";
+      tiles.push(statTile(cls === "hi" ? `${label} · high` : cls === "lo" ? `${label} · low` : label, fmtNum(v, k === "compressionRatio" ? 2 : 1), unit, cls));
+    }
+    return tiles;
+  }
 
   function renderDxResult(r) {
     const box = els.readingsResult;
     box.hidden = false;
     box.textContent = "";
-    if (r.summary) box.append(h("div", { class: "dx-summary", text: r.summary }));
-    if (r.validity && !r.validity.ok) {
-      box.append(h("div", { class: "dx-validity" }, h("b", { text: "Readings not valid for charge determination" }), h("ul", null, ...(r.validity.issues || []).map((i) => h("li", { text: i })))));
-    }
-    const derived = r.derived || {};
-    const stats = Object.entries(derived).filter(([k, v]) => typeof v === "number" && DERIVED_LABEL[k]);
-    if (derived.targetDeltaTF && typeof derived.targetDeltaTF === "object") stats.push(["targetDeltaTF", derived.targetDeltaTF]);
-    if (stats.length) {
-      box.append(h("div", { class: "derived-grid" }, ...stats.map(([k, v]) => {
-        const [label, unit] = DERIVED_LABEL[k] || ["Target ΔT", "°F"];
-        const val = typeof v === "number" ? `${fmtNum(v, k === "compressionRatio" ? 2 : 1)}${unit ? " " + unit : ""}` : `${v.min}–${v.max} °F`;
-        return h("div", { class: "stat" }, h("div", { class: "stat-label", text: label }), h("div", { class: "stat-value", text: val }));
-      })));
-    }
+    box.append(h("div", { class: "card-title" }, h("span", { text: "Diagnosis" }), sourceTag("server")));
+    const ok = !r.validity || r.validity.ok;
+    const val = h("div", { class: `validity ${ok ? "ok" : "bad"}` }, icon(ok ? "ok" : "alert"), h("div", null, h("div", { text: ok ? "Readings valid for charge determination" : "Readings not valid for charge determination" })));
+    if (!ok && r.validity.issues && r.validity.issues.length) val.lastChild.append(h("ul", null, ...r.validity.issues.map((i) => h("li", { text: i }))));
+    box.append(val);
+    if (r.summary) box.append(h("p", { class: "dx-summary", text: r.summary }));
+    const tiles = derivedStats(r.derived || {});
+    if (tiles.length) box.append(h("div", { class: "stats" }, ...tiles));
     if (r.findings && r.findings.length) {
-      box.append(h("div", { class: "dc-section-title", text: "Findings" }));
+      box.append(h("div", { class: "section-title", text: `Findings (${r.findings.length})` }));
       for (const f of r.findings) {
-        const card = h("div", { class: `dx-finding ${f.severity || ""}` },
-          h("div", { class: "dx-finding-head" }, h("span", { class: `chip ${SEV_CLASS[f.severity] || ""}`, text: f.severity }), h("span", { class: `chip ${CONF_CLASS[f.confidence] || ""}`, text: f.confidence }), h("span", { text: f.condition })),
-          h("div", { text: f.explanation }),
+        const card = h("div", { class: `dx-finding ${f.severity || "info"}` },
+          h("div", { class: "dx-finding-head" }, h("span", { class: `chip ${SEV_CLASS[f.severity] || ""}`, text: f.severity }), h("span", { class: `chip ${CONF_CLASS[f.confidence] || ""}`, text: `${f.confidence} confidence` }), h("div", { class: "dx-finding-title", text: f.condition })),
+          h("p", { text: f.explanation }),
         );
         if (f.nextChecks && f.nextChecks.length) card.append(h("ul", null, ...f.nextChecks.map((c) => h("li", { text: c }))));
         if (f.safety && f.safety.length) card.append(h("div", { class: "dx-safety", text: f.safety.join(" ") }));
@@ -1826,12 +2315,10 @@ function boot() {
       }
     }
     if (r.missing && r.missing.length) {
-      box.append(h("div", { class: "dc-section-title", text: "Would sharpen the diagnosis" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
+      box.append(h("div", { class: "section-title", text: "Would sharpen the diagnosis" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
     }
-    box.append(h("div", { class: "btn-row" }, h("button", { class: "btn btn-primary", type: "button", text: "Send readings + result to chat", onclick: () => sendReadingsToChat(true) })));
-    // Scroll only the sheet's own scroller: scrollIntoView would also shift the overflow-hidden page ancestors.
-    const scroller = box.closest(".sheet-body");
-    if (scroller) scroller.scrollTo({ top: Math.max(0, box.offsetTop - scroller.offsetTop - 8), behavior: "smooth" });
+    box.append(h("div", { class: "btn-row", style: "margin-top:8px" }, h("button", { class: "btn btn-primary grow", type: "button", onclick: () => sendReadingsToChat(true) }, icon("send"), "Send to chat")));
+    if (!isWide()) box.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   function sendReadingsToChat(withResult) {
@@ -1843,19 +2330,58 @@ function boot() {
   els.btnReadingsSend.addEventListener("click", () => sendReadingsToChat(false));
 
   /* ---------- calculators ---------- */
-  function renderGeneric(obj, depth = 0) {
+  function sourceTag(source) {
+    const map = { server: ["server", "From the server"], device: ["device", "Computed on this device (offline)"], cache: ["clock", "From the on-device cache"] };
+    const [ic, label] = map[source] || map.server;
+    return h("span", { class: "source-tag" }, icon(ic, "icon"), label);
+  }
+  const VALUE_LABEL = {
+    average: "Average", maxDeviation: "Max deviation", imbalancePercent: "Imbalance %", derateFactor: "NEMA derate factor", worstLeg: "Worst leg",
+    microfarads: "Measured µF", percentOfRated: "% of rated", deviationPercent: "Deviation %", pass: "Pass", outputBtuh: "Output BTU/h", cfm: "CFM",
+    r1: "R1 Ω", r2: "R2 Ω", r3: "R3 Ω", openCount: "Open readings", shortCount: "Shorted readings", csPlusCr: "C-S + C-R", sumErrorPercent: "Sum error %",
+    rhPercent: "Relative humidity %", dewPointF: "Dew point °F", enthalpyBtuLb: "Enthalpy BTU/lb", grainsPerLb: "Grains/lb", humidityRatio: "Humidity ratio",
+    evapSatF: "Evap sat °F", condSatF: "Cond sat °F", superheatF: "Superheat °F", subcoolingF: "Subcooling °F", targetSuperheatF: "Target SH °F", targetSubcoolingF: "Target SC °F",
+    superheatDelta: "SH vs target", subcoolingDelta: "SC vs target", patmPsia: "Patm psia", safetyClass: "Safety class", inHgVacuum: "Vacuum inHg", glideF: "Glide °F",
+  };
+  function renderCalcResult(kind, result) {
     const frag = doc.createDocumentFragment();
-    if (!obj || typeof obj !== "object") return frag;
-    for (const [k, v] of Object.entries(obj)) {
-      if (v === null || v === undefined || k === "kind") continue;
-      if (typeof v === "number") frag.append(h("div", { class: "kv" }, h("span", { text: k }), h("span", { text: fmtNum(v, 2) })));
-      else if (typeof v === "string" || typeof v === "boolean") frag.append(h("div", { class: "kv" }, h("span", { text: k }), h("span", { text: String(v) })));
-      else if (Array.isArray(v)) {
-        if (!v.length) continue;
-        frag.append(h("div", { class: k === "warnings" ? "kv-warn" : "", text: k }), h("ul", { class: "kv-list" }, ...v.map((x) => h("li", { text: typeof x === "string" ? x : JSON.stringify(x) }))));
-      } else if (typeof v === "object" && depth < 2) {
-        frag.append(h("div", { class: "dc-section-title", text: k }), renderGeneric(v, depth + 1));
+    const source = result && result.source ? result.source : "server";
+    frag.append(h("div", { class: "card-title" }, h("span", { text: "Result" }), sourceTag(source)));
+    if (kind === "pt") {
+      const tiles = [];
+      if (typeof result.bubbleTempF === "number") tiles.push(statTile("Bubble (SC)", fmtNum(result.bubbleTempF), "°F"));
+      if (typeof result.dewTempF === "number") tiles.push(statTile("Dew (SH)", fmtNum(result.dewTempF), "°F"));
+      if (typeof result.midpointTempF === "number" && result.bubbleTempF !== result.dewTempF) tiles.push(statTile("Midpoint", fmtNum(result.midpointTempF), "°F"));
+      if (typeof result.bubblePsig === "number") tiles.push(statTile("Bubble", fmtNum(result.bubblePsig), "psig"));
+      if (typeof result.dewPsig === "number") tiles.push(statTile("Dew", fmtNum(result.dewPsig), "psig"));
+      if (typeof result.inHgVacuum === "number") tiles.push(statTile("Vacuum", fmtNum(result.inHgVacuum), "inHg"));
+      if (typeof result.glideF === "number" && result.glideF >= 0.5) tiles.push(statTile("Glide", fmtNum(result.glideF), "°F"));
+      if (result.safetyClass) tiles.push(statTile("Safety class", result.safetyClass, ""));
+      if (tiles.length) frag.append(h("div", { class: "stats" }, ...tiles));
+    } else if (kind === "shsc") {
+      const tiles = [];
+      for (const k of ["superheatF", "targetSuperheatF", "subcoolingF", "targetSubcoolingF", "evapSatF", "condSatF", "patmPsia"]) {
+        if (typeof result[k] === "number") tiles.push(statTile(VALUE_LABEL[k].replace(/ (°F|psia)$/, ""), fmtNum(result[k], k === "patmPsia" ? 2 : 1), k === "patmPsia" ? "psia" : "°F"));
       }
+      if (result.safetyClass) tiles.push(statTile("Safety class", result.safetyClass, ""));
+      if (tiles.length) frag.append(h("div", { class: "stats" }, ...tiles));
+    } else {
+      const values = result && result.values && typeof result.values === "object" ? result.values : {};
+      const rows = Object.entries(values).filter(([, v]) => typeof v === "number" || typeof v === "string");
+      if (rows.length) {
+        frag.append(h("div", null, ...rows.map(([k, v]) => {
+          const label = VALUE_LABEL[k] || k;
+          const val = k === "pass" ? (v ? "PASS" : "FAIL") : typeof v === "number" ? fmtNum(v, 2) : String(v);
+          return h("div", { class: "kv" }, h("span", { class: "kv-key", text: label }), h("span", { class: `kv-value${k === "pass" ? (v ? " chip chip-ok" : " chip chip-danger") : ""}`, text: val }));
+        })));
+      }
+    }
+    const lists = [["interpretation", ""], ["notes", ""], ["warnings", "kv-warn"]];
+    for (const [key, cls] of lists) {
+      const arr = Array.isArray(result[key]) ? result[key].filter((x) => typeof x === "string") : [];
+      if (!arr.length) continue;
+      if (key === "warnings") frag.append(h("div", { class: "dc-warn", style: "margin-top:10px" }, h("ul", null, ...arr.map((x) => h("li", { text: x })))));
+      else frag.append(h("ul", { class: `kv-list ${cls}` }, ...arr.map((x) => h("li", { text: x }))));
     }
     return frag;
   }
@@ -1864,6 +2390,16 @@ function boot() {
     pt: "PT lookup", shsc: "Superheat/subcooling", voltage_imbalance: "Voltage imbalance", capacitor_under_load: "Capacitor under load",
     temp_rise_cfm: "Temp-rise CFM", winding_check: "Winding check", psychrometrics: "Psychrometrics",
   };
+
+  /** Offline saturation lookup for the SH/SC calculator, from cached PT answers. */
+  function satFromCache(refrigerant) {
+    return (psigSL) => {
+      if (!CALC) return null;
+      const r = CALC.ptLookupOffline(refrigerant, { psig: Math.round(psigSL * 10) / 10 });
+      if (!r || typeof r.dewTempF !== "number") return null;
+      return { bubbleF: r.bubbleTempF, dewF: r.dewTempF };
+    };
+  }
 
   for (const det of doc.querySelectorAll(".calc")) {
     const kind = det.dataset.calc;
@@ -1882,12 +2418,23 @@ function boot() {
       try {
         let result;
         if (kind === "pt") {
-          const qs = new URLSearchParams({ refrigerant: raw.refrigerant });
-          if (toNum(raw.psig) !== undefined) qs.set("psig", String(toNum(raw.psig)));
-          else if (toNum(raw.temp_f) !== undefined) qs.set("temp_f", String(toNum(raw.temp_f)));
+          const q = {};
+          if (toNum(raw.psig) !== undefined) q.psig = toNum(raw.psig);
+          else if (toNum(raw.temp_f) !== undefined) q.tempF = toNum(raw.temp_f);
           else throw new ApiFailure("validation", "Enter a pressure or a temperature.", 0);
-          if (toNum(raw.elevation_ft) !== undefined) qs.set("elevation_ft", String(toNum(raw.elevation_ft)));
-          result = await apiJson(`/api/reference/pt?${qs}`);
+          if (toNum(raw.elevation_ft) !== undefined) q.elevationFt = toNum(raw.elevation_ft);
+          const qs = new URLSearchParams({ refrigerant: raw.refrigerant });
+          if (q.psig !== undefined) qs.set("psig", String(q.psig));
+          else qs.set("temp_f", String(q.tempF));
+          if (q.elevationFt !== undefined) qs.set("elevation_ft", String(q.elevationFt));
+          try {
+            result = await apiJson(`/api/reference/pt?${qs}`);
+            if (CALC) CALC.ptCachePut(raw.refrigerant, q, result);
+          } catch (err) {
+            if (!isNetworkError(err) || !CALC) throw err;
+            result = CALC.ptLookupOffline(raw.refrigerant, q);
+            if (!result) throw new ApiFailure("offline", "Offline and no cached PT point near this value. Run this lookup once while connected — the last 20 are kept on the device.", 0);
+          }
         } else if (kind === "shsc") {
           const body = { refrigerant: raw.refrigerant, meteringDevice: "unknown", mode: "ac_cooling" };
           for (const k of ["suctionPsig", "suctionLineTempF", "liquidPsig", "liquidLineTempF", "elevationFt"]) {
@@ -1895,7 +2442,13 @@ function boot() {
             if (n !== undefined) body[k] = n;
           }
           if (body.suctionPsig === undefined && body.liquidPsig === undefined) throw new ApiFailure("validation", "Enter suction and/or liquid pressure with its line temperature.", 0);
-          result = await apiJson("/api/calc/superheat-subcooling", { method: "POST", json: body });
+          try {
+            result = await apiJson("/api/calc/superheat-subcooling", { method: "POST", json: body });
+            if (CALC) CALC.calcCachePut(kind, raw, result);
+          } catch (err) {
+            if (!isNetworkError(err) || !CALC) throw err;
+            result = CALC.calcCacheGet(kind, raw) || CALC.superheatSubcooling(body, satFromCache(raw.refrigerant));
+          }
         } else {
           const body = { kind };
           for (const [k, v] of Object.entries(raw)) {
@@ -1903,20 +2456,27 @@ function boot() {
             else {
               const n = toNum(v);
               if (n !== undefined) body[k] = n;
-              else if (k !== "ratedUf" && k !== "elevationFt") throw new ApiFailure("validation", `Enter ${k}.`, 0);
+              else if (k !== "ratedUf" && k !== "elevationFt") throw new ApiFailure("validation", `Enter ${VALUE_LABEL[k] || k}.`, 0);
             }
           }
-          result = await apiJson("/api/calc/electrical", { method: "POST", json: body });
+          try {
+            result = await apiJson("/api/calc/electrical", { method: "POST", json: body });
+            if (CALC) CALC.calcCachePut(kind, raw, result);
+          } catch (err) {
+            if (!isNetworkError(err) || !CALC) throw err;
+            result = CALC.electrical(body) || CALC.calcCacheGet(kind, raw);
+            if (!result) throw new ApiFailure("offline", "This calculator needs a connection (no cached result for these inputs).", 0);
+          }
         }
         last = { inputs: raw, result };
         resultBox.textContent = "";
-        resultBox.append(renderGeneric(result));
+        resultBox.append(renderCalcResult(kind, result));
         sendBtn.disabled = false;
       } catch (err) {
         last = null;
         sendBtn.disabled = true;
         resultBox.textContent = "";
-        resultBox.append(h("div", { class: "field-error", role: "alert", text: `${err.code || "error"}: ${err.message}` }));
+        resultBox.append(h("div", { class: "field-error", role: "alert", text: `${err.message}` }));
       }
     });
     sendBtn.addEventListener("click", () => {
@@ -1940,59 +2500,191 @@ function boot() {
       const json = await apiJson("/api/reference/refrigerants");
       const list = pickList(json, "refrigerants", "meta");
       const ids = list.map((r) => (typeof r === "string" ? r : r && r.id)).filter(Boolean);
-      if (ids.length) state.refrigerants = ids;
+      if (ids.length) {
+        state.refrigerants = ids;
+        store.set("hvac.refrigerants", JSON.stringify(ids));
+      }
     } catch {
-      /* fallback list stays */
+      try {
+        const cached = JSON.parse(store.get("hvac.refrigerants") || "null");
+        if (Array.isArray(cached) && cached.length) state.refrigerants = cached;
+      } catch {
+        /* fallback list stays */
+      }
     }
     populateRefrigerantSelects();
     if (state.unit) prefillReadingsFromUnit(state.unit);
   }
 
   /* ---------- settings ---------- */
-  function openSettings() {
+  function fillSettings() {
     $("s-apibase").value = store.get("hvac.apiBase") || "";
     $("s-token").value = store.get("hvac.token") || "";
-    $("s-theme").value = store.get("hvac.theme") || "auto";
-    els.linkExport.href = `${apiBase()}/api/export`;
-    openSheet(els.sheetSettings);
+    applyTheme(store.get("hvac.theme"));
+    renderInstallState();
+    renderOfflineInfo();
   }
-  els.settingsForm.addEventListener("submit", (e) => {
+  els.settingsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const base = $("s-apibase").value.trim().replace(/\/$/, "");
     if (base && !/^https?:\/\//i.test(base)) {
       els.settingsError.hidden = false;
-      els.settingsError.textContent = "API base must start with http:// or https://";
+      els.settingsError.textContent = "Server URL must start with http:// or https://";
       return;
     }
     els.settingsError.hidden = true;
     store.set("hvac.apiBase", base);
     store.set("hvac.token", $("s-token").value);
-    const theme = $("s-theme").value;
-    store.set("hvac.theme", theme === "auto" ? null : theme);
-    applyTheme(theme);
-    closeSheets();
-    toast("Settings saved");
-    init();
+    state.authNeeded = false;
+    for (const d of doc.querySelectorAll(".settings-dot")) d.hidden = true;
+    showSettingsNotice("");
+    toast("Connection saved");
+    await loadHealth();
+    if (state.health) init();
   });
+  $("btn-health-refresh").addEventListener("click", () => loadHealth().then(() => toast(state.health ? "Server reachable" : "Server unreachable")));
 
+  function setStatus(ok, text) {
+    els.settingsStatus.querySelector(".status-dot").className = `status-dot ${ok === null ? "" : ok ? "ok" : "bad"}`;
+    els.settingsStatusText.textContent = text;
+  }
+  function kvRow(key, value) {
+    return h("div", { class: "kv" }, h("span", { class: "kv-key", text: key }), value instanceof Node ? value : h("span", { class: "kv-value", text: String(value) }));
+  }
   async function loadHealth() {
-    els.healthInfo.textContent = "";
+    setStatus(null, "Checking…");
     try {
       const hlth = await apiJson("/api/health");
       state.health = hlth;
       els.demoBadge.hidden = !hlth.demo;
-      const bits = [];
-      if (hlth.model) bits.push(`model ${hlth.model}`);
-      if (hlth.effort) bits.push(`effort ${hlth.effort}`);
-      bits.push(`web search ${hlth.webSearch ? "on" : "off"}`);
-      if (hlth.packs !== undefined) bits.push(`${hlth.packs} manufacturer packs`);
-      if (hlth.refrigerants !== undefined) bits.push(`${hlth.refrigerants} refrigerants`);
-      if (hlth.rules !== undefined) bits.push(`${hlth.rules} rules`);
-      if (hlth.demo) bits.push("demo mode (no API key)");
-      for (const b of bits) els.healthInfo.append(h("span", { class: "chip", text: b }));
+      els.demoBadgeSettings.hidden = !hlth.demo;
+      const where = apiBase() || `${location.origin} (same origin)`;
+      setStatus(true, `Connected to ${where}${hlth.demo ? " · demo mode" : ""}`);
+      updateOnline(false);
+      els.healthInfo.textContent = "";
+      els.healthInfo.append(
+        kvRow("Model", hlth.model || "—"),
+        kvRow("Effort", hlth.effort || "—"),
+        kvRow("Web search", h("span", { class: `chip ${hlth.webSearch ? "chip-ok" : ""}`, text: hlth.webSearch ? "On — manufacturer literature lookups" : "Off" })),
+        kvRow("Refusal fallbacks", hlth.fallbacks === undefined ? "—" : String(hlth.fallbacks)),
+        kvRow("Knowledge", [hlth.packs !== undefined ? `${hlth.packs} manufacturer packs` : "", hlth.refrigerants !== undefined ? `${hlth.refrigerants} refrigerants` : "", hlth.rules !== undefined ? `${hlth.rules} diagnostic rules` : ""].filter(Boolean).join(" · ") || "—"),
+        kvRow("Mode", h("span", { class: `chip ${hlth.demo ? "chip-warn" : "chip-ok"}`, text: hlth.demo ? "Demo — no API key, canned replies" : "Live assistant" })),
+      );
     } catch (e) {
-      els.healthInfo.append(h("span", { class: "chip chip-danger", text: `Server unreachable: ${e.message}` }));
+      state.health = null;
+      els.demoBadge.hidden = true;
+      if (isNetworkError(e)) updateOnline(true);
+      setStatus(false, e.code === "auth" ? "Password required" : `Unreachable: ${e.message}`);
+      els.healthInfo.textContent = "";
+      els.healthInfo.append(h("div", { class: "list-empty", text: "Server status unavailable." }));
     }
+  }
+
+  /* ---------- PWA: install, service worker, export ---------- */
+  els.appVersion.textContent = `Version ${(window.APP_CONFIG && window.APP_CONFIG.version) || APP_VERSION}`;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    state.installPrompt = e;
+    renderInstallState();
+  });
+  window.addEventListener("appinstalled", () => {
+    state.installPrompt = null;
+    toast("Installed — open it from your home screen");
+    renderInstallState();
+  });
+  function renderInstallState() {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    if (isStandalone()) {
+      els.btnInstall.hidden = true;
+      els.installHint.textContent = "Installed as an app on this device.";
+    } else if (state.installPrompt) {
+      els.btnInstall.hidden = false;
+      els.installHint.textContent = "Install for a full-screen app with offline calculators.";
+    } else if (ios) {
+      els.btnInstall.hidden = true;
+      els.installHint.textContent = "Install: tap Share in Safari, then “Add to Home Screen”.";
+    } else {
+      els.btnInstall.hidden = true;
+      els.installHint.textContent = "Install: open the browser menu and choose “Install app” or “Add to Home screen”.";
+    }
+  }
+  els.btnInstall.addEventListener("click", async () => {
+    const p = state.installPrompt;
+    if (!p) return;
+    p.prompt();
+    try {
+      await p.userChoice;
+    } catch {
+      /* dismissed */
+    }
+    state.installPrompt = null;
+    renderInstallState();
+  });
+  function renderOfflineInfo() {
+    if (!CALC) {
+      els.offlineInfo.textContent = "";
+      return;
+    }
+    const s = CALC.ptCacheSummary();
+    els.offlineInfo.textContent = s.count
+      ? `Offline cache: ${s.count} PT lookup${s.count === 1 ? "" : "s"} (${s.refrigerants.map(([id, n]) => `${id} ×${n}`).join(", ")}). Electrical and SH/SC calculators run on the device.`
+      : "Offline: electrical and SH/SC calculators run on the device; PT lookups are cached as you use them (last 20).";
+  }
+  els.btnExport.addEventListener("click", async () => {
+    els.btnExport.disabled = true;
+    try {
+      const res = await api("/api/export");
+      if (!res.ok) throw await readError(res);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = h("a", { href: url, download: `hvac-export-${new Date().toISOString().slice(0, 10)}.json` });
+      doc.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast("Export downloaded");
+    } catch (e) {
+      toast(`Export failed: ${e.message}`);
+    } finally {
+      els.btnExport.disabled = false;
+    }
+  });
+  els.btnUpdate.addEventListener("click", () => {
+    if (state.swWaiting) state.swWaiting.postMessage({ type: "SKIP_WAITING" });
+    else location.reload();
+  });
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    const configVersion = window.APP_CONFIG && window.APP_CONFIG.version ? String(window.APP_CONFIG.version) : APP_VERSION;
+    const known = store.get("hvac.version");
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      if (known !== configVersion) {
+        store.set("hvac.version", configVersion);
+        reg.update().catch(() => {});
+      }
+      const track = (worker) => {
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            state.swWaiting = worker;
+            els.btnUpdate.hidden = false;
+          }
+        });
+      };
+      if (reg.waiting && navigator.serviceWorker.controller) {
+        state.swWaiting = reg.waiting;
+        els.btnUpdate.hidden = false;
+      }
+      reg.addEventListener("updatefound", () => track(reg.installing));
+    }).catch(() => {
+      /* http origin without SW support, or blocked */
+    });
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloading || !state.swWaiting) return;
+      reloading = true;
+      location.reload();
+    });
   }
 
   /* ---------- init ---------- */
@@ -2004,14 +2696,22 @@ function boot() {
     loadConversations();
     if (!booted) {
       booted = true;
-      const last = store.get("hvac.lastConversation");
-      if (last && /^[0-9a-f]{16}$/.test(last)) await openConversation(last, { silent: true });
-      else renderMessages();
+      const r = parseHash(currentHash());
+      if (r.screen === "chat" && !r.conv && !r.isNew) {
+        const last = store.get("hvac.lastConversation");
+        if (last && /^[0-9a-f]{16}$/.test(last)) setHashSilently(`#chat/${last}`);
+      }
+      if (!location.hash) setHashSilently(currentHash());
+      applyRoute();
+      if (state.route.screen === "chat" && state.route.conv) await openConversation(state.route.conv, { silent: true });
       renderHeader();
     }
   }
   renderMessages();
   renderHeader();
+  renderReadingsUnitChip();
+  renderInstallState();
+  registerServiceWorker();
   init();
 }
 
@@ -2022,7 +2722,8 @@ function boot() {
 globalThis.HVAC_UI = {
   parseSseFrames, escapeHtml, relTime, dayLabel, groupUnitsBySite, unitLabel, unitBadgeText, sortFindings, isHypothesis,
   needsNameplateVerify, toNum, buildMeasurements, composeReadingsMessage, composeCalcMessage, pickList, fmtNum,
-  DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS,
+  parseHash, groupSearchHits, filterUnits, timeOfDay,
+  DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION,
 };
 
 if (typeof document !== "undefined" && typeof window !== "undefined") {
