@@ -84,7 +84,7 @@ export function loadKnowledge(dir: string, opts: LoadOptions = {}): KnowledgeBas
   const meta: RefrigerantMeta[] = existsSync(metaPath) ? readJson<RefrigerantMeta[]>(metaPath) : [];
   const tables = new Map<string, RefrigerantTable>();
   for (const file of listJson(refDir)) {
-    if (file.endsWith("index.json")) continue;
+    if (file.endsWith("index.json") || /[\/\\]_[^\/\\]*$/.test(file)) continue;
     try {
       const t = readJson<RefrigerantTable>(file);
       if (!t.id || !Array.isArray(t.tempF) || t.tempF.length !== t.bubblePsig?.length || t.tempF.length !== t.dewPsig?.length) {

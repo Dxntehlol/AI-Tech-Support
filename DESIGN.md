@@ -60,7 +60,7 @@ hvac-assistant/
     server.ts           # entry: builds app, starts listening
     app.ts              # express app factory (createApp(deps)) — routes mount here
     routes/*.ts         # route modules (conversations, units, chat, reference, search)
-    db/schema.sql       # SQLite schema (idempotent CREATE IF NOT EXISTS)
+    db/schema.ts        # SQLite schema as a TS string constant (idempotent CREATE IF NOT EXISTS)
     db/index.ts         # openDatabase(path) -> Db (runs schema, FTS triggers)
     db/repos.ts         # Units/Conversations/Messages/Findings repositories + search
     knowledge/loader.ts # loads and validates all JSON packs once (KnowledgeBase)
@@ -78,7 +78,7 @@ hvac-assistant/
     vendor/                          # copied marked + DOMPurify (served locally)
 ```
 
-Parallel builders own disjoint files. `src/types.ts`, `db/schema.sql` and this document
+Parallel builders own disjoint files. `src/types.ts`, `db/schema.ts` and this document
 are the contract. If a builder must extend a type, it adds optional fields only.
 
 ## Data model (SQLite)

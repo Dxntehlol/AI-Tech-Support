@@ -1,0 +1,764 @@
+[
+ {
+  "id": "R-22",
+  "file": "R-22.json",
+  "type": "pure",
+  "criticalTempF": 205.1,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R22"
+ },
+ {
+  "id": "R-410A",
+  "file": "R-410A.json",
+  "type": "zeotrope",
+  "criticalTempF": 160.4,
+  "glideF": 0.2,
+  "points": 220,
+  "coolprop": "R410A"
+ },
+ {
+  "id": "R-134a",
+  "file": "R-134a.json",
+  "type": "pure",
+  "criticalTempF": 213.9,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R134a"
+ },
+ {
+  "id": "R-407C",
+  "file": "R-407C.json",
+  "type": "zeotrope",
+  "criticalTempF": 187.2,
+  "glideF": 10.8,
+  "points": 221,
+  "coolprop": "R407C"
+ },
+ {
+  "id": "R-404A",
+  "file": "R-404A.json",
+  "type": "zeotrope",
+  "criticalTempF": 161.8,
+  "glideF": 0.9,
+  "points": 221,
+  "coolprop": "R404A"
+ },
+ {
+  "id": "R-507A",
+  "file": "R-507A.json",
+  "type": "azeotrope",
+  "criticalTempF": 159.1,
+  "glideF": 0.0,
+  "points": 219,
+  "coolprop": "R507A"
+ },
+ {
+  "id": "R-32",
+  "file": "R-32.json",
+  "type": "pure",
+  "criticalTempF": 172.6,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R32"
+ },
+ {
+  "id": "R-1234yf",
+  "file": "R-1234yf.json",
+  "type": "pure",
+  "criticalTempF": 202.5,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R1234yf"
+ },
+ {
+  "id": "R-1234ze(E)",
+  "file": "R-1234zeE.json",
+  "type": "pure",
+  "criticalTempF": 228.9,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R1234ze(E)"
+ },
+ {
+  "id": "R-290",
+  "file": "R-290.json",
+  "type": "pure",
+  "criticalTempF": 206.1,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R290"
+ },
+ {
+  "id": "R-600a",
+  "file": "R-600a.json",
+  "type": "pure",
+  "criticalTempF": 274.4,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R600a"
+ },
+ {
+  "id": "R-717",
+  "file": "R-717.json",
+  "type": "pure",
+  "criticalTempF": 270.3,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R717"
+ },
+ {
+  "id": "R-744",
+  "file": "R-744.json",
+  "type": "pure",
+  "criticalTempF": 87.8,
+  "glideF": -0.0,
+  "points": 147,
+  "coolprop": "R744"
+ },
+ {
+  "id": "R-123",
+  "file": "R-123.json",
+  "type": "pure",
+  "criticalTempF": 362.6,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R123"
+ },
+ {
+  "id": "R-11",
+  "file": "R-11.json",
+  "type": "pure",
+  "criticalTempF": 388.3,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R11"
+ },
+ {
+  "id": "R-12",
+  "file": "R-12.json",
+  "type": "pure",
+  "criticalTempF": 233.5,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R12"
+ },
+ {
+  "id": "R-1233zd(E)",
+  "file": "R-1233zdE.json",
+  "type": "pure",
+  "criticalTempF": 330.3,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R1233zd(E)"
+ },
+ {
+  "id": "R-245fa",
+  "file": "R-245fa.json",
+  "type": "pure",
+  "criticalTempF": 308.9,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "R245fa"
+ },
+ {
+  "id": "R-152a",
+  "file": "R-152a.json",
+  "type": "pure",
+  "criticalTempF": 235.9,
+  "glideF": -0.0,
+  "points": 221,
+  "coolprop": "R152A"
+ },
+ {
+  "id": "R-23",
+  "file": "R-23.json",
+  "type": "pure",
+  "criticalTempF": 79.1,
+  "glideF": -0.0,
+  "points": 139,
+  "coolprop": "R23"
+ },
+ {
+  "id": "R-454B",
+  "file": "R-454B.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 2.7,
+  "points": 194,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 68.9
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 31.1
+   }
+  ]
+ },
+ {
+  "id": "R-448A",
+  "file": "R-448A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 10.7,
+  "points": 209,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 26.0
+   },
+   {
+    "component": "R125",
+    "massPercent": 26.0
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 20.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 21.0
+   },
+   {
+    "component": "R1234ze(E)",
+    "massPercent": 7.0
+   }
+  ]
+ },
+ {
+  "id": "R-449A",
+  "file": "R-449A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 9.9,
+  "points": 209,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 24.3
+   },
+   {
+    "component": "R125",
+    "massPercent": 24.7
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 25.3
+   },
+   {
+    "component": "R134a",
+    "massPercent": 25.7
+   }
+  ]
+ },
+ {
+  "id": "R-407A",
+  "file": "R-407A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 9.7,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 20.0
+   },
+   {
+    "component": "R125",
+    "massPercent": 40.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 40.0
+   }
+  ]
+ },
+ {
+  "id": "R-407F",
+  "file": "R-407F.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 9.7,
+  "points": 179,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 30.0
+   },
+   {
+    "component": "R125",
+    "massPercent": 30.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 40.0
+   }
+  ]
+ },
+ {
+  "id": "R-452A",
+  "file": "R-452A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 7.5,
+  "points": 197,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 11.0
+   },
+   {
+    "component": "R125",
+    "massPercent": 59.0
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 30.0
+   }
+  ]
+ },
+ {
+  "id": "R-513A",
+  "file": "R-513A.json",
+  "type": "azeotrope",
+  "criticalTempF": null,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R1234yf",
+    "massPercent": 56.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 44.0
+   }
+  ]
+ },
+ {
+  "id": "R-422D",
+  "file": "R-422D.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 6.4,
+  "points": 218,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 65.1
+   },
+   {
+    "component": "R134a",
+    "massPercent": 31.5
+   },
+   {
+    "component": "R600a",
+    "massPercent": 3.4
+   }
+  ]
+ },
+ {
+  "id": "R-438A",
+  "file": "R-438A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 13.5,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 8.5
+   },
+   {
+    "component": "R125",
+    "massPercent": 45.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 41.0
+   },
+   {
+    "component": "R600",
+    "massPercent": 1.7
+   },
+   {
+    "component": "R601a",
+    "massPercent": 0.6
+   }
+  ],
+  "approximate": true,
+  "approximatePairs": [
+   "R32/R601a",
+   "R125/R601a",
+   "R134a/R601a"
+  ]
+ },
+ {
+  "id": "R-417A",
+  "file": "R-417A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 6.9,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 46.6
+   },
+   {
+    "component": "R134a",
+    "massPercent": 50.0
+   },
+   {
+    "component": "R600",
+    "massPercent": 3.4
+   }
+  ]
+ },
+ {
+  "id": "R-421A",
+  "file": "R-421A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 7.4,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 58.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 42.0
+   }
+  ]
+ },
+ {
+  "id": "R-422B",
+  "file": "R-422B.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 7.3,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 55.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 42.0
+   },
+   {
+    "component": "R600a",
+    "massPercent": 3.0
+   }
+  ]
+ },
+ {
+  "id": "R-427A",
+  "file": "R-427A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 10.2,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 15.0
+   },
+   {
+    "component": "R125",
+    "massPercent": 25.0
+   },
+   {
+    "component": "R143a",
+    "massPercent": 10.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 50.0
+   }
+  ]
+ },
+ {
+  "id": "R-434A",
+  "file": "R-434A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 3.5,
+  "points": 212,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 63.2
+   },
+   {
+    "component": "R143a",
+    "massPercent": 18.0
+   },
+   {
+    "component": "R134a",
+    "massPercent": 16.0
+   },
+   {
+    "component": "R600a",
+    "massPercent": 2.8
+   }
+  ]
+ },
+ {
+  "id": "R-454A",
+  "file": "R-454A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 12.2,
+  "points": 213,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 35.0
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 65.0
+   }
+  ]
+ },
+ {
+  "id": "R-454C",
+  "file": "R-454C.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 14.7,
+  "points": 220,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R32",
+    "massPercent": 21.5
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 78.5
+   }
+  ]
+ },
+ {
+  "id": "R-455A",
+  "file": "R-455A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 22.3,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "CO2",
+    "massPercent": 3.0
+   },
+   {
+    "component": "R32",
+    "massPercent": 21.5
+   },
+   {
+    "component": "R1234yf",
+    "massPercent": 75.5
+   }
+  ]
+ },
+ {
+  "id": "R-450A",
+  "file": "R-450A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 1.1,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R134a",
+    "massPercent": 42.0
+   },
+   {
+    "component": "R1234ze(E)",
+    "massPercent": 58.0
+   }
+  ]
+ },
+ {
+  "id": "R-515B",
+  "file": "R-515B.json",
+  "type": "azeotrope",
+  "criticalTempF": null,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R1234ze(E)",
+    "massPercent": 91.1
+   },
+   {
+    "component": "R227ea",
+    "massPercent": 8.9
+   }
+  ]
+ },
+ {
+  "id": "R-502",
+  "file": "R-502.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 0.3,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R22",
+    "massPercent": 48.8
+   },
+   {
+    "component": "R115",
+    "massPercent": 51.2
+   }
+  ]
+ },
+ {
+  "id": "R-500",
+  "file": "R-500.json",
+  "type": "azeotrope",
+  "criticalTempF": null,
+  "glideF": 0.0,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R12",
+    "massPercent": 73.8
+   },
+   {
+    "component": "R152A",
+    "massPercent": 26.2
+   }
+  ]
+ },
+ {
+  "id": "R-408A",
+  "file": "R-408A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 0.5,
+  "points": 199,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 7.0
+   },
+   {
+    "component": "R143a",
+    "massPercent": 46.0
+   },
+   {
+    "component": "R22",
+    "massPercent": 47.0
+   }
+  ],
+  "approximate": true,
+  "approximatePairs": [
+   "R125/R22"
+  ]
+ },
+ {
+  "id": "R-402A",
+  "file": "R-402A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 2.8,
+  "points": 205,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R125",
+    "massPercent": 60.0
+   },
+   {
+    "component": "R290",
+    "massPercent": 2.0
+   },
+   {
+    "component": "R22",
+    "massPercent": 38.0
+   }
+  ]
+ },
+ {
+  "id": "R-401A",
+  "file": "R-401A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 9.9,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R22",
+    "massPercent": 53.0
+   },
+   {
+    "component": "R152A",
+    "massPercent": 13.0
+   },
+   {
+    "component": "R124",
+    "massPercent": 34.0
+   }
+  ],
+  "approximate": true,
+  "approximatePairs": [
+   "R22/R124",
+   "R152A/R124"
+  ]
+ },
+ {
+  "id": "R-409A",
+  "file": "R-409A.json",
+  "type": "zeotrope",
+  "criticalTempF": null,
+  "glideF": 14.1,
+  "points": 221,
+  "coolprop": "mass-fraction mixture",
+  "composition": [
+   {
+    "component": "R22",
+    "massPercent": 60.0
+   },
+   {
+    "component": "R124",
+    "massPercent": 25.0
+   },
+   {
+    "component": "R142b",
+    "massPercent": 15.0
+   }
+  ]
+ }
+]

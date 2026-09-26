@@ -1,3 +1,5 @@
+/** SQLite schema (idempotent). Kept as a TS constant so dist/ is self-contained. */
+export const SCHEMA_SQL = `
 -- HVAC Field Assistant schema (idempotent)
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
@@ -90,3 +92,4 @@ CREATE TRIGGER IF NOT EXISTS findings_au AFTER UPDATE ON findings BEGIN
   INSERT INTO findings_fts(rowid, symptom, cause, resolution, tags)
   VALUES (new.rowid, new.symptom, new.cause, new.resolution, new.tags);
 END;
+`;
