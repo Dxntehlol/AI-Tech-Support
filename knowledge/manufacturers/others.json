@@ -61,7 +61,7 @@
    "description": "Bard (June 1980 to present): 3 digits, a letter, then the serial digits; the two digits immediately after the letter (positions 5-6) are the year of manufacture (98 = 1998). Month/week not encoded.",
    "eraStart": 1980,
    "eraEnd": 2026,
-   "regex": "^(\\d{3})([A-Z])(\\d{2})(\\d{4,8})$",
+   "regex": "^(\\d{3})([A-Z])(\\d{2})(\\d{4,8})(?:-\\d{1,2})?$",
    "date": {
     "method": "twoDigitYear",
     "yearGroup": 3,
@@ -85,6 +85,12 @@
      "expect": {
       "year": 2017
      }
+    },
+    {
+     "serial": "000F950926066-1",
+     "expect": {
+      "year": 1995
+     }
     }
    ],
    "confidence": "medium",
@@ -100,7 +106,8 @@
     "Three independent secondary decoders agree on the rule; not confirmed against a Bard warranty lookup, so confidence is capped at medium.",
     "Examples are constructed to the published rule (year = digits 5-6); they were not taken from dated nameplate photos.",
     "Pre-June-1980 Bard serials (6 digits + 2 letters, second letter = year, B = 1962) and the Apr-May 1980 11-character style are not decoded here; use the data plate date.",
-    "Since 2025 Bard prints the serial information as three separate fields on the data plate instead of one string - the year digits are still the two digits after the letter. A date printed on the plate always outranks this decode."
+    "Since 2025 Bard prints the serial information as three separate fields on the data plate instead of one string - the year digits are still the two digits after the letter. A date printed on the plate always outranks this decode.",
+    "Some Bard serials carry a hyphenated 1-2 digit suffix (e.g. 000F950926066-1 = 1995, the worked example published by building-center.org and the intrysys Bard decoder); the suffix is ignored for dating."
    ]
   },
   {
@@ -154,8 +161,8 @@
   },
   {
    "id": "nordyne-mmyy",
-   "description": "Older Nordyne style (roughly late 1980s to 1999): 3-letter prefix, then MM (positions 4-5) and YY (positions 6-7), then 5 digits - month and year swapped relative to the current style.",
-   "eraStart": 1985,
+   "description": "Older Nordyne style (short transition period ~1997-1999): 3-letter prefix, then MM (positions 4-5) and YY (positions 6-7), then 5 digits - month and year swapped relative to the current style.",
+   "eraStart": 1997,
    "eraEnd": 1999,
    "regex": "^([A-Z]{3})(\\d{2})(\\d{2})(\\d{5})$",
    "date": {
@@ -166,16 +173,16 @@
    },
    "examples": [
     {
-     "serial": "GSD119512345",
+     "serial": "GSD119712345",
      "expect": {
-      "year": 1995,
+      "year": 1997,
       "month": 11
      }
     },
     {
-     "serial": "ABC069612345",
+     "serial": "ABC069812345",
      "expect": {
-      "year": 1996,
+      "year": 1998,
       "month": 6
      }
     }
@@ -188,23 +195,30 @@
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence: only one secondary source describes the swapped order and its wording is ambiguous about the cutover year (~2000). Treat any pre-2000 Nordyne date as an estimate and confirm from the compressor date code.",
+    "Nordyne 1980-1997 serials encode the year in the FIRST LETTER of the serial (A = 1980 ... M = 1991 ... S = 1997, per building-center.org/nordyne-hvac-age and hvacdecoder.com); this MMYY reading only applies to the short transition period before the YYMM style (~2000). Era narrowed to 1997-1999 so the letter-year scheme is not mis-read as month/year.",
+    "LOW confidence: only one secondary source describes the swapped order (units 'older than 12 years' as of ~2010-2012, i.e. roughly pre-1998/2000) and its wording is ambiguous about the cutover year. Treat any pre-2000 Nordyne date as an estimate and confirm from the compressor date code.",
     "Examples are constructed to the rule, not taken from dated plates.",
     "Same regex as nordyne-yymm; the decoder separates them by era and by month validity (a value > 12 in positions 4-5 cannot be a month, so it must be the year)."
    ]
   },
   {
-   "id": "reznor-letter-2021-2022",
-   "description": "Reznor (Nortek) serial: first element is a letter date code - two letters for the year (BU = 2021, BV = 2022) and a third letter for the month (A = Jan ... L = Dec) - followed by the plant code (e.g. 3062 = Monterrey) and a consecutive number.",
+   "id": "reznor-letter-2021-2028",
+   "description": "Reznor (Nortek) serial: first element is a letter date code - two letters for the year (BU = 2021, BV = 2022, BW = 2023, BX = 2024, BY = 2025, BZ = 2026, CA = 2027, CB = 2028) and a third letter for the month (A = Jan ... L = Dec) - followed by the plant code (e.g. 3062 = Monterrey) and a consecutive number.",
    "eraStart": 2021,
-   "eraEnd": 2022,
+   "eraEnd": 2028,
    "regex": "^([A-Z]{2})([A-L])[ -]?(\\d{4})[ -]?(\\d{4,8})$",
    "date": {
     "method": "letterYear",
     "yearGroup": 1,
     "map": {
      "BU": 2021,
-     "BV": 2022
+     "BV": 2022,
+     "BW": 2023,
+     "BX": 2024,
+     "BY": 2025,
+     "BZ": 2026,
+     "CA": 2027,
+     "CB": 2028
     },
     "monthGroup": 2,
     "monthLetterMap": {
@@ -249,6 +263,13 @@
       "year": 2022,
       "month": 9
      }
+    },
+    {
+     "serial": "BXA306200001",
+     "expect": {
+      "year": 2024,
+      "month": 1
+     }
     }
    ],
    "confidence": "medium",
@@ -256,20 +277,22 @@
    "sources": [
     "Reznor Form P-UD 'First Element of the Serial Number - Date of Manufacture' (Reznor date code chart 2002-2020 / 2021-2022 supplement, hosted at jjmorgan.com)",
     "Reznor replacement parts form P-UBX-UBZ-UDX-UDZ (03-21) 1034346-0 - serial number decoding (date code / plant / consecutive number)",
-    "Reznor serial number lookup (reznorheaters.com/en/na/serials)"
+    "Reznor serial number lookup (reznorheaters.com/en/na/serials)",
+    "Reznor replacement parts form UBX-UBZ-UDX-UDZ-RPL (08-22) 1034346-H (firstsupply.com), Table 2 date codes: 2023 = BWA-BWL, 2024 = BXA-BXL, 2025 = BYA-BYL, 2026 = BZA-BZL, 2027 = CAA-CAL, 2028 = CBA-CBL"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "Only the 2021 (BU) and 2022 (BV) year letters were read directly from the Reznor chart summary; the month letters A-L run January-December (BUA = Jan 2021, BUL = Dec 2021, BVA-BVI = Jan-Sep 2022).",
+    "2021 (BU) and 2022 (BV) were read from the Reznor chart summary; 2023-2028 (BW-CB) are listed in Table 2 of Reznor parts form 1034346-H (08-22). The month letters A-L run January-December (BUA = Jan 2021, BVC = Mar 2022, BXA = Jan 2024 per the same form).",
     "The plant code separator and the consecutive-number length are not documented in the sources; the regex tolerates optional spaces/hyphens. Reznor's online serial lookup (reznorheaters.com) is authoritative.",
-    "Examples are constructed from the published month/year letters, not from dated nameplate photos."
+    "Examples are constructed from the published month/year letters, not from dated nameplate photos.",
+    "Examples are constructed from the published month/year letters; BXA306200001 follows the form's BXA = Jan 2024 entry with the Monterrey plant code."
    ]
   },
   {
    "id": "reznor-letter-extrapolated",
-   "description": "Reznor letter date code for years other than 2021-2022, assuming the second year letter advances one letter per year (BT = 2020 ... BZ = 2026). NOT confirmed - use Reznor's serial lookup.",
+   "description": "Reznor letter date code for 2015-2020, assuming the second year letter advances one letter per year (BO = 2015 ... BT = 2020). NOT confirmed - use Reznor's serial lookup. 2021-2028 are documented in reznor-letter-2021-2028.",
    "eraStart": 2015,
-   "eraEnd": 2026,
+   "eraEnd": 2020,
    "regex": "^([A-Z]{2})([A-L])[ -]?(\\d{4})[ -]?(\\d{4,8})$",
    "date": {
     "method": "letterYear",
@@ -280,11 +303,7 @@
      "BQ": 2017,
      "BR": 2018,
      "BS": 2019,
-     "BT": 2020,
-     "BW": 2023,
-     "BX": 2024,
-     "BY": 2025,
-     "BZ": 2026
+     "BT": 2020
     },
     "monthGroup": 2,
     "monthLetterMap": {
@@ -317,21 +336,22 @@
      }
     },
     {
-     "serial": "BXF306200002",
+     "serial": "BRG306200002",
      "expect": {
-      "year": 2024,
-      "month": 6
+      "year": 2018,
+      "month": 7
      }
     }
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Extrapolated from the Reznor Form P-UD date code chart entries for 2021 (BU) and 2022 (BV); Reznor Date Code 1949-2015 chart (jjmorgan.com) not read"
+    "Extrapolated backwards from the Reznor date codes BU = 2021 ... CB = 2028 (parts form 1034346-H); the Reznor Form P-UD chart 2002-2020 summary (jjmorgan.com) is internally inconsistent about 2019/2020 (shows both BS* and BT* under 2020), so BO-BT remain unconfirmed"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence / inferred: the year-letter sequence outside 2021-2022 is an assumption (no evidence about skipped letters such as I, O or Q). Confirm with Reznor's serial lookup at reznorheaters.com/en/na/serials or tech support (855) 584-3172 before relying on the year.",
+    "LOW confidence / inferred: the year-letter sequence for 2015-2020 is an assumption (no evidence about skipped letters such as I, O or Q). Confirm with Reznor's serial lookup at reznorheaters.com/en/na/serials or Reznor support (800-695-1901) before relying on the year.",
+    "Reznor's own worked serial in parts form 1034346-0 (03-21) is 'BOG 3062 00000' (date code BOG, plant 3062, consecutive number) - its year is not stated in the form, so it is not used as a dated example.",
     "Pre-2015 Reznor units use earlier letter codes documented in the 'Reznor Date Code 1949-2015' chart - not decoded here."
    ]
   },
@@ -506,10 +526,10 @@
   },
   {
    "id": "mitsubishi-yymm-new",
-   "description": "Newer Mitsubishi Electric (Mr. Slim / M-series, ~2015+) serial: two leading letters/characters, then YY (characters 3-4) and MM (characters 5-6), then the sequence (e.g. AU1708... = August 2017).",
+   "description": "Newer Mitsubishi Electric (Mr. Slim / M-series, ~2015+) serial: one or two leading letters (factory/prefix), then YY and MM, then the sequence (e.g. AU1708... = August 2017).",
    "eraStart": 2014,
    "eraEnd": 2027,
-   "regex": "^([A-Z]{2})(\\d{2})(\\d{2})([A-Z0-9]{3,8})$",
+   "regex": "^([A-Z]{1,2})(\\d{2})(\\d{2})([A-Z0-9]{3,8})$",
    "date": {
     "method": "twoDigitYear",
     "yearGroup": 2,
@@ -532,21 +552,23 @@
      }
     }
    ],
-   "confidence": "medium",
-   "evidence": "multi_secondary",
+   "confidence": "low",
+   "evidence": "single_secondary",
    "sources": [
-    "minisplitsizer.com - How to Find the Age of a Mitsubishi Mini Split (serial guide; AU1708 = August 2017)",
-    "furnace.direct - Mitsubishi Electric Serial Number Lookup"
+    "minisplitsizer.com - How to Find the Age of a Mitsubishi Mini Split (serial guide: characters 3-4 = year, 5-6 = month; AU1708 = August 2017)",
+    "inspectorsjournal.com thread 17397 - competing description with a ONE-letter factory prefix (U01123456 = factory U, 01 = 2001, 12 = December)",
+    "furnace.direct - Mitsubishi Electric Serial Number Lookup (listed by the builder; not confirmed to state this rule)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
+    "LOW confidence: only one secondary decoder (minisplitsizer.com) was confirmed to state the two-letter + YYMM rule; furnace.direct was not confirmed. A competing third-party description gives a single-letter factory prefix followed by YY MM, so the prefix length (1 or 2 letters) is unconfirmed and the regex accepts both.",
     "AU1708 = August 2017 is the worked example published by the secondary source; the second example is constructed to the same rule.",
-    "The leading two characters and the trailing sequence length are not fully documented - the regex is deliberately loose. If the serial starts with a digit, use the first-digit-year formats instead."
+    "If the serial starts with a digit, use the first-digit-year formats instead. Confirm the build date from the rating plate or Mitsubishi's warranty lookup."
    ]
   },
   {
    "id": "friedrich-ptac-yymm",
-   "description": "Friedrich PTAC / room AC (2017+ parts-manual style): plant/prefix letter(s), then YY year (17 = 2017 ... 22 = 2022) and MM month (01-12), then the sequence.",
+   "description": "Friedrich PTAC / room AC (2017+ parts-manual style): plant/prefix letter(s), then YY year (17 = 2017 ... 29 = 2029 per current manuals) and MM month (01-12), then the sequence.",
    "eraStart": 2017,
    "eraEnd": 2027,
    "regex": "^([A-Z]{1,2})(\\d{2})(\\d{2})([A-Z0-9]{4,8})$",
@@ -573,38 +595,39 @@
     }
    ],
    "confidence": "low",
-   "evidence": "single_secondary",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "Friedrich PTAC parts manual - 'PTAC Serial Number Identification Guide' (ManualsLib, Friedrich WallMaster WMPTAC02 parts manual p.3; H)A09K25**G parts manual p.2): year code 17 = 2017 ... 22 = 2022, month code 01-12",
-    "hvacagelookup.com - Friedrich HVAC Age (states letter plant code + 2-digit year + 2-digit WEEK - conflicts on month vs week)"
+    "Friedrich PTAC parts manual - 'PTAC Serial Number Identification Guide' (ManualsLib, Friedrich WallMaster WMPTAC02 parts manual p.3; H)A09K25**G parts manual p.2; ZoneAire Select service manual): year code 17-22 (24-29 in current manuals), MONTH code 01-12",
+    "hvacagelookup.com - Friedrich HVAC Age and howtolookatahouse.com (2019): letter plant code + 2-digit year + 2-digit WEEK ('A1712 = week 12 of 2017') - superseded by the manufacturer guide"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence: the Friedrich parts manual defines year (17-22) and month (01-12) codes but the exact character positions were not read; a second source says the two digits after the year are a WEEK, not a month. The regex assumes year then month immediately after the prefix letter(s). Confirm against the serial-number guide in the unit's parts manual.",
+    "Positions assumed plant letter(s) + YY + MM; the Friedrich guide confirms month (01-12), so secondary decoders that call the last two digits a week are superseded. The exact character positions were still not read directly, so confidence stays LOW - confirm against the serial-number guide in the unit's parts manual.",
+    "Year codes 17-22 are in the older guides and 24-29 in current Friedrich manuals; the two-digit year is read directly (pivot 70).",
     "Examples are constructed, not from dated plates."
    ]
   },
   {
    "id": "friedrich-ptac-letteryear",
-   "description": "Friedrich PTAC (2009-2017 parts-manual style): two-letter year code (LJ = 2009, AK = 2010, AA = 2011, AB = 2012, AC = 2013, AD = 2014, AE = 2015, AF = 2016, AG = 2017) plus a one-letter month code (A = Jan ... H = Aug, J = Sep, K = Oct, L = Nov, M = Dec; I skipped).",
+   "description": "Friedrich PTAC (2009-2017 parts-manual style): plant letter, then a single year-digit letter (A = 1, B = 2 ... H = 8, J = 9, K = 0; read as 2009-2017 in this era) and a one-letter month code (A = Jan ... H = Aug, J = Sep, K = Oct, L = Nov, M = Dec; I skipped), then the sequence.",
    "eraStart": 2009,
    "eraEnd": 2017,
-   "regex": "^([A-Z]{2})([A-HJ-M])(\\d{5,9})$",
+   "regex": "^([A-Z])([A-HJ-K])([A-HJ-M])(\\d{5,9})$",
    "date": {
     "method": "letterYear",
-    "yearGroup": 1,
+    "yearGroup": 2,
     "map": {
-     "LJ": 2009,
-     "AK": 2010,
-     "AA": 2011,
-     "AB": 2012,
-     "AC": 2013,
-     "AD": 2014,
-     "AE": 2015,
-     "AF": 2016,
-     "AG": 2017
+     "J": 2009,
+     "K": 2010,
+     "A": 2011,
+     "B": 2012,
+     "C": 2013,
+     "D": 2014,
+     "E": 2015,
+     "F": 2016,
+     "G": 2017
     },
-    "monthGroup": 2,
+    "monthGroup": 3,
     "monthLetterMap": {
      "A": 1,
      "B": 2,
@@ -646,20 +669,24 @@
    "confidence": "low",
    "evidence": "single_secondary",
    "sources": [
-    "Friedrich PTAC parts manual - 'PTAC Serial Number Identification Guide' (ManualsLib, Friedrich WallMaster WMPTAC02 parts manual p.3) - year and month letter tables"
+    "Friedrich PTAC parts manual - 'PTAC Serial Number Identification Guide' (ManualsLib, Friedrich WallMaster WMPTAC02 parts manual p.3; H)A09K25 parts manual p.2) - single-letter year digit (A = 1 ... H = 8, J = 9, K = 0), month letters A-M skipping I, plant letter first in the newer guide"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence: the year-letter and month-letter tables come from the Friedrich parts manual (manufacturer document) but the position of the codes within the serial was not confirmed; this regex assumes they lead the serial. Verify against the guide printed in the parts manual for the model.",
-    "Examples are constructed from the published letter tables."
-   ]
+    "LOW confidence: Friedrich's guide defines a SINGLE-letter year digit, so the year letter repeats every decade (K = 2010 or 2000, A = 2011 or 2001 ...). This format assumes the 2009-2017 era; confirm the decade from the model generation / refrigerant (R-410A = 2010+) or the date on the plate.",
+    "The first letter is the plant code (any letter). Examples are constructed from the published letter tables (AKC = plant A, year 0 -> 2010, March; LJM = plant L, year 9 -> 2009, December).",
+    "The position of the codes within the serial was not read directly from the guide; verify against the guide printed in the parts manual for the model."
+   ],
+   "plant": {
+    "group": 1
+   }
   },
   {
    "id": "lg-ymm-prefix",
    "description": "LG (Multi V, splits, PTAC): serial begins with 3 digits - last digit of the year, then the two-digit month (e.g. 412... = December 2014) - followed by a plant/sequence code. Decade candidate 2010-2019.",
    "eraStart": 2010,
    "eraEnd": 2019,
-   "regex": "^(\\d)(\\d{2})([A-Z]{2}[A-Z0-9]{3,9})$",
+   "regex": "^(\\d)(\\d{2})([A-Z])([A-Z][A-Z0-9]{3,9})$",
    "date": {
     "method": "oneDigitYear",
     "yearGroup": 1,
@@ -680,25 +707,42 @@
       "year": 2018,
       "month": 1
      }
+    },
+    {
+     "serial": "705KWPZ64912",
+     "expect": {
+      "year": 2017,
+      "month": 5
+     }
     }
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "multi_secondary",
    "sources": [
-    "Builder memory of the LG appliance/HVAC serial convention (year digit + 2-digit month) - NOT re-verified against a source in this review"
+    "building-center.org/lg-hvac-age - LG HVAC age (first digit = year, digits 2-3 = month)",
+    "rapidhvacparts.com - LG Multi V serial number nomenclature (first digit = year, digits 2-3 = month, following letter = factory/country, K = Korea)",
+    "howtolookatahouse.com - How can I tell the age of an LG air conditioner from the serial number (2020)",
+    "partsdr.com / oemhvacparts.com - LG serial number date decoding (corroboration)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence - memory only. LG serials encode only the last digit of the year; decade must come from the model generation (Multi V III ~2011-2014, IV ~2014-2017, 5 ~2017+). Confirm with LG's warranty lookup (lghvac.com) before quoting an age.",
-    "Examples are constructed to the assumed rule."
-   ]
+    "Confidence kept at LOW by the verification pass (the rule was originally builder memory); four independent secondary decoders now agree on year-digit + MM, which would qualify for medium once a builder re-checks the examples. LG serials encode only the last digit of the year; decade must come from the model generation (Multi V III ~2011-2014, IV ~2014-2017, 5 ~2017+). Confirm with LG's warranty lookup (lghvac.com) before quoting an age.",
+    "The first letter after the date digits is the factory country (K = Korea per rapidhvacparts); other letters are not mapped.",
+    "705KWPZ64912 (= May of a year ending in 7) is the worked example published by the secondary decoders; the other examples are constructed to the rule."
+   ],
+   "plant": {
+    "group": 3,
+    "map": {
+     "K": "Korea"
+    }
+   }
   },
   {
    "id": "lg-ymm-prefix-2020s",
-   "description": "LG year-digit + month serial, decade candidate 2020-2029 (same assumed rule as lg-ymm-prefix).",
+   "description": "LG year-digit + month serial, decade candidate 2020-2029 (same rule as lg-ymm-prefix).",
    "eraStart": 2020,
    "eraEnd": 2027,
-   "regex": "^(\\d)(\\d{2})([A-Z]{2}[A-Z0-9]{3,9})$",
+   "regex": "^(\\d)(\\d{2})([A-Z])([A-Z][A-Z0-9]{3,9})$",
    "date": {
     "method": "oneDigitYear",
     "yearGroup": 1,
@@ -722,14 +766,23 @@
     }
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "multi_secondary",
    "sources": [
-    "Builder memory of the LG serial convention - NOT re-verified in this review"
+    "building-center.org/lg-hvac-age - LG HVAC age (first digit = year, digits 2-3 = month)",
+    "rapidhvacparts.com - LG Multi V serial number nomenclature (first digit = year, digits 2-3 = month, following letter = factory/country, K = Korea)",
+    "howtolookatahouse.com - How can I tell the age of an LG air conditioner from the serial number (2020)",
+    "partsdr.com / oemhvacparts.com - LG serial number date decoding (corroboration)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "LOW confidence - memory only; decade candidate. See lg-ymm-prefix."
-   ]
+    "LOW confidence (kept low by the verification pass); decade candidate only. See lg-ymm-prefix for sources and the factory-letter note."
+   ],
+   "plant": {
+    "group": 3,
+    "map": {
+     "K": "Korea"
+    }
+   }
   }
  ],
  "modelFormats": [
@@ -900,13 +953,14 @@
    "notes": [
     "Nameplate: model line reads e.g. 'UDAP-125'; the input rating (MBH) printed beside it must match the number in the model. Fuel (natural gas / propane) is a separate line - the model does not encode it.",
     "Older Reznor equivalents: F-series (FE/FT) and XE/UDX; newer ones UDX/UDZ (2021+) follow the same size numbering.",
-    "Confidence medium: model letter meanings from the Reznor IOM titles/parts forms located in search, not from a nomenclature page read directly."
+    "Confidence medium: model letter meanings from Reznor documents (IOM Form I-UDA, parts form 1034346, Unit Heater Catalog C-UH) located in search summaries, not from a nomenclature page read directly."
    ],
    "confidence": "medium",
-   "evidence": "single_secondary",
+   "evidence": "manufacturer_doc",
    "sources": [
     "Reznor UDAP/UDAS Installation & Operation manual (Form I-UDA; ManualsLib listing 'Reznor UDAP-125' and 'Reznor UDAP, UDAS Installation Manual')",
-    "Reznor replacement parts form P-UBX-UBZ-UDX-UDZ (03-21) 1034346-0"
+    "Reznor replacement parts form P-UBX-UBZ-UDX-UDZ (03-21) 1034346-0",
+    "Reznor Unit Heater Catalog C-UH (partner.reznorhvac.com/files/C-UH_0.pdf) - model designations (UDAP/UDAS/UDBP/UDBS) and sizes 30-400 MBH"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -988,7 +1042,7 @@
    "description": "City Multi outdoor: PUHY-P72TNU-A style. Prefix = system type; P = inverter (EP = high-efficiency, HP = hyper-heat); number = nominal cooling capacity in kBtuh for US models; letter after number = voltage; suffix letters = market/version.",
    "productType": "vrf_outdoor",
    "eraStart": 2005,
-   "regex": "^(PURY|PUHY|PUMY|PQRY|PQHY)-(?:E?P|HP|Y|N)?(\\d{2,4})([TYN])([A-Z]{1,4}\\d?)(?:-[A-Z0-9]+)?$",
+   "regex": "^(PURY|PUHY|PUMY|PQRY|PQHY)-(?:E?P|HP|Y|N)?(\\d{2,4})([TYN])([A-Z]{1,4}\\d?)(?:-[A-Z0-9]+)?(?:-[A-Z0-9]+)?$",
    "segments": [
     {
      "group": 1,
@@ -1019,13 +1073,13 @@
       "Y": "460-3-60",
       "N": "208/230-1-60 (PUMY) - verify on plate"
      },
-     "notes": "T/Y confirmed only from builder memory of US catalog models (e.g. PUHY-P72TNU-A, PUHY-P72YNU-A); N on PUMY single-phase models. LOW confidence - verify."
+     "notes": "T/Y confirmed from the Trane/Mitsubishi Electric 'CITY MULTI Outdoor Unit Model Number Reference Guide' and the PUHY-P72-432TNU-A data book (T = 208/230-3-60, Y = 460-3-60); N (PUMY single-phase) inferred - verify on plate."
     },
     {
      "group": 4,
      "name": "Market / version suffix",
      "attribute": "revision",
-     "notes": "'NU' / 'KMU' = North America (U); trailing -A / -A1 = design revision."
+     "notes": "'NU' / 'KMU' = North America (U); trailing -A / -A1 = design revision; a second suffix such as -BS = coastal / blue-fin coil (PUHY-(E)P-(T)(Y)(S)NU-A(-BS) per mitsubishitechinfo.ca)."
     }
    ],
    "refrigerant": "R-410A",
@@ -1056,18 +1110,28 @@
       "tonnage": "3",
       "voltage": "208/230-1-60 (PUMY) - verify on plate"
      }
+    },
+    {
+     "model": "PUHY-P72TNU-A-BS",
+     "expect": {
+      "series": "City Multi Y-series heat pump (2-pipe), air-cooled",
+      "tonnage": "6",
+      "voltage": "208/230-3-60"
+     }
     }
    ],
    "notes": [
-    "LOW confidence: layout from builder memory; the Mitsubishi Electric Trane HVAC US nomenclature sheet was not read in this review. Family identification (PUHY/PURY/PUMY/PQHY/PQRY) and the kBtuh capacity digits are reliable; the voltage-letter map is not confirmed.",
+    "LOW confidence: layout from builder memory; family identification (PUHY/PURY/PUMY/PQHY/PQRY), the kBtuh capacity digits and the T/Y voltage letters are confirmed (PUHY-P72TNU-A = 6 ton per submittal); the PUMY 'N' voltage letter and the suffix meanings are not.",
     "Nameplate: the outdoor unit plate carries the model (PUHY-P72TNU-A) and, separately, the module serial; a multi-module system's combined model (e.g. PUHY-P240TSNU-A) is on a system label - decode the individual modules.",
     "R-410A through 2025 generations; 2025+ North American VRF moves to R-454B (A2L) - check plate and refrigerant detection sensors."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
+    "Trane / Mitsubishi Electric CITY MULTI Outdoor Unit Model Number Reference Guide (trane.com) - voltage letters T / Y",
     "Mitsubishi Electric City Multi error code list (mitsubishielectric.com.sg CityMultiErrorCode.pdf) - model naming in headings",
-    "Builder memory of Mitsubishi Electric Trane US City Multi catalog nomenclature (unverified)"
+    "Builder memory of Mitsubishi Electric Trane US City Multi catalog nomenclature (unverified)",
+    "Mitsubishi Electric PUHY-P72-432TNU-A data book / PUHY-P72TNU-A submittal - 6 ton, 208/230-3-60"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1176,9 +1240,13 @@
     },
     {
      "group": 3,
-     "name": "Cabinet / voltage / market letters",
-     "attribute": "options",
-     "notes": "e.g. BTE = 208/230-3-60 US model, LTE = 460-3-60 (builder memory, unverified)"
+     "name": "Voltage / configuration",
+     "attribute": "voltage",
+     "map": {
+      "BTE": "208-230/3/60",
+      "DTE": "460/3/60"
+     },
+     "notes": "BTE = 208-230 V 3 ph 60 Hz and DTE = 460 V 3 ph 60 Hz per the LG Multi V 5 ODU submittal (ARUM072BTE5) and the Multi V IV ARUN072BTE4 service manual; other letter groups are reported raw."
     },
     {
      "group": 4,
@@ -1189,7 +1257,7 @@
       "4": "Multi V IV",
       "5": "Multi V 5"
      },
-     "notes": "Unverified map."
+     "notes": "4 = Multi V IV and 5 = Multi V 5 confirmed by the LG Multi V 5 submittal / Multi V IV service manual; 3 = Multi V III from builder memory."
     }
    ],
    "refrigerant": "R-410A",
@@ -1202,7 +1270,8 @@
      "expect": {
       "series": "Multi V 5 outdoor, air-cooled (heat pump or heat recovery - check nameplate/model suffix)",
       "tonnage": "6",
-      "revision": "Multi V 5"
+      "revision": "Multi V 5",
+      "voltage": "208-230/3/60"
      }
     },
     {
@@ -1210,28 +1279,31 @@
      "expect": {
       "series": "Multi V (III/IV) heat pump outdoor, air-cooled",
       "tonnage": "8",
-      "revision": "Multi V IV"
+      "revision": "Multi V IV",
+      "voltage": "208-230/3/60"
      }
     }
    ],
    "notes": [
-    "LOW confidence: layout from builder memory; the LG Multi V engineering manual nomenclature page was not read. Capacity digits (kBtuh) are reliable.",
+    "LOW confidence kept: the voltage letters, generation digit and 072 = 6 ton / 096 = 8 ton are confirmed from LG submittal and service-manual excerpts, but the LG nomenclature page itself was not read, so the series map and the overall layout remain unverified.",
     "Nameplate: 'MODEL' line on the outdoor unit; the 'BUYER MODEL' may differ - decode the factory model."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Builder memory of LG Multi V catalog nomenclature (unverified)"
+    "LG Multi V 5 ODU submittal ARUM072BTE5 (media.us.lg.com) - 208-230V 3ph 60Hz, 6 ton, Multi V 5",
+    "LG Multi V IV ARUN072BTE4 service manual (ManualsLib 2994109) - model / voltage",
+    "Builder memory of LG Multi V catalog nomenclature (series letters, unverified)"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "samsung-dvm-outdoor",
    "family": "Samsung DVM S / DVM S2 VRF outdoor units (AM***)",
-   "description": "Samsung DVM outdoor: AM072FXVAFH/AA style. AM + nominal capacity in kBtuh + series/type letters, optional /AA market suffix.",
+   "description": "Samsung DVM outdoor: AM072FXVAFH/AA style. AM = DVM, 3 digits = capacity code (HP x 10; equals nominal kBtuh on US 60 Hz models), then version year, X = outdoor, series (V = DVM S), feature, voltage and heat-type letters, optional /AA or digit market suffix.",
    "productType": "vrf_outdoor",
    "eraStart": 2010,
-   "regex": "^(AM)(\\d{3})([A-Z]{2})([A-Z]{2,5})(?:/[A-Z]{2})?$",
+   "regex": "^(AM)(\\d{3})([A-Z])([A-Z])([A-Z])([A-Z])([A-Z])([A-Z])(?:[/A-Z0-9]*)?$",
    "segments": [
     {
      "group": 1,
@@ -1243,22 +1315,57 @@
     },
     {
      "group": 2,
-     "name": "Nominal cooling capacity (kBtuh)",
+     "name": "Capacity code",
      "attribute": "tonnage",
      "transform": "mbh_to_tons",
-     "unit": "mbh"
+     "unit": "mbh",
+     "notes": "Capacity code is HP x 10 per Samsung nomenclature; on US 60 Hz models it equals nominal kBtuh (AM072 = 6 ton, AM096 = 8 ton)."
     },
     {
      "group": 3,
-     "name": "Series letters",
-     "attribute": "options",
-     "notes": "e.g. FX = DVM S heat pump, HX = DVM S heat recovery, JX = DVM S2 (builder memory, unverified)"
+     "name": "Version year",
+     "attribute": "revision",
+     "notes": "F = 2013 version per the Samsung AM080FXWANR service manual 'Model Naming' (ManualsLib p.294); other letters not mapped."
     },
     {
      "group": 4,
-     "name": "Voltage / configuration letters",
+     "name": "Unit position",
+     "attribute": "unit_type",
+     "map": {
+      "X": "Outdoor unit"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Series letter",
      "attribute": "options",
-     "notes": "Not decoded."
+     "map": {
+      "V": "DVM S"
+     },
+     "notes": "Only V (DVM S) confirmed from the service manual."
+    },
+    {
+     "group": 6,
+     "name": "Feature letter",
+     "notes": "Not decoded (A = feature per the service manual naming)."
+    },
+    {
+     "group": 7,
+     "name": "Rated voltage",
+     "attribute": "voltage",
+     "map": {
+      "F": "208-230/3/60"
+     },
+     "notes": "F = 3-phase 208-230 V 60 Hz per the service manual; other letters (e.g. 460 V) not confirmed - read the plate."
+    },
+    {
+     "group": 8,
+     "name": "Heat type",
+     "attribute": "heat_type",
+     "map": {
+      "H": "Heat pump",
+      "R": "Heat recovery"
+     }
     }
    ],
    "refrigerant": "R-410A",
@@ -1270,30 +1377,36 @@
      "model": "AM072FXVAFH/AA",
      "expect": {
       "series": "Samsung DVM (VRF) outdoor / system unit",
-      "tonnage": "6"
+      "tonnage": "6",
+      "voltage": "208-230/3/60",
+      "heat_type": "Heat pump"
      }
     },
     {
-     "model": "AM096HXVAFH",
+     "model": "AM096FXVAFH2AA",
      "expect": {
-      "tonnage": "8"
+      "tonnage": "8",
+      "heat_type": "Heat pump"
      }
     }
    ],
    "notes": [
-    "LOW confidence - builder memory; only family identification and kBtuh capacity should be trusted."
+    "LOW confidence: positions from the Samsung AM080FXWANR service manual 'Model Naming' (search summary); family identification, capacity and the F/H letters are reliable, other letters are not mapped.",
+    "Capacity code is HP x 10 per Samsung nomenclature; on US 60 Hz models it equals nominal kBtuh (AM072 = 6 ton, AM096 = 8 ton). AM096FXVAFH2AA is the 8-ton DVM S 230 V heat pump listed at samsunghvac.com."
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "single_secondary",
    "sources": [
-    "Samsung DVM S ECO HR service manual AC-00216E (s3.amazonaws.com/samsung-files) - model naming; builder memory (unverified)"
+    "Samsung AM080FXWANR service manual 'Model Naming' (ManualsLib p.294) - AM = DVM, capacity code x 1/10 HP, F = version year, X = outdoor, V = DVM S, F = 3ph 208-230 V 60 Hz, H = heat pump",
+    "Samsung HVAC US catalog - DVM S 230V heat pump AM096FXVAFH2AA (samsunghvac.com)",
+    "Samsung DVM S ECO HR service manual AC-00216E (s3.amazonaws.com/samsung-files) - model naming"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "fujitsu-airstage-outdoor",
    "family": "Fujitsu Airstage VRF outdoor units (AJ-series) and Fujitsu commercial split outdoor units (AOU-series)",
-   "description": "Fujitsu: AJY072LBLBH (Airstage J-series) / AOU36RLXFZ (split outdoor). Prefix = family, number = nominal capacity in kBtuh, suffix = series letters.",
+   "description": "Fujitsu: AJY072LALBH (Airstage V-III) / AOU36RLXFZ (split outdoor). Prefix = family, number = nominal capacity code, suffix = series letters.",
    "productType": "vrf_outdoor",
    "eraStart": 2008,
    "regex": "^(AJ[YHV]|AOU|AOUG|AOUH)(\\d{2,3})([A-Z]{2,7}\\d{0,2})(?:[-A-Z0-9]*)?$",
@@ -1331,7 +1444,7 @@
    ],
    "examples": [
     {
-     "model": "AJY072LBLBH",
+     "model": "AJY072LALBH",
      "expect": {
       "series": "Airstage VRF outdoor (J/V-series heat pump)",
       "tonnage": "6"
@@ -1346,12 +1459,14 @@
     }
    ],
    "notes": [
-    "LOW confidence - builder memory; only family identification and kBtuh capacity should be trusted."
+    "LOW confidence - builder memory; only family identification and kBtuh capacity should be trusted.",
+    "Capacity code assumed kBtuh (072 = 6 ton class); the Fujitsu nomenclature sheet was not read. Real catalog models: AJY072LALBH (Airstage V-III), AJY072LELBH (J-IVL), AJY072LALDH (V-IV, 3-phase); AOU36RLXFZ = 36,000 BTU (3 ton) per fujitsugeneral.com."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Fujitsu Airstage V-II / J-II service manuals (ManualsLib) - model naming; builder memory (unverified)"
+    "Fujitsu Airstage V-II / J-II service manuals (ManualsLib) - model naming; builder memory (unverified)",
+    "Fujitsu General global catalog - AJY072LALBH (Airstage V-III), AJY072LELBH (J-IVL); fujitsugeneral.com AOU36RLXFZ = 36,000 BTU"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1439,25 +1554,27 @@
   },
   {
    "id": "climatemaster-tranquility",
-   "family": "ClimateMaster Tranquility water-source / geothermal heat pumps (TC = Tranquility 20, TT = Tranquility 27/30, TE = Tranquility 16, TS = Tranquility 22)",
+   "family": "ClimateMaster Tranquility water-source / geothermal heat pumps (TC = Tranquility 16, TS = Tranquility 20, TY = Tranquility 22, TT = Tranquility 27/30, TR = Tranquility 16 HE Versatile, TE/TZ = Tranquility 30/27 Digital residential)",
    "description": "ClimateMaster: TTV036AGC00CRTS style. Two-letter series, cabinet letter (H horizontal / V vertical / D downflow / W water-to-water), nominal capacity in kBtuh, revision letter, voltage letter, controls/option letters.",
    "productType": "water_source_hp",
    "eraStart": 2000,
-   "regex": "^(T[CTESRV])([HVDW])(\\d{3})([A-Z])([A-Z])([A-Z])(\\d{2})(?:[-A-Z0-9]*)?$",
+   "regex": "^(T[CTESRVYZ])([HVDW])(\\d{3})([A-Z])([A-Z])([A-Z])(\\d{2})(?:[-A-Z0-9]*)?$",
    "segments": [
     {
      "group": 1,
      "name": "Series",
      "attribute": "series",
      "map": {
-      "TC": "Tranquility 20 (single-stage)",
-      "TT": "Tranquility 27 / 30 (two-stage)",
-      "TE": "Tranquility 16 (compact)",
-      "TS": "Tranquility 22",
-      "TR": "Tranquility (TR) series",
+      "TC": "Tranquility 16 (TC) compact",
+      "TS": "Tranquility 20 (TS)",
+      "TT": "Tranquility 27 / 30 (TT) two-stage",
+      "TR": "Tranquility 16 High-Efficiency (TR) Versatile",
+      "TY": "Tranquility 22 (TY)",
+      "TE": "Tranquility 30 Digital (TE) residential",
+      "TZ": "Tranquility 27 Digital (TZ) residential",
       "TV": "Tranquility variable-speed"
      },
-     "notes": "Partial map, builder memory."
+     "notes": "Series letters from ClimateMaster IOM titles (97B0075N02/N07 'Tranquility 16 (TC)', 97B0075N06 'Tranquility 20 (TS)', 97B0075N15 'Tranquility 22 (TY)', 97B0075N05 'Tranquility 30 (TT)', 97B0075N08 'Tranquility 16/High Efficiency (TR) Versatile', 97B0045N04 'Tranquility 30 Digital (TE)'). TZ/TV not confirmed from an IOM title."
     },
     {
      "group": 2,
@@ -1468,14 +1585,35 @@
       "V": "Vertical",
       "D": "Downflow",
       "W": "Water-to-water"
-     }
+     },
+     "notes": "Cabinet letters D/H/V confirmed by the same IOMs; W (water-to-water) from builder memory."
     },
     {
      "group": 3,
-     "name": "Nominal capacity (kBtuh)",
+     "name": "Nominal size code",
      "attribute": "tonnage",
-     "transform": "mbh_to_tons",
-     "unit": "mbh"
+     "transform": "map_tons",
+     "map": {
+      "006": "0.5",
+      "009": "0.75",
+      "012": "1",
+      "015": "1.25",
+      "018": "1.5",
+      "024": "2",
+      "026": "2",
+      "030": "2.5",
+      "036": "3",
+      "038": "3",
+      "042": "3.5",
+      "048": "4",
+      "049": "4",
+      "060": "5",
+      "064": "5",
+      "070": "6",
+      "072": "6"
+     },
+     "unit": "tons",
+     "notes": "Size code is a nominal size, not exactly kBtuh: 026/038/049/064/072 are ClimateMaster's nominal 2/3/4/5/6-ton sizes (same convention as WaterFurnace), so they map to whole tons instead of dividing by 12."
     },
     {
      "group": 4,
@@ -1493,7 +1631,7 @@
       "F": "460-3-60",
       "K": "575-3-60"
      },
-     "notes": "Partial map from builder memory - LOW confidence, verify on the ClimateMaster nomenclature sheet."
+     "notes": "Voltage codes G = 208-230/60/1, H = 208-230/60/3, F = 460/60/3, E = 265/60/1 confirmed by the ClimateMaster Tranquility IOMs (97B0075N05/N06/N07/N15); K = 575-3-60 from builder memory."
     },
     {
      "group": 6,
@@ -1515,16 +1653,16 @@
     {
      "model": "TTD049AGS22CRN",
      "expect": {
-      "series": "Tranquility 27 / 30 (two-stage)",
+      "series": "Tranquility 27 / 30 (TT) two-stage",
       "cabinet": "Downflow",
-      "tonnage": "4.1",
+      "tonnage": "4",
       "voltage": "208/230-1-60"
      }
     },
     {
      "model": "TCH036AGC00CRTS",
      "expect": {
-      "series": "Tranquility 20 (single-stage)",
+      "series": "Tranquility 16 (TC) compact",
       "cabinet": "Horizontal",
       "tonnage": "3",
       "voltage": "208/230-1-60"
@@ -1533,22 +1671,35 @@
     {
      "model": "TTV060AHC00CRTS",
      "expect": {
-      "series": "Tranquility 27 / 30 (two-stage)",
+      "series": "Tranquility 27 / 30 (TT) two-stage",
       "cabinet": "Vertical",
       "tonnage": "5",
       "voltage": "208/230-3-60"
      }
+    },
+    {
+     "model": "TYH036AGC00CRTS",
+     "expect": {
+      "series": "Tranquility 22 (TY)",
+      "cabinet": "Horizontal",
+      "tonnage": "3",
+      "voltage": "208/230-1-60"
+     }
     }
    ],
    "notes": [
-    "LOW confidence: layout from builder memory; TTD049AGS22CRN is a real listing (eBay 'ClimateMaster Tranquility 27 TTD049AGS22CRN') confirming series/cabinet/capacity positions, but the voltage and controls maps are unverified.",
+    "Confidence kept LOW: series, cabinet and voltage codes are now taken from ClimateMaster IOM titles and voltage tables, but the full nomenclature page (revision, controls and option letters) was not read. TTD049AGS22CRN is a real listing (eBay) confirming the positions.",
     "Nameplate: model on the data plate inside the compressor compartment door; the CXM/DXM/UPM board revision is on the board itself."
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "ClimateMaster Tranquility 27 TTD049AGS22CRN listing (ebay.com) - model string only",
-    "Builder memory of ClimateMaster nomenclature (unverified)"
+    "ClimateMaster IOM 97B0075N05 'Tranquility 30 (TT) Series' (files.climatemaster.com) - model nomenclature / voltage codes",
+    "ClimateMaster IOM 97B0075N06 'Tranquility 20 (TS) Series' (files.climatemaster.com)",
+    "ClimateMaster IOM 97B0075N07 / 97B0075N02 'Tranquility 16 (TC) Series' (files.climatemaster.com)",
+    "ClimateMaster IOM 97B0075N15 'Tranquility 22 (TY) Series' (files.climatemaster.com)",
+    "ClimateMaster IOM 97B0075N08 'Tranquility 16/High Efficiency (TR) Versatile Series'; 97B0045N04 'Tranquility 30 Digital (TE) Series' (titles)",
+    "ClimateMaster Tranquility 27 TTD049AGS22CRN listing (ebay.com) - model string only"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1564,14 +1715,33 @@
      "group": 1,
      "name": "Platform / stages / cabinet",
      "attribute": "series",
-     "notes": "Partial: NDV = Envision/5 Series dual-capacity vertical, NDH = horizontal, NSV = single-stage vertical, NVV = 7 Series variable-speed vertical, VS*/VV* = Versatec (builder memory, unverified)."
+     "map": {
+      "NDV": "5 Series dual-capacity vertical",
+      "NDH": "5 Series dual-capacity horizontal",
+      "NSV": "5 Series single-speed vertical",
+      "NSH": "5 Series single-speed horizontal"
+     },
+     "notes": "N = 5 Series water-to-air, D = dual-capacity, S = single-speed, V = vertical, H = horizontal per the WaterFurnace SC2500AN 5 Series specification catalog. NVV = 7 Series variable-speed vertical, VS*/VV* = Versatec (builder memory, unverified) - reported as the raw code."
     },
     {
      "group": 2,
-     "name": "Nominal capacity (kBtuh)",
+     "name": "Nominal size code",
      "attribute": "tonnage",
-     "transform": "mbh_to_tons",
-     "unit": "mbh"
+     "transform": "map_tons",
+     "map": {
+      "026": "2",
+      "038": "3",
+      "049": "4",
+      "064": "5",
+      "072": "6",
+      "036": "3",
+      "042": "3.5",
+      "048": "4",
+      "060": "5",
+      "070": "6"
+     },
+     "unit": "tons",
+     "notes": "Sizes 026/038/049/064/072 = 2/3/4/5/6 tons nominal per the SC2500AN catalog / ENERGY STAR listing (the code is not exactly kBtuh); other codes are common kBtuh sizes."
     }
    ],
    "refrigerant": "R-410A",
@@ -1582,35 +1752,37 @@
     {
      "model": "NDV038A111CTL",
      "expect": {
-      "tonnage": "3.2"
+      "series": "5 Series dual-capacity vertical",
+      "tonnage": "3"
      }
     },
     {
      "model": "NSH049",
      "expect": {
-      "tonnage": "4.1"
+      "series": "5 Series single-speed horizontal",
+      "tonnage": "4"
      }
     }
    ],
    "notes": [
-    "LOW confidence - builder memory; only capacity digits should be trusted. 5 Series 500A11 (R-454B, 2025+) uses the same size numbering.",
+    "LOW confidence kept: platform/stage/cabinet letters and sizes for the 5 Series come from the WaterFurnace SC2500AN specification catalog nomenclature (search summary); position 7 = vintage and position 8 = voltage (1 = 208-230/60/1) are not decoded. 5 Series 500A11 (R-454B, 2025+) uses the same size numbering.",
     "Nameplate: model on the plate at the compressor compartment; Aurora board version is read from the AID Tool or the board label."
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "WaterFurnace 5 Series 500A11 R-454B O&M OMW5-0016W (waterfurnace.com/literature) - title only",
-    "Builder memory (unverified)"
+    "WaterFurnace SC2500AN 5 Series 500A11 specification catalog - model nomenclature (N = 5 Series water-to-air, D = dual-capacity, V = vertical, 038 = 3-ton nominal; sizes 026/038/049/064/072 = 2/3/4/5/6 tons)",
+    "WaterFurnace 5 Series 500A11 R-454B O&M OMW5-0016W (waterfurnace.com/literature) - title only"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "trane-axiom-wshp",
    "family": "Trane Axiom water-source heat pumps (GEH horizontal, GEV vertical, GEC console, GET/GER rooftop, EXH/EXV high-efficiency)",
-   "description": "Trane Axiom: GEH024 / GEVE036 style. Prefix = platform and cabinet; optional E = high-efficiency/EarthWise; 3-digit number = nominal capacity in kBtuh.",
+   "description": "Trane Axiom: GEHG024 / GEVE072 style. Prefix = platform and cabinet; digit 4 (C, D, E, F, G, H, J) = drive-package / development sequence, not an efficiency tier; 3-digit number = nominal capacity in kBtuh.",
    "productType": "water_source_hp",
    "eraStart": 1995,
-   "regex": "^(GE[HVCRT]E?|EX[HV]E?|GW[HVS]E?)(\\d{3})(?:[-A-Z0-9]*)?$",
+   "regex": "^(GE[HVCRT][A-Z]?|EX[HV][A-Z]?|GW[HVS][A-Z]?)(\\d{3})(?:[-A-Z0-9]*)?$",
    "segments": [
     {
      "group": 1,
@@ -1618,18 +1790,22 @@
      "attribute": "series",
      "map": {
       "GEH": "Axiom horizontal water-source heat pump",
-      "GEHE": "Axiom horizontal, high-efficiency",
+      "GEHE": "Axiom horizontal, 6-25 ton (digit 4 = development sequence)",
+      "GEHG": "Axiom horizontal 1/2-5 ton (G sequence)",
       "GEV": "Axiom vertical water-source heat pump",
-      "GEVE": "Axiom vertical, high-efficiency",
+      "GEVE": "Axiom vertical, 6-25 ton (digit 4 = development sequence)",
+      "GEVG": "Axiom vertical 1/2-5 ton (G sequence)",
       "GEC": "Axiom console water-source heat pump",
       "GET": "Axiom rooftop water-source heat pump",
       "GER": "Axiom rooftop water-source heat pump",
       "EXH": "Axiom high-efficiency horizontal",
       "EXV": "Axiom high-efficiency vertical",
+      "EXHF": "Axiom high-efficiency horizontal (F sequence)",
+      "EXVF": "Axiom high-efficiency vertical (F sequence)",
       "GWH": "Axiom water-to-water (horizontal)",
       "GWS": "Axiom water-to-water"
      },
-     "notes": "Partial map, builder memory."
+     "notes": "Per Trane WSHP-PRC017 / GEHE IOM model number descriptions: current 1/2-5 ton models are GEHG/GEVG 006-060, 6-25 ton are GEHE 072-180 / GEVE 072-300, high-efficiency are EXHF/EXVF. Other digit-4 sequence letters (C, D, H, J) are reported as the raw code."
     },
     {
      "group": 2,
@@ -1650,21 +1826,36 @@
      }
     },
     {
-     "model": "GEVE036",
+     "model": "GEVE072",
      "expect": {
-      "series": "Axiom vertical, high-efficiency",
-      "tonnage": "3"
+      "series": "Axiom vertical, 6-25 ton (digit 4 = development sequence)",
+      "tonnage": "6"
+     }
+    },
+    {
+     "model": "GEHG024",
+     "expect": {
+      "series": "Axiom horizontal 1/2-5 ton (G sequence)",
+      "tonnage": "2"
+     }
+    },
+    {
+     "model": "EXHF042",
+     "expect": {
+      "series": "Axiom high-efficiency horizontal (F sequence)",
+      "tonnage": "3.5"
      }
     }
    ],
    "notes": [
-    "LOW confidence - builder memory; the Trane Axiom product catalog nomenclature page was not read. Trane serials are decoded by the Trane pack (this pack does not carry Trane serial rules).",
+    "LOW confidence kept: the prefix/sequence-letter meanings come from the Trane WSHP-PRC017 model number description (search summary), but the rest of the string (voltage, options) was not decoded. Trane serials are decoded by the Trane pack (this pack does not carry Trane serial rules).",
     "Axiom units ship with Trane 'Deluxe' or 'Basic' 24 V controls boards or Tracer ZN524/UC400 controllers; fault LED tables were not verified in this review - see the Axiom IOM."
    ],
    "confidence": "low",
-   "evidence": "inferred",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "Builder memory of Trane Axiom nomenclature (unverified)"
+    "Trane WSHP-PRC017W-EN (03/2023) Axiom water-source heat pump product catalog - model number description",
+    "Trane GEHE IOM 'Model Number Descriptions' (ManualsLib 534795 p.4)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1702,13 +1893,13 @@
       "K": "208/230-1-60",
       "R": "265-1-60"
      },
-     "notes": "Builder memory - LOW confidence; verify."
+     "notes": "K = 208/230 V and R = 265 V agreed by three dealer listings (amgair, ptacinc, appliancealliance) - multi_secondary for this segment."
     },
     {
      "group": 4,
-     "name": "Electric heater kW code",
-     "attribute": "heat_capacity",
-     "notes": "Digit code (2/3/5) - kW value not verified."
+     "name": "Electric heater size code",
+     "attribute": "other",
+     "notes": "Digit code (2/3/5). Friedrich's serial/model guide lists nominal heater sizes 'no heater, 2.5 kW, 3.4 kW, 5.0 kW' but the digit-to-kW mapping was not read, so the raw digit is reported (not a kW value)."
     },
     {
      "group": 5,
@@ -1736,12 +1927,13 @@
     }
    ],
    "notes": [
-    "LOW confidence - builder memory; family, heat type and kBtuh are reliable, the rest is unverified."
+    "LOW confidence: PDE = electric heat, PDH = heat pump, K = 208/230 V, R = 265 V and 09/12 = kBtuh are agreed by dealer listings; the heater-size digit and revision letters are unverified."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Friedrich PTAC parts manuals (ManualsLib) - model identification guide located but not read; builder memory (unverified)"
+    "Dealer listings amgair.com, ptacinc.com, appliancealliance.com - Friedrich PDE/PDH model breakdown (PDE = electric heat, PDH = heat pump, K = 208/230 V, R = 265 V, 09/12 = kBtuh)",
+    "Friedrich PTAC parts manuals (ManualsLib) - serial/model identification guide (nominal heater sizes 2.5 / 3.4 / 5.0 kW; digit mapping not read)"
    ],
    "lastVerified": "2026-09-26"
   }
@@ -1871,7 +2063,7 @@
    ],
    "diagnosticTips": [
     "The LED is on the integrated ignition control inside the control compartment (remove the side access panel).",
-    "A 1-flash lockout is cleared by interrupting the thermostat call (or the 24 V control circuit) for a few seconds, or by cycling line power; the control retries ignition trials before locking out.",
+    "A 1-flash (soft) lockout is reset by removing power from the control for more than one second, or by removing the thermostat call for heat for more than 1 second and LESS than 20 seconds (Form I-UDA p.25); the control retries ignition trials before locking out. A hard lockout (board fault, LED off) self-resets only when the hardware fault clears.",
     "Ignition-failure causes listed in the IOM: loose wiring, transformer failure, incorrect spark gap, shorted spark cable/electrode, burner or board not grounded, blown board fuse, faulty board, lockout device open, faulty combustion-air proving switch, main valve not operating."
    ],
    "coverage": "partial",
@@ -1928,6 +2120,38 @@
      "evidence": "manufacturer_doc"
     },
     {
+     "code": "LED 2 flashes",
+     "meaning": "Pressure switch is closed - the control waits indefinitely for the pressure switch to open before starting the venter",
+     "likelyCauses": [
+      "Pressure switch contacts stuck / welded closed",
+      "Pressure switch miswired (reads closed with the venter off)"
+     ],
+     "checks": [
+      "With no call for heat, ohm across the pressure switch - contacts must be open",
+      "Tubing and wiring at the switch; replace a welded switch"
+     ],
+     "severity": "warning",
+     "source": "Modine doc 5H79749 'Modine/UT Ignition Control Board Failure Codes' (breeze.modine.com), search summary",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LED 3 flashes",
+     "meaning": "Limit switch open - gas valve de-energized, blower runs on heat speed and inducer runs until the limit closes",
+     "likelyCauses": [
+      "Low airflow across the heat exchanger (fan motor / fan relay, dirty propeller, blocked discharge)",
+      "Overfired unit (manifold pressure / orifices)",
+      "Flame rollout"
+     ],
+     "checks": [
+      "Fan runs when the burner is on; motor amps",
+      "Manifold pressure vs. rating plate",
+      "Find the cause before resetting a manual rollout switch; inspect the heat exchanger"
+     ],
+     "severity": "warning",
+     "source": "Modine doc 5H79749 'Modine/UT Ignition Control Board Failure Codes' (breeze.modine.com), search summary",
+     "evidence": "manufacturer_doc"
+    },
+    {
      "code": "LED 6 flashes",
      "meaning": "Ignition lockout - failed ignition or flame not detected (as reported by third-party service sources; confirm against the Modine flash-code table)",
      "likelyCauses": [
@@ -1945,10 +2169,27 @@
      "severity": "lockout",
      "source": "JustAnswer HVAC threads 'Modine heater 6 flashes' - THIRD PARTY, not transcribed from the Modine table",
      "evidence": "single_secondary"
+    },
+    {
+     "code": "LED 7 flashes",
+     "meaning": "Lockout after 5 flame losses (4 re-cycles) in one call for heat",
+     "likelyCauses": [
+      "Weak flame signal (dirty flame sensor, poor burner ground)",
+      "Unstable flame - low gas pressure, drafts, venting",
+      "Intermittent gas valve"
+     ],
+     "checks": [
+      "Flame current with a microamp meter during the run; clean the sensor rod",
+      "Inlet and manifold gas pressure while running",
+      "Reset by interrupting the thermostat call or cycling power"
+     ],
+     "severity": "lockout",
+     "source": "Modine doc 5H79749 'Modine/UT Ignition Control Board Failure Codes' (breeze.modine.com), search summary",
+     "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
-    "The full flash-code table (1-6 flashes: pressure switch, limit, flame, lockout conditions) is in Modine document 5H79749 'Modine/UT Ignition Control Board Failure Codes' and in the unit IOM 'Service & Troubleshooting' section - only the entries above were confirmed in this review.",
+    "The full flash-code table (1-7 flashes: pressure switch, limit, flame and lockout conditions) is in Modine document 5H79749 'Modine/UT Ignition Control Board Failure Codes' and in the unit IOM 'Service & Troubleshooting' section - only the entries above were confirmed in this review (the 6-flash entry is third-party only).",
     "Lockout reset: interrupt the thermostat call for heat (or 24 V) for a few seconds, or cycle line power.",
     "Modine Power-Vented Unit Heater Troubleshooting Guide (doc 6-549) covers venter/pressure-switch and limit sequences."
    ],
@@ -1974,7 +2215,7 @@
   {
    "id": "mitsubishi-mnet-city-multi",
    "name": "Mitsubishi Electric City Multi / P-series check codes (M-NET, 4-digit)",
-   "description": "4-digit check codes displayed on the outdoor unit LED/7-segment display, the wired remote controller (PAR-xx), the MA/ME controllers and centralized controllers (AE-200/EW-50). Codes are shared across City Multi VRF and (largely) P-series splits. Extends the existing others.json entry (5 codes: 1102, 1302, 4103, 4115, 6607) with the remaining common City Multi 4-digit codes and the P-series/Mr. Slim A-control 2-character codes. Existing meanings were kept consistent; 6607 wording now includes the address/attribute display. Coverage is partial: the full City Multi service handbook check code list also contains preliminary codes (12xx, 14xx, 15xx sub-codes), 1000-series sub-variants, 2000-series water-side codes for water-cooled (PQHY/PQRY) and PWFY units, 3121/3152 (out-of-range outdoor/water temperature), 4102/4106/4109/4114/4121/4124, 4225/4226/4255/4256, 5108/5109/5111/5112/5120/5305, 6201/6202/6500/6601/6604/6605/6820-6824, 6840-6846, 7108/7109/7112/7116, plus inverter detail codes (101-137), which were not all seen in a source and are omitted. Thermistor attribution for 5101-5107 differs between indoor and outdoor units and between outdoor unit generations (older lists show 5104 as outside temperature; PUHY/PURY HP/YLM handbooks show 5104 = TH4 discharge, 5107 = TH7 outside). Always read the attribute/address shown with the code and use the thermistor table for that unit. Codes 1501, 2600, 4102, 4108, 4200, 4240, 4260, 4300, 5701, 7106, 7107, E1 and E2 were only seen in s",
+   "description": "4-digit check codes displayed on the outdoor unit LED/7-segment display, the wired remote controller (PAR-xx), the MA/ME controllers and centralized controllers (AE-200/EW-50). Codes are shared across City Multi VRF and (largely) P-series splits; the P-series/Mr. Slim A-control 2-character codes (P/E/F/U) are included. Coverage is partial (97 codes transcribed): preliminary codes (12xx, 14xx, 15xx sub-codes), 2000-series water-side codes for PQHY/PQRY/PWFY, 3121/3152, several 41xx/42xx/51xx/6xxx/71xx codes and the inverter detail codes (101-137) are omitted - see the outdoor unit Service Handbook check code list. Thermistor attribution for 5101-5107 differs between indoor and outdoor units and between outdoor unit generations (older lists show 5104 as outside temperature; PUHY/PURY HP/YLM handbooks show 5104 = TH4 discharge, 5107 = TH7 outside) - always read the attribute/address shown with the code and use the thermistor table for that unit.",
    "appliesTo": [
     "mitsubishi-city-multi-outdoor",
     "mitsubishi-p-series"
@@ -3499,14 +3740,13 @@
    "diagnosticTips": [
     "The outdoor unit control board has a 7-segment/LED display and SW1 dip switches for the self-diagnosis (maintenance) monitor: pressures, thermistors, LEV opening, operation history. Use the service handbook 'LED Monitor Display' table for your unit generation.",
     "Codes display on the remote controller together with the unit address and attribute (e.g. OC = outdoor, IC = indoor, BC = BC controller) that raised the fault.",
-    "Clearing: most check codes clear when the fault condition clears and the system restarts from the remote controller (turn OFF then ON); repeated hard faults (e.g. 1302 three times) lock out until power is cycled at the outdoor unit.",
-    "Only five codes were transcribed here. The full City Multi Check Code List (1000-series refrigerant/pressure, 2000-series water/drain, 4000-series inverter/power, 5000-series sensors, 6000-series communication, 7000-series system setting) is in the outdoor unit Service Handbook, Troubleshooting [1] Check Code List, and the summary PDF at mitsubishielectric.com.sg (CityMultiErrorCode.pdf).",
+    "Clearing faults: most check codes clear when the cause is removed and the system is restarted from the remote controller (OFF then ON). Repeated hard faults that lock the outdoor unit (e.g. 1302 high pressure on the second/third occurrence, inverter faults 42xx) require a power cycle at the outdoor unit after repair. Thermistor faults (51xx) put the unit in 3-minute anti-restart on first detection and error stop on the second.",
+    "97 codes are transcribed here (City Multi 4-digit codes plus P-series A-control 2-character codes); sub-codes, preliminary codes and inverter detail codes are omitted - the full City Multi Check Code List (1000-series refrigerant/pressure, 2000-series water/drain, 4000-series inverter/power, 5000-series sensors, 6000-series communication, 7000-series system setting) is in the outdoor unit Service Handbook, Troubleshooting [1] Check Code List, and the summary PDF at mitsubishielectric.com.sg (CityMultiErrorCode.pdf).",
     "Where codes appear: City Multi 4-digit check codes display on the wired remote controller (PAR-2x/3x MA controllers, ME controllers) together with the address and attribute of the unit that raised the fault (OC = outdoor, OS = sub outdoor, IC = indoor, BC = BC controller, Lc = Lossnay, RC = remote controller), on the outdoor unit control board 7-segment LED service display, and on centralized controllers (AE-200/EW-50, AG-150). P-series (A-control) 2-character codes (P/E/F/U) display on the wired remote controller; the outdoor board shows the same fault as LED1 (green) / LED2 (red) blink counts.",
     "Self check on the PAR-21MAA / MA remote controllers: press the CHECK button twice in succession to start self-diagnosis; 'CHECK MODE' appears, then after about 10 seconds the unit address and check code alternate at one-second intervals. Each unit stores the latest check code, so it can be recalled even after it was cancelled from the remote. Press CHECK twice within three seconds to exit self check, or press ON/OFF (which also stops the indoor units).",
     "Error history: the self-check results display shows the error history for each unit; the installation manual's 'Error history reset' procedure clears it (when the reset fails, the error contents are displayed again). On City Multi outdoor units, error history with detection time is also saved in service memory and read via the SW1 LED monitor settings in the service handbook.",
     "Outdoor unit maintenance monitor (City Multi): the control board has DIP switch SW1-1 to 1-8; setting SW1 per the 'LED monitor display' table shows pressures (63HS/63LS), thermistor values, LEV openings, compressor frequency, relay outputs and error history on the 7-segment display. Inverter detail codes (e.g. for 4220/4250/5301) are read with specific SW1 combinations given in the handbook (for example SW1 dips 1,2,5,6,8 ON on some generations).",
     "Test run: on P-series outdoor units the test run can be started and finished with DIP switch SW4 on the outdoor control board; on City Multi, test run is started from the remote controller (TEST RUN button / menu) after the addresses are set and the system has been powered 12 hours for crankcase heat. Check code 0900 means a unit (Lossnay) is in test mode, not a fault.",
-    "Clearing faults: most check codes clear when the cause is removed and the system is restarted from the remote controller (OFF then ON). Repeated hard faults that lock the outdoor unit (e.g. 1302 high pressure on the second occurrence, inverter faults 42xx) require a power cycle at the outdoor unit after repair. Thermistor faults (51xx) put the unit in 3-minute anti-restart on first detection and error stop on the second.",
     "Communication faults: for 66xx codes measure the M-NET DC voltage at TB3 (indoor/outdoor) and TB7 (centralized control) on the outdoor unit and confirm the transmission booster is powered; never wire or change polarity on the transmission line with power on (causes 6602). For 683x codes check the MA remote controller A/B line, the number of controllers/indoor units in the group and the main/sub setting; indoor board LED2 shows whether the MA line is powered.",
     "Mr. Slim P-series with an M-NET interface reports A-control faults as City Multi 4-digit codes (for example U1 -> 1302, U2 -> 1102, UF -> 4100, UP -> 4210, P5 -> 2502, E6 -> 6607-type communication codes); the MrSlimerrorCode.pdf table lists both forms side by side."
    ],
@@ -4573,11 +4813,11 @@
    "diagnosticTips": [
     "The outdoor unit main PCB has a 7-segment display and function buttons; error codes and operating data cycle on the display. LG's official trouble-shooting video guide covers CH05/CH53/CH237 communication faults.",
     "Clear a communication code by correcting the wiring and cycling power to the outdoor unit; re-run auto addressing if indoor units were added.",
-    "Only four codes were transcribed here. The complete CH table (CH01-CH19 indoor sensors/drain, CH21-CH29 inverter/compressor, CH32-CH47 sensors and pressure, CH51-CH59 capacity/communication, CH100+ heat recovery units) is in the LG Multi V service manual and LG's Help Library.",
+    "56 codes are transcribed here from the Multi V 5 service manual tables 68/69 and per-code pages (corroborated by the Multi V III list and the LG wall-mount inverter SM); HR-unit (CH1xx) and CH2xx codes beyond those listed are in the Multi V service manual and LG's Help Library.",
     "Where codes appear: the indoor unit display window / LED, the wired remote controller display (CHxx), and the outdoor unit main PCB 7-segment LED (SSD). All error codes can also be viewed with the LGMV (LG Monitoring View) service tool / PLGMVW101 Wi-Fi module, which also shows live pressures, temperatures and superheat.",
     "Reading the outdoor SSD: 1st-3rd digits are the error number and the 4th digit is the unit number (1 Master, 2 Slave 1, 3 Slave 2) - ARUM160LTE5 IM p.50; Multi V5 SM p.126 'Error Code Display'. Outdoor unit information cycles in sequence on the main PCB SSD.",
     "Response levels (Multi V5 SM p.125): four levels - Level 4 'notify and keep operating' up to Level 1 'immediate system shutdown, manual restart required'. Non-communication faults start at Level 3 (auto-restart) and escalate to Level 1 on the 10th occurrence; communication faults (CH05/CH53) are Level 2 and activate after 10 failed communication attempts.",
-    "Clearing: correct the cause, then cycle power to the outdoor unit (Level 1 faults need a manual restart). Communication codes clear after wiring is fixed and, if indoor units were added or replaced, auto addressing is re-run.",
+    "Clearing (Multi V 5 SM p.125): after the cause is fixed the error code remains until the master outdoor unit's microprocessor is reset AND operation has resumed for 130 minutes without recurrence; Level 1 faults need a manual power reset at the outdoor unit, Level 4 faults notify and keep operating. Communication codes clear after wiring is fixed and, if indoor units were added or replaced, auto addressing is re-run.",
     "Auto addressing (Multi V5 / ARUM IM p.40): wait 3 minutes after power-up, then press the RED button (SW01C) on the outdoor unit main PCB for 5 seconds; the number of connected indoor units shows on the 7-segment LED for 30 seconds when complete. Heat recovery systems also need auto pipe detection (Multi V5 SM p.105).",
     "Sensor codes (CH01/02/06, CH41-47, CH65, CH153/154): unplug the sensor and measure resistance against the manual's temperature table, then measure the sensor voltage plugged in; replace the sensor before the PCB (wall-mount SM p.64 method).",
     "Inverter codes (CH21/22/23/26/29): check U-V/V-W/W-U compressor winding balance and megohms, the inverter IPM, DC link voltage and connections; always apply heat-transfer paste and use a JIS screwdriver on inverter PCB screws (Multi V5 SM p.209).",
@@ -5100,7 +5340,7 @@
    "diagnosticTips": [
     "The ABC board status LED flashes the fault code; the AID Tool (Aurora Interface and Diagnostics) plugged into the board shows the code text and sensor data.",
     "Lockout reset: cycle the thermostat call (or the unit power); the last fault is retained in the ABC memory and readable with the AID Tool.",
-    "Only E1-E5 were transcribed here; the full table (E7 condensate, E8 over/under voltage, E10-E11 sensor faults, E13 non-critical sensor, E15-E23 compressor/loop/hot-water faults, E41+ variable-speed drive faults) is in AG1566EW / AG1562EW and the unit O&M."
+    "Only E1-E5 were transcribed here; the rest of the table per the Aurora points lists / AG1566EW: E7 condensate overflow, E8 over/under voltage, E10 compressor monitoring, E11 FP1 sensor error, E13 non-critical AXB sensor error, E15 hot-water limit, E16 variable-speed pump, E18 non-critical / E19 critical communication error; variable-speed drive codes (E41+) were NOT verified in this review - see AG1566EW / AG1562EW and the unit O&M."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -5126,17 +5366,18 @@
   {
    "id": "climatemaster-cxm-dxm-upm",
    "name": "ClimateMaster CXM / DXM / DXM2 / UPM heat pump controllers (fault LED flash codes)",
-   "description": "Microprocessor controls on ClimateMaster Tranquility water-source/geothermal heat pumps. The fault LED flashes a code; slow flash = fault retry, fast flash = lockout.",
+   "description": "Microprocessor controls on ClimateMaster Tranquility water-source/geothermal heat pumps. In normal mode the fault LED is steady on (normal), slow flash (fault retry) or fast flash (lockout); numeric fault codes are flashed only in Test Mode.",
    "appliesTo": [
     "climatemaster-tranquility"
    ],
    "faultCodes": [
     {
      "code": "Code 1",
-     "meaning": "No fault in memory (the fault LED flashes code 1 when no fault is stored)",
+     "meaning": "No fault in memory since the last power-up (the fault LED flashes code 1 in Test Mode when no fault is stored)",
      "severity": "info",
      "source": "ClimateMaster CXM Controls Application, Operation & Maintenance manual 97B0003N12 - LED and Alarm Relay Output table",
-     "evidence": "manufacturer_doc"
+     "evidence": "manufacturer_doc",
+     "notes": "Numeric codes are only flashed in Test Mode (momentarily short the TEST terminals)."
     },
     {
      "code": "Code 6",
@@ -5153,7 +5394,8 @@
      ],
      "severity": "lockout",
      "source": "ClimateMaster CXM Controls manual 97B0003N12 - condensate overflow fault; ClimateMaster Basic Troubleshooting Information and Guidelines",
-     "evidence": "manufacturer_doc"
+     "evidence": "manufacturer_doc",
+     "notes": "The numeric code is read in Test Mode (momentarily short the TEST terminals; 20 minutes, timers x15); in normal mode the LED only shows fast flash (lockout)."
     },
     {
      "code": "Slow flash (1 flash / 2 s)",
@@ -5181,8 +5423,8 @@
     }
    ],
    "diagnosticTips": [
-    "Count the fault LED flashes and compare to the 'LED and Alarm Relay Output Table' in the unit IOM; the LED continuously flashes the last fault in memory (code 1 = none).",
-    "Lockout reset: cycle the thermostat (Y) call or the unit power; a test mode (jumper/dip switch on the board) shortens timers for troubleshooting - see the CXM/DXM manual.",
+    "Enter Test Mode by momentarily shorting the TEST terminals on the board (Test Mode lasts 20 minutes and speeds all time delays by 15x); the fault LED - and the alarm relay, so the code can be read at the thermostat - then flash the last fault code in memory (code 1 = no fault since power-up). Compare the count to the 'LED and Alarm Relay Output Table' in the unit IOM (97B0003N12).",
+    "Normal mode LED: steady on = normal, slow flash = fault retry, fast flash = lockout (no numeric code outside Test Mode). Lockout reset: cycle the thermostat (Y) call or the unit power; the last fault is retained in memory and read back in Test Mode.",
     "Only codes 1 and 6 and the flash speeds were transcribed; the full table (2 high pressure, 3 low pressure, 4/5 freeze detection FP1/FP2, 7 over/under voltage, 8 unit performance sentinel, 9 swapped FP1/FP2 thermistors, and DXM/UPM-specific codes) is in ClimateMaster manual 97B0003N12 (CXM), the DXM/DXM2 manual, and files.climatemaster.com 'Service Tool fault list'."
    ],
    "coverage": "partial",
@@ -5214,57 +5456,73 @@
    "controlVoltage": "24 VAC from the unit control transformer (TRAN), 208/230 V or 460 V primary per voltage code; fused/circuit-breaker protected secondary on newer boards",
    "components": [
     {
-     "designator": "C / CC",
-     "name": "Compressor contactor"
+     "designator": "HPC",
+     "name": "High Pressure Control (auto reset), used with the Compressor Control Module (CCM)",
+     "notes": "Confirmed in Bard wall-mount IOMs (2100-829 / 2100-689, W3RV1 IOM p.18) and parts pages."
     },
     {
-     "designator": "IFC / BM",
-     "name": "Indoor blower motor (evaporator fan) and relay"
+     "designator": "LPC",
+     "name": "Low Pressure Control",
+     "notes": "Confirmed in Bard wall-mount IOMs and parts pages."
     },
     {
-     "designator": "OFM",
-     "name": "Outdoor (condenser) fan motor"
+     "designator": "CCM",
+     "name": "Compressor Control Module (Bard part 8201-088) - lockout / anti-short-cycle logic for HPC and LPC",
+     "notes": "Confirmed in Bard wall-mount IOMs and parts pages."
+    },
+    {
+     "designator": "LAC",
+     "name": "Low Ambient Control (outdoor fan cycling for low-ambient cooling)",
+     "notes": "Confirmed in Bard wall-mount IOMs."
     },
     {
      "designator": "TRAN",
      "name": "24 V control transformer"
     },
     {
-     "designator": "HPS",
-     "name": "High-pressure switch (auto reset)"
+     "designator": "C / CC",
+     "name": "Compressor contactor",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
-     "designator": "LPS",
-     "name": "Low-pressure switch"
+     "designator": "IFC / BM",
+     "name": "Indoor blower motor (evaporator fan) and relay",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
+    },
+    {
+     "designator": "OFM",
+     "name": "Outdoor (condenser) fan motor",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
      "designator": "HC / HR",
-     "name": "Electric heater contactor(s) / relays (heater kW per model code)"
+     "name": "Electric heater contactor(s) / relays (heater kW per model code)",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
      "designator": "TL / HL",
-     "name": "Heater high-limit(s) on the electric heat assembly"
+     "name": "Heater high-limit(s) on the electric heat assembly",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
      "designator": "CAP",
-     "name": "Run capacitor(s), compressor and fan (single-phase models)"
+     "name": "Run capacitor(s), compressor and fan (single-phase models)",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
      "designator": "CB",
-     "name": "Circuit breaker(s) for electric heat on larger kW packages"
+     "name": "Circuit breaker(s) for electric heat on larger kW packages",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     },
     {
      "designator": "ECON / VENT",
-     "name": "Economizer / ventilation package (optional, encoded in the trailing model characters)"
-    },
-    {
-     "designator": "CCM / LAC",
-     "name": "Compressor control module or low-ambient control on units so equipped"
+     "name": "Economizer / ventilation package (optional, encoded in the trailing model characters)",
+     "notes": "Designator not found in Bard literature (builder memory) - read the legend on the unit wiring diagram / IOM 2100-829 before using it"
     }
    ],
    "safetyDevices": [
-    "High-pressure switch",
-    "Low-pressure switch",
+    "HPC high-pressure control (auto reset, through the CCM)",
+    "LPC low-pressure control",
     "Electric heat high-limit(s)",
     "Compressor internal overload",
     "Phase monitor on some 3-phase models (not confirmed)"
@@ -5279,19 +5537,20 @@
     "A": "Economizer / ventilation enable on some ventilation packages (verify)"
    },
    "sequenceOfOperation": [
-    "Cooling: thermostat Y + G energize the compressor contactor (through HPS/LPS and any low-ambient/compressor control module) and the blower; the outdoor fan runs with the compressor (cycled by a low-ambient control on units so equipped).",
+    "Cooling: thermostat Y + G energize the compressor contactor (through the Compressor Control Module, which monitors HPC / LPC) and the blower; the outdoor fan runs with the compressor (cycled by the Low Ambient Control on units so equipped).",
     "Electric heat: W energizes the heater contactor(s) and, through the board/relay, the blower; heaters are protected by auto-reset high-limits and fuses/breakers per kW package.",
     "Ventilation/economizer options operate from the ventilation package controller (mixed air / CO2 / occupancy) per the option installed."
    ],
    "notes": [
-    "LOW confidence: designators from builder memory of Bard wall-mount wiring diagrams (IOM 2100-689 / 2100-829 located but not read). Confirm against the wiring-diagram legend inside the unit's control panel cover.",
+    "LOW confidence: HPC, LPC, LAC and CCM naming is confirmed from Bard wall-mount literature (IOM 2100-829 / 2100-689, W3RV1 IOM, parts pages); the remaining designators are builder memory in Carrier style and were not found in any Bard document - confirm against the wiring-diagram legend inside the unit's control panel cover.",
     "Bard W-series 3-phase units: check phase rotation at start-up (scroll compressors); reverse rotation shows as low amps and no pressure differential."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Bard Installation Instructions 2100-689 / 2100-829 (titles only)",
-    "Builder memory (unverified)"
+    "Bard wall-mount Installation Instructions 2100-829 / 2100-689 (bardwallmount.com/files) - HPC / LPC / LAC / CCM (search summary; legend not read in full)",
+    "Bard W3RV1 IOM p.18 and Bard parts pages (Compressor Control Module 8201-088)",
+    "Builder memory for the remaining designators (unverified)"
    ]
   },
   {
@@ -5526,7 +5785,7 @@
   {
    "familyRegex": "(mitsubishi-city-multi-outdoor|mitsubishi-p-series)",
    "familyLabel": "Mitsubishi Electric City Multi VRF (M-NET) and P-series",
-   "controlVoltage": "Outdoor unit control boards run on rectified DC from the main power; M-NET transmission line is a polarity-free ~24-30 VDC shielded 2-wire bus powered from the outdoor unit (or a PAC-SC51KUA power supply for centralized controllers); indoor units are powered separately (208/230 V) on City Multi",
+   "controlVoltage": "Outdoor unit control boards run on rectified DC from the main power; M-NET transmission line is a polarity-free shielded 2-wire DC bus powered from the outdoor unit (or a PAC-SC51KUA power supply for centralized controllers) - measure the bus voltage per the service handbook's M-NET voltage check page (nominal figure not cited here); indoor units are powered separately (208/230 V) on City Multi",
    "components": [
     {
      "designator": "TB1",
@@ -5606,7 +5865,8 @@
    ],
    "notes": [
     "LOW confidence: designators from builder memory of City Multi service handbooks; TB3/TB7/63HS/LEV/21S4 naming is standard Mitsubishi practice but was not transcribed from a legend in this review. Confirm on the outdoor unit wiring diagram (inside the control box cover).",
-    "Never megger or check continuity on the M-NET line with units powered; disconnect the transmission line before insulation tests."
+    "Never megger or check continuity on the M-NET line with units powered; disconnect the transmission line before insulation tests.",
+    "M-NET terminals are printed M1 / M2 / S on US units; some Mitsubishi design manuals label the same terminals A / B (non-polarity) and S. The shield is grounded at the outdoor unit whose CN41 is moved to CN40 (power-supply unit), per the City Multi design manuals."
    ],
    "confidence": "low",
    "evidence": "inferred",
@@ -5712,7 +5972,10 @@
    ],
    "appliesTo": "bard-w-series-wall-mount",
    "confidence": "low",
-   "evidence": "inferred"
+   "evidence": "inferred",
+   "sources": [
+    "Builder inference - no manufacturer source (generic HVAC symptom, not a documented brand bulletin)"
+   ]
   },
   {
    "symptom": "Bard wall-mount with ventilation/economizer package: high humidity or no fresh air, damper stuck",
@@ -5728,10 +5991,13 @@
    ],
    "appliesTo": "bard-w-series-wall-mount",
    "confidence": "low",
-   "evidence": "inferred"
+   "evidence": "inferred",
+   "sources": [
+    "Builder inference - no manufacturer source (generic HVAC symptom, not a documented brand bulletin)"
+   ]
   },
   {
-   "symptom": "Reznor / Modine unit heater: venter runs but no ignition, LED 2 flashes",
+   "symptom": "Reznor UD unit heater: venter runs but no ignition, DSI LED 2 flashes (pressure switch did not close)",
    "likelyCauses": [
     "Pressure switch not proving: blocked vent/flue, cracked tubing, water in the switch, venter wheel dirty",
     "Venter motor slow (bearings)"
@@ -5741,15 +6007,15 @@
     "Vent termination, screens, ice",
     "Venter motor current and speed"
    ],
-   "appliesTo": "(reznor-ud-unit-heater|modine-unit-heater)",
+   "appliesTo": "reznor-ud-unit-heater",
    "confidence": "medium",
-   "evidence": "single_secondary",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "Reznor UDAP/UDAS IOM DSI LED table (2 flashes = pressure switch did not close within 30 s)"
+    "Reznor UDAP/UDAS IOM (Form I-UDA) DSI LED table (2 flashes = pressure switch did not close within 30 s of venter start)"
    ]
   },
   {
-   "symptom": "Reznor / Modine unit heater: ignites then locks out (1 flash / ignition lockout)",
+   "symptom": "Reznor UD unit heater: ignites then locks out (DSI LED 1 flash = flame not detected / sustained)",
    "likelyCauses": [
     "Flame sensor dirty or poor burner ground (weak flame current)",
     "Low gas pressure / propane conversion not done",
@@ -5760,11 +6026,28 @@
     "Inlet/manifold pressure during trial",
     "Ground continuity from the burner to the board"
    ],
-   "appliesTo": "(reznor-ud-unit-heater|modine-unit-heater)",
+   "appliesTo": "reznor-ud-unit-heater",
    "confidence": "medium",
-   "evidence": "single_secondary",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "Reznor UDAP/UDAS IOM ignition-failure causes list"
+    "Reznor UDAP/UDAS IOM (Form I-UDA) DSI LED table (1 flash = system lockout, flame not detected) and ignition-failure causes list"
+   ]
+  },
+  {
+   "symptom": "Modine / UT ignition board: LED 2 flashes (pressure switch closed with no venter call) or 3 flashes (limit open)",
+   "likelyCauses": [
+    "2 flashes: pressure switch contacts stuck / welded closed, or switch miswired so it reads closed before the venter starts (the board waits indefinitely for it to open)",
+    "3 flashes: high limit open - low airflow across the heat exchanger (fan motor / fan relay, dirty propeller, blocked discharge), overfiring"
+   ],
+   "checks": [
+    "2 flashes: with no call for heat, ohm across the pressure switch - contacts must be open; check tubing and wiring, replace a welded switch",
+    "3 flashes: gas valve is de-energized, blower runs on heat speed and inducer runs; check fan operation, manifold pressure vs. rating plate, reset the limit only after the cause is found"
+   ],
+   "appliesTo": "modine-unit-heater",
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Modine doc 5H79749 'Modine/UT Ignition Control Board Failure Codes' (breeze.modine.com) - 2 flashes pressure switch closed, 3 flashes limit open"
    ]
   },
   {
@@ -5781,24 +6064,11 @@
    ],
    "appliesTo": "(reznor-ud-unit-heater|modine-unit-heater)",
    "confidence": "medium",
-   "evidence": "single_secondary",
+   "evidence": "manufacturer_doc",
    "sources": [
-    "Reznor UDAP/UDAS IOM DSI LED table (3 flashes = limit or rollout open)"
+    "Reznor UDAP/UDAS IOM DSI LED table (3 flashes = limit or rollout open)",
+    "Modine doc 5H79749 'Modine/UT Ignition Control Board Failure Codes' (3 flashes = limit open)"
    ]
-  },
-  {
-   "symptom": "Nordyne / Nortek packaged unit or furnace: intermittent no-heat, control board LED codes",
-   "likelyCauses": [
-    "Integrated furnace control board failure (common on 2000s-era units)",
-    "Flame sensor / pressure switch"
-   ],
-   "checks": [
-    "Read the board LED code table on the door label",
-    "Flame current; pressure switch operation"
-   ],
-   "appliesTo": "nordyne",
-   "confidence": "low",
-   "evidence": "inferred"
   },
   {
    "symptom": "Mitsubishi City Multi: 6607 / communication errors after a power event or added units",
@@ -5935,7 +6205,7 @@
    ]
   },
   {
-   "symptom": "Water-source heat pump: lockout on FP1 freeze detection (E5 / CXM code 5-class) in heating",
+   "symptom": "Water-source heat pump: lockout on FP1 water-coil freeze detection (WaterFurnace E5 / ClimateMaster CXM-DXM code 4) in heating",
    "likelyCauses": [
     "Freeze setpoint left at 30 F (water) on an antifreeze loop",
     "Low loop flow or cold loop",
@@ -5944,14 +6214,16 @@
    "checks": [
     "Board freeze jumper/dip switch setting (15 F for antifreeze)",
     "Loop delta-P and entering water temperature",
-    "Charge by subcooling"
+    "Charge by subcooling",
+    "ClimateMaster: code 4 = low water temperature (FP1); code 5 is the air-coil (FP2) freeze fault - do not confuse the two"
    ],
    "appliesTo": "(climatemaster-tranquility|waterfurnace-commercial)",
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
     "WaterFurnace Aurora A&T Guide E5",
-    "JustAnswer WaterFurnace E5 (ABC dip switch)"
+    "JustAnswer WaterFurnace E5 (ABC dip switch)",
+    "ClimateMaster Service Tool fault list / DXM2 resources (files.climatemaster.com): code 4 = Low Water Temperature (FP1), code 5 = Low Air Coil (FP2), code 6 = Condensate Overflow"
    ]
   },
   {
@@ -6006,34 +6278,18 @@
    ],
    "appliesTo": "friedrich-ptac",
    "confidence": "low",
-   "evidence": "inferred"
-  },
-  {
-   "symptom": "Direct-fired make-up air (CaptiveAire / Greenheck): burner drops out or no heat with high discharge air",
-   "likelyCauses": [
-    "Airflow proving switch not made (dampers, belts, dirty filters)",
-    "High-limit or profile-plate airflow out of range",
-    "Modulating gas valve / actuator"
-   ],
-   "checks": [
-    "Airflow switch differential pressure",
-    "Discharge temperature limit",
-    "Burner profile pressure per the IOM"
-   ],
-   "appliesTo": "(captiveaire|greenheck)",
-   "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Builder memory (unverified)"
+    "Builder inference - no manufacturer source (generic HVAC symptom, not a documented brand bulletin)"
    ]
   }
  ],
  "support": {
-  "phone": "Reznor / Nortek Global HVAC tech support (855) 584-3172 (confirmed). Other brands: not confirmed in this review - see notes",
+  "phone": "800-695-1901",
   "url": "https://www.reznorhvac.com/",
   "literatureUrl": "Bard: bardhvac.com (product literature) / bardwallmount.com/files; Reznor: reznorhvac.com literature + serial lookup reznorheaters.com/en/na/serials; Mitsubishi Electric: mylinkdrive.com; LG: lghvac.com; Samsung: samsunghvac.com; Fujitsu: fujitsugeneral.com; Liebert/Vertiv: vertiv.com/en-us/support/ and applications.liebert.com/partsmanuals; Modine: modinehvac.com (breeze.modine.com tech support docs); ClimateMaster: files.climatemaster.com; WaterFurnace: waterfurnace.com/literature; Trane Axiom: trane.com; Friedrich: friedrich.com",
   "literatureSearchHint": "Search '<model prefix> installation operation manual' plus the brand (e.g. 'UDAP installation manual Reznor', 'Bard W36A2 2100-829', 'PUHY-P72TNU-A service handbook', 'ClimateMaster 97B0003N12'); wiring diagrams are inside the unit control panel cover and in the IOM appendix. VRF error tables live in the outdoor unit service handbook 'Troubleshooting - Check Code List'.",
-  "notes": "Phone numbers for Bard, Mitsubishi, LG, Samsung, Fujitsu, Vertiv, Modine, ClimateMaster, WaterFurnace, Trane and Friedrich were NOT confirmed in this review and are deliberately omitted - look them up on the brand's support page before calling."
+  "notes": "800-695-1901 is Reznor general sales & support (reznorhvac.com/contact-us), not a dedicated tech-support line; (855) 584-3172 is the Nortek Global HVAC LLC general sales & support number (O'Fallon, MO). Bard Technical Service 419-636-0439 (bardhvac.com/contact-us). Phone numbers for Mitsubishi, LG, Samsung, Fujitsu, Vertiv, Modine, ClimateMaster, WaterFurnace, Trane and Friedrich were NOT confirmed in this review and are deliberately omitted - look them up on the brand's support page before calling."
  },
  "notes": [
   "This pack groups secondary commercial brands. Each serialFormat and modelFormat is scoped to a brand family by its regex; brands[] lists every brand covered so the manufacturer hint can rank this pack.",
@@ -6058,7 +6314,11 @@
   "Emerson Liebert Challenger 3000/ITR with iCOM user manual (manualsdir 85779); Vertiv Liebert iCOM installer/user manual (ManualsLib 1461666); Liebert Model Number Reference Guide (surplusgroup.com)",
   "ClimateMaster CXM Controls manual 97B0003N12; ClimateMaster Basic Troubleshooting Information and Guidelines; ClimateMaster Service Tool fault list (files.climatemaster.com)",
   "WaterFurnace Aurora Control Standard V3.00 A&T Guide AG1566EW; Aurora Base Control A&T Guide AG1562EW; 5 Series 500A11 O&M OMW5-0016W (waterfurnace.com)",
-  "Friedrich PTAC parts manuals - serial number identification guide (ManualsLib 53690, 53751)"
+  "Friedrich PTAC parts manuals - serial number identification guide (ManualsLib 53690, 53751)",
+  "Reznor replacement parts form UBX-UBZ-UDX-UDZ-RPL (08-22) 1034346-H (firstsupply.com) - Table 2 date codes 2023-2028; Reznor Unit Heater Catalog C-UH",
+  "ClimateMaster Tranquility IOMs 97B0075N02/N05/N06/N07/N08/N15, 97B0045N04 (files.climatemaster.com) - series / voltage codes; WaterFurnace SC2500AN 5 Series specification catalog - nomenclature",
+  "Trane WSHP-PRC017W-EN Axiom product catalog model number description; Trane/Mitsubishi CITY MULTI Outdoor Unit Model Number Reference Guide; LG Multi V 5 ODU submittal ARUM072BTE5; Samsung AM080FXWANR service manual 'Model Naming'",
+  "building-center.org/lg-hvac-age; rapidhvacparts.com LG Multi V serial nomenclature; howtolookatahouse.com LG age (2020); intrysys Bard serial decoder"
  ],
  "confidence": "low",
  "lastReviewed": "2026-09-26"
