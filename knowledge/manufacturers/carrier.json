@@ -34,7 +34,7 @@
   {
    "id": "carrier-wwyy-letter-5",
    "description": "Carrier / Bryant / Payne modern style: WWYY + plant letter + 5-digit sequence (e.g. 3018E12345 = week 30 of 2018)",
-   "eraStart": 1985,
+   "eraStart": 1980,
    "eraEnd": 2027,
    "regex": "^(\\d{2})(\\d{2})([A-Z])(\\d{5})$",
    "date": {
@@ -62,17 +62,17 @@
      }
     },
     {
+     "serial": "5021P43556",
+     "expect": {
+      "year": 2021,
+      "week": 50
+     }
+    },
+    {
      "serial": "0593G12345",
      "expect": {
       "year": 1993,
       "week": 5
-     }
-    },
-    {
-     "serial": "4805V67890",
-     "expect": {
-      "year": 2005,
-      "week": 48
      }
     }
    ],
@@ -84,14 +84,16 @@
     "Building Intelligence Center — Bryant HVAC age (building-center.org/bryant-hvac-age/)",
     "HVAC Base — Carrier HVAC Age: How to Tell AC Age by Serial Number (hvacbase.org/carrier-hvac-age-serial-number)",
     "PickHVAC — Carrier HVAC Age: Serial Number Breakdown (pickhvac.com/hvac/age-serial-number/carrier/)",
-    "Inspector Handbook — Decode Carrier HVAC Serial Number (inspectorhandbook.com/hvac/carrier)"
+    "Inspector Handbook — Decode Carrier HVAC Serial Number (inspectorhandbook.com/hvac/carrier)",
+    "HVAC-Talk thread — nameplate photo/transcription of a Carrier 48TCED12A2A6 with serial 5021P43556 (week 50 of 2021)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "Positions 1-2 = week of manufacture (01-53), positions 3-4 = year, position 5 = manufacturing plant letter, positions 6-10 = sequence. Carrier's own 48TC service-manual appendix documents this layout; building-center.org dates it from ~1980 (Carrier) / 1985 (Bryant) and it is still in use.",
-    "Pivot 70: '85'-'99' -> 1985-1999, '00'-'69' -> 2000s. Weeks above 53 mean you are not reading a Carrier serial (e.g. ICP YYWW style puts the year first).",
-    "Only the two sourced examples (3216E54321 from hvacbase.org, 3018E12345 from the task brief / hvacagelookup format description) carry a third-party-stated date; the 1993 and 2005 examples are constructed to exercise the pivot and are consistent with the documented rule.",
-    "Plant letter map is not published in the sources gathered; common letters seen on light-commercial rooftops are E, G, V and C. Not decoded here.",
+    "Positions 1-2 = week of manufacture (01-53), positions 3-4 = year, position 5 = manufacturing plant letter, positions 6-10 = sequence. Carrier's own 48TC service-manual appendix documents this layout; building-center.org states this style has been used since 1980 (Carrier) / 1985 (Bryant) and it is still in use, so eraStart is 1980.",
+    "Overlaps with the 8-character 'Style 3' (letter + year digit + letter + 5 digits, see carrier-style3-1980-1988) during 1980-88; the two are told apart by the leading character (digit here, letter for Style 3).",
+    "Pivot 70: '80'-'99' -> 1980-1999, '00'-'69' -> 2000s. Weeks above 53 mean you are not reading a Carrier serial (e.g. ICP YYWW style puts the year first).",
+    "Sourced dated examples: 3216E54321 (hvacbase.org), 3018E12345 (hvacagelookup format description) and 5021P43556 (HVAC-Talk nameplate, 48TCED12A2A6, week 50 of 2021). The 1993 example is constructed to exercise the pivot and is consistent with the documented rule.",
+    "Plant letter map is not published in the sources gathered; common letters seen on light-commercial rooftops are E, G, P, V and C. Not decoded here.",
     "Canadian-built units are reported (building-center.org) to swap the year/week positions; if week > 53 on a Canadian nameplate, try YYWW.",
     "ICP brands (Tempstar, Heil, Comfortmaker, Arcoaire, Day & Night, KeepRite) use the same 10-character look but with YEAR first (see icp-yyww). A leading letter + 4 digits is ICP; 4 digits + letter is Carrier/Bryant/Payne."
    ]
@@ -101,7 +103,7 @@
    "description": "Carrier 1960s-1970s: 1-2 digit week, then a year letter (L=1960 ... H=1979, skipping O, Q, Z), then 5 digits (e.g. 12E12345 = week 12 of 1976)",
    "eraStart": 1965,
    "eraEnd": 1979,
-   "regex": "^(\\d{1,2})([A-HJ-NP-Y])(\\d{5})$",
+   "regex": "^(\\d{1,2})([A-HS-Y])(\\d{5})$",
    "date": {
     "method": "letterYear",
     "yearGroup": 2,
@@ -140,18 +142,17 @@
      }
     }
    ],
-   "confidence": "medium",
-   "evidence": "multi_secondary",
+   "confidence": "low",
+   "evidence": "single_secondary",
    "sources": [
-    "Building Intelligence Center — Carrier HVAC age (building-center.org/carrier-hvac-age/)",
-    "Grokipedia — Carrier serial number decoding (grokipedia.com/page/Carrier_serial_number_decoding)"
+    "Building Intelligence Center — Carrier HVAC age (building-center.org/carrier-hvac-age/)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "building-center.org: year letter (2nd or 3rd position) begins with L and cycles to H, skipping O, Q and Z, representing 1960-1979; week is the leading 1-2 digits. Grokipedia gives the worked example 12E12345 -> week 12 of 1976, which agrees with the map (E = 1976).",
-    "The 1974 example is constructed from the rule, not from a dated nameplate. Letters L-W map to 1960-1969, below the engine's 1965 floor; treat any such decode as 'pre-1965, confirm on plate'.",
-    "No collision with the modern WWYY style (that one has four digits before the letter) or with the 1970s letter-month style (that one starts with a letter).",
-    "Letters L, M, N, P, R (1960-1964) are outside the assistant's supported range and were removed; units that old should be dated from the nameplate era."
+    "building-center.org: year letter (2nd or 3rd position) begins with L and cycles to H, skipping O, Q and Z, representing 1960-1979; week is the leading 1-2 digits. This is the only genuine secondary source found for this style.",
+    "LOW CONFIDENCE: PickHVAC describes the 1960s differently ('Style 5': first digit = year 196x) and the 1970s as month-letter + year-digit ('Style 4', see carrier-monthletter-yeardigit-1970s), i.e. it does not corroborate a week + year-letter style. A Grokipedia page that repeated the rule (with the example 12E12345) is an AI-generated aggregator and was dropped as a source; neither example below is traceable to a dated nameplate.",
+    "Both examples are constructed from the rule (12E12345 = week 12 of 1976, 40C54321 = week 40 of 1974), not from dated nameplates. Letters L-R (1960-1964) are outside the assistant's supported range and are excluded from the regex so such serials fall through instead of erroring; treat any such plate as 'pre-1965, confirm on plate'.",
+    "No collision with the modern WWYY style (that one has four digits before the letter) or with the 1970s letter-month style (that one starts with a letter)."
    ]
   },
   {
@@ -199,13 +200,13 @@
    "confidence": "medium",
    "evidence": "multi_secondary",
    "sources": [
-    "Grokipedia — Carrier serial number decoding (grokipedia.com/page/Carrier_serial_number_decoding)",
+    "LearnMetrics — Carrier age by serial number (learnmetrics.com/carrier-hvac-age-carrier-serial-number/)",
     "PickHVAC — Carrier HVAC Age: Serial Number Breakdown (pickhvac.com/hvac/age-serial-number/carrier/)",
     "HVAC Base — Carrier HVAC Age: How to Tell AC Age by Serial Number (hvacbase.org/carrier-hvac-age-serial-number)"
    ],
    "lastVerified": "2026-09-26",
    "notes": [
-    "PickHVAC and Grokipedia agree: one letter A-L = month, first digit = year within the 1970s, then a sequence. Grokipedia's worked example E312345 -> May 1973 is the sourced test; K712345 is constructed from the rule.",
+    "PickHVAC ('Style 4': first letter = month, D = April; digit 0 = 1970, 1 = 1971 ...) and LearnMetrics ('E312345 decodes to May 1973') independently agree: one letter A-L = month, first digit = year within the 1970s, then a sequence. LearnMetrics' worked example E312345 -> May 1973 is the sourced test; K712345 is constructed from the rule. hvacbase.org's description of this style was not confirmed this session.",
     "Collides with the Bryant 1980s letter-month + two-digit-year style (B85xxxx = Feb 1985): E852345 reads 1978 here and 1985 there. Disambiguate by nameplate brand/style, R-22 vs earlier refrigerants, and the 1980s-style rectangular Bryant plates; the engine will flag the ambiguity."
    ]
   },
@@ -444,18 +445,13 @@
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
      },
-     "notes": "Map is from 48HC/48LC product data; 48TC lists A, C, D, F (and G on newer builds). Partial for other letters."
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
     },
     {
      "group": 5,
@@ -466,7 +462,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -478,29 +474,23 @@
       "09": "8.5"
      },
      "transform": "map_tons",
-     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=18, 24=20, 28=25, 30=27.5 (large chassis). 20 -> 18 tons is from catalog listings rather than the nomenclature page; verify on the nameplate."
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Partial map (A, B, F, K confirmed); other letters denote power-exhaust, ultra-low-leak and CO2/DCV combinations — see the product data."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
      "map": {
-      "0": "Electromechanical controls (usable with W7212 EconoMi$er IV)",
-      "1": "PremierLink controller"
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
      },
-     "notes": "Product data confirms 0 = electromechanical. 1 = PremierLink and 2 = RTU Open are from memory of the 48TC nomenclature page and most 2015+ stock units carry '2' here — verify against the product data for the unit's build year before trusting this digit; 6 = SystemVu on late builds is unconfirmed."
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
     },
     {
      "group": 8,
@@ -521,52 +511,75 @@
     },
     {
      "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "map": {
+      "0": "Electro-mechanical controls (usable with W7212 EconoMi$er IV)",
+      "1": "PremierLink controller",
+      "2": "RTU Open controller",
+      "6": "See product data — the 48TC nomenclature search summary reports 6 as electro-mechanical controls (for W7220 EconoMi$er X); the earlier pack reading '6 = SystemVu' is unconfirmed"
+     },
+     "notes": "First character after the dash. The order of the five after-dash positions used here (controls, intake/exhaust, packaging & seismic, electrical, service) is consistent with real catalog models 48TCFD24A2A5-6F0G0 and 48TCDD08A2A6-6U0G0 and with stock -0A0A0 units, but has not been read off the 48TC-7-16-03PD nomenclature page — confirm before relying on any after-dash decode."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
      "name": "Packaging & seismic",
      "map": {
       "0": "Standard",
       "1": "LTL",
       "3": "CA seismic compliant",
       "4": "LTL + CA seismic compliant"
-     }
-    },
-    {
-     "group": 11,
-     "name": "Refrigerant system options",
-     "map": {
-      "A": "Standard (no Humidi-MiZer)"
      },
-     "notes": "Letters other than A encode Humidi-MiZer adaptive dehumidification and coil-material combinations; map is partial — see product data."
-    },
-    {
-     "group": 12,
-     "name": "Service options",
-     "map": {
-      "0": "None",
-      "1": "Unpowered convenience outlet"
-     },
-     "notes": "Partial; other digits combine powered outlet / hinged panels / hot-gas re-heat service options."
+     "notes": "Third character after the dash."
     },
     {
      "group": 13,
-     "name": "Indoor fan options",
-     "attribute": "airflow",
+     "name": "Electrical options",
+     "attribute": "options",
      "map": {
-      "A": "Standard static motor/drive"
+      "A": "None",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "M": "2-speed indoor fan (VFD) controller + non-fused disconnect + thru-the-base"
      },
-     "notes": "Partial; other letters = medium/high static drives, 2-speed or VFD fan options."
+     "notes": "Fourth character after the dash. Letters A, C, D, F, G, J, K, M are the 48TC product data electrical-options list; 'E' (previously listed as HACR + thru-the-base) is not in the 48TC or 48HC lists and was removed."
     },
     {
      "group": 14,
-     "name": "Coil options (outdoor - indoor - hail guard)",
+     "name": "Service options",
      "map": {
-      "0": "Al/Cu standard coils, no hail guard"
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
      },
-     "notes": "Partial; letters encode pre-coat, e-coat, Cu/Cu and louvered hail guard combinations."
+     "notes": "Fifth character after the dash."
     }
    ],
    "refrigerant": "R-410A",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-iv-w7212",
     "economizer-x-w7220",
     "premierlink",
@@ -585,7 +598,9 @@
       "unit_type": "Gas heat / electric cooling packaged rooftop",
       "heat_type": "Low gas heat",
       "tonnage": "3",
-      "voltage": "208/230-3-60"
+      "voltage": "208/230-3-60",
+      "controls": "Electro-mechanical controls (usable with W7212 EconoMi$er IV)",
+      "options": "None"
      }
     },
     {
@@ -594,7 +609,7 @@
       "heat_type": "Medium gas heat",
       "tonnage": "10",
       "voltage": "208/230-3-60",
-      "options": "Thru-the-base connections"
+      "airflow": "Medium static"
      }
     },
     {
@@ -609,19 +624,30 @@
      "model": "48TCFD20A2A6",
      "expect": {
       "heat_type": "High gas heat",
-      "tonnage": "18",
+      "tonnage": "17.5",
       "voltage": "460-3-60"
+     }
+    },
+    {
+     "model": "48TCFD24A2A5-6F0G0",
+     "expect": {
+      "tonnage": "20",
+      "voltage": "208/230-3-60",
+      "airflow": "Medium static",
+      "other": "Enthalpy economizer w/ barometric relief",
+      "options": "2-speed indoor fan (VFD) controller"
      }
     }
    ],
    "notes": [
-    "Nameplate: the model is the 'MODEL NO.' line on the unit data plate inside the control-box door / on the corner post; it is 10 characters, a dash, then 5 option characters (e.g. 48TCDA04A2A5-0A0A0). Sales literature sometimes shows only the first 10 characters.",
+    "Nameplate: the model is the 'MODEL NO.' line on the unit data plate inside the control-box door / on the corner post; it is 12 characters, a dash, then 5 option characters (e.g. 48TCDA04A2A5-0A0A0). Sales literature sometimes shows only the first 12 characters.",
     "Do not confuse with the 'Product No.' / factory order number or the ETO (engineered-to-order) sticker; only the MODEL NO. line decodes here.",
     "48 = gas heat; 50 = electric cooling with optional electric heat (heater kW is NOT in the model number — read the heater nameplate) or heat pump when the 5th character is Q.",
-    "Sizes 04-07 are single-stage scroll; 08-16 two-stage (two compressors or two-stage scroll). 17-30 large chassis use ComfortLink-less electromechanical controls with 2 or 4 compressors.",
-    "Position maps for groups 11-14 (options after the dash) are partial; the product data 'Model Number Nomenclature' page has the full option tables."
+    "Sizes 04-07 are single-stage scroll; 08-16 two-stage (two compressors or two-stage scroll). 17-30 large chassis use electromechanical controls with 2 or 4 compressors.",
+    "Layout: 1-2 unit type, 3-4 series, 5 heat size, 6 refrigeration-system/cooling-stage option, 7-8 size code, 9 sensor options, 10 indoor fan static option, 11 design revision, 12 voltage; after the dash: base unit controls, intake/exhaust, packaging & seismic, electrical options, service options. Earlier pack versions had positions 6, 9 and 10 mislabelled (electrical / intake-exhaust / controls); corrected against the 48TC and 50TC product data nomenclature and real catalog models.",
+    "Confidence is medium (not high) until the after-dash position order is read directly off the 48TC-7-16-03PD 'Model Number Nomenclature' page."
    ],
-   "confidence": "high",
+   "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
     "Carrier 48TC WeatherMaker Product Data (Form 48TC-18-29-H-06PD, 2021; 48TC-7-16-03PD; 48TC-14PD) — Model Number Nomenclature",
@@ -630,7 +656,9 @@
     "Carrier 50TC Product Data (Form 50TC-14PD / 50TC-7-16-03PD) — Model Number Nomenclature",
     "Carrier 50TCQ Product Data (Form 50TCQ-7-14-02PD / 50TCQ-05PD) — Model Number Nomenclature",
     "DCNE catalog listing 48TCED12A2A5-0A0A0 (10 ton, medium gas heat, 208/230-3)",
-    "DCNE catalog listing 50TC-A06A2A5-0A0A0 (5 ton cooling only)"
+    "DCNE catalog listing 50TC-A06A2A5-0A0A0 (5 ton cooling only)",
+    "Carrier 48TC 17-30 Product Data (Form 48TC-17-30-V-06PD; 48TC-16PD '15 to 27.5 Nominal Tons') — sizes 17/20/24/28/30 = 15/17.5/20/25/27.5 tons",
+    "DCNE catalog listings 48TCED08A2A5-0A0A0 ('MED FAN'), 48TCFD24A2A5-6F0G0 (20 ton, 'Medium STATIC', enthalpy economizer, 2-speed fan) and 48TCDD08A2A6-6U0G0"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -678,18 +706,13 @@
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
      },
-     "notes": "Map is from 48HC/48LC product data; 48TC lists A, C, D, F (and G on newer builds). Partial for other letters."
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
     },
     {
      "group": 5,
@@ -700,7 +723,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -712,28 +735,23 @@
       "09": "8.5"
      },
      "transform": "map_tons",
-     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=18, 24=20, 28=25, 30=27.5 (large chassis). 20 -> 18 tons is from catalog listings rather than the nomenclature page; verify on the nameplate."
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Partial map (A, B, F, K confirmed); other letters denote power-exhaust, ultra-low-leak and CO2/DCV combinations — see the product data."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
      "map": {
-      "0": "Electromechanical controls"
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
      },
-     "notes": "48HC product data lists electromechanical, PremierLink, RTU Open and (later) SystemVu options in this position; only '0' = electromechanical is confirmed from the gathered pages. Verify the digit against the product data for the unit's build year."
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
     },
     {
      "group": 8,
@@ -754,54 +772,80 @@
     },
     {
      "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "map": {
+      "0": "Electro-mechanical controls (usable with W7212 EconoMi$er IV)",
+      "1": "PremierLink controller",
+      "2": "RTU Open controller",
+      "6": "See product data — the 48TC nomenclature search summary reports 6 as electro-mechanical controls (for W7220 EconoMi$er X); the earlier pack reading '6 = SystemVu' is unconfirmed"
+     },
+     "notes": "First character after the dash. The order of the five after-dash positions used here (controls, intake/exhaust, packaging & seismic, electrical, service) is consistent with real catalog models 48TCFD24A2A5-6F0G0 and 48TCDD08A2A6-6U0G0 and with stock -0A0A0 units, but has not been read off the 48TC-7-16-03PD nomenclature page — confirm before relying on any after-dash decode."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
      "name": "Packaging & seismic",
      "map": {
       "0": "Standard",
       "1": "LTL",
       "3": "CA seismic compliant",
       "4": "LTL + CA seismic compliant"
-     }
-    },
-    {
-     "group": 11,
-     "name": "Refrigerant system options",
-     "map": {
-      "A": "Standard (no Humidi-MiZer)"
      },
-     "notes": "Letters other than A encode Humidi-MiZer adaptive dehumidification and coil-material combinations; map is partial — see product data."
-    },
-    {
-     "group": 12,
-     "name": "Service options",
-     "map": {
-      "0": "None",
-      "1": "Unpowered convenience outlet"
-     },
-     "notes": "Partial; other digits combine powered outlet / hinged panels / hot-gas re-heat service options."
+     "notes": "Third character after the dash."
     },
     {
      "group": 13,
-     "name": "Indoor fan options",
-     "attribute": "airflow",
+     "name": "Electrical options",
+     "attribute": "options",
      "map": {
-      "A": "Standard static motor/drive"
+      "A": "None",
+      "B": "HACR circuit breaker",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "L": "Listed in the 48HC product data electrical-options table (combination not transcribed — see the nomenclature page)",
+      "N": "Listed in the 48HC product data electrical-options table (combination not transcribed — see the nomenclature page)"
      },
-     "notes": "Partial; other letters = medium/high static drives, 2-speed or VFD fan options."
+     "notes": "Fourth character after the dash. Letters A, B, C, D, F, G, J, K, L, N are the 48HC product data (48HC-4-14-08PD / 48HC-17-28-05PD) electrical-options list; 'E' is not listed and was removed. L and N meanings were not transcribed."
     },
     {
      "group": 14,
-     "name": "Coil options (outdoor - indoor - hail guard)",
+     "name": "Service options",
      "map": {
-      "0": "Al/Cu standard coils, no hail guard"
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
      },
-     "notes": "Partial; letters encode pre-coat, e-coat, Cu/Cu and louvered hail guard combinations."
+     "notes": "Fifth character after the dash."
     }
    ],
    "refrigerant": "R-410A",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-iv-w7212",
     "economizer-x-w7220",
+    "premierlink",
     "comfortlink-rtu",
     "rtu-open",
     "systemvu"
@@ -816,9 +860,9 @@
      "model": "48HCDD05A2A5-0A0A0",
      "expect": {
       "heat_type": "Low gas heat",
-      "options": "Thru-the-base connections",
       "tonnage": "4",
-      "voltage": "208/230-3-60"
+      "voltage": "208/230-3-60",
+      "airflow": "Medium static"
      }
     },
     {
@@ -838,11 +882,11 @@
     }
    ],
    "notes": [
-    "Same layout as 48/50TC; the 3rd-4th characters HC distinguish the high-efficiency (Novation microchannel condenser on many sizes) chassis.",
-    "Humidi-MiZer units carry a non-A letter in the refrigerant-system-options position after the dash and have a reheat coil + 3-way valve; read the unit's Humidi-MiZer sticker.",
-    "Position maps after the dash are partial."
+    "Same layout as 48/50TC (see carrier-48-50tc notes); the 3rd-4th characters HC distinguish the high-efficiency (Novation microchannel condenser on many sizes) chassis.",
+    "Humidi-MiZer units carry a non-A letter in position 6 (refrigeration system options) and have a reheat coil + 3-way valve; read the unit's Humidi-MiZer sticker.",
+    "Confidence is medium (not high) until the after-dash position order is read directly off the 48HC product data nomenclature page."
    ],
-   "confidence": "high",
+   "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
     "Carrier 48HC WeatherMaster Product Data (Form 48HC-17-28-05PD Rev. A, 2021; 48HC-4-14-08PD Rev. C, 2022) — Model Number Nomenclature",
@@ -894,18 +938,13 @@
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
      },
-     "notes": "Map is from 48HC/48LC product data; 48TC lists A, C, D, F (and G on newer builds). Partial for other letters."
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
     },
     {
      "group": 5,
@@ -916,7 +955,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -928,28 +967,23 @@
       "09": "8.5"
      },
      "transform": "map_tons",
-     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=18, 24=20, 28=25, 30=27.5 (large chassis). 20 -> 18 tons is from catalog listings rather than the nomenclature page; verify on the nameplate."
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Partial map (A, B, F, K confirmed); other letters denote power-exhaust, ultra-low-leak and CO2/DCV combinations — see the product data."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
      "map": {
-      "6": "SystemVu controller"
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
      },
-     "notes": "Current 48/50LC ship with SystemVu; the digit mapping in this position is from memory (6 = SystemVu) and unconfirmed — treat as low confidence."
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
     },
     {
      "group": 8,
@@ -970,47 +1004,63 @@
     },
     {
      "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "notes": "First character after the dash. Unmapped for this family: current 48/50LC units ship with SystemVu, and catalog units show 0 here (e.g. 48FEEM08A2A5-0A0A0), so the 48TC digit table (0 = electro-mechanical, 1 = PremierLink, 2 = RTU Open) evidently does not apply — read the family product data nomenclature page. The after-dash position order is assumed to match 48/50TC and is unconfirmed."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
      "name": "Packaging & seismic",
      "map": {
       "0": "Standard",
       "1": "LTL",
       "3": "CA seismic compliant",
       "4": "LTL + CA seismic compliant"
-     }
-    },
-    {
-     "group": 11,
-     "name": "Refrigerant system options",
-     "map": {
-      "A": "Standard (no Humidi-MiZer)"
      },
-     "notes": "Letters other than A encode Humidi-MiZer adaptive dehumidification and coil-material combinations; map is partial — see product data."
-    },
-    {
-     "group": 12,
-     "name": "Service options",
-     "map": {
-      "0": "None",
-      "1": "Unpowered convenience outlet"
-     },
-     "notes": "Partial; other digits combine powered outlet / hinged panels / hot-gas re-heat service options."
+     "notes": "Third character after the dash."
     },
     {
      "group": 13,
-     "name": "Indoor fan options",
-     "attribute": "airflow",
+     "name": "Electrical options",
+     "attribute": "options",
      "map": {
-      "A": "Standard static motor/drive"
+      "A": "None",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "M": "2-speed indoor fan (VFD) controller + non-fused disconnect + thru-the-base"
      },
-     "notes": "Partial; other letters = medium/high static drives, 2-speed or VFD fan options."
+     "notes": "Fourth character after the dash. Map copied from the 48TC electrical-options list (A, C, D, F, G, J, K, M); this family's own list was not read — verify on its product data nomenclature page."
     },
     {
      "group": 14,
-     "name": "Coil options (outdoor - indoor - hail guard)",
+     "name": "Service options",
      "map": {
-      "0": "Al/Cu standard coils, no hail guard"
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
      },
-     "notes": "Partial; letters encode pre-coat, e-coat, Cu/Cu and louvered hail guard combinations."
+     "notes": "Fifth character after the dash."
     }
    ],
    "refrigerant": "R-410A",
@@ -1040,7 +1090,7 @@
    ],
    "notes": [
     "48LC product data lists sizes 04, 05, 06, 07, 12, 14 and 26 (3-23 tons); the 26 size code is not in the shared tons map (26 is ~23 tons per product data) — verify on nameplate.",
-    "Electrical option letters A-F confirmed from the 48LC nomenclature page."
+    "Layout assumed identical to 48/50TC (see carrier-48-50tc notes). Both examples are constructed; their position-10 digit '6' was written when that position was believed to be the controls digit and is unverified as an indoor-fan code."
    ],
    "confidence": "medium",
    "evidence": "manufacturer_doc",
@@ -1095,18 +1145,13 @@
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
      },
-     "notes": "Map is from 48HC/48LC product data; 48TC lists A, C, D, F (and G on newer builds). Partial for other letters."
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
     },
     {
      "group": 5,
@@ -1117,7 +1162,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -1129,28 +1174,23 @@
       "09": "8.5"
      },
      "transform": "map_tons",
-     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=18, 24=20, 28=25, 30=27.5 (large chassis). 20 -> 18 tons is from catalog listings rather than the nomenclature page; verify on the nameplate."
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Partial map (A, B, F, K confirmed); other letters denote power-exhaust, ultra-low-leak and CO2/DCV combinations — see the product data."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
      "map": {
-      "0": "Electromechanical controls"
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
      },
-     "notes": "Only '0' = electromechanical is confirmed; RTU Open / SystemVu digits unconfirmed."
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
     },
     {
      "group": 8,
@@ -1171,52 +1211,75 @@
     },
     {
      "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "map": {
+      "0": "Electro-mechanical controls (usable with W7212 EconoMi$er IV)",
+      "1": "PremierLink controller",
+      "2": "RTU Open controller",
+      "6": "See product data — the 48TC nomenclature search summary reports 6 as electro-mechanical controls (for W7220 EconoMi$er X); the earlier pack reading '6 = SystemVu' is unconfirmed"
+     },
+     "notes": "First character after the dash. The order of the five after-dash positions used here (controls, intake/exhaust, packaging & seismic, electrical, service) is consistent with real catalog models 48TCFD24A2A5-6F0G0 and 48TCDD08A2A6-6U0G0 and with stock -0A0A0 units, but has not been read off the 48TC-7-16-03PD nomenclature page — confirm before relying on any after-dash decode."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
      "name": "Packaging & seismic",
      "map": {
       "0": "Standard",
       "1": "LTL",
       "3": "CA seismic compliant",
       "4": "LTL + CA seismic compliant"
-     }
-    },
-    {
-     "group": 11,
-     "name": "Refrigerant system options",
-     "map": {
-      "A": "Standard (no Humidi-MiZer)"
      },
-     "notes": "Letters other than A encode Humidi-MiZer adaptive dehumidification and coil-material combinations; map is partial — see product data."
-    },
-    {
-     "group": 12,
-     "name": "Service options",
-     "map": {
-      "0": "None",
-      "1": "Unpowered convenience outlet"
-     },
-     "notes": "Partial; other digits combine powered outlet / hinged panels / hot-gas re-heat service options."
+     "notes": "Third character after the dash."
     },
     {
      "group": 13,
-     "name": "Indoor fan options",
-     "attribute": "airflow",
+     "name": "Electrical options",
+     "attribute": "options",
      "map": {
-      "A": "Standard static motor/drive"
+      "A": "None",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "M": "2-speed indoor fan (VFD) controller + non-fused disconnect + thru-the-base"
      },
-     "notes": "Partial; other letters = medium/high static drives, 2-speed or VFD fan options."
+     "notes": "Fourth character after the dash. Map copied from the 48TC electrical-options list (A, C, D, F, G, J, K, M); this family's own list was not read — verify on its product data nomenclature page."
     },
     {
      "group": 14,
-     "name": "Coil options (outdoor - indoor - hail guard)",
+     "name": "Service options",
      "map": {
-      "0": "Al/Cu standard coils, no hail guard"
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
      },
-     "notes": "Partial; letters encode pre-coat, e-coat, Cu/Cu and louvered hail guard combinations."
+     "notes": "Fifth character after the dash."
     }
    ],
    "refrigerant": "R-410A",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-x-w7220",
     "rtu-open",
     "systemvu"
@@ -1247,7 +1310,7 @@
     }
    ],
    "notes": [
-    "Layout identical to 48/50TC. Series descriptions are from carrier.com product pages (48LC/48KC/48GC/48FC listings).",
+    "Layout identical to 48/50TC (see carrier-48-50tc notes). Series descriptions are from carrier.com product pages (48LC/48KC/48GC/48FC listings).",
     "Examples are constructed from the documented layout, not copied from a catalog page."
    ],
    "confidence": "medium",
@@ -1302,18 +1365,13 @@
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
      },
-     "notes": "Map is from 48HC/48LC product data; 48TC lists A, C, D, F (and G on newer builds). Partial for other letters."
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
     },
     {
      "group": 5,
@@ -1324,7 +1382,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -1336,28 +1394,23 @@
       "09": "8.5"
      },
      "transform": "map_tons",
-     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=18, 24=20, 28=25, 30=27.5 (large chassis). 20 -> 18 tons is from catalog listings rather than the nomenclature page; verify on the nameplate."
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Partial map (A, B, F, K confirmed); other letters denote power-exhaust, ultra-low-leak and CO2/DCV combinations — see the product data."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
      "map": {
-      "6": "SystemVu controller"
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
      },
-     "notes": "Digit mapping unconfirmed."
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
     },
     {
      "group": 8,
@@ -1378,47 +1431,63 @@
     },
     {
      "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "notes": "First character after the dash. Unmapped for this family: current 48/50JC units ship with SystemVu, and catalog units show 0 here (e.g. 48FEEM08A2A5-0A0A0), so the 48TC digit table (0 = electro-mechanical, 1 = PremierLink, 2 = RTU Open) evidently does not apply — read the family product data nomenclature page. The after-dash position order is assumed to match 48/50TC and is unconfirmed."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
      "name": "Packaging & seismic",
      "map": {
       "0": "Standard",
       "1": "LTL",
       "3": "CA seismic compliant",
       "4": "LTL + CA seismic compliant"
-     }
-    },
-    {
-     "group": 11,
-     "name": "Refrigerant system options",
-     "map": {
-      "A": "Standard (no Humidi-MiZer)"
      },
-     "notes": "Letters other than A encode Humidi-MiZer adaptive dehumidification and coil-material combinations; map is partial — see product data."
-    },
-    {
-     "group": 12,
-     "name": "Service options",
-     "map": {
-      "0": "None",
-      "1": "Unpowered convenience outlet"
-     },
-     "notes": "Partial; other digits combine powered outlet / hinged panels / hot-gas re-heat service options."
+     "notes": "Third character after the dash."
     },
     {
      "group": 13,
-     "name": "Indoor fan options",
-     "attribute": "airflow",
+     "name": "Electrical options",
+     "attribute": "options",
      "map": {
-      "A": "Standard static motor/drive"
+      "A": "None",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "M": "2-speed indoor fan (VFD) controller + non-fused disconnect + thru-the-base"
      },
-     "notes": "Partial; other letters = medium/high static drives, 2-speed or VFD fan options."
+     "notes": "Fourth character after the dash. Map copied from the 48TC electrical-options list (A, C, D, F, G, J, K, M); this family's own list was not read — verify on its product data nomenclature page."
     },
     {
      "group": 14,
-     "name": "Coil options (outdoor - indoor - hail guard)",
+     "name": "Service options",
      "map": {
-      "0": "Al/Cu standard coils, no hail guard"
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
      },
-     "notes": "Partial; letters encode pre-coat, e-coat, Cu/Cu and louvered hail guard combinations."
+     "notes": "Fifth character after the dash."
     }
    ],
    "refrigerant": "R-454B",
@@ -1444,13 +1513,237 @@
     }
    ],
    "notes": [
-    "LOW CONFIDENCE: the only evidence gathered is the title 'Carrier 48JCH 04-06 Series Service and Maintenance Instructions' (SystemVu, RDS) on manualslib; the layout is assumed to follow 48/50KC. R-454B is inferred from the 2025 A2L transition. Confirm refrigerant on the nameplate before connecting gauges.",
-    "Note the 'H' after JC in the manual title: the 5th-character heat position may be occupied by 'H' on these units — the regex accepts it as the heat_type code (unmapped)."
+    "LOW CONFIDENCE: the only evidence gathered is the title 'Carrier 48JCH 04-06 Series Service and Maintenance Instructions' (SystemVu, RDS) on manualslib; the layout is assumed to follow 48/50KC. R-454B is inferred from the 2025 A2L transition. Confirm refrigerant on the nameplate before connecting gauges. The shipping R-454B WeatherMaker family with product data is 48/50FE (see carrier-48-50fe-r454b).",
+    "Note the 'H' after JC in the manual title: the 5th-character heat position may be occupied by 'H' on these units — the regex accepts it as the heat_type code (unmapped).",
+    "Examples are constructed."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
     "manualslib: Carrier 48JCH 04-06 Series Service and Maintenance Instructions (SystemVu control system section)"
+   ],
+   "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "carrier-48-50fe-r454b",
+   "family": "Carrier 48/50FE WeatherMaker packaged rooftop with R-454B (Puron Advance), 3-27.5 tons (48FE gas/electric, 50FE cooling + optional electric heat)",
+   "description": "Shipping R-454B (A2L) WeatherMaker family (2025+) with SystemVu v4.x controls and EcoBlue indoor fan; model layout follows 48/50TC.",
+   "productType": "packaged_rtu",
+   "eraStart": 2025,
+   "eraEnd": 2027,
+   "regex": "^(48|50)(FE)([A-Z-])([A-Z])(\\d{2})([A-Z])([0-9A-Z])([A-Z])(\\d)(?:-?([0-9A-Z])([A-Z])([0-9A-Z])([A-Z])([0-9A-Z]))?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Unit type",
+     "attribute": "unit_type",
+     "map": {
+      "48": "Gas heat / electric cooling packaged rooftop",
+      "50": "Electric cooling packaged rooftop (electric heat optional) or packaged heat pump"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Series / efficiency tier",
+     "attribute": "series",
+     "map": {
+      "FE": "WeatherMaker R-454B (Puron Advance, A2L), SystemVu controls"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Heat size",
+     "attribute": "heat_type",
+     "map": {
+      "D": "Low gas heat",
+      "E": "Medium gas heat",
+      "F": "High gas heat",
+      "L": "Low NOx, low gas heat",
+      "M": "Low NOx, medium gas heat",
+      "N": "Low NOx, high gas heat",
+      "-": "No heat (50 series: electric heat is a field/factory accessory)",
+      "Q": "Heat pump (50TCQ/50HCQ/50GCQ)"
+     },
+     "notes": "Gas units: D/E/F = low/medium/high heat, L/M/N = low-NOx versions; 50FE cooling-only shows '-' here. Heat-code list copied from 48TC; verify on the 48/50FE nomenclature page."
+    },
+    {
+     "group": 4,
+     "name": "Refrigeration system / cooling-stage options",
+     "attribute": "stages",
+     "map": {
+      "A": "Standard one-stage cooling (per 50TC product data nomenclature)",
+      "D": "2-stage cooling compressor with Novation coil (per 48TC product data)"
+     },
+     "notes": "Position 6. Carrier 50TC product data decodes '50TC-A06' as '-' = no heat, 'A' = standard one-stage cooling, '06' = 5 tons; 48TC product data lists 'D = 2-stage cooling compressor with NOVATION coil'. Other letters (B, C, E, F, M ...) encode further compressor/coil/Humidi-MiZer combinations and are unmapped — see the product data. Earlier pack versions mislabelled this position as electrical options; those letters are the fourth character after the dash."
+    },
+    {
+     "group": 5,
+     "name": "Cooling size code (nominal tons)",
+     "attribute": "tonnage",
+     "map": {
+      "12": "10",
+      "14": "12.5",
+      "16": "15",
+      "17": "15",
+      "20": "17.5",
+      "24": "20",
+      "28": "25",
+      "30": "27.5",
+      "04": "3",
+      "05": "4",
+      "06": "5",
+      "07": "6",
+      "08": "7.5",
+      "09": "8.5"
+     },
+     "transform": "map_tons",
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
+    },
+    {
+     "group": 6,
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Position 9. Unmapped: letters encode return/supply-air smoke detector and CO2 sensor combinations (catalog stock units usually show A) — see the product data nomenclature. Earlier pack versions mislabelled this position as intake/exhaust options; those are the second character after the dash."
+    },
+    {
+     "group": 7,
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
+     "map": {
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
+     },
+     "notes": "Position 10 per the 48TC product data nomenclature ('Indoor Fan Options: 1 = Standard static option, 2 = Medium static option, 3 = High static option'); DCNE catalog titles for 48TCED08A2A5-0A0A0 ('MED FAN') and 48TCFD24A2A5-6F0G0 ('Medium STATIC') carry '2' here, and Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = standard static. Codes 4-7 (2-speed / VFD fan variants) are unverified. Earlier pack versions mislabelled this position as base-unit controls; that digit is the first character after the dash."
+    },
+    {
+     "group": 8,
+     "name": "Design revision",
+     "attribute": "revision"
+    },
+    {
+     "group": 9,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "1": "575-3-60",
+      "3": "208/230-1-60",
+      "5": "208/230-3-60",
+      "6": "460-3-60"
+     },
+     "notes": "1 = 575-3-60, 3 = 208/230-1-60 (sizes 04-07 only), 5 = 208/230-3-60, 6 = 460-3-60."
+    },
+    {
+     "group": 10,
+     "name": "Base unit controls",
+     "attribute": "controls",
+     "notes": "First character after the dash. Unmapped for this family: current 48/50FE units ship with SystemVu, and catalog units show 0 here (e.g. 48FEEM08A2A5-0A0A0), so the 48TC digit table (0 = electro-mechanical, 1 = PremierLink, 2 = RTU Open) evidently does not apply — read the family product data nomenclature page. The after-dash position order is assumed to match 48/50TC and is unconfirmed."
+    },
+    {
+     "group": 11,
+     "name": "Intake / exhaust options",
+     "attribute": "other",
+     "map": {
+      "A": "None",
+      "B": "Temperature economizer w/ barometric relief",
+      "F": "Enthalpy economizer w/ barometric relief",
+      "K": "2-position damper",
+      "U": "Temperature ultra-low-leak economizer w/ barometric relief",
+      "W": "Enthalpy ultra-low-leak economizer w/ barometric relief"
+     },
+     "notes": "Second character after the dash. Partial map; other letters denote power-exhaust and CO2/DCV combinations — see the product data."
+    },
+    {
+     "group": 12,
+     "name": "Packaging & seismic",
+     "map": {
+      "0": "Standard",
+      "1": "LTL",
+      "3": "CA seismic compliant",
+      "4": "LTL + CA seismic compliant"
+     },
+     "notes": "Third character after the dash."
+    },
+    {
+     "group": 13,
+     "name": "Electrical options",
+     "attribute": "options",
+     "map": {
+      "A": "None",
+      "C": "Non-fused disconnect",
+      "D": "Thru-the-base connections",
+      "F": "Non-fused disconnect + thru-the-base",
+      "G": "2-speed indoor fan (VFD) controller",
+      "J": "2-speed indoor fan (VFD) controller + non-fused disconnect",
+      "K": "2-speed indoor fan (VFD) controller + thru-the-base",
+      "M": "2-speed indoor fan (VFD) controller + non-fused disconnect + thru-the-base"
+     },
+     "notes": "Fourth character after the dash. Map copied from the 48TC electrical-options list (A, C, D, F, G, J, K, M); this family's own list was not read — verify on its product data nomenclature page."
+    },
+    {
+     "group": 14,
+     "name": "Service options",
+     "map": {
+      "0": "None",
+      "1": "Unpowered convenience outlet",
+      "2": "Powered convenience outlet",
+      "3": "Hinged access panels",
+      "4": "Hinged access panels + unpowered convenience outlet",
+      "5": "Hinged access panels + powered convenience outlet"
+     },
+     "notes": "Fifth character after the dash."
+    }
+   ],
+   "refrigerant": "R-454B",
+   "controlPlatformIds": [
+    "systemvu",
+    "igc",
+    "economizer-x-w7220"
+   ],
+   "equivalentFamilies": [
+    "Successor to Carrier 48/50TC (R-410A) in the WeatherMaker line"
+   ],
+   "examples": [
+    {
+     "model": "48FEEM08A2A5-0A0A0",
+     "expect": {
+      "tonnage": "7.5",
+      "voltage": "208/230-3-60",
+      "heat_type": "Medium gas heat"
+     }
+    },
+    {
+     "model": "48FEEA04A2A3-0A0A0",
+     "expect": {
+      "tonnage": "3",
+      "voltage": "208/230-1-60"
+     }
+    },
+    {
+     "model": "48FEEM14A3A6-0A0A0",
+     "expect": {
+      "tonnage": "12.5",
+      "voltage": "460-3-60",
+      "airflow": "High static"
+     }
+    },
+    {
+     "model": "48FEEM16A2A6-0A0A0",
+     "expect": {
+      "tonnage": "15",
+      "voltage": "460-3-60"
+     }
+    }
+   ],
+   "notes": [
+    "R-454B is an A2L refrigerant: A2L-rated recovery machine and leak detector, no ignition sources, ventilate; units carry refrigerant detection sensors (RDS). Confirm the refrigerant on the nameplate.",
+    "Layout and all position maps are carried over from 48/50TC and are consistent with the four Carrier Enterprise catalog models used as examples (48FEEM08A2A5-0A0A0 7.5 t 208/230-3; 48FEEA04A2A3-0A0A0 3 t 208/230-1; 48FEEM14A3A6-0A0A0 12.5 t 460-3; 48FEEM16A2A6-0A0A0 15 t 460-3). The 48/50FE nomenclature page itself (Form 48-50FE-8-16-01PD) was not read; position-6 letter 'M' seen on these units is unmapped."
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Carrier 48/50FE Product Data Form 48-50FE-8-16-01PD; carrier.com/commercial WeatherMaker 48FE / 50FE product pages (Puron Advance R-454B, 3-27.5 tons, EcoBlue)",
+    "Carrier Enterprise catalog listings 48FEEM08A2A5-0A0A0, 48FEEA04A2A3-0A0A0, 48FEEM14A3A6-0A0A0, 48FEEM16A2A6-0A0A0",
+    "Carrier 48/50FE, GE Rooftop Units with SystemVu Controls Version 4.X — Controls, Start-Up, Operation and Troubleshooting (SYSVU-FE-GE-02T)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -1630,7 +1923,7 @@
       "12": "10",
       "14": "12.5",
       "16": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "100": "100",
@@ -1651,7 +1944,7 @@
       "090": "90"
      },
      "transform": "map_tons",
-     "notes": "2-digit codes = PG/PM/PD Centurion sizes (map from 48TC-style size codes; 03 = 2.5 t unverified); 3-digit codes = P2-P5 nominal tons."
+     "notes": "2-digit codes = PG/PM/PD Centurion sizes (map from 48TC-style size codes, 20 = 17.5 t per 48TC 17-30 product data; 03 = 2.5 t unverified); 3-digit codes = P2-P5 nominal tons."
     }
    ],
    "refrigerant": "R-410A",
@@ -1848,17 +2141,20 @@
       "016": "15",
       "020": "18",
       "024": "20",
+      "025": "20",
       "028": "25",
       "030": "27.5"
      },
      "transform": "map_tons",
-     "notes": "Small-chassis codes confirmed by manual titles (005-007 = 4-6 t; 008-014 = 7.5-12.5 t). 016-030 large-chassis mapping from memory of 48TM/48EJ literature — verify."
+     "notes": "Small-chassis codes confirmed by manual titles (005-007 = 4-6 t; 008-014 = 7.5-12.5 t). Large chassis per the Carrier 48TM016-028 Installation/Service manual and 48H,T-6PD: 016 = 15 t (176 MBH), 020 = 18 t (202 MBH), 025 = 20 t (236 MBH), 028 = 25 t (278 MBH). Codes 024 (= 20 t) and 030 (= 27.5 t) could not be confirmed for any legacy family and are unverified."
     }
    ],
    "refrigerant": "R-22",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-iv-w7212",
+    "premierlink",
     "comfortlink-rtu"
    ],
    "equivalentFamilies": [
@@ -1907,12 +2203,12 @@
   },
   {
    "id": "bryant-light-commercial-j",
-   "family": "Bryant light-commercial packaged rooftops 580J/581J/582J (gas/electric), 551J/558J/559J (cooling), 548J/549J (heat pump), 3-27.5 tons",
+   "family": "Bryant light-commercial packaged rooftops 580J/581J (gas/electric), 551J/558J (cooling), 548J/549J (heat pump), 3-27.5 tons",
    "description": "Bryant re-badges of Carrier 48/50TC (580J, 551J, 548J Legacy) and 48/50HC (581J, 558J, 549J Preferred). Voltage is a LETTER right after the series and heat is the 3-digit input MBH.",
    "productType": "packaged_rtu",
    "eraStart": 2009,
    "eraEnd": 2027,
-   "regex": "^(548|549|551|558|559|580|581|582)J([EJPT])(\\d{2})([A-Z])(\\d{3}|---)?([A-Z])?(\\d)?([A-Z])?([0-9A-Z]*)$",
+   "regex": "^(548|549|551|558|580|581)J([EJPT])(\\d{2})([A-Z])(\\d{3}|---)?([A-Z])?(\\d)?([A-Z])?([0-9A-Z]*)$",
    "segments": [
     {
      "group": 1,
@@ -1923,12 +2219,10 @@
       "549": "Preferred packaged heat pump (= Carrier 50HCQ)",
       "551": "Legacy electric cooling (= Carrier 50TC)",
       "558": "Preferred electric cooling (= Carrier 50HC)",
-      "559": "Bryant electric cooling (high-tier; = Carrier 50LC family)",
       "580": "Legacy gas heat/electric cooling (= Carrier 48TC)",
-      "581": "Preferred gas heat/electric cooling (= Carrier 48HC)",
-      "582": "Bryant gas heat/electric cooling (high-tier; = Carrier 48LC family)"
+      "581": "Preferred gas heat/electric cooling (= Carrier 48HC)"
      },
-     "notes": "580J/581J/548J confirmed from Bryant product data titles; 582J/559J/551J/558J/549J pairings are from memory of Bryant's Legacy/Preferred/Evolution tiers — treat as low confidence."
+     "notes": "580J/581J/548J confirmed from Bryant product data titles; 551J/558J/549J pairings are from memory of Bryant's Legacy/Preferred tiers — treat as low confidence. 582/559 were removed: the only Bryant literature found for them is Form PDS582-559K-4-7-01, a K series (582K/559K, 4-7 ton) that this J-series regex would not match; the earlier '582J/559J = Carrier 48/50LC' pairing was unverified. 582K/559K may be Carrier 48/50FC/GC/KC equivalents — confirm before mapping."
     },
     {
      "group": 2,
@@ -1950,7 +2244,7 @@
       "14": "12.5",
       "16": "15",
       "17": "15",
-      "20": "18",
+      "20": "17.5",
       "24": "20",
       "28": "25",
       "30": "27.5",
@@ -1961,22 +2255,19 @@
       "08": "7.5",
       "09": "8.5"
      },
-     "transform": "map_tons"
+     "transform": "map_tons",
+     "notes": "04=3, 05=4, 06=5, 07=6, 08=7.5, 09=8.5, 12=10, 14=12.5, 16=15 (small chassis); 17=15, 20=17.5, 24=20, 28=25, 30=27.5 (large chassis per Carrier 48TC 17-30 product data 48TC-17-30-V-06PD / 48TC-16PD '15 to 27.5 Nominal Tons' and Bryant PDS580J-18-29-H). Size 20 = 17.5 t (18 t was the legacy R-22 48TM020 rating). 48LC size 26 (~23 t) is not mapped."
     },
     {
      "group": 4,
-     "name": "Electrical options",
-     "attribute": "options",
+     "name": "Refrigeration system / gas heat options",
+     "attribute": "stages",
      "map": {
-      "A": "None",
-      "B": "HACR circuit breaker",
-      "C": "Non-fused disconnect",
-      "D": "Thru-the-base connections",
-      "E": "HACR breaker + thru-the-base",
-      "F": "Non-fused disconnect + thru-the-base",
-      "G": "2-speed indoor fan (VFD) controller"
+      "A": "Standard one-stage cooling (mirrors Carrier 48/50TC position 6)",
+      "D": "2-stage compressor / aluminized heat exchanger (per Bryant 580J product data 'Refrigeration System/Gas Heat Options')",
+      "F": "2-stage compressor / stainless-steel heat exchanger (per Bryant 580J product data)"
      },
-     "notes": "Assumed to mirror Carrier's letters; unconfirmed."
+     "notes": "Position after the size code. Bryant 580J product data: 'Refrigeration System/Gas Heat Options: D = 2-Stage Compressor/Al HX, F = 2-Stage Compressor/SS HX'; A assumed to mirror Carrier's one-stage code. Earlier pack versions mislabelled this position as electrical options."
     },
     {
      "group": 5,
@@ -1987,21 +2278,19 @@
     },
     {
      "group": 6,
-     "name": "Intake / exhaust options",
-     "attribute": "other",
-     "map": {
-      "A": "None",
-      "B": "Temperature economizer w/ barometric relief",
-      "F": "Enthalpy economizer w/ barometric relief",
-      "K": "2-position damper"
-     },
-     "notes": "Assumed to mirror Carrier; unconfirmed."
+     "name": "Sensor options (smoke detector / CO2)",
+     "notes": "Assumed to mirror Carrier position 9 (sensor options); unmapped and unconfirmed."
     },
     {
      "group": 7,
-     "name": "Base unit controls",
-     "attribute": "controls",
-     "notes": "Digit; mapping unconfirmed."
+     "name": "Indoor fan static option",
+     "attribute": "airflow",
+     "notes": "Bryant 580J product data decodes 580JE06A072A1A0AA with '1' = Indoor Fan Options, standard static; 2/3 mirror Carrier's medium/high static codes. Codes 4-7 (2-speed / VFD) unverified.",
+     "map": {
+      "1": "Standard static",
+      "2": "Medium static",
+      "3": "High static"
+     }
     },
     {
      "group": 8,
@@ -2012,8 +2301,10 @@
    "refrigerant": "R-410A",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-iv-w7212",
     "economizer-x-w7220",
+    "premierlink",
     "rtu-open",
     "systemvu"
    ],
@@ -2028,7 +2319,8 @@
       "series": "Legacy gas heat/electric cooling (= Carrier 48TC)",
       "voltage": "460-3-60",
       "tonnage": "5",
-      "heat_capacity": "072"
+      "heat_capacity": "072",
+      "airflow": "Standard static"
      }
     },
     {
@@ -2037,7 +2329,7 @@
       "voltage": "460-3-60",
       "tonnage": "7.5",
       "heat_capacity": "180",
-      "options": "Thru-the-base connections"
+      "airflow": "Medium static"
      }
     },
     {
@@ -2051,25 +2343,26 @@
    ],
    "notes": [
     "Bryant nameplate shows the Bryant model (e.g. 580JE06A072A1A0AA); the equivalent Carrier chassis is the source of service literature, IGC codes and wiring — search the Carrier 48/50TC or 48/50HC IOM for the same size.",
-    "Segment maps after the tonnage are assumed to mirror Carrier's and are unverified; the product data 'Model Number Nomenclature' page has the full option tables."
+    "Positions after the design revision (base unit controls, intake/exhaust, electrical, service options) are not decoded; the product data 'Model Number Nomenclature' page has the full option tables."
    ],
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
     "Bryant 580J Product Data (Form PDS580J-7-16-02, 2018; PDS580J-18-29-H-02) — Model Number Nomenclature; Bryant 580J*D17 Service and Maintenance Instructions, Appendix I",
     "Carrier Enterprise catalog listing bryant_580je08d180a2a0ad (580J 7.5-10 ton product data)",
-    "manualslib: Bryant Preferred 581J and Packaged Heat Pump 548J Product Data — Model Number Nomenclature"
+    "manualslib: Bryant Preferred 581J and Packaged Heat Pump 548J Product Data — Model Number Nomenclature",
+    "Bryant Form PDS582-559K-4-7-01 (582K/559K 4-7 ton product data) — only 582/559 literature found; K series, not J"
    ],
    "lastVerified": "2026-09-26"
   },
   {
    "id": "icp-light-commercial-rooftops",
-   "family": "ICP (Tempstar, Heil, Comfortmaker, Arcoaire, Day & Night, KeepRite) light-commercial packaged rooftops RGH/RAH/RHH (high efficiency) and RGS/RAS/RHS (standard efficiency), 3-27.5 tons",
-   "description": "R = rooftop; 2nd letter G = gas heat/electric cooling, A = electric cooling (electric heat optional), H = heat pump; 3rd letter H = high efficiency, S = standard efficiency; then nominal cooling in MBH (036 = 3 t ... 300 = 25 t).",
+   "family": "ICP (Tempstar, Heil, Comfortmaker, Arcoaire, Day & Night, KeepRite) light-commercial packaged rooftops RGH/RAH/RHH (high efficiency), RGS/RAS/RHS (standard efficiency) and RGV/RAV/RHV tier, 3-27.5 tons",
+   "description": "R = rooftop; 2nd letter G = gas heat/electric cooling, A = electric cooling (electric heat optional), H = heat pump; 3rd letter H = high efficiency, S = standard efficiency, V = RGV/RAV/RHV tier (efficiency level unverified); then nominal cooling in MBH (036 = 3 t ... 300 = 25 t).",
    "productType": "packaged_rtu",
    "eraStart": 2008,
    "eraEnd": 2027,
-   "regex": "^R([GAH])([HS])(\\d{3})(?:[-A-Z0-9/]*)?$",
+   "regex": "^R([GAH])([HSV])(\\d{3})(?:[-A-Z0-9/]*)?$",
    "segments": [
     {
      "group": 1,
@@ -2087,8 +2380,10 @@
      "attribute": "series",
      "map": {
       "H": "High efficiency (RGH/RAH/RHH)",
-      "S": "Standard efficiency (RGS/RAS/RHS)"
-     }
+      "S": "Standard efficiency (RGS/RAS/RHS)",
+      "V": "RGV/RAV/RHV tier (efficiency level unverified — see ICP catalog 40122132001)"
+     },
+     "notes": "V tier from ICP catalog literature (Baker Distributing 'icp_rav-rgv-rhs-rhv-ras-rgs' brochure; Sid Harvey RGV048HFFA0AAA brochure); its efficiency level relative to H/S was not confirmed."
     },
     {
      "group": 3,
@@ -2101,6 +2396,7 @@
    "refrigerant": "R-410A",
    "controlPlatformIds": [
     "igc",
+    "electromechanical-thermostat",
     "economizer-x-w7220",
     "rtu-open"
    ],
@@ -2130,6 +2426,14 @@
      "expect": {
       "tonnage": "12.5"
      }
+    },
+    {
+     "model": "RGV048HFFA0AAA",
+     "expect": {
+      "unit_type": "Gas heat / electric cooling",
+      "series": "RGV/RAV/RHV tier (efficiency level unverified — see ICP catalog 40122132001)",
+      "tonnage": "4"
+     }
     }
    ],
    "notes": [
@@ -2140,7 +2444,8 @@
    "confidence": "medium",
    "evidence": "manufacturer_doc",
    "sources": [
-    "ICP 509 01 1703 00SS / 509 01 1702 00SS — RGH/RAH/RHH/RGS/RAS/RHS Single Package Rooftop Units (2014) and ICP 'Commercial Packaged Rooftops 3-27.5 tons' catalog (40122132001)"
+    "ICP 509 01 1703 00SS / 509 01 1702 00SS — RGH/RAH/RHH/RGS/RAS/RHS Single Package Rooftop Units (2014) and ICP 'Commercial Packaged Rooftops 3-27.5 tons' catalog (40122132001)",
+    "Baker Distributing ICP RAV/RGV/RHS/RHV/RAS/RGS brochure; Sid Harvey RGV048HFFA0AAA brochure (RGV tier catalog models)"
    ],
    "lastVerified": "2026-09-26"
   },
@@ -2181,13 +2486,12 @@
       "12": "10",
       "14": "12.5",
       "16": "15",
-      "20": "18",
       "25": "20",
       "07": "6",
       "08": "7.5"
      },
      "transform": "map_tons",
-     "notes": "07=6, 08=7.5, 12=10, 14=12.5, 16=15, 25=20 from the product data; 20 = 18 t is assumed (unverified)."
+     "notes": "07 = 6, 08 = 7.5, 12 = 10, 14 = 12.5, 16 = 15, 25 = 20 tons per the 38AU product data (38AU-7-25-04PD / 38AU-7-28-01PD); there is no size 20 in this family. An unmapped size code is echoed as the raw code, not tons — treat it as unknown and read the nameplate."
     },
     {
      "group": 4,
@@ -2339,7 +2643,6 @@
       "12": "10",
       "14": "12.5",
       "16": "15",
-      "20": "18",
       "25": "20",
       "28": "25",
       "30": "30",
@@ -2347,7 +2650,7 @@
       "08": "7.5"
      },
      "transform": "map_tons",
-     "notes": "07-16 from the product data; 20/25/28/30 (18/20/25/30 t) are from the 40RUA 07-30 size list and assumed by analogy with 38AU — verify."
+     "notes": "07 = 6, 08 = 7.5, 12 = 10, 14 = 12.5, 16 = 15, 25 = 20, 28 = 25, 30 = 30 tons per the 40RU product data (40RU-7-30-03PD); there is no size 20 in this family. An unmapped size code is echoed as the raw code, not tons — treat it as unknown and read the nameplate."
     },
     {
      "group": 4,
@@ -2625,7 +2928,7 @@
   {
    "id": "igc",
    "name": "Carrier Integrated Gas Controller (IGC) — LED flash codes",
-   "description": "Gas-heat ignition/safety board on 48-series rooftops (48TC/HC/LC/FC/GC/KC/JC, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ, Bryant 580J/581J, ICP RGH/RGS). One status LED: steady ON = normal, OFF = no power or hardware failure, N flashes = fault. Codes are displayed until the fault clears or power is cycled. Scope: this sidecar replaces the 11 IGC codes in the base pack (5 of which were flagged 'from memory') with the same 11 codes now sourced from the Carrier 48TC/48HC/Bryant 580J 'IGC Board LED Alarm Codes' tables and the legacy 48HJ/48TF/48EJ/48TJ 'LED Error Code Service Analysis' tables. The IGC table is identical across Carrier 48TC/HC/LC/FC/GC/KC/JC, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ/GS/GX, Bryant 580J/581J and ICP RGH/RGS, so coverage is 'complete' for the IGC (codes OFF, ON, 1–9). Honeywell W7220 JADE (Carrier EconoMi$er X) alarm strings are transcribed from the Honeywell 63-2700 / 62-0331 installation instructions, which Carrier reproduces in the EconoMi$er X IIK-CRECOMZR instructions and 48TC/50TC IOMs. Early-firmware modules show ACT UNDER V / ACT OVER V / ACT STALLED and SYS ALARM; later firmware (63-2700-11) consolidates the actuator faults into ACT ERROR and adds OA SENS T ERR, FREEZE ALARM, SHUTDOWN ACTIVE, DMP CAL RUNNING and DA SENS ALM. Both sets are included so the assistant matches whatever the LCD shows. Fault-code 'checks' marked 'Manual:' are from the source; 'Field practice:' items are sound technician practice added by the builder. The W7",
+   "description": "Gas-heat ignition/safety board on 48-series rooftops (48TC/HC/LC/FC/GC/KC/JC/FE, 48A/P/N gas sections, legacy 48HJ/TJ/TM/TF/EJ, Bryant 580J/581J, ICP RGH/RGS). One status LED: steady ON = normal, OFF = no power or hardware failure, N flashes = fault. Codes are displayed until the fault clears or power is cycled. The 11 codes (OFF, ON, 1-9) are transcribed from the Carrier 48TC/48HC/Bryant 580J 'IGC Board LED Alarm Codes' tables and the legacy 48HJ/48TF/48EJ/48TJ 'LED Error Code Service Analysis' tables; the table is identical across these families, so coverage is complete. Fault-code 'checks' marked 'Manual:' are from the source; 'Field practice:' items are technician practice added by the builder. Economizer (W7220 / W7212) diagnostics are on the economizer-x-w7220 and economizer-iv-w7212 platforms.",
    "appliesTo": [
     "48TC",
     "48HC",
@@ -2718,7 +3021,7 @@
      "checks": [
       "Manual: check gas valve operation; ensure the induced-draft blower wheel is properly secured to the motor shaft",
       "Field practice: inspect the heat exchanger and burner compartment for rollout scorching; verify inducer draws and flue is clear; watch ignition for delayed light-off",
-      "Reset: cycle unit power at the disconnect after correcting the cause (some vintages use a manual-reset rollout switch — reset at the switch)"
+      "Reset: cycle unit power at the disconnect after correcting the cause (the rollout switch itself auto-resets on IGC units; some legacy heat sections use a manual-reset switch — reset at the switch)"
      ],
      "severity": "lockout",
      "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '7 flashes: Rollout Switch Fault — Rollout switch has opened'; 48HJD IOM p.39; tsihvac igc_codes.pdf 'Rollout Switch Fault (LED 7 flashes) ... rollout switch will automatically reset but IGC will continue to lock out unit ... reset at unit disconnect'",
@@ -2821,267 +3124,9 @@
      "severity": "lockout",
      "source": "Carrier 48TC Service Manual Table 19 'IGC Board LED Alarm Codes' — '9 flashes: Temporary Software Lockout — 1 hour auto reset or power reset — Electrical interference is disrupting the IGC software'; hvac-talk 'Carrier Codes' thread reproduction",
      "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "MAT SENS ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): mixed air sensor has failed or become disconnected.",
-     "likelyCauses": [
-      "MAT sensor (20K NTC) open, shorted or unplugged at the MAT / MAT T1 terminals",
-      "Sensor lead damaged; sensor fell out of the mixed-air stream"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: ohm the sensor (20K at 77 °F) at the module terminals; compare the STATUS menu MA TEMP reading to a reference thermometer"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'MAT SENS ERR: Indicates that the mixed air sensor has failed or become disconnected. Check wiring and replace sensor if alarm persists.'",
-     "evidence": "manufacturer_doc",
-     "notes": "Displayed on the W7220 LCD ALARMS (#) menu; the economizer then runs with damper at minimum position and mechanical cooling only."
-    },
-    {
-     "code": "CO2 SENS ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): CO2 sensor has failed, gone out of range, or become disconnected.",
-     "likelyCauses": [
-      "CO2 (IAQ) sensor unpowered, miswired at IAQ 2-10 / IAQ COM / IAQ 24V, or output out of the 2–10 V range",
-      "Sensor failed or needs calibration"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: measure the IAQ 2-10 V signal at the module; confirm 24 VAC to the sensor; if DCV is not used, set DCV to NONE in SETUP so the alarm does not occur"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'CO2 SENS ERR: Indicates that the CO2 sensor has failed, gone out of range, or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "OA SYLK T ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
-     "likelyCauses": [
-      "C7400A enthalpy sensor (or C7250A temperature sensor) on the S-BUS unplugged, wired backwards is not an issue (polarity-insensitive) but open/shorted S-BUS lead is",
-      "Sensor failed; more than the supported number of Sylk devices on the bus"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: verify the S-BUS pair is intact and the sensor is set to OA (jumper/DIP per sensor instructions); check the STATUS menu for the OA sensor readings"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "OA SYLK H ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
-     "likelyCauses": [
-      "C7400A enthalpy sensor humidity element failed or sensor disconnected from the S-BUS"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: compare OA HUM in the STATUS menu with a sling psychrometer; replace the sensor if far off or missing"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "RA SYLK T ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
-     "likelyCauses": [
-      "Return-air C7400A sensor disconnected from the S-BUS or failed",
-      "Sensor addressed as OA instead of RA (two sensors with the same address)"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: only fitted on differential-enthalpy configurations — verify S-BUS wiring and the RA address setting on the sensor"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "RA SYLK H ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
-     "likelyCauses": [
-      "Return-air C7400A humidity element failed or sensor disconnected"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "DA SYLK T ERR",
-     "meaning": "EconoMi$er X (W7220 JADE): discharge air (Sylk-bus) sensor has failed or become disconnected.",
-     "likelyCauses": [
-      "C7250A discharge-air sensor unplugged from the S-BUS or failed"
-     ],
-     "checks": [
-      "Manual: check wiring and replace the sensor if the alarm persists",
-      "Field practice: the DA sensor is optional — if not installed, make sure the module is not configured to expect one"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'DA SYLK T ERR: Indicates that the discharge air sensor has failed or become disconnected.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "OA SENS T ERR",
-     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): outdoor air temperature sensor (20K wired OAT input) has failed or become disconnected — 'SENS T' is shown instead of 'SYLK T' when a 20K OA temperature sensor is used.",
-     "likelyCauses": [
-      "20K OAT sensor open/shorted or unplugged at the OAT / OAT T1 terminals",
-      "Sensor lead damaged by the condenser fan or weather"
-     ],
-     "checks": [
-      "Manual (by analogy with the other sensor rows): check wiring and replace the sensor if the alarm persists",
-      "Field practice: ohm the sensor at the module (20K at 77 °F) and compare OA TEMP in the STATUS menu to ambient"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' menu list ('OA SENS T ERR'; 'When using 20k OA temperature sensors, SENS T will appear on the screen')",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "ACT ERROR",
-     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): the actuator has failed or become disconnected.",
-     "likelyCauses": [
-      "Damper actuator stalled (damper jammed, linkage bound, ice or debris)",
-      "Actuator supply voltage out of range (below 21.6 V or above 26.4 V) at ACT 24V / ACT COM",
-      "Actuator unplugged from ACT 2-10 / S-BUS, or actuator failed"
-     ],
-     "checks": [
-      "Manual: check for stall, over voltage, under voltage and actuator count; replace the actuator if the damper is movable and the supply voltage is between 21.6 V and 26.4 V",
-      "Field practice: run CHECKOUT > DAMPER OPEN / DAMPER CLOSE and watch the damper travel; free a bound damper before condemning the actuator"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'ACT ERROR: Indicates that the actuator has failed or become disconnected. Check for stall, over voltage, under voltage and actuator count. Replace the actuator if damper is movable and supply voltage is between 21.6 V and 26.4 V.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "ACT UNDER V",
-     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is below the expected range.",
-     "likelyCauses": [
-      "Low 24 VAC supply to the actuator (undersized/overloaded transformer, long thin wiring, poor connection at ACT 24V / ACT COM)"
-     ],
-     "checks": [
-      "Field practice: measure 24 VAC at the actuator power terminals under load; must be within 21.6–26.4 V (per the ACT ERROR row); correct the supply or connections"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT UNDER V: Indicates voltage received by the actuator is below the expected range.' (manualsdir 131876 p.19)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "ACT OVER V",
-     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is above the expected range.",
-     "likelyCauses": [
-      "High control-transformer secondary (wrong primary tap for line voltage), or actuator miswired"
-     ],
-     "checks": [
-      "Field practice: measure actuator supply; if above 26.4 V check the transformer primary tap and line voltage"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT OVER V: Indicates voltage received by the actuator is above the expected range.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "ACT STALLED",
-     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): the actuator stopped before achieving its commanded position.",
-     "likelyCauses": [
-      "Damper blades or linkage binding, ice/debris in the hood, actuator clutch slipping",
-      "Actuator stroke or rotation direction set wrong"
-     ],
-     "checks": [
-      "Field practice: disengage the actuator clutch and move the damper by hand through full travel; run CHECKOUT DAMPER OPEN/CLOSE and confirm the damper reaches both ends"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT STALLED: Indicates the actuator stopped before achieving its commanded position.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "FREEZE ALARM",
-     "meaning": "EconoMi$er X (W7220 JADE): outdoor temperature is below the LOW TEMP LOCKOUT setting or the mixed air temperature is below the Lo setpoint; the alarm clears when conditions return to the normal range.",
-     "likelyCauses": [
-      "Genuinely cold outdoor air with the damper open (freeze protection is doing its job)",
-      "MAT sensor reading low (misplaced in a cold stream) or LOW TEMP LOCKOUT / MAT LO SET configured too high"
-     ],
-     "checks": [
-      "Manual: alarm self-clears when temperatures return to normal range",
-      "Field practice: confirm the damper drives closed on the freeze alarm; verify MAT sensor placement and the SETUP values MAT LO SET / LOW T LOCK"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'FREEZE ALARM: Indicates that the outdoor temperature is below the LOW Temp Lockout setting or the mixed air temperature is below the Lo Setpoint. The alarm will clear when conditions return to normal range.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "SHUTDOWN ACTIVE",
-     "meaning": "EconoMi$er X (W7220 JADE): AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX2 IN terminal.",
-     "likelyCauses": [
-      "Smoke detector / fire alarm or BAS shutdown input is energizing AUX2 IN (intended)",
-      "AUX2 IN mis-programmed as SHUTDOWN while wired for another function (e.g. occupancy or HEAT input)"
-     ],
-     "checks": [
-      "Field practice: confirm what is feeding 24 V to AUX2 IN; if the input is meant to be occupancy/heat, change AUX2 IN in the SETUP menu"
-     ],
-     "severity": "info",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'SHUTDOWN ACTIVE: Indicates that AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX 2IN terminal.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "DMP CAL RUNNING",
-     "meaning": "EconoMi$er X (W7220 JADE): DCV Auto enable has been programmed and the JADE is completing a calibration on the dampers.",
-     "likelyCauses": [
-      "Normal — automatic damper calibration in progress after power-up or a configuration change"
-     ],
-     "checks": [
-      "Field practice: wait for the calibration to finish before judging damper position or running CHECKOUT"
-     ],
-     "severity": "info",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DMP CAL RUNNING: Displays if DCV Auto enable has been programmed and the Jade is completing a calibration on the dampers.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "DA SENS ALM",
-     "meaning": "EconoMi$er X (W7220 JADE): the discharge air temperature is out of the range set in the ADVANCED SETUP menu.",
-     "likelyCauses": [
-      "Discharge air too cold/hot relative to the DA LO/HI alarm limits (mechanical cooling or heat problem, or damper stuck open in cold weather)",
-      "DA sensor reading wrong or alarm limits set too tight"
-     ],
-     "checks": [
-      "Field practice: compare DA TEMP in STATUS with a duct thermometer; review ADVANCED SETUP discharge-air alarm limits; check the unit's cooling/heating operation"
-     ],
-     "severity": "warning",
-     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DA SENS ALM: Indicates that the discharge air temperature is out of the range set in the ADVANCED SETUP Menu.'",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "SYS ALARM",
-     "meaning": "EconoMi$er X (W7220 JADE): when AUX1-O is set to SYS and any alarm exists (e.g. failed sensors), the AUX1-O terminal has 24 VAC out (system alarm output).",
-     "likelyCauses": [
-      "Any other active JADE alarm — this is the summary output, not a fault by itself"
-     ],
-     "checks": [
-      "Field practice: open the ALARMS (#) menu and clear the underlying alarm(s); AUX1-O drops out when no alarms remain"
-     ],
-     "severity": "info",
-     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'SYS ALARM: When AUX1-O is set to SYS and there is any alarm (e.g., failed sensors), the AUX1-O terminal has 24 Vac out.' (manualsdir 131876 p.19)",
-     "evidence": "manufacturer_doc"
     }
    ],
    "ledPatterns": [
-    {
-     "pattern": "LED steady on",
-     "meaning": "Normal"
-    },
-    {
-     "pattern": "LED off",
-     "meaning": "No 24 V power to IGC or board hardware failure",
-     "checks": [
-      "24 VAC at IGC input",
-      "control fuse / CB"
-     ]
-    },
-    {
-     "pattern": "LED flashing N times, pause, repeat",
-     "meaning": "Fault code N (see faultCodes)"
-    },
     {
      "pattern": "IGC LED steady on",
      "meaning": "Normal operation (IGC powered, no stored fault).",
@@ -3103,61 +3148,15 @@
       "Count flashes between pauses; watch a full cycle to catch multiple codes",
       "Codes are held until the fault clears or 24 V power is cycled"
      ]
-    },
-    {
-     "pattern": "EconoMi$er IV (Honeywell W7212 logic module) — Free Cool LED on",
-     "meaning": "Outdoor air is suitable for free cooling (enthalpy/dry-bulb changeover satisfied); the damper modulates on a cooling call.",
-     "checks": [
-      "Checkout (Honeywell 63-2596 / Carrier IIK-CRECOMZR52): with the 620-ohm checkout resistor across SO and + and the enthalpy pot at A, the Free Cool LED turns on and the actuator drives to about 45° open (DCV Max at mid position); turning the pot to D (fully CW) or removing the resistor turns the LED off and drives the actuator fully closed"
-     ]
-    },
-    {
-     "pattern": "EconoMi$er IV (W7212) — DCV LED on",
-     "meaning": "The module is in demand-controlled ventilation (CO2) mode and is overriding the minimum position.",
-     "checks": [
-      "Verify the CO2 sensor 2-10 V signal and the DCV Set/DCV Max pot settings"
-     ]
-    },
-    {
-     "pattern": "EconoMi$er IV (W7212) — Exh LED on",
-     "meaning": "The exhaust-fan contact (EXH1/EXH2) is closed — damper position has exceeded the Exhaust Fan Set Point.",
-     "checks": [
-      "Adjust the Exh Fan Set pot if the power exhaust runs too early/late"
-     ]
-    },
-    {
-     "pattern": "EconoMi$er IV (W7212) — no LEDs lit",
-     "meaning": "No 24 VAC to the module (TR/TR1) or the module has failed; the W7212 has no fault-code display — diagnosis is by LED state plus the checkout table.",
-     "checks": [
-      "24 VAC between TR and TR1",
-      "Thermostat/unit signals at Y1, G, O and the 2-10 V actuator output"
-     ]
-    },
-    {
-     "pattern": "EconoMi$er X (W7220 JADE) LCD shows 'ALARMS (#)' with a count",
-     "meaning": "Number of active alarms; alarms display only when active. On power-up the module waits 60 minutes before checking for alarms so configured sensors/actuator can come online.",
-     "checks": [
-      "Scroll into the ALARMS menu to read each alarm string (see faultCodes)"
-     ]
     }
    ],
    "diagnosticTips": [
-    "The IGC LED is on the board in the gas-section control compartment (burner side); view it with the panel open and the door-interlock (if fitted) bypassed for service only.",
-    "Codes 2, 3, 7 and 8 were confirmed against Carrier IOM pages this session; codes 1, 4, 5, 6 and 9 are from memory of the same table — verify in the unit's IOM 'IGC Board LED Alarms' before acting on them.",
-    "To clear a lockout: remove the call for heat (W) for a few seconds or cycle 24 V control power; rollout switches (7 flashes) are manual reset at the switch.",
-    "The IGC controls the indoor fan in heating: fan starts ~45 s after the burners light and runs ~45 s after W drops out; a modified delay shows as 1 flash.",
-    "Heat-exchanger limit trips on rooftops are almost always airflow: check filters, belt tension, blower rotation and the supply-air temperature rise against the nameplate range before condemning parts.",
     "IGC location: the Integrated Gas Controller is in the gas-section (burner) control compartment of 48-series rooftops; its single status LED is on the board. Read it with the panel open (bypass the door/service switch for service only).",
     "IGC code display: the LED flashes the code number with a 3-second pause between codes; if more than one error exists, all applicable codes are shown in numerical sequence. Codes stay displayed until the fault clears or 24 V power is cycled.",
+    "To clear a lockout: remove the call for heat (W) for a few seconds or cycle 24 V control power. Rollout (7 flashes): on IGC-equipped units the rollout switch resets automatically but the IGC keeps the unit locked out until unit power is reset at the disconnect (48TJD/48HJD IOM 'LED Error Code Service Analysis'); some legacy heat sections use a manual-reset rollout switch — check the unit's diagram.",
     "IGC reset: most codes auto-reset when the input clears; ignition lockout (5), rollout (7) and internal fault (8) require cycling 24 V control power / unit power at the disconnect; temporary software lockout (9) auto-resets after 1 hour or on power reset.",
     "IGC fan control: in heating the IGC runs the indoor fan; if a limit or heating fault modifies the fan on/off delay, code 1 flashes. Repeated limit trips on rooftops are almost always airflow (filters, belt, blower speed, closed dampers) — verify temperature rise against the nameplate before condemning parts.",
-    "Inducer (6 flashes): the IGC proves the inducer with a Hall-effect speed sensor inside the IDM, wired to IGC plug J2 (pin 1 white, pin 2 red, pin 3 black). Replacement inducers must include the sensor.",
-    "EconoMi$er X (W7220 JADE) interface: 2-line 16-character LCD with a 4-button keypad (Menu Up, Menu Down, Enter, Exit) mounted in the economizer/control box. Menus: STATUS, SETUP, ADVANCED SETUP, CHECKOUT, ALARMS(#). Alarms show only while active.",
-    "EconoMi$er X clearing an alarm: navigate to the alarm in ALARMS, press Enter — 'ERASE?' displays — press Enter again; 'ALARM ERASED' confirms; press Menu Up/Exit to return. If the condition still exists the alarm re-displays within 5 seconds.",
-    "EconoMi$er X power-up: the JADE waits 60 minutes after power-up before checking for alarms; a sensor that loses communication after being detected shows a device-fail error, and after 60 minutes the module drops to operation mode with the missing device alarmed.",
-    "EconoMi$er X checkout: CHECKOUT menu tests DAMPER MINIMUM (drives to configured minimum), DAMPER OPEN (fully open; exhaust-fan contacts energize during this test) and DAMPER CLOSE (fully closed) — use them to prove actuator/damper travel when ACT ERROR / ACT STALLED is shown. The controller must see Y1-G / occupancy inputs per the SETUP for normal economizing.",
-    "EconoMi$er IV (W7212 logic module) has no display and no alarm codes: diagnose with the three LEDs (Free Cool, DCV, Exh), the potentiometer settings and the Honeywell checkout table (620-ohm resistor across SO and +, enthalpy pot A vs D, DCV Max mid) — see ledPatterns.",
-    "EconoMi$er 2 is the simpler DCV-capable economizer without a logic-module display; it also has no fault codes — verify by 24 V inputs, actuator 2-10 V and damper travel."
+    "Inducer (6 flashes): the IGC proves the inducer with a Hall-effect speed sensor inside the IDM, wired to IGC plug J2 (pin 1 white, pin 2 red, pin 3 black). Replacement inducers must include the sensor."
    ],
    "coverage": "complete",
    "sourceDocs": [
@@ -3221,36 +3220,6 @@
      "title": "TSI HVAC — 'LED Error Code Service Analysis' (SYMPTOM / CAUSE / REMEDY reproduction of the Carrier IGC table, incl. Hall-effect speed-sensor test)",
      "docId": "igc_codes.pdf",
      "url": "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
-    },
-    {
-     "title": "Honeywell JADE Economizer Module (Model W7220) Installation Instructions — 'Troubleshooting / Alarms' table and menu structure",
-     "docId": "63-2700-11 (and earlier 62-0331-15)",
-     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf"
-    },
-    {
-     "title": "Honeywell JADE W7220 Installation Instructions and Operators Manual (ManualsLib mirror) — 'Alarms' (p.24) and menu tables",
-     "docId": "ManualsLib 1405190 p.24",
-     "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
-    },
-    {
-     "title": "Honeywell W7220 (early firmware) — 'Troubleshooting, Alarms' page (ACT UNDER V / ACT OVER V / ACT STALLED / SYS ALARM rows)",
-     "docId": "manualsdir 131876 p.19",
-     "url": "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19"
-    },
-    {
-     "title": "Carrier EconoMi$er X (W7220) Factory-Installed Option Low Leak Economizer — Installation Instructions (Carrier version of the JADE alarm/menu tables)",
-     "docId": "IIK-CRECOMZR67-03 / CRECOMZR076-080 (ManualsLib 2855215)",
-     "url": "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
-    },
-    {
-     "title": "Honeywell W7212 / W7213 / W7214 Economizer Logic Modules — Product Data 63-2596 (LED description and 'Checkout' table used for Carrier EconoMi$er IV)",
-     "docId": "63-2596-09",
-     "url": "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf"
-    },
-    {
-     "title": "Carrier EconoMi$er IV field accessory Installation Instructions (W7212 checkout / Free Cool LED)",
-     "docId": "IIK-CRECOMZR52-02",
-     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
     }
    ],
    "confidence": "medium",
@@ -3264,19 +3233,13 @@
     "https://www.manualslib.com/manual/25511/Carrier-Carrier-48tfd008-014.html?page=42",
     "https://www.manualslib.com/manual/25597/Carrier-Single-Package-Rooftop-Units-Electric-Cooling-Gas-Heating-48ej.html?page=60",
     "https://www.manualslib.com/manual/25401/Carrier-48tjd.html?page=45",
-    "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf",
-    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf",
-    "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24",
-    "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19",
-    "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf",
-    "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf",
-    "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
+    "https://www.tsihvac.com/pdfs/servicedep/igc_codes.pdf"
    ]
   },
   {
    "id": "systemvu",
    "name": "Carrier SystemVu rooftop controller",
-   "description": "Integrated DDC unit controller (MBB main base board + display) shipped on 48/50LC, newer 48/50FC/GC/KC/JC and optionally 48/50TC/HC. Alarm codes: F### = fault (unit or component shutdown), A### = alert. More than 300 configuration and 300 status/diagnostic points are available from the display. Coverage is partial. WebSearch summaries exposed only individual rows of the SystemVu alarm tables (Table 12/13 in 48/50FC-GC-01T, Table 16 in S-VU-LC-4-26-xxT, Faults and Alerts in SYSVU-FE-GE-02T); the full table (all sensor open/short alerts for SAT/OAT/RAT/SPT/SPRH/IAQ, circuit A/B pressure and compressor alerts, economizer FDD alerts, IGC/heat alerts, communication alerts, Humidi-MiZer and RDS/A2L leak alarms on 48/50JC) could not be read and is NOT transcribed. Verifiers should open the PDFs (shareddocs links above) and extend this file. A605 and A608 meanings are paraphrased from a search summary of Table 16 ('motor thermistor thermal' and 'AMA internal fault'); the exact display text must be confirmed against the 48/50LC manual before promotion beyond medium confidence. A600-A604 and A609 exist in the same VFD block but were not seen. A321 definition comes from a Carrier distributor tech tip (Mingledorff's) that reproduces the 48/50JC SystemVu alert text; the manual itself (48/50JC-4-6-02T) was not readable through search, hence evidence single_secondary. Codes A140-A156 and A200-A210 returned in searches belonged to Carrier ComfortLink chiller/38AP tables (e.g. A140 reverse ro",
+   "description": "Integrated DDC unit controller (MBB main base board + display) shipped on 48/50LC, newer 48/50FC/GC/KC/JC and optionally 48/50TC/HC. Alarm codes: F### = fault (unit or component shutdown), A### = alert. More than 300 configuration and 300 status/diagnostic points are available from the display. Coverage is partial. WebSearch summaries exposed only individual rows of the SystemVu alarm tables (Table 12/13 in 48/50FC-GC-01T, Table 16 in S-VU-LC-4-26-xxT, Faults and Alerts in SYSVU-FE-GE-02T); the full table (all sensor open/short alerts for SAT/OAT/RAT/SPT/SPRH/IAQ, circuit A/B pressure and compressor alerts, economizer FDD alerts, IGC/heat alerts, communication alerts, Humidi-MiZer and RDS/A2L leak alarms on 48/50JC) could not be read and is NOT transcribed. Verifiers should open the PDFs (shareddocs links above) and extend this file. A605 and A608 wording is from the S-VU-LC Table 16 rows as returned by search (ManualsLib 1801319/1585307 p.61). A600-A604 and A609 exist in the same VFD block but were not seen. A321 definition comes from a Carrier distributor tech tip (Mingledorff's) that reproduces the 48/50JC SystemVu alert text; the manual itself (48/50JC-4-6-02T) was not readable through search, hence evidence single_secondary. Codes A140-A156 and A200-A210 returned in searches belonged to Carrier ComfortLink chiller/38AP tables (e.g. A140 reverse ro",
    "appliesTo": [
     "48/50LC",
     "48/50FC",
@@ -3284,7 +3247,8 @@
     "48/50KC",
     "48/50JC",
     "48/50TC (SystemVu option)",
-    "48/50HC (SystemVu option)"
+    "48/50HC (SystemVu option)",
+    "48/50FE (SystemVu v4.x)"
    ],
    "faultCodes": [
     {
@@ -3548,7 +3512,7 @@
     },
     {
      "code": "A605",
-     "meaning": "IDF VFD motor thermistor / motor thermal alert (indoor fan drive reports motor over-temperature). Wording paraphrased from Table 16; verify exact text.",
+     "meaning": "IDF VFD MOTOR THERMISTOR — thermistor or thermistor connection is disconnected; THERMAL UNEXPECTED over-temperature condition (see VFD parameter 1-90).",
      "likelyCauses": [
       "Indoor fan motor overheating: overload, high static, blocked cooling, wrong drive motor data"
      ],
@@ -3557,7 +3521,7 @@
       "Check external static, belts/drive and motor cooling; verify motor data programmed in the VFD (field practice)"
      ],
      "severity": "warning",
-     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A605-IDF VFD ... motor thermistor/thermal)",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A605-IDF VFD Motor thermistor: thermistor or thermistor connection disconnected / THERMAL UNEXPECTED over temperature, see parameter 1-90)",
      "evidence": "manufacturer_doc"
     },
     {
@@ -3597,7 +3561,7 @@
     },
     {
      "code": "A608",
-     "meaning": "IDF VFD AMA internal fault (drive automatic motor adaptation / internal fault reported to SystemVu). Wording paraphrased from Table 16; verify exact text.",
+     "meaning": "IDF VFD AMA — internal fault; contact your local Carrier representative.",
      "likelyCauses": [
       "VFD internal fault or failed automatic motor adaptation run",
       "Wrong motor data in the drive"
@@ -3607,7 +3571,7 @@
       "Replace the drive if the internal fault persists after a power cycle (field practice)"
      ],
      "severity": "warning",
-     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A608-IDF VFD ... AMA internal fault)",
+     "source": "S-VU-LC-4-26-03T Table 16 SystemVu Controller Alarm Codes (A608-IDF VFD AMA: internal fault, contact your local Carrier representative)",
      "evidence": "manufacturer_doc"
     }
    ],
@@ -3620,7 +3584,7 @@
     "Viewing/clearing: active faults and alerts and the alarm history are reviewed and cleared from the local display (ALARMS menu) or from a network device (CCN / i-Vu / BACnet MS/TP). Automatic-reset codes clear when the condition goes away; fix the cause before resetting shutdown faults.",
     "Service Test: a built-in test routine (SERVICE TEST menu; e.g. HEAT 1 TEST, IDF SPEED TEST) lets you run compressors, indoor/outdoor fans, heat stages and the economizer manually for start-up commissioning and diagnosis. After clearing alarms, verify compressors, fans and valves in Service Test.",
     "Alarm numbering groups seen in the manuals: 01x = MBB hardware (voltage, fuses, EEPROM); 20x = unit-level shutdowns (freeze protection F202, remote shutdown F204, indoor fan limit F205, phase monitor F206); 16x = humidity/air-quality sensor open/short alerts (OARH A160/A161, RARH A162/A163, OAQ A166/A167); 3xx = refrigerant circuit A/B (A321 CIR.A FAIL TO PRESSURE, F310 CIRA DOWN DUE TO FAIL, F318 COMPRESSOR STUCK ON); 60x = indoor fan VFD alerts (A605-A608).",
-    "Gas heat: the IGC (Integrated Gas Control) board has its own LED; count flashes per the IGC table above. The IGC monitors the rollout switch, limit switch and flue gas pressure switch and controls the direct-spark ignition; SystemVu reports IGC problems as heat alerts but the root cause is read from the IGC LED.",
+    "Gas heat: the IGC (Integrated Gas Control) board has its own LED; count flashes per the IGC table on the igc control platform. The IGC monitors the rollout switch, limit switch and flue gas pressure switch and controls the direct-spark ignition; SystemVu reports IGC problems as heat alerts but the root cause is read from the IGC LED.",
     "The alarm list varies by product and SystemVu software version (v1.x 48/50FC-GC, v2.x-3.x 48/50LC, v2.x-4.x 48/50JC, v4.x 50FEQ/GEQ/48QE); always refer to the Controls, Start-Up, Operation and Troubleshooting book for the unit's family and version."
    ],
    "coverage": "partial",
@@ -3687,84 +3651,11 @@
    ],
    "ledPatterns": [
     {
-     "pattern": "IGC LED off",
-     "meaning": "Hardware failure / loss of power to the IGC — no gas heating.",
+     "pattern": "IGC LED (gas units) — steady on / off / N flashes",
+     "meaning": "Same IGC table as the igc control platform (48/50FC-GC-01T Table 18 'IGC Board LED Alarm Codes'): ON = normal; OFF = loss of power / hardware failure; 1 = indoor fan on/off delay modified; 2 = limit switch fault; 3 = flame sense fault; 4 = four consecutive limit switch faults; 5 = ignition lockout; 6 = induced-draft motor fault; 7 = rollout switch fault; 8 = internal control fault; 9 = temporary software lockout (1-hour auto reset or power reset). Multiple codes display in numerical sequence with a 3-second pause between codes.",
      "checks": [
-      "Check the 5 amp fuse on the IGC, power to the unit, the 24 V circuit breaker, the transformer and the wiring to the IGC (48/50FC-GC-01T Table 18 IGC Board LED Alarm Codes)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 1 flash",
-     "meaning": "Limit switch fault — the high-temperature limit switch opened; gas valve and igniter turn off while the indoor fan and inducer remain on.",
-     "checks": [
-      "Check indoor airflow: filters, blower speed/belt, external static, closed dampers (field practice)",
-      "Check limit switch wiring and that the limit closes when cooled (field practice)",
-      "Note: limit circuit lockout occurs if the limit or flame rollout switch is open longer than 3 minutes or 10 successive limit trips occur (IGC description)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 2 flashes",
-     "meaning": "Flame sense fault.",
-     "checks": [
-      "Clean the flame sensor rod; check flame-sense wiring, polarity/ground of the 24 V circuit and burner alignment (field practice)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 3 flashes",
-     "meaning": "Pressure switch fault — the flue gas pressure switch is read closed before the inducer starts (or fails to close after it starts).",
-     "checks": [
-      "Check for a stuck/welded pressure switch, pinched or wet tubing, blocked flue or inducer, and switch wiring (TSI IGC codes / field practice)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 4 flashes",
-     "meaning": "Four consecutive limit switch faults.",
-     "checks": [
-      "Treat as a repeat of the 1-flash cause: airflow, limit switch, blower; correct before resetting (field practice)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 5 flashes",
-     "meaning": "Ignition lockout fault.",
-     "checks": [
-      "Check gas supply/pressure, gas valve voltage, igniter, flame sensor and combustion air; reset by cycling 24 V power to the IGC (field practice)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 6 flashes",
-     "meaning": "Induced-draft motor fault.",
-     "checks": [
-      "Check for proper voltage to the inducer motor and verify the speed sensor plug at IGC terminal J2 (PIN 1 white, PIN 2 red, PIN 3 black) (TSI IGC codes)",
-      "Ensure the induced-draft blower wheel is secured to the motor shaft (48FC/LC service literature)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 7 flashes",
-     "meaning": "Rollout switch fault — the rollout switch has opened; heating is shut down.",
-     "checks": [
-      "Check gas valve operation and that the induced-draft blower wheel is properly secured to the motor shaft (Carrier service literature)",
-      "Inspect the heat exchanger and burners for blockage or cracks before resetting the manual rollout switch (field practice)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 8 flashes",
-     "meaning": "Internal control fault — the IGC has sensed an internal hardware or software error.",
-     "checks": [
-      "If the fault is not cleared by resetting 24 V power, replace the IGC (48/50FC-GC-01T Table 18)"
-     ]
-    },
-    {
-     "pattern": "IGC LED 9 flashes",
-     "meaning": "Internal software fault / software lockout.",
-     "checks": [
-      "If the error code is not cleared by resetting unit power, replace the IGC (TSI IGC codes)"
-     ]
-    },
-    {
-     "pattern": "IGC LED multiple codes",
-     "meaning": "If more than one error code exists they are displayed on the LED in numerical sequence with a 3-second pause between codes.",
-     "checks": [
-      "Count each flash group separately; write down all codes before cycling power (manual)"
+      "Read the code on the IGC board in the gas section and look it up on the igc platform (likely causes, checks and reset method per code)",
+      "SystemVu reports IGC problems as heat alerts; the root cause is read from the IGC LED"
      ]
     }
    ]
@@ -3840,27 +3731,13 @@
      "severity": "warning",
      "source": "Carrier RTU Open v3 Integration Guide (11-808-521-01) / RTU Open v5 Integration Guide (11-808-697-01) — Alarms section; RTU Open Controls, Start-Up, Operation and Troubleshooting (manualslib 1955294) — Alarms: Airside linkage",
      "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "Space Temp Sensor / Dirty Filter / Fan Status / Compressor Status alarms",
-     "meaning": "Additional configurable alarms documented in the RTU Open integration guide: space temperature sensor failure, dirty filter (differential switch), supply fan status (no proof), compressor status/failure, OAT sensor, IAQ/CO2 sensor, space temp high/low, SAT high/low.",
-     "likelyCauses": [
-      "Sensor or switch fault, or a real condition (filter loaded, belt broken, compressor safety open)"
-     ],
-     "checks": [
-      "Read the alarm text and the associated status point on the Equipment Touch / BAS; the point name identifies the input to test"
-     ],
-     "severity": "warning",
-     "source": "Carrier RTU Open v3 Integration Guide (11-808-521-01) / RTU Open v5 Integration Guide (11-808-697-01) — Alarms section; RTU Open Controls, Start-Up, Operation and Troubleshooting (manualslib 1955294) — Alarms (list names from memory; verify in the guide)",
-     "evidence": "inferred",
-     "notes": "Names are from memory of the integration guide alarm list; the guide is the authority."
     }
    ],
    "diagnosticTips": [
     "Connect with Field Assistant (USB Local Access) or the Equipment Touch to view alarms, points and to run the controller's Service Test (fan, compressors, heat, economizer).",
-    "Set the protocol and baud with the DIP switches and rotary address switches on the board; the board's status LEDs (Run/Error) indicate firmware state — Error LED patterns are in the installation guide.",
+    "Set the protocol and baud with the DIP switches and rotary address switches on the board; the board's status LEDs indicate firmware/communication state — their patterns are in the installation guide (not transcribed here).",
     "Alarms reset automatically when the condition clears unless configured as latching; check 'Alarm settings' for the enable flags before assuming a missing alarm means no fault.",
-    "Full alarm list: RTU Open v3/v5 Integration Guide, 'Alarms' section (11-808-521-01 / 11-808-697-01). Only four alarm points were confirmed here."
+    "Full alarm list: RTU Open v3/v5 Integration Guide, 'Alarms' section (11-808-521-01 / 11-808-697-01) — it also covers Space Temp, Outdoor Air Temp, Filter, Fan Status, Compressor Status, Space RH and IAQ/OAQ alarm points, which are not transcribed here. Only the four alarm points above were confirmed verbatim."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -4291,8 +4168,9 @@
       "Check the CCN/building-automation system for an active emergency-stop point and release it; alarm clears automatically once EMSTOP returns to normal (manual text)"
      ],
      "severity": "shutdown",
-     "source": "48/50AJ Table 114 'T150 / A150 Unit is in Emergency Stop'; 30RAP ComfortLink table 'A150 Emergency Stop — CCN emergency stop command received'",
-     "evidence": "manufacturer_doc"
+     "source": "Not confirmed on a rooftop table this session (48/50AJ Table 114 pp. 94-97, 48/50PG C03-14 Table 12 and 48/50HC-05T searches returned no A150/T150 row); the code exists on Carrier ComfortLink 30-series chiller alarm tables as 'Emergency Stop'",
+     "evidence": "single_secondary",
+     "notes": "UNVERIFIED for rooftops: code number not confirmed on any rooftop ComfortLink alarm table this session; on 30-series chillers Emergency Stop is a CCN command — confirm in the unit's controls manual before acting."
     },
     {
      "code": "A152",
@@ -4541,7 +4419,7 @@
     },
     {
      "code": "T418",
-     "meaning": "OAU (outdoor air unit / dedicated outdoor air accessory) alert — expands to 'T418 OAU Low CFM' or 'T418 OAU General Alarm'.",
+     "meaning": "OAU (outdoor air unit / dedicated outdoor air accessory) alert — expands to one of 'T418 OAU Motor Failure', 'T418 OAU Dirty Filter', 'T418 OAU Low CFM' or 'T418 OAU General Alarm'.",
      "likelyCauses": [
       "Outdoor-air unit reporting low airflow or a general fault over the network (manual text)"
      ],
@@ -4549,7 +4427,7 @@
       "Expand the alert to read the sub-text; troubleshoot the OAU per its own manual and check its network connection (field practice)"
      ],
      "severity": "warning",
-     "source": "48/50HC 04-28 controls manual (ManualsLib 1653595) p.67 'T418 OAU Low CFM; T418 OAU General Alarm'",
+     "source": "48/50HC 04-28 controls manual (ManualsLib 1653595) p.67 'T418 OAU Motor Failure; T418 OAU Dirty Filter; T418 OAU Low CFM; T418 OAU General Alarm'",
      "evidence": "manufacturer_doc"
     },
     {
@@ -4765,13 +4643,12 @@
     "Scrolling marquee: 4-digit display with ESCAPE / ENTER / up / down keys on the main control box. Hold ESCAPE to reach the top menu; the ALARMS menu shows CURR (current) and HIST (history) codes; RCRN = reset current alarms.",
     "Service Test mode: from the SERVICE TEST menu set TEST = ON (unit must be off / disabled) to run fans, compressors, heat stages, economizer and power exhaust manually — the manual lists lockouts that remain enforced.",
     "Alerts (Txxx) do not shut the unit down; alarms (Axxx) do. Codes with the same number can appear as T or A depending on whether the fault is inhibiting a component or the whole unit.",
-    "ALL codes above are from memory of the 48/50A / 48/50HC ComfortLink alarm tables and are marked inferred — read the unit's controls manual 'Alarm and Alert Codes' appendix (48/50A-15T for 48/50A; 48/50HC-05T for 48/50HC v3; 48/50PG C03-14 for Centurion) before acting. 38AP and 30RAP use different chiller/condensing-unit tables.",
     "Display: the ComfortLink Scrolling Marquee is a 4-key, 4-character, 16-segment LED module on the main control box (ESCAPE, ENTER, up, down). Menus: Run Status, Service Test, Temperatures, Pressures, Setpoints, Inputs, Outputs, Configuration, Time Clock, Operating Modes, Alarms. The accessory Navigator (handheld) or i-Vu/CCN can also be used.",
     "Reading an alarm in plain English: press ESCAPE to clear the marquee, scroll to ALARMS, press ENTER on CURR (currently active alarms) or HIST (alarm history); when a code is displayed press ESCAPE and ENTER at the same time to expand it — the display scrolls the full alarm text plus time/date (48LC controls manual p.3; HVAC-Talk).",
     "Resetting alarms: ALARMS menu contains CURR (current alarms), HIST (alarm history) and R.HIS / reset items; the manual says to use the Scrolling Marquee to reset the alarm after correcting the cause. Lockout alarms (A163/A164) are manual reset; most T-alerts clear automatically when the condition goes away.",
     "Service Test: set SERVICE TEST > TEST = ON from the marquee (the marquee writes a Control force at level 7; the Navigator writes a Service force at level 3). Service Test lets you run the indoor fan, compressors, heat stages, economizer and power exhaust individually; several alerts have a 'Service Test' variant text. In space-sensor mode the R-W1 jumper must be installed to run heat in Service Test (T411).",
     "Alerts (Txxx) let the unit keep running with reduced function; alarms (Axxx) shut down a circuit or the unit. Compressor safety trips and low-pressure trips accumulate strikes; 3 strikes lock the circuit out (A163/A164) until manually reset.",
-    "Board LEDs: MBB has a red STATUS LED, a green LEN LED (should always blink) and a yellow CCN LED (blinks with traffic). Gas units: the IGC LED flash code is read on the IGC board in the heat section (see ledPatterns). Some ComfortLink RTUs ask for a service access code on the display: factory default is commonly 1111 (HVAC-Talk field reports — confirm in the unit's manual)."
+    "Board LEDs: MBB has a red STATUS LED, a green LEN LED (should always blink) and a yellow CCN LED (blinks with traffic) (48/50HC-05T). Gas units: the IGC LED flash code is read on the IGC board in the heat section (see ledPatterns)."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -4953,12 +4830,14 @@
   {
    "id": "economizer-x-w7220",
    "name": "EconoMi$er X (Honeywell W7220 JADE) economizer controller",
-   "description": "Factory-installed option on 48/50TC/HC/LC/FC/GC/KC and Bryant/ICP equivalents from ~2013 (replaces EconoMi$er IV). 2-line LCD with 4-button navigation; ALARMS(n) menu shows active alarms only, with n = number of active alarms. Sensors: S-bus digital sensors (OAT/RAT enthalpy) plus 10 k mixed-air (MAT) and optional CO2 / SAT.",
+   "description": "Factory-installed option on 48/50TC/HC/LC/FC/GC/KC/JC/FE and Bryant/ICP equivalents from ~2013 (replaces EconoMi$er IV). 2-line LCD with 4-button navigation; ALARMS(n) menu shows active alarms only, with n = number of active alarms. Sensors: S-bus digital sensors (OAT/RAT enthalpy) plus 20K mixed-air (MAT) and optional CO2 / DA. Alarm strings are transcribed from the Honeywell JADE W7220 installation instructions 63-2700 / 62-0331, which Carrier reproduces in the EconoMi$er X IIK-CRECOMZR instructions and 48TC/50TC IOMs. Early-firmware modules show ACT UNDER V / ACT OVER V / ACT STALLED and SYS ALARM; later firmware (63-2700-11) consolidates the actuator faults into ACT ERROR and adds OA SENS T ERR, FREEZE ALARM, SHUTDOWN ACTIVE, DMP CAL RUNNING and DA SENS ALM. Both sets are included so the assistant matches whatever the LCD shows; coverage is complete for the 63-2700-11 alarm list. Confidence is left at low pending an independent verifier reading of the Honeywell alarm page (the strings were verified by search summary only).",
    "appliesTo": [
     "48/50TC",
     "48/50HC",
     "48/50LC",
     "48/50FC/GC/KC",
+    "48/50JC",
+    "48/50FE",
     "580J/581J",
     "RGH/RGS/RAH/RAS"
    ],
@@ -4976,73 +4855,262 @@
       "Correct the sensor/actuator issue; alarms clear automatically when the condition is gone"
      ],
      "severity": "warning",
-     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table — 'Alarms' (menu behaviour confirmed; individual alarm strings not transcribed)",
+     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table — 'Alarms' (menu behaviour; individual alarm strings follow, transcribed from Honeywell 63-2700 / 62-0331)",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "MAT SENS ERR",
-     "meaning": "Mixed-air temperature sensor out of range / open / shorted.",
+     "meaning": "EconoMi$er X (W7220 JADE): mixed air sensor has failed or become disconnected.",
      "likelyCauses": [
-      "MAT 10 k thermistor open or shorted",
-      "Wiring to MAT terminals"
+      "MAT sensor (20K NTC) open, shorted or unplugged at the MAT / MAT T1 terminals",
+      "Sensor lead damaged; sensor fell out of the mixed-air stream"
      ],
      "checks": [
-      "Ohm the MAT sensor: ~10 kΩ at 77 °F; check the MAT terminal connections"
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: ohm the sensor (20K at 77 °F) at the module terminals; compare the STATUS menu MA TEMP reading to a reference thermometer"
      ],
      "severity": "warning",
-     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table (alarm string from memory; verify)",
-     "evidence": "inferred"
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'MAT SENS ERR: Indicates that the mixed air sensor has failed or become disconnected. Check wiring and replace sensor if alarm persists.'",
+     "evidence": "manufacturer_doc",
+     "notes": "Displayed on the W7220 LCD ALARMS (#) menu; the economizer then runs with damper at minimum position and mechanical cooling only."
     },
     {
-     "code": "OAT SENS ERR / RAT SENS ERR",
-     "meaning": "Outdoor-air (or return-air) S-bus sensor error — sensor missing, mis-addressed or not communicating.",
+     "code": "CO2 SENS ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): CO2 sensor has failed, gone out of range, or become disconnected.",
      "likelyCauses": [
-      "S-bus wiring (polarity insensitive, but open)",
-      "Sensor DIP/enthalpy sensor failure"
+      "CO2 (IAQ) sensor unpowered, miswired at IAQ 2-10 / IAQ COM / IAQ 24V, or output out of the 2–10 V range",
+      "Sensor failed or needs calibration"
      ],
      "checks": [
-      "Check S-bus wiring continuity; verify the sensor appears in the SETUP > sensor list"
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: measure the IAQ 2-10 V signal at the module; confirm 24 VAC to the sensor; if DCV is not used, set DCV to NONE in SETUP so the alarm does not occur"
      ],
      "severity": "warning",
-     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table (alarm string from memory; verify)",
-     "evidence": "inferred"
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'CO2 SENS ERR: Indicates that the CO2 sensor has failed, gone out of range, or become disconnected.'",
+     "evidence": "manufacturer_doc"
     },
     {
-     "code": "ACT UNDER V / ACT OVER V",
-     "meaning": "Damper actuator supply voltage below or above range.",
+     "code": "OA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
      "likelyCauses": [
-      "Low/high 24 VAC at the actuator",
-      "Transformer overloaded or wrong tap"
+      "C7400A enthalpy sensor (or C7250A temperature sensor) on the S-BUS unplugged, wired backwards is not an issue (polarity-insensitive) but open/shorted S-BUS lead is",
+      "Sensor failed; more than the supported number of Sylk devices on the bus"
      ],
      "checks": [
-      "Measure 24 VAC at the actuator power terminals under load (typically 21.6-26.4 VAC)"
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: verify the S-BUS pair is intact and the sensor is set to OA (jumper/DIP per sensor instructions); check the STATUS menu for the OA sensor readings"
      ],
      "severity": "warning",
-     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table (alarm string from memory; verify)",
-     "evidence": "inferred"
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
     },
     {
-     "code": "ACT STALL / ACT ERROR",
-     "meaning": "Damper actuator could not reach the commanded position or failed to respond.",
+     "code": "OA SYLK H ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
      "likelyCauses": [
-      "Damper binding / linkage",
-      "Actuator failure or S-bus fault"
+      "C7400A enthalpy sensor humidity element failed or sensor disconnected from the S-BUS"
      ],
      "checks": [
-      "Command the damper open/closed from the CHECKOUT menu and watch travel; check for mechanical binding"
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: compare OA HUM in the STATUS menu with a sling psychrometer; replace the sensor if far off or missing"
      ],
      "severity": "warning",
-     "source": "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table (alarm string from memory; verify)",
-     "evidence": "inferred"
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'OA SYLK T ERR / OA SYLK H ERR: Indicates that the outdoor air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor temperature reading has failed or become disconnected.",
+     "likelyCauses": [
+      "Return-air C7400A sensor disconnected from the S-BUS or failed",
+      "Sensor addressed as OA instead of RA (two sensors with the same address)"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: only fitted on differential-enthalpy configurations — verify S-BUS wiring and the RA address setting on the sensor"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "RA SYLK H ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): return air enthalpy (Sylk-bus) sensor humidity reading has failed or become disconnected.",
+     "likelyCauses": [
+      "Return-air C7400A humidity element failed or sensor disconnected"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'RA SYLK T ERR / RA SYLK H ERR: Indicates that the return air enthalpy sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DA SYLK T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE): discharge air (Sylk-bus) sensor has failed or become disconnected.",
+     "likelyCauses": [
+      "C7250A discharge-air sensor unplugged from the S-BUS or failed"
+     ],
+     "checks": [
+      "Manual: check wiring and replace the sensor if the alarm persists",
+      "Field practice: the DA sensor is optional — if not installed, make sure the module is not configured to expect one"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700 'Alarms' table — 'DA SYLK T ERR: Indicates that the discharge air sensor has failed or become disconnected.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "OA SENS T ERR",
+     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): outdoor air temperature sensor (20K wired OAT input) has failed or become disconnected — 'SENS T' is shown instead of 'SYLK T' when a 20K OA temperature sensor is used.",
+     "likelyCauses": [
+      "20K OAT sensor open/shorted or unplugged at the OAT / OAT T1 terminals",
+      "Sensor lead damaged by the condenser fan or weather"
+     ],
+     "checks": [
+      "Manual (by analogy with the other sensor rows): check wiring and replace the sensor if the alarm persists",
+      "Field practice: ohm the sensor at the module (20K at 77 °F) and compare OA TEMP in the STATUS menu to ambient"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' menu list ('OA SENS T ERR'; 'When using 20k OA temperature sensors, SENS T will appear on the screen')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT ERROR",
+     "meaning": "EconoMi$er X (W7220 JADE, newer firmware): the actuator has failed or become disconnected.",
+     "likelyCauses": [
+      "Damper actuator stalled (damper jammed, linkage bound, ice or debris)",
+      "Actuator supply voltage out of range (below 21.6 V or above 26.4 V) at ACT 24V / ACT COM",
+      "Actuator unplugged from ACT 2-10 / S-BUS, or actuator failed"
+     ],
+     "checks": [
+      "Manual: check for stall, over voltage, under voltage and actuator count; replace the actuator if the damper is movable and the supply voltage is between 21.6 V and 26.4 V",
+      "Field practice: run CHECKOUT > DAMPER OPEN / DAMPER CLOSE and watch the damper travel; free a bound damper before condemning the actuator"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'ACT ERROR: Indicates that the actuator has failed or become disconnected. Check for stall, over voltage, under voltage and actuator count. Replace the actuator if damper is movable and supply voltage is between 21.6 V and 26.4 V.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT UNDER V",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is below the expected range.",
+     "likelyCauses": [
+      "Low 24 VAC supply to the actuator (undersized/overloaded transformer, long thin wiring, poor connection at ACT 24V / ACT COM)"
+     ],
+     "checks": [
+      "Field practice: measure 24 VAC at the actuator power terminals under load; must be within 21.6–26.4 V (per the ACT ERROR row); correct the supply or connections"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT UNDER V: Indicates voltage received by the actuator is below the expected range.' (manualsdir 131876 p.19)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT OVER V",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): voltage received by the actuator is above the expected range.",
+     "likelyCauses": [
+      "High control-transformer secondary (wrong primary tap for line voltage), or actuator miswired"
+     ],
+     "checks": [
+      "Field practice: measure actuator supply; if above 26.4 V check the transformer primary tap and line voltage"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT OVER V: Indicates voltage received by the actuator is above the expected range.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ACT STALLED",
+     "meaning": "EconoMi$er X (W7220 JADE, earlier firmware): the actuator stopped before achieving its commanded position.",
+     "likelyCauses": [
+      "Damper blades or linkage binding, ice/debris in the hood, actuator clutch slipping",
+      "Actuator stroke or rotation direction set wrong"
+     ],
+     "checks": [
+      "Field practice: disengage the actuator clutch and move the damper by hand through full travel; run CHECKOUT DAMPER OPEN/CLOSE and confirm the damper reaches both ends"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'ACT STALLED: Indicates the actuator stopped before achieving its commanded position.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "FREEZE ALARM",
+     "meaning": "EconoMi$er X (W7220 JADE): outdoor temperature is below the LOW TEMP LOCKOUT setting or the mixed air temperature is below the Lo setpoint; the alarm clears when conditions return to the normal range.",
+     "likelyCauses": [
+      "Genuinely cold outdoor air with the damper open (freeze protection is doing its job)",
+      "MAT sensor reading low (misplaced in a cold stream) or LOW TEMP LOCKOUT / MAT LO SET configured too high"
+     ],
+     "checks": [
+      "Manual: alarm self-clears when temperatures return to normal range",
+      "Field practice: confirm the damper drives closed on the freeze alarm; verify MAT sensor placement and the SETUP values MAT LO SET / LOW T LOCK"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'FREEZE ALARM: Indicates that the outdoor temperature is below the LOW Temp Lockout setting or the mixed air temperature is below the Lo Setpoint. The alarm will clear when conditions return to normal range.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SHUTDOWN ACTIVE",
+     "meaning": "EconoMi$er X (W7220 JADE): AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX2 IN terminal.",
+     "likelyCauses": [
+      "Smoke detector / fire alarm or BAS shutdown input is energizing AUX2 IN (intended)",
+      "AUX2 IN mis-programmed as SHUTDOWN while wired for another function (e.g. occupancy or HEAT input)"
+     ],
+     "checks": [
+      "Field practice: confirm what is feeding 24 V to AUX2 IN; if the input is meant to be occupancy/heat, change AUX2 IN in the SETUP menu"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'SHUTDOWN ACTIVE: Indicates that AUX2 IN is programmed for SHUTDOWN and 24 V has been applied to the AUX 2IN terminal.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DMP CAL RUNNING",
+     "meaning": "EconoMi$er X (W7220 JADE): DCV Auto enable has been programmed and the JADE is completing a calibration on the dampers.",
+     "likelyCauses": [
+      "Normal — automatic damper calibration in progress after power-up or a configuration change"
+     ],
+     "checks": [
+      "Field practice: wait for the calibration to finish before judging damper position or running CHECKOUT"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DMP CAL RUNNING: Displays if DCV Auto enable has been programmed and the Jade is completing a calibration on the dampers.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "DA SENS ALM",
+     "meaning": "EconoMi$er X (W7220 JADE): the discharge air temperature is out of the range set in the ADVANCED SETUP menu.",
+     "likelyCauses": [
+      "Discharge air too cold/hot relative to the DA LO/HI alarm limits (mechanical cooling or heat problem, or damper stuck open in cold weather)",
+      "DA sensor reading wrong or alarm limits set too tight"
+     ],
+     "checks": [
+      "Field practice: compare DA TEMP in STATUS with a duct thermometer; review ADVANCED SETUP discharge-air alarm limits; check the unit's cooling/heating operation"
+     ],
+     "severity": "warning",
+     "source": "Honeywell W7220 JADE Installation Instructions 63-2700-11 'Alarms' table — 'DA SENS ALM: Indicates that the discharge air temperature is out of the range set in the ADVANCED SETUP Menu.'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "SYS ALARM",
+     "meaning": "EconoMi$er X (W7220 JADE): when AUX1-O is set to SYS and any alarm exists (e.g. failed sensors), the AUX1-O terminal has 24 VAC out (system alarm output).",
+     "likelyCauses": [
+      "Any other active JADE alarm — this is the summary output, not a fault by itself"
+     ],
+     "checks": [
+      "Field practice: open the ALARMS (#) menu and clear the underlying alarm(s); AUX1-O drops out when no alarms remain"
+     ],
+     "severity": "info",
+     "source": "Honeywell W7220 JADE Installation Instructions 62-0331 'Troubleshooting / Alarms' — 'SYS ALARM: When AUX1-O is set to SYS and there is any alarm (e.g., failed sensors), the AUX1-O terminal has 24 Vac out.' (manualsdir 131876 p.19)",
+     "evidence": "manufacturer_doc"
     }
    ],
    "diagnosticTips": [
     "Home screen shows status; press the down arrow to scroll STATUS, SETPOINTS, SYSTEM SETUP, ADVANCED SETUP, CHECKOUT, ALARMS(n). ENTER edits; up/down change values.",
     "CHECKOUT menu drives the damper (open / closed / minimum) and exercises outputs for testing without a thermostat call.",
     "Verify OAT and RAT sensors are recognised (SYSTEM SETUP > sensors); a missing OAT sensor disables free cooling entirely.",
-    "Individual alarm strings other than the ALARMS menu behaviour are from memory (Honeywell W7220 install manual) and must be verified in the unit's EconoMi$er X installation instructions."
+    "EconoMi$er X (W7220 JADE) interface: 2-line 16-character LCD with a 4-button keypad (Menu Up, Menu Down, Enter, Exit) mounted in the economizer/control box. Menus: STATUS, SETUP, ADVANCED SETUP, CHECKOUT, ALARMS(#). Alarms show only while active.",
+    "EconoMi$er X clearing an alarm: navigate to the alarm in ALARMS, press Enter — 'ERASE?' displays — press Enter again; 'ALARM ERASED' confirms; press Menu Up/Exit to return. If the condition still exists the alarm re-displays within 5 seconds.",
+    "EconoMi$er X power-up: the JADE waits 60 minutes after power-up before checking for alarms; a sensor that loses communication after being detected shows a device-fail error, and after 60 minutes the module drops to operation mode with the missing device alarmed.",
+    "EconoMi$er X checkout: CHECKOUT menu tests DAMPER MINIMUM (drives to configured minimum), DAMPER OPEN (fully open; exhaust-fan contacts energize during this test) and DAMPER CLOSE (fully closed) — use them to prove actuator/damper travel when ACT ERROR / ACT STALLED is shown. The controller must see Y1-G / occupancy inputs per the SETUP for normal economizing."
    ],
-   "coverage": "partial",
+   "coverage": "complete",
    "sourceDocs": [
     {
      "title": "Carrier EconoMi$er X Installation, Setup and Troubleshooting",
@@ -5055,11 +5123,44 @@
     {
      "title": "Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions",
      "url": "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
+    },
+    {
+     "title": "Honeywell JADE Economizer Module (Model W7220) Installation Instructions — 'Troubleshooting / Alarms' table and menu structure",
+     "docId": "63-2700-11 (and earlier 62-0331-15)",
+     "url": "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf"
+    },
+    {
+     "title": "Honeywell JADE W7220 Installation Instructions and Operators Manual (ManualsLib mirror) — 'Alarms' (p.24) and menu tables",
+     "docId": "ManualsLib 1405190 p.24",
+     "url": "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24"
+    },
+    {
+     "title": "Honeywell W7220 (early firmware) — 'Troubleshooting, Alarms' page (ACT UNDER V / ACT OVER V / ACT STALLED / SYS ALARM rows)",
+     "docId": "manualsdir 131876 p.19",
+     "url": "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19"
+    },
+    {
+     "title": "Carrier EconoMi$er X (W7220) Factory-Installed Option Low Leak Economizer — Installation Instructions (Carrier version of the JADE alarm/menu tables)",
+     "docId": "IIK-CRECOMZR67-03 / CRECOMZR076-080 (ManualsLib 2855215)",
+     "url": "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
     }
    ],
    "confidence": "low",
    "sources": [
-    "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table"
+    "Carrier EconoMi$er X (Honeywell W7220) Installation, Setup and Troubleshooting (manualslib 2855215); Carrier IIK-CRECOMZR67-03 Low-Leak EconoMi$er X Installation Instructions — 'Alarms' table",
+    "https://prod-edam.honeywell.com/content/dam/honeywell-edam/hbt/en-us/documents/manuals-and-guides/installation-guides/HBT-BMS-63-2700-InstallationInstructions.pdf",
+    "https://www.manualslib.com/manual/1405190/Honeywell-Jade-W7220.html?page=24",
+    "https://www.manualsdir.com/manuals/131876/jade-range-w7220.html?page=19",
+    "https://trainingcarrierwest.com/wp-content/uploads/2021/01/IIK-CRECOMZR67-03-Low-Leak.pdf"
+   ],
+   "ledPatterns": [
+    {
+     "pattern": "LCD shows 'ALARMS (#)' with a count",
+     "meaning": "Number of active alarms; alarms display only when active. On power-up the module waits 60 minutes before checking for alarms so configured sensors/actuator can come online.",
+     "checks": [
+      "Scroll into the ALARMS menu to read each alarm string (see faultCodes)"
+     ]
+    }
    ]
   },
   {
@@ -5099,32 +5200,63 @@
    "ledPatterns": [
     {
      "pattern": "Free Cool LED on",
-     "meaning": "Outdoor conditions suitable — economizer allowed to modulate for cooling"
+     "meaning": "Outdoor air is suitable for free cooling (enthalpy/dry-bulb changeover satisfied); the damper modulates on a cooling call.",
+     "checks": [
+      "Checkout (Honeywell 63-2596 / Carrier IIK-CRECOMZR52): with the 620-ohm checkout resistor across SO and + and the enthalpy pot at A, the Free Cool LED turns on and the actuator drives to about 45° open (DCV Max at mid position); turning the pot to D (fully CW) or removing the resistor turns the LED off and drives the actuator fully closed"
+     ]
     },
     {
      "pattern": "DCV LED on",
-     "meaning": "CO2 above setpoint — damper driven toward the DCV maximum position"
+     "meaning": "The module is in demand-controlled ventilation (CO2) mode and is overriding the minimum position.",
+     "checks": [
+      "Verify the CO2 sensor 2-10 V signal and the DCV Set/DCV Max pot settings"
+     ]
     },
     {
-     "pattern": "Exhaust LED on",
-     "meaning": "Power exhaust relay energized (damper past the exhaust setpoint)"
+     "pattern": "Exh LED on",
+     "meaning": "The exhaust-fan contact (EXH1/EXH2) is closed — damper position has exceeded the Exhaust Fan Set Point.",
+     "checks": [
+      "Adjust the Exh Fan Set pot if the power exhaust runs too early/late"
+     ]
+    },
+    {
+     "pattern": "no LEDs lit",
+     "meaning": "No 24 VAC to the module (TR/TR1) or the module has failed; the W7212 has no fault-code display — diagnosis is by LED state plus the checkout table.",
+     "checks": [
+      "24 VAC between TR and TR1",
+      "Thermostat/unit signals at Y1, G, O and the 2-10 V actuator output"
+     ]
     }
    ],
    "diagnosticTips": [
     "The W7212 is mounted on the economizer damper assembly or in the control box; potentiometers set minimum position, DCV max, exhaust setpoint and the enthalpy changeover (A/B/C/D or 1-6 on later units).",
     "With the W7212 removed from a unit with a DDC controller (PremierLink/RTU Open/SystemVu), the damper is driven directly by the controller (EconoMi$er2) — do not look for the W7212.",
-    "Frozen evaporator or high humidity with the unit off often traces to a damper that fails to close (spring-return actuator failure or minimum position set too high)."
+    "Frozen evaporator or high humidity with the unit off often traces to a damper that fails to close (spring-return actuator failure or minimum position set too high).",
+    "EconoMi$er IV (W7212 logic module) has no display and no alarm codes: diagnose with the three LEDs (Free Cool, DCV, Exh), the potentiometer settings and the Honeywell checkout table (620-ohm resistor across SO and +, enthalpy pot A vs D, DCV Max mid) — see ledPatterns.",
+    "EconoMi$er 2 is the simpler DCV-capable economizer without a logic-module display; it also has no fault codes — verify by 24 V inputs, actuator 2-10 V and damper travel."
    ],
    "coverage": "partial",
    "sourceDocs": [
     {
      "title": "Carrier 48TC Installation Instructions (48TC-8-16-02SI and later) — EconoMi$er IV / EconoMi$er2 sections",
      "url": "https://climaproyectos.com.mx/wp-content/uploads/2015/10/48TC-8-16-02SI-Installation-Manual-CP.pdf"
+    },
+    {
+     "title": "Honeywell W7212 / W7213 / W7214 Economizer Logic Modules — Product Data 63-2596 (LED description and 'Checkout' table used for Carrier EconoMi$er IV)",
+     "docId": "63-2596-09",
+     "url": "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf"
+    },
+    {
+     "title": "Carrier EconoMi$er IV field accessory Installation Instructions (W7212 checkout / Free Cool LED)",
+     "docId": "IIK-CRECOMZR52-02",
+     "url": "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
     }
    ],
    "confidence": "low",
    "sources": [
-    "Carrier 48/50TC Installation Instructions — 'EconoMi$er IV' / 'EconoMi$er2' sections and W7212 troubleshooting table"
+    "Carrier 48/50TC Installation Instructions — 'EconoMi$er IV' / 'EconoMi$er2' sections and W7212 troubleshooting table",
+    "https://trainingcarrierwest.com/wp-content/uploads/2020/12/W7212-Control.pdf",
+    "https://www.shareddocs.com/hvac/docs/1005/Public/01/IIK-CRECOMZR52-02.pdf"
    ]
   },
   {
@@ -5259,7 +5391,8 @@
     },
     {
      "designator": "CLO",
-     "name": "Compressor lockout relay/board — latches compressor off after a safety opens until the Y call is removed"
+     "name": "Compressor Lockout (factory option or accessory) — latches the compressor off after a safety opens",
+     "notes": "Carrier TIP05-002: the lockout is released by dropping the Y call or interrupting power."
     },
     {
      "designator": "COMP",
@@ -5292,7 +5425,7 @@
     },
     {
      "designator": "FPT",
-     "name": "Freeze protection thermostat on the evaporator coil (opens on low coil temperature)"
+     "name": "Freeze-Up Protection Thermostat on the evaporator coil (opens on low coil temperature)"
     },
     {
      "designator": "FS / FSE",
@@ -5323,11 +5456,6 @@
      "name": "Integrated gas unit controller (ignition, flame sense, limit/rollout monitoring, IFM delay, LED code)"
     },
     {
-     "designator": "LAS",
-     "name": "Low-ambient switch (low-ambient / winter-start option)",
-     "notes": "Meaning from memory; confirm on the legend of the specific diagram"
-    },
-    {
      "designator": "LPS",
      "name": "Low-pressure switch (per circuit; auto reset, often bypassed for 2-3 min at start on newer builds)"
     },
@@ -5353,7 +5481,7 @@
     },
     {
      "designator": "RS",
-     "name": "Rollout switch (manual reset) at the burner"
+     "name": "Rollout switch at the burner (auto-reset on IGC-equipped units; the IGC latches the lockout until 24 V / unit power is cycled — verify on the unit's diagram, some legacy heat sections use manual-reset switches)"
     },
     {
      "designator": "SAT / RAT / OAT",
@@ -5375,11 +5503,11 @@
    "safetyDevices": [
     "HPS (high pressure, each circuit)",
     "LPS (low pressure, each circuit)",
-    "FPT freeze protection thermostat",
+    "FPT Freeze-Up Protection Thermostat",
     "Compressor internal overload / motor protector",
     "CLO compressor lockout",
     "LS high-temperature limit (auto reset)",
-    "RS rollout switch (manual reset)",
+    "RS rollout switch (auto-reset on IGC units; IGC holds the lockout until power is cycled)",
     "Pressure switch (inducer proving)",
     "PMR phase monitor (3-phase)",
     "Optional duct smoke detector shutdown",
@@ -5405,15 +5533,16 @@
     "Heat pump (50TCQ/HCQ): O/B reversing valve energized in cooling on Carrier (verify on diagram); defrost is time/temperature initiated by the defrost board."
    ],
    "notes": [
-    "Designators and sequence are the standard Carrier light-commercial rooftop legend from memory of the 48/50TC IOM; the IOM was not read this session, so treat as low-confidence and confirm on the unit's own wiring diagram (inside the control-box door).",
-    "Phase monitor: available as a factory option on 48/50TC 3-phase units and standard on 48/50TC 17-30 and newer SystemVu-equipped units (F206 alarm); scroll compressors run backwards (noisy, no pumping) if rotation is reversed — check on start-up.",
+    "Designators and sequence are the standard Carrier light-commercial rooftop legend, largely from memory of the 48/50TC IOM; a verifier confirmed CLO (Compressor Lockout, factory option or accessory), FPT (Freeze-Up Protection Thermostat), IFC, OFC, PMR, IGC and TRAN against 48TC/48TF legend excerpts and the CLO reset behaviour against Carrier TIP05-002. 'LAS' (low-ambient switch) was not found on any 48/50TC legend and was removed. Treat the rest as low-confidence and confirm on the unit's own wiring diagram (inside the control-box door).",
+    "Phase monitor: a factory option on 48/50TC 3-phase units; SystemVu units report a phase-monitor trip as F206 (48/50FC-GC-01T). Scroll compressors run backwards (noisy, no pumping) if rotation is reversed — check on start-up.",
     "Single-phase (voltage code 3 / Bryant J) sizes 04-07 use a PSC/ECM IFM and capacitor-start compressor; there is no PMR.",
     "Newer (2023+) builds add a Low Pressure Switch bypass timer and, on R-454B (48/50JC) units, refrigerant detection sensors (RDS) that force the IFM on and lock out ignition/compressors on a leak alarm."
    ],
    "confidence": "low",
    "evidence": "inferred",
    "sources": [
-    "Carrier 48/50TC Installation Instructions (48TC-8-16-02SI, 48TC-14-xxSI and successors) — wiring diagram legend and Sequence of Operation (from memory; the document was not read this session)"
+    "Carrier 48/50TC Installation Instructions (48TC-8-16-02SI, 48TC-14-xxSI and successors) — wiring diagram legend and Sequence of Operation (mostly from memory; CLO/FPT/IFC/OFC/PMR/IGC/TRAN confirmed by a verifier against 48TC/48TF legend excerpts)",
+    "Carrier TIP05-002 — compressor lockout (CLO) reset behaviour"
    ]
   },
   {
@@ -5525,8 +5654,8 @@
      "name": "Crankcase heater"
     },
     {
-     "designator": "LAS / MTPS",
-     "name": "Low-ambient switch / fan cycling pressure switch (low-ambient option B)"
+     "designator": "Low-ambient control (legend abbreviation not confirmed)",
+     "name": "Fan-cycling / head-pressure control fitted with the low-ambient option (refrigerant option B); the diagram designator for it was not confirmed on the 38AU legend"
     },
     {
      "designator": "IFM / IFC",
@@ -5579,11 +5708,14 @@
    "checks": [
     "Measure temperature rise (supply − return) and compare to the nameplate range",
     "Check belt tension/condition and blower rotation; measure external static",
-    "Check manifold pressure (typ. 3.5 in. w.c. natural gas high fire; see nameplate)"
+    "Check manifold pressure (natural gas: 3.5 in. w.c. high fire / 1.7 in. w.c. low fire per the 48TC*D08 IOM; see nameplate)"
    ],
    "appliesTo": "^(48)(TC|HC|LC|FC|GC|KC|HJ|TJ|TM|TF)|^58[012]J|^RG[HS]",
    "confidence": "medium",
-   "evidence": "inferred"
+   "evidence": "inferred",
+   "sources": [
+    "Carrier 48TC*D08 Installation Instructions — gas manifold pressure 3.5 in. wg high fire / 1.7 in. wg low fire (natural gas)"
+   ]
   },
   {
    "symptom": "No heat, IGC LED 5 flashes (ignition lockout) — especially first cold snap of the season",
@@ -5605,7 +5737,7 @@
   {
    "symptom": "Heat works, but indoor fan will not shut off or will not start in heating (cooling fan OK)",
    "likelyCauses": [
-    "IGC board fan relay contacts welded or failed (common IGC failure)",
+    "IGC board fan relay contacts welded or failed (widely reported field pattern; no Carrier bulletin found — unverified)",
     "IGC 1-flash modified delay after limit trips"
    ],
    "checks": [
@@ -5613,7 +5745,7 @@
     "Check limit history (2/4 flashes) and airflow before replacing the board"
    ],
    "appliesTo": "^(48)(TC|HC|LC|FC|GC|KC|HJ|TJ|TM|TF)|^58[012]J|^RG[HS]",
-   "confidence": "medium",
+   "confidence": "low",
    "evidence": "inferred"
   },
   {
@@ -5696,17 +5828,20 @@
   {
    "symptom": "Humidi-MiZer unit: poor dehumidification, or cooling weak with the reheat coil hot",
    "likelyCauses": [
-    "3-way valve / solenoid stuck in reheat position",
-    "Humidistat or DDC dehumidify input wiring",
+    "Humidi-MiZer 3-way solenoid valve stuck in the reheat position, or CLV / RLV / LDV (cooling liquid / reheat liquid / liquid diverter) valves not shifting between normal cooling, subcooling (Reheat1) and hot-gas reheat (Reheat2) modes",
+    "CRC (cooling relay / Humidi-MiZer control relay) or humidistat / DDC dehumidify input wiring",
     "Reheat check valve leaking"
    ],
    "checks": [
-    "Verify the dehumidify input state and 24 V at the valve solenoids",
+    "Verify the dehumidify input state and 24 V at the CRC relay and the 3-way solenoid / CLV / RLV / LDV valve coils in each mode (48-50TCHC-01XA troubleshooting)",
     "Compare liquid-line and reheat-coil temperatures in normal cooling — reheat coil should be near liquid temperature when not in reheat"
    ],
    "appliesTo": "^(48|50)(TC|HC|LC)",
    "confidence": "low",
-   "evidence": "inferred"
+   "evidence": "inferred",
+   "sources": [
+    "Carrier Humidi-MiZer Adaptive Dehumidification System for 48/50TC, HC — Installation / Troubleshooting (48-50TCHC-01XA); 48/50HC 04-28 controls manual Humidi-MiZer section (Reheat1 subcooling / Reheat2 hot-gas reheat modes)"
+   ]
   },
   {
    "symptom": "SystemVu/RTU Open unit runs but BAS shows sensor alarms; readings drift from measured values",
@@ -5764,9 +5899,9 @@
  "notes": [
   "Brands: Carrier, Bryant, Payne (same factories, same WWYY serial style, Bryant/Payne have their own model nomenclature); ICP brands (Tempstar, Heil, Comfortmaker, Arcoaire, Day & Night, KeepRite, Airquest) share ownership and use a YEAR-FIRST (YYWW) serial with their own nomenclature.",
   "Nameplate reading: Carrier commercial rooftop plates list MODEL NO., SERIAL NO., electrical data (volts/phase/Hz, MCA, MOP, compressor RLA/LRA, fan FLA), refrigerant and charge per circuit, and test pressures. Decode only the MODEL NO. line; ETO / 'Product No.' strings are not the model.",
-  "Light-commercial model layout (48/50TC, HC, LC, FC, GC, KC): 10 characters, dash, 5 option characters. Positions: 1-2 unit type, 3-4 series, 5 heat size, 6 electrical options, 7-8 size code, 9 intake/exhaust, 10 base-unit controls, 11 design revision, 12 voltage, then packaging/refrigerant-system/service/fan/coil options.",
-  "Refrigerants: 48/50TC/HC/LC/FC/GC/KC, 38AU, 40RU, 38AP, 30RAP/30RB, 48/50A2-A5, P, N = R-410A (Puron); legacy HJ/TJ/TM/TF/EJ, AJ-AY, Z, 30RA, 09DK = R-22 (verify retrofit sticker); 48/50JC (2025+) = R-454B (A2L) — confirm on plate.",
-  "Web-search budget was exhausted mid-research; many detailed maps (option positions, full alarm tables, wiring legends) were not verified against the documents and are flagged low/inferred. Verifiers should prioritize: ComfortLink alarm codes, IGC codes 1/4/5/6/9, W7220 alarm strings, 48TC controls-position digits, Bryant J-series tail positions, and the Carrier Style-3 (1980-88) serial month map."
+  "Light-commercial model layout (48/50TC, HC, LC, FC, GC, KC, JC, FE): 12 characters, dash, 5 option characters. Positions: 1-2 unit type, 3-4 series, 5 heat size, 6 refrigeration-system/cooling-stage option, 7-8 size code, 9 sensor options, 10 indoor fan static option, 11 design revision, 12 voltage; after the dash: base-unit controls, intake/exhaust, packaging & seismic, electrical options, service options (after-dash order consistent with catalog models but not yet read off the nomenclature page).",
+  "Refrigerants: 48/50TC/HC/LC/FC/GC/KC, 38AU, 40RU, 38AP, 30RAP/30RB, 48/50A2-A5, P, N = R-410A (Puron); legacy HJ/TJ/TM/TF/EJ, AJ-AY, Z, 30RA, 09DK = R-22 (verify retrofit sticker); 48/50FE and 48/50JC (2025+) = R-454B (A2L, Puron Advance) — confirm on plate.",
+  "Open verification items after the 2026-09-26 review: read the after-dash position order off the 48TC-7-16-03PD nomenclature page; read the 48/50FE nomenclature page (48-50FE-8-16-01PD) and the position-6 refrigeration-system letters; confirm whether Bryant 582K/559K pair with Carrier 48/50FC/GC/KC; Carrier Style-3 (1980-88) serial month map; the Carrier 1960s-70s week + year-letter serial style (single source); ComfortLink A150 on rooftop tables; RTU Open full alarm-point names."
  ],
  "sources": [
   "Carrier 48TC*D08-D14 Service and Maintenance Instructions, Appendix I — Model Number Nomenclature / Serial Number Format (manualsdir.com/manuals/59708/carrier-48tcd08.html?page=87)",
@@ -5793,11 +5928,19 @@
   "Building Intelligence Center — Carrier HVAC age; Bryant HVAC age (building-center.org)",
   "PickHVAC — Carrier HVAC Age: Serial Number Breakdown; Bryant HVAC Age (pickhvac.com)",
   "HVAC Base — Carrier HVAC Age (hvacbase.org/carrier-hvac-age-serial-number)",
-  "Grokipedia — Carrier serial number decoding",
+  "Grokipedia — Carrier serial number decoding (AI aggregator; used only for the Bryant 1980s YYMM example)",
   "Inspector Handbook — Decode Carrier HVAC Serial Number; howtolookatahouse.com Carrier / Bryant age articles; bryantnorthwest.com Bryant furnace age",
   "icptempstarparts.com Serial Number Nomenclature; intrysys.com ICP serial lookup; InspectApedia Tempstar HVAC age",
   "carrier.com/commercial 24/7 Support and Service page (1-800-379-6484); carrier.com commercial product pages (48KC, 48GC, 48FC, 48LC, 48A, 48P, 38AUZ, 40RUA, 38AP, 30RAP)",
-  "DCNE / Carrier Enterprise / Peirce-Phelps catalog listings for example model numbers (48TCED12A2A5-0A0A0, 50TC-A06A2A5-0A0A0, 38AUZA08A0A5-0A0A0, 38AUZM14A0A5-0A0A0, 40RUAA08A2A6-0A0A0, 40RUAA12A2A6-0A0A0, 40RUAA12A3A6-0A0A0, 580JE08D180A2A0AD)"
+  "DCNE / Carrier Enterprise / Peirce-Phelps catalog listings for example model numbers (48TCED12A2A5-0A0A0, 50TC-A06A2A5-0A0A0, 38AUZA08A0A5-0A0A0, 38AUZM14A0A5-0A0A0, 40RUAA08A2A6-0A0A0, 40RUAA12A2A6-0A0A0, 40RUAA12A3A6-0A0A0, 580JE08D180A2A0AD)",
+  "LearnMetrics — Carrier age by serial number (learnmetrics.com/carrier-hvac-age-carrier-serial-number/)",
+  "HVAC-Talk — nameplate serial 5021P43556 on a 48TCED12A2A6 (week 50 of 2021)",
+  "Carrier 48TC 17-30 Product Data (48TC-17-30-V-06PD; 48TC-16PD); Bryant PDS580J-18-29-H / PDS580J-17-30-V-04 (sizes 17/20/24/28/30 = 15/17.5/20/25/27.5 t)",
+  "Carrier 48/50FE Product Data (48-50FE-8-16-01PD); carrier.com WeatherMaker 48FE/50FE product pages; Carrier Enterprise catalog listings 48FEEM08A2A5-0A0A0, 48FEEA04A2A3-0A0A0, 48FEEM14A3A6-0A0A0, 48FEEM16A2A6-0A0A0",
+  "Carrier 48TM016-028 Installation/Service manual (48TM016 = 15 t, 020 = 18 t, 025 = 20 t, 028 = 25 t)",
+  "Baker Distributing / Sid Harvey ICP RGV/RAV/RHV brochures (RGV048HFFA0AAA)",
+  "Bryant Form PDS582-559K-4-7-01 (582K/559K product data)",
+  "Carrier Humidi-MiZer 48-50TCHC-01XA; Carrier TIP05-002 (CLO reset); Carrier 48TC*D08 IOM manifold pressures"
  ],
  "confidence": "medium",
  "lastReviewed": "2026-09-26"
