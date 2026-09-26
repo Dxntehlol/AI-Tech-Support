@@ -156,6 +156,7 @@ npm run check            # typecheck sources, server tests and web-client tests
 npm test                 # unit tests (node --test): src/**/*.test.ts and web/*.test.ts
 npm run check:knowledge  # validate every knowledge pack and decode every example
 npm run gen:refrigerants # regenerate PT tables (needs: pip install CoolProp)
+node scripts/smoke.mjs http://127.0.0.1:8787   # end-to-end HTTP smoke against a running (demo) server
 ```
 
 The UI is plain HTML/CSS/JS with no build step (`web/`). It was reviewed with screenshots at
