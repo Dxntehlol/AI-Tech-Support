@@ -522,6 +522,8 @@ function boot() {
     installPrompt: null,
     swWaiting: null,
     lastAppliedHash: null,
+    ctx: null, // desktop context panel: {unit, decoded, findings} for the attached unit
+    ctxLoading: null,
   };
 
   const els = {
@@ -544,10 +546,16 @@ function boot() {
     settingsStatusText: $("settings-status-text"), settingsStatus: $("settings-status"),
     demoBadge: $("demo-badge"), demoBadgeSettings: $("demo-badge-settings"), toast: $("toast"), offline: $("offline-banner"), backdrop: $("backdrop"),
     btnExport: $("btn-export"), btnInstall: $("btn-install"), btnUpdate: $("btn-update"), installHint: $("install-hint"), offlineInfo: $("offline-info"), appVersion: $("app-version"),
+    liveRegion: $("live-region"), searchSide: $("search-side"), searchResultsSide: $("search-results-side"), convBrowseSide: $("conv-browse-side"), btnSearchSideClear: $("btn-search-side-clear"),
+    ctxCol: $("ctx-col"), ctxBody: $("ctx-body"), ctxSub: $("ctx-sub"), btnCtxOpen: $("btn-ctx-open"), btnChatList: $("btn-chat-list"), uTag: $("u-tag"),
   };
 
   const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || "ontouchstart" in window;
-  const isWide = () => window.matchMedia("(min-width: 900px)").matches;
+  const mq = (q) => !!(window.matchMedia && window.matchMedia(q).matches);
+  const isTwoColDx = () => mq("(min-width: 720px)");
+  const hasCtxPanel = () => mq("(min-width: 1200px)");
+  /** "smooth" unless the OS asks for reduced motion (CSS scroll-behavior does not affect explicit JS options). */
+  const scrollBehavior = () => (mq("(prefers-reduced-motion: reduce)") ? "instant" : "smooth");
   const isStandalone = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
 
   /* ---------- theme ---------- */
@@ -705,20 +713,58 @@ function boot() {
   }
 
   /* ---------- sheets ---------- */
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]):not(.sr-only), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  let sheetOpener = null;
+  function setInert(on) {
+    // The page behind a sheet is inert for keyboard and AT; aria-hidden is the fallback for browsers without `inert`.
+    if ("inert" in els.app) els.app.inert = on;
+    if (on) els.app.setAttribute("aria-hidden", "true");
+    else els.app.removeAttribute("aria-hidden");
+  }
   function showSheet(sheet) {
+    const noneOpen = els.sheetDecode.hidden && els.sheetUnitActions.hidden;
+    const active = doc.activeElement;
+    if (noneOpen && active && active !== doc.body && !active.closest(".sheet")) sheetOpener = active;
     sheet.hidden = false;
     els.backdrop.hidden = false;
+    setInert(true);
     const first = sheet.querySelector("input:not([type=hidden]):not(.sr-only), select, textarea, button.row");
-    if (first && !isTouch) first.focus();
+    const title = sheet.querySelector("h2[tabindex]");
+    if (first && !isTouch) first.focus({ preventScroll: true });
+    else if (title) title.focus({ preventScroll: true });
   }
   function hideSheet(sheet) {
+    const wasOpen = !sheet.hidden;
     sheet.hidden = true;
+    if (wasOpen && els.sheetDecode.hidden && els.sheetUnitActions.hidden) {
+      setInert(false);
+      const opener = sheetOpener;
+      sheetOpener = null;
+      if (opener && opener.isConnected && typeof opener.focus === "function") opener.focus({ preventScroll: true });
+    }
   }
+  function trapTab(e) {
+    const sheet = e.currentTarget;
+    if (e.key !== "Tab") return;
+    const nodes = [...sheet.querySelectorAll(FOCUSABLE)].filter((el) => !el.hidden && el.offsetParent !== null);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (e.shiftKey && (doc.activeElement === first || !sheet.contains(doc.activeElement))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && doc.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  for (const sheet of [els.sheetDecode, els.sheetUnitActions]) sheet.addEventListener("keydown", trapTab);
   els.backdrop.addEventListener("click", closeSheets);
   for (const b of doc.querySelectorAll(".btn-sheet-close")) b.addEventListener("click", closeSheets);
   doc.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && state.route.sheet) closeSheets();
   });
+  els.btnChatList.addEventListener("click", () => navigate("#history"));
   for (const b of doc.querySelectorAll("[data-back]")) b.addEventListener("click", () => goBack(b.dataset.back));
   doc.querySelectorAll("a.tab").forEach((a) => {
     a.addEventListener("click", (e) => {
@@ -835,9 +881,10 @@ function boot() {
       : escapeHtml(text || "");
     const box = h("div", { class: "md", html: clean });
     for (const t of box.querySelectorAll("table")) {
-      const wrap = h("div", { class: "table-wrap" });
+      const wrap = h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Table, scrolls sideways" });
       t.replaceWith(wrap);
       wrap.append(t);
+      watchTableScroll(wrap);
     }
     // "what we know so far" recaps → highlighted card
     for (const head of box.querySelectorAll("h1, h2, h3, h4")) {
@@ -853,6 +900,17 @@ function boot() {
       }
     }
     return box;
+  }
+
+  /** Fade the right edge of a table while there is more to pan to. */
+  const tableObserver = typeof ResizeObserver === "function" ? new ResizeObserver((entries) => { for (const en of entries) updateTableHint(en.target); }) : null;
+  function updateTableHint(wrap) {
+    wrap.classList.toggle("can-scroll", wrap.scrollWidth - wrap.clientWidth - wrap.scrollLeft > 4);
+  }
+  function watchTableScroll(wrap) {
+    wrap.addEventListener("scroll", () => updateTableHint(wrap), { passive: true });
+    if (tableObserver) tableObserver.observe(wrap);
+    requestAnimationFrame(() => updateTableHint(wrap));
   }
 
   /* ---------- messages ---------- */
@@ -871,13 +929,27 @@ function boot() {
     if (/finding|conversation/.test(name || "")) return "finding";
     return "tool";
   }
+  const TOOL_LABEL = {
+    decode_unit: "Decode unit", find_unit: "Find unit", refrigerant_pt: "PT lookup", calc_superheat_subcooling: "Superheat / subcooling",
+    diagnose_refrigeration: "Diagnose cycle", electrical_reference: "Electrical reference", calc_electrical: "Electrical calc", lookup_fault_code: "Fault code lookup",
+    search_history: "Search history", get_unit_history: "Unit history", save_finding: "Save finding", update_unit: "Update unit", set_conversation: "Update conversation",
+    web_search: "Web search",
+  };
+  const TOOL_STATE_TEXT = { running: "running", ok: "done", err: "failed" };
+  const RESULT_CAP = 700;
+  function toolState(t) {
+    return t.ok === true ? "ok" : t.ok === false ? "err" : "running";
+  }
   function toolChip(t) {
-    const chip = h("details", { class: `tool-chip ${t.ok === true ? "ok" : t.ok === false ? "err" : "running"}`, dataset: { toolId: t.id } });
-    const iconBox = h("span", { class: "tool-icon" }, t.ok === undefined ? h("span", { class: "spinner" }) : icon(t.ok ? "check" : "close", "icon"));
+    const st = toolState(t);
+    const chip = h("details", { class: `tool-chip ${st}`, dataset: { toolId: t.id } });
+    const iconBox = h("span", { class: "tool-icon" }, st === "running" ? h("span", { class: "spinner" }) : icon(st === "ok" ? "check" : "close", "icon"));
     const summary = h("summary", null,
       iconBox,
-      h("span", { class: "tool-label", text: t.label || t.name || "tool" }),
-      h("span", { class: "tool-summary", text: t.summary || (t.ok === undefined ? "running…" : "") }),
+      h("span", { class: "tool-label", text: TOOL_LABEL[t.name] || t.label || t.name || "Tool" }),
+      h("span", { class: "tool-state", text: st === "running" ? "running…" : st === "err" ? "failed" : "" }),
+      h("span", { class: "sr-only tool-sr", text: `, ${TOOL_STATE_TEXT[st]}` }),
+      h("span", { class: "tool-summary", text: st === "running" ? "" : t.summary || "" }),
     );
     let inputText = "";
     try {
@@ -885,42 +957,66 @@ function boot() {
     } catch {
       inputText = String(t.input);
     }
+    const resultText = t.summary || (st === "running" ? "…" : "");
+    const pre = h("pre", { class: `tool-result${resultText.length > RESULT_CAP ? " capped" : ""}`, text: resultText });
+    const more = h("button", { class: "text-btn", type: "button", text: "Show full result", hidden: resultText.length <= RESULT_CAP, onclick: () => { pre.classList.remove("capped"); more.hidden = true; } });
     const body = h("div", { class: "tool-body" },
-      h("div", { class: "tool-body-title", text: `${toolIconFor(t.name) === "tool" ? "Tool" : t.name || "Tool"} input` }),
+      h("div", { class: "tool-body-title", text: `${t.label || t.name || "Tool"} — input` }),
       h("pre", { text: inputText }),
       h("div", { class: "tool-body-title", text: "Result" }),
-      h("pre", { class: "tool-result", text: t.summary || (t.ok === undefined ? "…" : "") }),
+      pre,
+      more,
     );
     chip.append(summary, body);
     return chip;
   }
 
   function updateToolChip(chip, { ok, summary }) {
+    const st = ok ? "ok" : "err";
     chip.classList.remove("running", "ok", "err");
-    chip.classList.add(ok ? "ok" : "err");
+    chip.classList.add(st);
     const box = chip.querySelector(".tool-icon");
     box.textContent = "";
     box.append(icon(ok ? "check" : "close", "icon"));
+    chip.querySelector(".tool-state").textContent = ok ? "" : "failed";
+    chip.querySelector(".tool-sr").textContent = `, ${TOOL_STATE_TEXT[st]}`;
     chip.querySelector(".tool-summary").textContent = summary || "";
-    chip.querySelector(".tool-result").textContent = summary || "";
+    const pre = chip.querySelector(".tool-result");
+    pre.textContent = summary || "";
+    const capped = (summary || "").length > RESULT_CAP;
+    pre.classList.toggle("capped", capped);
+    const more = chip.querySelector(".tool-body .text-btn");
+    if (more) more.hidden = !capped;
   }
 
-  function renderMessage(m) {
-    const time = h("div", { class: "msg-time", text: timeOfDay(m.createdAt) || relTime(m.createdAt) });
+  function timeEl(iso) {
+    const t = Date.parse(iso);
+    return h("time", { class: "msg-time", datetime: Number.isFinite(t) ? new Date(t).toISOString() : null, text: timeOfDay(iso) || relTime(iso) });
+  }
+  function renderMessage(m, showTime = true) {
     if (m.role === "user") {
-      const wrap = h("div", { class: "msg msg-user", dataset: { id: m.id } });
+      const wrap = h("div", { class: "msg msg-user", dataset: { id: m.id } }, h("span", { class: "sr-only", text: "You: " }));
       if (m.images && m.images.length) {
         wrap.append(h("div", { class: "thumbs" }, ...m.images.map((img) => h("img", { src: imageSrc(img), alt: "Attached photo", loading: "lazy" }))));
       }
       if (m.text) wrap.append(h("div", { class: "bubble", text: m.text }));
-      wrap.append(time);
+      if (showTime) wrap.append(timeEl(m.createdAt));
       return wrap;
     }
-    const wrap = h("div", { class: "msg msg-assistant", dataset: { id: m.id } });
+    const wrap = h("div", { class: "msg msg-assistant", dataset: { id: m.id } }, h("span", { class: "sr-only", text: "Assistant: " }));
     if (m.tools && m.tools.length) wrap.append(...m.tools.map(toolChip));
     if (m.text) wrap.append(renderMarkdown(m.text));
-    wrap.append(time);
+    if (showTime) wrap.append(timeEl(m.createdAt));
     return wrap;
+  }
+
+  /** A timestamp goes on the last message of a same-role run within 3 minutes, so a tool row and its answer read as one turn. */
+  function showTimeFor(list, i) {
+    const m = list[i];
+    const next = list[i + 1];
+    if (!next || next.role !== m.role) return true;
+    const gap = Date.parse(next.createdAt) - Date.parse(m.createdAt);
+    return !(Number.isFinite(gap) && gap >= 0 && gap <= 180000);
   }
 
   function renderMessages() {
@@ -928,14 +1024,14 @@ function boot() {
     const wasStuck = state.stickToBottom;
     for (const n of [...list.children]) if (n !== els.emptyState) n.remove();
     let lastDay = "";
-    for (const m of state.messages) {
+    state.messages.forEach((m, i) => {
       const k = dayKey(m.createdAt);
       if (k && k !== lastDay) {
         list.append(h("div", { class: "day-sep", text: dayLabel(m.createdAt) }));
         lastDay = k;
       }
-      list.append(renderMessage(m));
-    }
+      list.append(renderMessage(m, showTimeFor(state.messages, i)));
+    });
     const empty = state.messages.length === 0 && !state.streaming;
     els.emptyState.hidden = !empty;
     els.quickChips.hidden = !empty;
@@ -957,7 +1053,9 @@ function boot() {
     els.chatTitle.textContent = title;
     els.chatSub.textContent = "";
     if (state.unit) {
-      els.chatSub.append(h("span", { class: "badge", text: unitBadgeText(state.unit) }), h("span", { text: [state.unit.manufacturer, state.unit.model !== unitBadgeText(state.unit) ? state.unit.model : "", state.unit.site].filter(Boolean).join(" · ") }));
+      const u = state.unit;
+      const model = u.model && u.model !== unitBadgeText(u) ? u.model : "";
+      els.chatSub.append(h("span", { class: "badge", text: unitBadgeText(u) }), h("span", { text: [model || u.manufacturer, u.site].filter(Boolean).join(" · ") }));
       els.btnChatUnit.setAttribute("aria-label", `Open unit ${unitLabel(state.unit)}`);
       els.btnChatUnit.classList.add("has-unit");
     } else {
@@ -967,6 +1065,7 @@ function boot() {
     }
     els.btnConvDelete.hidden = !state.conversation;
     doc.title = state.conversation && state.conversation.title ? `${state.conversation.title} · HVAC Field Assistant` : "HVAC Field Assistant";
+    renderCtxPanel();
   }
   els.btnChatUnit.addEventListener("click", () => {
     if (state.unit) navigate(`#unit/${state.unit.id}`);
@@ -1016,6 +1115,7 @@ function boot() {
   function applyConversation(data) {
     state.conversation = data.conversation || null;
     state.unit = data.unit || null;
+    state.ctx = null;
     state.messages = Array.isArray(data.messages) ? data.messages : [];
     state.busy = !!data.busy;
     state.stickToBottom = true;
@@ -1147,7 +1247,7 @@ function boot() {
     setStreaming(true);
 
     // live assistant element: text segments and tool chips appended in stream order
-    const live = h("div", { class: "msg msg-assistant streaming" });
+    const live = h("div", { class: "msg msg-assistant streaming" }, h("span", { class: "sr-only", text: "Assistant: " }));
     const cursor = h("span", { class: "cursor", "aria-hidden": "true" });
     const typing = h("div", { class: "notice" }, h("span", { class: "spinner" }), "Thinking…");
     live.append(typing, cursor);
@@ -1158,6 +1258,21 @@ function boot() {
     let raf = 0;
     const chips = new Map();
     const keepCursorLast = () => live.append(cursor);
+    // Screen readers hear only new text, announced at sentence/paragraph boundaries — never the whole reply per frame.
+    let announceBuf = "";
+    const announce = (text) => {
+      const plain = String(text || "").replace(/[*_`#>|]+/g, " ").replace(/\s+/g, " ").trim();
+      if (!plain) return;
+      els.liveRegion.append(h("p", { text: plain }));
+    };
+    const announceReady = () => {
+      const m = /^([\s\S]*?[.!?:](?:\s|$)|[\s\S]*?\n)([\s\S]*)$/.exec(announceBuf);
+      if (!m) return;
+      announceBuf = m[2];
+      announce(m[1]);
+      if (announceBuf.length) announceReady();
+    };
+    els.liveRegion.textContent = "";
     const flush = () => {
       raf = 0;
       if (!seg) return;
@@ -1183,6 +1298,8 @@ function boot() {
             segText = "";
           }
           segText += ev.text || "";
+          announceBuf += ev.text || "";
+          announceReady();
           schedule();
           break;
         case "tool_start": {
@@ -1191,21 +1308,26 @@ function boot() {
             flush();
           }
           seg = null;
+          announce(announceBuf);
+          announceBuf = "";
           const chip = toolChip({ id: ev.id, name: ev.name, input: ev.input, label: ev.label });
           chips.set(ev.id, chip);
           live.append(chip);
           keepCursorLast();
+          announce(`Running ${TOOL_LABEL[ev.name] || ev.label || ev.name}.`);
           if (state.stickToBottom) scrollToBottom();
           break;
         }
         case "tool_end": {
           const chip = chips.get(ev.id);
           if (chip) updateToolChip(chip, { ok: !!ev.ok, summary: ev.summary });
+          announce(`${TOOL_LABEL[ev.name] || ev.name} ${ev.ok ? "done" : "failed"}.`);
           break;
         }
         case "notice":
           live.append(h("div", { class: "notice", text: ev.text || "" }));
           keepCursorLast();
+          announce(ev.text || "");
           if (state.stickToBottom) scrollToBottom();
           break;
         case "unit_attached":
@@ -1213,6 +1335,7 @@ function boot() {
             loadUnitPanel(ev.unitId, { quiet: true }).then(() => {
               if (state.panelUnit && state.panelUnit.unit.id === ev.unitId) {
                 state.unit = state.panelUnit.unit;
+                state.ctx = null;
                 renderHeader();
                 renderReadingsUnitChip();
               }
@@ -1273,6 +1396,9 @@ function boot() {
       live.classList.remove("streaming");
       state.abort = null;
       setStreaming(false);
+      announce(announceBuf);
+      announceBuf = "";
+      setTimeout(() => { els.liveRegion.textContent = ""; }, 1500);
     }
 
     if (busy409) {
@@ -1481,7 +1607,8 @@ function boot() {
   }
 
   function conversationRow(c, { compact = false } = {}) {
-    const row = h("button", { class: `row${c.id === state.conversationId ? " active" : ""}`, type: "button", role: "listitem", dataset: { convId: c.id }, onclick: () => navigate(`#chat/${c.id}`) },
+    const active = c.id === state.conversationId;
+    const row = h("button", { class: "row", type: "button", onclick: () => navigate(`#chat/${c.id}`) },
       compact ? null : h("div", { class: "row-lead" }, icon("chat")),
       h("div", { class: "row-body" },
         h("div", { class: "row-title", text: c.title || "New conversation" }),
@@ -1489,7 +1616,11 @@ function boot() {
       ),
     );
     const del = h("button", { class: "icon-btn", type: "button", "aria-label": `Delete conversation ${c.title || ""}`, onclick: () => deleteConversation(c) }, icon("trash", "icon icon-sm"));
-    return h("div", { class: "row-item" }, row, del);
+    return h("div", { class: `row-item${active ? " active" : ""}`, role: "listitem", "aria-current": active ? "true" : null, dataset: { convId: c.id } }, row, del);
+  }
+  /** Plain list row (button) wrapped in a listitem so AT hears "button", not "list item". */
+  function listRow(rowBtn, attrs = {}) {
+    return h("div", { class: "row-item", role: "listitem", ...attrs }, rowBtn);
   }
 
   function renderConversations() {
@@ -1542,9 +1673,14 @@ function boot() {
   }
   els.btnConvDelete.addEventListener("click", () => state.conversation && deleteConversation(state.conversation));
 
+  function setActive(el, on) {
+    el.classList.toggle("active", on);
+    if (on) el.setAttribute("aria-current", "true");
+    else el.removeAttribute("aria-current");
+  }
   function markActiveRows() {
-    for (const r of doc.querySelectorAll(".row[data-conv-id]")) r.classList.toggle("active", r.dataset.convId === state.conversationId);
-    for (const r of els.unitsList.querySelectorAll(".row")) r.classList.toggle("active", !!state.panelUnit && state.route.screen === "units" && r.dataset.unitId === state.panelUnit.unit.id);
+    for (const r of doc.querySelectorAll("[data-conv-id]")) setActive(r, r.dataset.convId === state.conversationId);
+    for (const r of els.unitsList.querySelectorAll("[data-unit-id]")) setActive(r, !!state.panelUnit && state.route.screen === "units" && r.dataset.unitId === state.panelUnit.unit.id);
   }
 
   for (const b of doc.querySelectorAll(".btn-new-conv")) {
@@ -1604,11 +1740,12 @@ function boot() {
       els.unitsList.append(h("div", { class: "site-head" }, h("span", null, icon("site", "icon icon-sm"), " ", site), h("span", { class: "muted", text: `${units.length}` })));
       const card = h("div", { class: "list-card", role: "list" });
       for (const u of units) {
-        card.append(h("button", { class: `row${state.panelUnit && state.panelUnit.unit.id === u.id && state.route.screen === "units" ? " active" : ""}`, type: "button", role: "listitem", dataset: { unitId: u.id }, onclick: () => navigate(`#unit/${u.id}`) },
+        const active = !!(state.panelUnit && state.panelUnit.unit.id === u.id && state.route.screen === "units");
+        card.append(listRow(h("button", { class: "row", type: "button", onclick: () => navigate(`#unit/${u.id}`) },
           h("div", { class: "row-lead" }, icon("units")),
           h("div", { class: "row-body" }, h("div", { class: "row-title", text: unitLabel(u) }), h("div", { class: "row-sub" }, h("span", { text: unitSubtitle(u) || "No details yet" }))),
           h("div", { class: "row-meta" }, u.last_service_at ? h("span", { text: relTime(u.last_service_at) }) : null, icon("chevron", "icon icon-sm row-chevron")),
-        ));
+        ), { class: `row-item${active ? " active" : ""}`, "aria-current": active ? "true" : null, dataset: { unitId: u.id } }));
       }
       els.unitsList.append(card);
     }
@@ -1657,9 +1794,77 @@ function boot() {
   const CONF_CLASS = { high: "chip-ok", medium: "chip-warn", low: "chip-danger" };
   const CONF_LABEL = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" };
 
-  function attr(label, value) {
+  function attr(label, value, cls = "") {
     if (value === null || value === undefined || value === "") return null;
-    return h("div", { class: "attr" }, h("div", { class: "attr-label", text: label }), h("div", { class: "attr-value", text: String(value) }));
+    const text = String(value);
+    // Long values (equivalent families, product descriptions) take the full row instead of being clipped in a half column.
+    const wide = text.length > 30 && !cls.includes("num");
+    return h("div", { class: `attr${wide ? " attr-wide" : ""}` }, h("div", { class: "attr-label", text: label }), h("div", { class: `attr-value${cls ? ` ${cls}` : ""}`, text }));
+  }
+  /** Confidence chip with one short, consistent wording everywhere ("Model: medium"). */
+  function confChip(kind, m) {
+    if (!m) return null;
+    return h("span", { class: `chip ${CONF_CLASS[m.confidence] || ""}`, title: `${kind} match ${CONF_LABEL[m.confidence] ? CONF_LABEL[m.confidence].toLowerCase() : m.confidence}`, text: `${kind}: ${m.confidence}${m.ambiguous ? " (ambiguous)" : ""}` });
+  }
+  /** Control platform name without its trailing " — LED flash codes" style description. */
+  function shortPlatform(v) {
+    return v ? String(v).split(" — ")[0] : v;
+  }
+
+  /** Nameplate-style unit card (unit detail and the desktop context panel). */
+  function buildPlate(u, d, { attached, actions = true } = {}) {
+    const bestSerial = d && d.serial && d.serial[0];
+    const bestModel = d && d.model && d.model[0];
+    let age = "";
+    if (bestSerial && bestSerial.manufactureDate) age = `${bestSerial.manufactureDate}${bestSerial.ageYears !== undefined ? ` · ${fmtNum(bestSerial.ageYears)}\u00a0yr` : ""}`;
+    else if (u.install_year) age = String(u.install_year);
+    let charge = "";
+    if (u.charge_json) {
+      try {
+        const c = JSON.parse(u.charge_json);
+        charge = typeof c === "object" && c ? Object.entries(c).map(([k, v]) => `${k}: ${v}`).join(", ") : String(c);
+      } catch {
+        charge = u.charge_json;
+      }
+    }
+    return h("div", { class: "nameplate" },
+      h("div", { class: "np-head" },
+        h("div", { class: "np-tag", text: [u.unit_tag, u.nickname].filter(Boolean).join(" · ") || "Unit" }),
+        h("div", { class: "np-model", text: u.model || "No model on record" }),
+        h("div", { class: "np-mfr", text: u.manufacturer || u.brand || "Manufacturer unknown" }),
+        bestModel && bestModel.family ? h("div", { class: "np-family", text: bestModel.family }) : null,
+        u.serial ? h("div", { class: "np-serial" }, h("span", { class: "muted", text: "S/N" }), h("span", { text: u.serial })) : null,
+      ),
+      h("div", { class: "np-body" },
+        (u.site || u.customer) ? h("div", { class: "np-site" }, icon("site", "icon icon-sm"), h("span", { text: [u.site, u.customer, u.location_note].filter(Boolean).join(" · ") })) : null,
+        h("div", { class: "chip-row" },
+          confChip("Model", bestModel),
+          confChip("Serial", bestSerial),
+          needsNameplateVerify(d) ? h("span", { class: "chip chip-warn" }, icon("alert", "icon"), "Verify on nameplate") : null,
+          attached ? h("span", { class: "chip chip-accent" }, icon("link", "icon"), "In this chat") : null,
+        ),
+        h("div", { class: "attr-grid" },
+          attr("Refrigerant", u.refrigerant), attr("Tonnage", u.tonnage ? `${u.tonnage}\u00a0ton` : null, "num"), attr("Voltage", u.voltage && u.phase && !String(u.voltage).includes(String(u.phase)) ? `${u.voltage} · ${u.phase}-ph` : u.voltage || (u.phase ? `${u.phase}-phase` : null), "num"),
+          attr("Controls", shortPlatform(u.control_platform)), attr("Heat", u.heat_type), attr("Metering", u.metering_device ? (METERING_LABEL[u.metering_device] || u.metering_device) : null),
+          attr("Manufactured", age, "num"), attr("Circuits", u.circuits), attr("Charge", charge), attr("Elevation", u.elevation_ft !== null && u.elevation_ft !== undefined ? `${u.elevation_ft}\u00a0ft` : null, "num"),
+        ),
+        u.notes ? h("p", { class: "dc-summary", text: u.notes }) : null,
+      ),
+      actions ? h("div", { class: "np-actions" },
+        h("button", { class: "btn btn-primary", type: "button", onclick: attachOrStart }, icon(attached ? "chat" : "link"), attached ? "Open chat" : state.conversationId ? "Attach to chat" : "Start chat"),
+        h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
+        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
+        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
+      ) : null,
+    );
+  }
+
+  function buildFindingsCard(findingsRaw, { onChanged } = {}) {
+    const findings = sortFindings(findingsRaw || []);
+    const fcard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Findings (${findings.length})` })));
+    if (!findings.length) fcard.append(h("div", { class: "list-empty", text: "No findings on this unit yet. The assistant offers to save one after a fix is verified." }));
+    else fcard.append(h("div", { class: "timeline", role: "list" }, ...findings.map((f) => findingItem(f, onChanged))));
+    return fcard;
   }
 
   function renderUnitDetail() {
@@ -1676,55 +1881,11 @@ function boot() {
     const u = pu.unit;
     const d = pu.decoded;
     els.unitTitle.textContent = unitLabel(u);
-    els.unitSub.textContent = [u.site, u.customer].filter(Boolean).join(" · ");
+    els.unitSub.textContent = "";
+    els.unitSub.append(h("span", { text: [u.site, u.customer].filter(Boolean).join(" · ") }));
     const attached = !!(state.unit && state.unit.id === u.id);
-    const bestSerial = d && d.serial && d.serial[0];
-    const bestModel = d && d.model && d.model[0];
-    let age = "";
-    if (bestSerial && bestSerial.manufactureDate) age = `${bestSerial.manufactureDate}${bestSerial.ageYears !== undefined ? ` · ${fmtNum(bestSerial.ageYears)} yr` : ""}`;
-    else if (u.install_year) age = String(u.install_year);
-    let charge = "";
-    if (u.charge_json) {
-      try {
-        const c = JSON.parse(u.charge_json);
-        charge = typeof c === "object" && c ? Object.entries(c).map(([k, v]) => `${k}: ${v}`).join(", ") : String(c);
-      } catch {
-        charge = u.charge_json;
-      }
-    }
 
-    // Nameplate card
-    const plate = h("div", { class: "nameplate" },
-      h("div", { class: "np-head" },
-        h("div", { class: "np-tag", text: [u.unit_tag, u.nickname].filter(Boolean).join(" · ") || "Unit" }),
-        h("div", { class: "np-model", text: u.model || "No model on record" }),
-        h("div", { class: "np-mfr", text: u.manufacturer || u.brand || "Manufacturer unknown" }),
-        bestModel && bestModel.family ? h("div", { class: "np-family", text: bestModel.family }) : null,
-        u.serial ? h("div", { class: "np-serial" }, h("span", { class: "muted", text: "S/N" }), h("span", { text: u.serial })) : null,
-      ),
-      h("div", { class: "np-body" },
-        (u.site || u.customer) ? h("div", { class: "np-site" }, icon("site", "icon icon-sm"), h("span", { text: [u.site, u.customer, u.location_note].filter(Boolean).join(" · ") })) : null,
-        h("div", { class: "chip-row" },
-          bestModel ? h("span", { class: `chip ${CONF_CLASS[bestModel.confidence] || ""}`, text: `Model · ${CONF_LABEL[bestModel.confidence] || bestModel.confidence}` }) : null,
-          bestSerial ? h("span", { class: `chip ${CONF_CLASS[bestSerial.confidence] || ""}`, text: `Serial · ${CONF_LABEL[bestSerial.confidence] || bestSerial.confidence}${bestSerial.ambiguous ? " (ambiguous)" : ""}` }) : null,
-          needsNameplateVerify(d) ? h("span", { class: "chip chip-warn" }, icon("alert", "icon"), "Verify on nameplate") : null,
-          attached ? h("span", { class: "chip chip-accent" }, icon("link", "icon"), "In this conversation") : null,
-        ),
-        h("div", { class: "attr-grid" },
-          attr("Refrigerant", u.refrigerant), attr("Tonnage", u.tonnage ? `${u.tonnage} ton` : null), attr("Voltage", u.voltage && u.phase && !String(u.voltage).includes(String(u.phase)) ? `${u.voltage} · ${u.phase}-ph` : u.voltage || (u.phase ? `${u.phase}-phase` : null)),
-          attr("Controls", u.control_platform), attr("Heat", u.heat_type), attr("Metering", u.metering_device ? (METERING_LABEL[u.metering_device] || u.metering_device) : null),
-          attr("Manufactured", age), attr("Circuits", u.circuits), attr("Charge", charge), attr("Elevation", u.elevation_ft !== null && u.elevation_ft !== undefined ? `${u.elevation_ft} ft` : null),
-        ),
-        u.notes ? h("p", { class: "dc-summary", text: u.notes }) : null,
-      ),
-      h("div", { class: "np-actions" },
-        h("button", { class: "btn btn-primary", type: "button", onclick: attachOrStart }, icon(attached ? "chat" : "link"), attached ? "Open chat" : state.conversationId ? "Attach to chat" : "Start chat"),
-        h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
-        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
-        h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
-      ),
-    );
-    els.unitContent.append(plate);
+    els.unitContent.append(buildPlate(u, d, { attached }));
 
     // Decode details
     if (d) {
@@ -1734,11 +1895,7 @@ function boot() {
     }
 
     // Findings timeline
-    const findings = sortFindings(pu.findings || []);
-    const fcard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Findings (${findings.length})` })));
-    if (!findings.length) fcard.append(h("div", { class: "list-empty", text: "No findings on this unit yet. The assistant offers to save one after a fix is verified." }));
-    else fcard.append(h("div", { class: "timeline" }, ...findings.map(findingItem)));
-    els.unitContent.append(fcard);
+    els.unitContent.append(buildFindingsCard(pu.findings));
 
     // Conversations on this unit
     const convs = pu.conversations || [];
@@ -1747,11 +1904,12 @@ function boot() {
     else {
       const list = h("div", { class: "list", role: "list" });
       for (const c of convs) {
-        list.append(h("button", { class: "row", type: "button", role: "listitem", dataset: { convId: c.id }, onclick: () => navigate(`#chat/${c.id}`) },
+        const active = c.id === state.conversationId;
+        list.append(listRow(h("button", { class: "row", type: "button", onclick: () => navigate(`#chat/${c.id}`) },
           h("div", { class: "row-lead" }, icon("chat")),
           h("div", { class: "row-body" }, h("div", { class: "row-title", text: c.title || "New conversation" }), h("div", { class: "row-sub" }, h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") }))),
           icon("chevron", "icon icon-sm row-chevron"),
-        ));
+        ), { class: `row-item${active ? " active" : ""}`, "aria-current": active ? "true" : null, dataset: { convId: c.id } }));
       }
       ccard.append(list);
     }
@@ -1759,14 +1917,15 @@ function boot() {
     els.unitDetail.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  function findingItem(f) {
+  function findingItem(f, onChanged) {
     const hyp = isHypothesis(f);
     const statusCls = f.status === "open" ? "chip-danger" : f.status === "monitor" ? "chip-warn" : "chip-ok";
+    const patch = (patchBody, msg) => patchFinding(f, patchBody, msg, onChanged);
     const item = h("div", { class: `tl-item ${f.status || "open"}${hyp ? " hypothesis" : ""}`, role: "listitem" },
       h("div", { class: "tl-head" },
         h("span", { class: `chip ${statusCls}`, text: f.status || "open" }),
         hyp ? h("span", { class: "chip chip-info", text: "Hypothesis — unconfirmed" }) : null,
-        Number(f.confirmed) ? h("span", { class: "chip chip-ok" }, icon("check", "icon"), "Confirmed") : null,
+        Number(f.confirmed) && (f.cause || f.resolution) ? h("span", { class: "chip chip-ok" }, icon("check", "icon"), "Confirmed") : null,
         f.circuit ? h("span", { class: "chip", text: `Circuit ${f.circuit}` }) : null,
         h("span", { class: "row-meta", text: relTime(f.service_date || f.created_at) }),
       ),
@@ -1777,20 +1936,23 @@ function boot() {
     if (f.refrigerant_added_lbs) item.append(h("div", { class: "tl-line" }, h("b", { text: "Refrigerant added: " }), `${f.refrigerant_added_lbs} lb ${f.refrigerant || ""}`));
     if (f.follow_up) item.append(h("div", { class: "tl-line" }, h("b", { text: "Follow-up: " }), f.follow_up));
     const actions = h("div", { class: "tl-actions" });
-    if (!Number(f.confirmed)) actions.append(h("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => patchFinding(f, { confirmed: 1 }, "Finding confirmed") }, icon("check", "icon icon-sm"), "Confirm"));
-    if (f.status !== "resolved") actions.append(h("button", { class: "btn btn-sm", type: "button", text: "Mark resolved", onclick: () => patchFinding(f, { status: "resolved" }, "Marked resolved") }));
-    if (f.status === "open") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Monitor", onclick: () => patchFinding(f, { status: "monitor" }, "Set to monitor") }));
-    if (f.status === "resolved") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Reopen", onclick: () => patchFinding(f, { status: "open" }, "Reopened") }));
+    if (!Number(f.confirmed)) actions.append(h("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => patch({ confirmed: 1 }, "Finding confirmed") }, icon("check", "icon icon-sm"), "Confirm"));
+    if (f.status !== "resolved") actions.append(h("button", { class: "btn btn-sm", type: "button", text: "Mark resolved", onclick: () => patch({ status: "resolved" }, "Marked resolved") }));
+    if (f.status === "open") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Monitor", onclick: () => patch({ status: "monitor" }, "Set to monitor") }));
+    if (f.status === "resolved") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Reopen", onclick: () => patch({ status: "open" }, "Reopened") }));
     actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", onclick: () => shareFinding(f) }, icon("share", "icon icon-sm"), navigator.share ? "Share" : "Copy"));
     item.append(actions);
     return item;
   }
 
-  async function patchFinding(f, patch, msg) {
+  async function patchFinding(f, patch, msg, onChanged) {
     try {
       await apiJson(`/api/findings/${encodeURIComponent(f.id)}`, { method: "PATCH", json: patch });
       toast(msg);
       if (state.panelUnit) loadUnitPanel(state.panelUnit.unit.id, { quiet: true });
+      if (state.ctx && f.unit_id === state.ctx.unit.id) state.ctx = null;
+      if (typeof onChanged === "function") onChanged();
+      else renderCtxPanel();
     } catch (e) {
       showError(e.code, e.message);
       if (state.route.screen !== "chat") toast(`${e.code}: ${e.message}`);
@@ -1943,6 +2105,7 @@ function boot() {
     els.decodeCard.textContent = "";
     state.decoded = editing && state.panelUnit && state.panelUnit.decoded ? state.panelUnit.decoded : null;
     if (state.decoded) renderDecodePreview(state.decoded);
+    updateSaveLabel();
     showSheet(els.sheetDecode);
   }
   $("btn-unit-add").addEventListener("click", () => navigate("#units/decode"));
@@ -1976,8 +2139,15 @@ function boot() {
     els.decodeCard.hidden = false;
     els.decodeCard.textContent = "";
     els.decodeCard.append(renderDecodeCard(d, { compact: true }));
-    els.decodeCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    els.decodeCard.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+    updateSaveLabel();
   }
+  /** "Save unit" becomes "Save RTU-7" once a tag is typed, so the sticky footer says what it will do. */
+  function updateSaveLabel() {
+    const tag = els.uTag.value.trim();
+    els.btnSaveUnit.textContent = state.editingUnitId ? "Save changes" : tag ? `Save ${tag.slice(0, 14)}` : "Save unit";
+  }
+  els.uTag.addEventListener("input", updateSaveLabel);
 
   els.btnSaveUnit.addEventListener("click", async () => {
     const v = unitFormValues();
@@ -2026,13 +2196,24 @@ function boot() {
         h("div", { class: "muted small", text: bestModel ? String(bestModel.productType || "").replace(/_/g, " ") : "No model format matched" }),
       );
     }
-    const chips = h("div", { class: "chip-row", style: "margin:10px 0" });
-    if (bestModel) chips.append(h("span", { class: `chip ${CONF_CLASS[bestModel.confidence] || ""}`, text: `Model · ${bestModel.confidence}` }));
-    if (bestSerial) chips.append(h("span", { class: `chip ${CONF_CLASS[bestSerial.confidence] || ""}`, text: `Serial · ${bestSerial.confidence}${bestSerial.ambiguous ? " (ambiguous)" : ""}` }));
+    const chips = h("div", { class: "chip-row", style: "margin:10px 0" }, confChip("Model", bestModel), confChip("Serial", bestSerial));
     if (needsNameplateVerify(d)) chips.append(h("span", { class: "chip chip-warn" }, icon("alert", "icon"), "Verify on nameplate"));
+    // The unit detail's nameplate card already shows these chips; only the sheet preview (and a no-match card) repeats them.
     if (compact || !bestModel) frag.append(chips);
 
-    if (d.summary) frag.append(h("p", { class: "dc-summary", text: d.summary }));
+    if (d.summary) {
+      const para = h("p", { class: `dc-summary${d.summary.length > 220 ? " clamped" : ""}`, text: d.summary });
+      const wrap = h("div", { class: "dc-summary-wrap" }, para);
+      if (d.summary.length > 220) {
+        const more = h("button", { class: "text-btn", type: "button", text: "Show more", "aria-expanded": "false", onclick: () => {
+          const open = para.classList.toggle("clamped");
+          more.textContent = open ? "Show more" : "Show less";
+          more.setAttribute("aria-expanded", open ? "false" : "true");
+        } });
+        wrap.append(more);
+      }
+      frag.append(wrap);
+    }
 
     const rows = [];
     if (bestModel && bestModel.attributes) {
@@ -2096,64 +2277,78 @@ function boot() {
   }
 
   /* ---------- history: search ---------- */
-  let searchTimer = null;
-  let searchSeq = 0;
-  els.search.addEventListener("input", () => {
-    clearTimeout(searchTimer);
-    const q = els.search.value.trim();
-    els.btnSearchClear.hidden = !q;
-    if (q.length < 2) {
-      els.searchResults.hidden = true;
-      els.searchResults.textContent = "";
-      els.historyBrowse.hidden = false;
+  /** FTS snippet → nodes: "[term]" markers become <mark>, markdown table pipes and emphasis are flattened. */
+  function snippetNodes(snippet) {
+    const cleaned = String(snippet || "").replace(/\s*\|\s*/g, " · ").replace(/(^|\s)[#>*_`-]+(?=\s|$)/g, "$1").replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
+    return cleaned.split(/(\[[^\]]+\])/).filter(Boolean).map((p) => (/^\[[^\]]+\]$/.test(p) ? h("mark", { text: p.slice(1, -1) }) : p));
+  }
+  function searchHitRow(hit, { compact }) {
+    const kindLabel = hit.kind === "unit" ? "Unit" : hit.kind === "finding" ? "Finding" : "Message";
+    const leadCls = hit.kind === "finding" ? "ok" : hit.kind === "unit" ? "info" : "";
+    return listRow(h("button", { class: "row", type: "button", onclick: () => openSearchHit(hit) },
+      compact ? null : h("div", { class: `row-lead ${leadCls}` }, icon(hit.kind === "unit" ? "units" : hit.kind === "finding" ? "finding" : "chat")),
+      h("div", { class: "row-body" },
+        h("div", { class: "row-sub" }, h("span", { class: "chip", text: kindLabel }), h("span", { text: relTime(hit.createdAt) })),
+        h("div", { class: "snippet" }, ...snippetNodes(hit.snippet)),
+      ),
+      compact ? null : icon("chevron", "icon icon-sm row-chevron"),
+    ));
+  }
+  function renderSearchHits(target, hits, q, { compact = false } = {}) {
+    target.textContent = "";
+    if (!hits.length) {
+      target.append(h("div", { class: "empty" }, h("div", { class: "empty-icon" }, icon("search")), h("div", { class: "empty-title", text: "No matches" }), h("p", { class: "empty-sub", text: `Nothing in conversations, findings or units matches “${q}”.` })));
       return;
     }
-    searchTimer = setTimeout(() => runSearch(q), 250);
-  });
-  els.btnSearchClear.addEventListener("click", () => {
-    els.search.value = "";
-    els.search.dispatchEvent(new Event("input"));
-    els.search.focus();
-  });
-  async function runSearch(q) {
-    const seq = ++searchSeq;
-    els.searchResults.hidden = false;
-    els.historyBrowse.hidden = true;
-    els.searchResults.textContent = "";
-    els.searchResults.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
-    try {
-      const json = await apiJson(`/api/search?q=${encodeURIComponent(q)}&limit=30`);
-      if (seq !== searchSeq) return;
-      const hits = pickList(json, "hits");
-      els.searchResults.textContent = "";
-      if (!hits.length) {
-        els.searchResults.append(h("div", { class: "empty" }, h("div", { class: "empty-icon" }, icon("search")), h("div", { class: "empty-title", text: "No matches" }), h("p", { class: "empty-sub", text: `Nothing in conversations, findings or units matches “${q}”.` })));
-        return;
-      }
-      for (const g of groupSearchHits(hits, state.unitsById)) {
-        const card = h("div", { class: "list-card", role: "list", style: "margin-bottom:12px" });
-        const headIcon = g.kind === "conversation" ? "chat" : g.kind === "unit" ? "units" : "search";
-        card.append(h("div", { class: "group-head" }, icon(headIcon, "icon icon-sm"), h("span", { text: g.title }), h("span", { class: "muted", text: `${g.hits.length} hit${g.hits.length === 1 ? "" : "s"}` })));
-        for (const hit of g.hits) {
-          const kindLabel = hit.kind === "unit" ? "Unit" : hit.kind === "finding" ? "Finding" : "Message";
-          const leadCls = hit.kind === "finding" ? "ok" : hit.kind === "unit" ? "info" : "";
-          card.append(h("button", { class: "row", type: "button", role: "listitem", onclick: () => openSearchHit(hit) },
-            h("div", { class: `row-lead ${leadCls}` }, icon(hit.kind === "unit" ? "units" : hit.kind === "finding" ? "finding" : "chat")),
-            h("div", { class: "row-body" },
-              h("div", { class: "row-sub" }, h("span", { class: "chip", text: kindLabel }), h("span", { text: relTime(hit.createdAt) })),
-              h("div", { class: "snippet", text: hit.snippet || "" }),
-            ),
-            icon("chevron", "icon icon-sm row-chevron"),
-          ));
-        }
-        els.searchResults.append(card);
-      }
-    } catch (e) {
-      if (seq !== searchSeq) return;
-      els.searchResults.textContent = "";
-      els.searchResults.append(h("div", { class: "field-error", role: "alert", text: `Search failed: ${e.message}` }));
+    for (const g of groupSearchHits(hits, state.unitsById)) {
+      const card = h("div", { class: compact ? "list" : "list-card", role: "list", style: compact ? "" : "margin-bottom:12px" });
+      const headIcon = g.kind === "conversation" ? "chat" : g.kind === "unit" ? "units" : "search";
+      card.append(h("div", { class: "group-head" }, icon(headIcon, "icon icon-sm"), h("span", { text: g.title }), h("span", { class: "muted", text: `${g.hits.length} hit${g.hits.length === 1 ? "" : "s"}` })));
+      for (const hit of g.hits) card.append(searchHitRow(hit, { compact }));
+      target.append(card);
     }
   }
+  /** Debounced FTS search bound to an input; results replace `browse` inside the same scroller. */
+  function bindSearch({ input, clear, results, browse, compact }) {
+    let timer = null;
+    let seq = 0;
+    const reset = () => {
+      results.hidden = true;
+      results.textContent = "";
+      browse.hidden = false;
+    };
+    const run = async (q) => {
+      const mine = ++seq;
+      results.hidden = false;
+      browse.hidden = true;
+      results.textContent = "";
+      results.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
+      try {
+        const json = await apiJson(`/api/search?q=${encodeURIComponent(q)}&limit=30`);
+        if (mine !== seq) return;
+        renderSearchHits(results, pickList(json, "hits"), q, { compact });
+      } catch (e) {
+        if (mine !== seq) return;
+        results.textContent = "";
+        results.append(h("div", { class: "field-error", role: "alert", text: `Search failed: ${e.message}` }));
+      }
+    };
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      clear.hidden = !q;
+      if (q.length < 2) return reset();
+      timer = setTimeout(() => run(q), 250);
+      return undefined;
+    });
+    clear.addEventListener("click", () => {
+      input.value = "";
+      input.dispatchEvent(new Event("input"));
+      input.focus();
+    });
+  }
+  bindSearch({ input: els.search, clear: els.btnSearchClear, results: els.searchResults, browse: els.historyBrowse, compact: false });
+  bindSearch({ input: els.searchSide, clear: els.btnSearchSideClear, results: els.searchResultsSide, browse: els.convBrowseSide, compact: true });
   function openSearchHit(hit) {
     if (hit.kind === "message" && hit.conversationId) return navigate(`#chat/${hit.conversationId}`);
     if (hit.kind === "unit") return navigate(`#unit/${hit.id}`);
@@ -2169,7 +2364,8 @@ function boot() {
     const u = state.unit;
     els.readingsUnitChip.hidden = !u;
     els.readingsUnitChip.textContent = u ? unitLabel(u) : "";
-    els.readingsSub.textContent = u ? `${[u.manufacturer, u.model].filter(Boolean).join(" ")} · ${u.refrigerant || "refrigerant?"}` : "";
+    els.readingsSub.textContent = "";
+    if (u) els.readingsSub.append(h("span", { text: `${[u.manufacturer, u.model].filter(Boolean).join(" ")} · ${u.refrigerant || "refrigerant?"}` }));
   }
   function prefillReadingsFromUnit(u, { force = false } = {}) {
     const f = els.readingsForm.elements;
@@ -2294,14 +2490,14 @@ function boot() {
     const box = els.readingsResult;
     box.hidden = false;
     box.textContent = "";
-    box.append(h("div", { class: "card-title" }, h("span", { text: "Diagnosis" }), sourceTag("server")));
+    box.append(h("div", { class: "card-title" }, h("span", { text: "Diagnosis" }), r.source && r.source !== "server" ? sourceTag(r.source) : null));
     const ok = !r.validity || r.validity.ok;
     const val = h("div", { class: `validity ${ok ? "ok" : "bad"}` }, icon(ok ? "ok" : "alert"), h("div", null, h("div", { text: ok ? "Readings valid for charge determination" : "Readings not valid for charge determination" })));
     if (!ok && r.validity.issues && r.validity.issues.length) val.lastChild.append(h("ul", null, ...r.validity.issues.map((i) => h("li", { text: i }))));
     box.append(val);
-    if (r.summary) box.append(h("p", { class: "dx-summary", text: r.summary }));
     const tiles = derivedStats(r.derived || {});
     if (tiles.length) box.append(h("div", { class: "stats" }, ...tiles));
+    if (r.summary) box.append(h("p", { class: "dx-summary", text: r.summary }));
     if (r.findings && r.findings.length) {
       box.append(h("div", { class: "section-title", text: `Findings (${r.findings.length})` }));
       for (const f of r.findings) {
@@ -2318,7 +2514,7 @@ function boot() {
       box.append(h("div", { class: "section-title", text: "Would sharpen the diagnosis" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
     }
     box.append(h("div", { class: "btn-row", style: "margin-top:8px" }, h("button", { class: "btn btn-primary grow", type: "button", onclick: () => sendReadingsToChat(true) }, icon("send"), "Send to chat")));
-    if (!isWide()) box.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (!isTwoColDx()) box.scrollIntoView({ block: "start", behavior: scrollBehavior() });
   }
 
   function sendReadingsToChat(withResult) {
@@ -2346,7 +2542,7 @@ function boot() {
   function renderCalcResult(kind, result) {
     const frag = doc.createDocumentFragment();
     const source = result && result.source ? result.source : "server";
-    frag.append(h("div", { class: "card-title" }, h("span", { text: "Result" }), sourceTag(source)));
+    frag.append(h("div", { class: "card-title" }, h("span", { text: "Result" }), source !== "server" ? sourceTag(source) : null));
     if (kind === "pt") {
       const tiles = [];
       if (typeof result.bubbleTempF === "number") tiles.push(statTile("Bubble (SC)", fmtNum(result.bubbleTempF), "°F"));
@@ -2514,6 +2710,65 @@ function boot() {
     }
     populateRefrigerantSelects();
     if (state.unit) prefillReadingsFromUnit(state.unit);
+  }
+
+  /* ---------- desktop context panel (attached unit beside the chat, ≥ 1200 px) ---------- */
+  function renderCtxPanel() {
+    if (!hasCtxPanel()) return;
+    const u = state.unit;
+    els.ctxSub.textContent = "";
+    if (!u) {
+      state.ctx = null;
+      els.btnCtxOpen.hidden = true;
+      els.ctxBody.textContent = "";
+      els.ctxBody.append(h("div", { class: "empty" },
+        h("div", { class: "empty-icon" }, icon("units")),
+        h("div", { class: "empty-title", text: state.conversation ? "No unit attached" : "Attach a unit" }),
+        h("p", { class: "empty-sub", text: "Decode the nameplate or pick a saved unit — its readings, findings and prior jobs then stay in view while you chat." }),
+        h("button", { class: "btn btn-primary", type: "button", onclick: () => navigate("#units") }, icon("link"), "Pick a unit"),
+        h("button", { class: "btn", type: "button", onclick: () => navigate("#units/decode") }, icon("scan"), "Decode a nameplate"),
+      ));
+      return;
+    }
+    els.btnCtxOpen.hidden = false;
+    els.ctxSub.append(h("span", { class: "badge", text: unitBadgeText(u) }), h("span", { text: [u.site, u.customer].filter(Boolean).join(" · ") }));
+    if (state.ctx && state.ctx.unit.id === u.id) {
+      const c = state.ctx;
+      els.ctxBody.textContent = "";
+      els.ctxBody.append(buildPlate(c.unit, c.decoded, { attached: true, actions: false }));
+      els.ctxBody.append(buildFindingsCard(c.findings, { onChanged: () => { state.ctx = null; renderCtxPanel(); } }));
+      els.ctxBody.append(h("div", { class: "btn-row", style: "margin-top:16px" },
+        h("button", { class: "btn grow", type: "button", onclick: () => { prefillReadingsFromUnit(c.unit, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
+        h("button", { class: "btn grow", type: "button", onclick: () => navigate(`#unit/${c.unit.id}`) }, icon("units"), "Unit page"),
+      ));
+      return;
+    }
+    if (state.ctxLoading === u.id) return;
+    state.ctxLoading = u.id;
+    els.ctxBody.textContent = "";
+    els.ctxBody.append(h("div", { class: "skeleton", style: "min-height:180px" }), h("div", { class: "skeleton" }));
+    apiJson(`/api/units/${encodeURIComponent(u.id)}`).then((data) => {
+      const unit = data.unit || data;
+      let decoded = data.decoded || null;
+      if (!decoded && unit.decoded_json) {
+        try { decoded = JSON.parse(unit.decoded_json); } catch { decoded = null; }
+      }
+      state.ctx = { unit, decoded, findings: pickList(data.findings || [], "findings") };
+    }).catch((e) => {
+      els.ctxBody.textContent = "";
+      els.ctxBody.append(h("div", { class: "list-empty", text: `Could not load the unit: ${e.message}` }));
+    }).finally(() => {
+      if (state.ctxLoading === u.id) state.ctxLoading = null;
+      if (state.unit && state.unit.id === u.id && state.ctx) renderCtxPanel();
+    });
+  }
+  els.btnCtxOpen.addEventListener("click", () => state.unit && navigate(`#unit/${state.unit.id}`));
+  if (window.matchMedia) {
+    try {
+      window.matchMedia("(min-width: 1200px)").addEventListener("change", () => renderCtxPanel());
+    } catch {
+      /* older Safari */
+    }
   }
 
   /* ---------- settings ---------- */
