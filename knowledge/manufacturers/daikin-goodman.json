@@ -1994,7 +1994,7 @@
   {
    "id": "goodman-integrated-ignition-control",
    "name": "Goodman / Amana / Daikin (Goodman-built) integrated ignition control - single-LED flash codes (CPG/DCG/GPG packaged gas units and matching furnaces)",
-   "description": "Integrated hot-surface ignition control (Goodman part families PCBBF1xx / PCBBF13x, White-Rodgers 50-series OEM boards) with a single red diagnostic LED; the flash count identifies the fault. The exact table is printed on the unit's control-compartment door label - always read that label for the specific board.",
+   "description": "Integrated hot-surface ignition control (Goodman part families PCBBF1xx / PCBBF13x, White-Rodgers 50-series OEM boards) with a single red diagnostic LED; the flash count identifies the fault. The exact table is printed on the unit's control-compartment door label - always read that label for the specific board. Enrichment pass 2026-09-26 via WebSearch summaries only (WebFetch blocked). Codes are grouped: CPG/DCG HSI single-LED table (incl. White-Rodgers 50A55/50M56 board fault index), GPG/APG M-series DSI 'Ignition Control Diagnostic Indicator Chart' (suffixed '(DSI chart ...)' to avoid clashing with the HSI table), ComfortNet furnace status codes E0-EA, ComfortNet blower codes b0-b9 and network/shared-data codes d0-d4. Contradiction on record: Goodman's own M-series installation manuals print a chart with 1 flash = Internal Control Failure and 2 flashes = External Lockout, while the narrative text in the same manuals (GPG16: 5 flashes = flame with valve closed; 7 flashes = limit opened 5 times) and GHAC's GPG14 note (1 flash = 3 failed ignition attempts) follow the furnace-style numbering. The door label on the specific unit governs. 'EE' and 'FE' ComfortNet codes were not found in any manufacturer document during this pass (only a vague third-party description of 'EE' as an EEPROM/firmware fault), so they are not transcribed. 'E9' (high-stage pressure switch stuck open) is included from secondary sources only and flagged single_secondary. Air-handler-only ComfortNet codes (",
    "appliesTo": [
     "goodman-cpg-daikin-dcg-commercial-packaged",
     "goodman-gpg-gpc-gph-packaged-legacy",
@@ -2014,7 +2014,7 @@
       "Cycle power for more than 5 seconds; if the LED stays off with power present, replace the control"
      ],
      "severity": "lockout",
-     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600); White-Rodgers 50M56-743 fault index ('Off: control failure')",
      "evidence": "manufacturer_doc"
     },
     {
@@ -2024,20 +2024,21 @@
       "Low gas pressure or gas valve not opening",
       "Dirty/cracked hot surface ignitor or poor flame sensor signal",
       "Flame rectification problem (dirty flame rod, poor burner ground)",
-      "Burner/crossover problems causing flame dropouts"
+      "Burner/crossover problems causing flame dropouts",
+      "Per the CPG manual: also check the secondary limit and rollout limit and the wiring"
      ],
      "checks": [
       "Watch the ignition sequence: inducer -> pressure switch -> HSI glow -> gas valve 24 V -> flame",
-      "Measure manifold pressure (typ. 3.5 in. w.c. NG) and 24 V at the gas valve during trial for ignition",
+      "Measure supply and manifold pressure (typ. 3.5 in. w.c. NG) and 24 V at the gas valve during trial for ignition; inspect orifices for debris (CPG manual)",
       "Measure flame current (microamps DC) and clean the flame sensor; check ignitor resistance"
      ],
      "severity": "lockout",
-     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart and Abnormal Operation - Heating (manualslib 61600); Daikin DCG Service Instructions (manualslib 1642558); White-Rodgers 50M56-743 fault index",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "2 flashes",
-     "meaning": "Pressure switch stuck open - pressure switch did not close with the induced draft blower running.",
+     "meaning": "Pressure switch stuck open - pressure switch did not close with the induced draft blower running. (CPG/DCG packaged-unit label. NOTE: White-Rodgers 50A55/50M56 furnace-style boards and Goodman furnace boards use 2 flashes for 'pressure switch stuck closed' - read the door label.)",
      "likelyCauses": [
       "Faulty pressure switch or wiring",
       "Disconnected, cracked or plugged pressure-switch hose",
@@ -2054,7 +2055,7 @@
     },
     {
      "code": "3 flashes",
-     "meaning": "Pressure switch stuck closed - the pressure switch is closed before the induced draft blower is energized.",
+     "meaning": "Pressure switch stuck closed - the pressure switch is closed before the induced draft blower is energized; the control auto-resets after one hour or by removing power. (CPG/DCG packaged-unit label. NOTE: White-Rodgers 50A55/50M56 and Goodman furnace boards use 3 flashes for 'pressure switch stuck open'.)",
      "likelyCauses": [
       "Faulty (welded) pressure switch",
       "Faulty wiring shorting the switch input"
@@ -2064,7 +2065,7 @@
       "Inspect the switch wiring for a short to 24 V"
      ],
      "severity": "lockout",
-     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600); Daikin DCG Service Instructions 'Pressure Switch Stuck Closed (3 flash code)' (manualslib 1642558)",
      "evidence": "manufacturer_doc"
     },
     {
@@ -2081,12 +2082,12 @@
       "Check continuity across each limit and rollout switch; reset any manual-reset rollout only after finding the cause"
      ],
      "severity": "lockout",
-     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600); White-Rodgers 50M56-743 fault index ('4 flashes: open high temperature limit switch')",
      "evidence": "manufacturer_doc"
     },
     {
      "code": "5 flashes",
-     "meaning": "Flame detected with the gas valve de-energized (flame sensed when it should not be). Resets by removing power, or automatically after one hour.",
+     "meaning": "Flame detected with the gas valve de-energized (flame sensed when it should not be); the combustion and air circulator blowers are energized. Resets by removing power, or automatically after one hour.",
      "likelyCauses": [
       "Gas valve leaking through / stuck open",
       "Flame sensor circuit shorted or moisture on the control",
@@ -2097,7 +2098,7 @@
       "Check the flame sensor wiring for shorts to ground"
      ],
      "severity": "lockout",
-     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600)",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600); Daikin DCG Service Instructions (manualslib 1642558); GPG 16 M Series installation 'Flame Detected with Gas Valve Closed - five (5) flashes'",
      "evidence": "manufacturer_doc"
     },
     {
@@ -2112,7 +2113,524 @@
       "If the igniter is good, replace the control"
      ],
      "severity": "lockout",
-     "source": "Goodman Service Bulletin SF-024 - Missing Identification of Eight (8) Flash Fault Code (mobile.goodmanmfg.com Tech Services); corroborated by third-party flash-code guides",
+     "source": "Goodman Service Bulletin SF-024 - Missing Identification of Eight (8) Flash Fault Code (mobile.goodmanmfg.com Tech Services); White-Rodgers 50M56-743 fault index ('8 flashes: ignitor relay fault'); corroborated by third-party flash-code guides",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "6 flashes",
+     "meaning": "Model-dependent. CPG packaged-unit chart: 'Short Cycle Compressor Delay' (Daikin DCG service manual: 'compressor output delay or short cycle compressor delay'). White-Rodgers 50A55/50M56 furnace-style boards: 'Open rollout switch'. Read the door label for the board fitted.",
+     "likelyCauses": [
+      "CPG/DCG: normal anti-short-cycle timing after a cooling call is satisfied or interrupted (not a fault)",
+      "WR boards: flame rollout switch tripped by flame rollout (blocked heat exchanger/flue, low combustion air, burner misalignment)"
+     ],
+     "checks": [
+      "CPG/DCG: wait out the compressor delay; if the unit never restarts, check the thermostat call, the compressor contactor coil and any external time-delay/phase monitor",
+      "WR boards: check the manual-reset rollout switch continuity; find and correct the cause of rollout before resetting"
+     ],
+     "severity": "info",
+     "source": "Goodman CPG Series installation instructions - Diagnostic LED chart (manualslib 61600); Daikin DCG Service Instructions (manualslib 1642558, 6 blinks); White-Rodgers 50M56-743 fault index ('6 flashes: open rollout switch')",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "7 flashes",
+     "meaning": "Board-dependent. White-Rodgers 50A55/50M56 fault index: 'Low flame sense current' (unit keeps running, warning). Goodman GPG 16 M Series installation instructions: if the primary limit opens five (5) times within the same call for heat, the ignition control locks out for one (1) hour and the red diagnostic LED flashes seven (7) times.",
+     "likelyCauses": [
+      "Low flame signal: coated/dirty flame sensor, poor burner ground, lazy flame from low gas pressure or misaligned burner",
+      "Repeated limit trips: restricted airflow (filters, static, blower speed/belt), failing limit switch, over-fired unit"
+     ],
+     "checks": [
+      "Measure flame current in microamps DC and compare with the board's minimum; clean the flame rod with fine abrasive and check the ground path",
+      "If the limit has been cycling, check temperature rise, external static, blower operation and manifold pressure before clearing the lockout",
+      "Which meaning applies depends on the board: read the label on the control-compartment door"
+     ],
+     "severity": "warning",
+     "source": "White-Rodgers 50M56-743 fault index ('7 flashes: low flame sense current'); Goodman GPG 16 M Series installation instructions - Abnormal Operation - Heating (seven flashes after five limit trips); third-party Goodman furnace guides corroborate 'low flame signal'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Rapid flash (continuous fast blink)",
+     "meaning": "Reversed polarity (115 VAC line/neutral reversed at the control). White-Rodgers 50A55/50M56 fault index: 'Rapid flash: reversed polarity'.",
+     "likelyCauses": [
+      "L1 and neutral swapped at the unit disconnect, junction box or board plug",
+      "Poor or missing equipment ground (flame rectification depends on it)"
+     ],
+     "checks": [
+      "Measure hot-to-ground (~120 V) and neutral-to-ground (~0 V) at the control's line plug; correct the wiring",
+      "Verify a solid ground wire from the board/burner assembly to the unit chassis and the supply ground"
+     ],
+     "severity": "warning",
+     "source": "White-Rodgers 50M56-743 installation instructions - fault index p.8 (manualslib 1585345); White-Rodgers 50A55 troubleshooting manual (manualslib 556709)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "1 flash (DSI chart, GPG/APG M-series)",
+     "meaning": "Internal Control Failure - per the Ignition Control Diagnostic Indicator Chart in the A/GPG13, APG14/GPG14 and GPG16 M-series installation instructions (direct-spark PCBAG boards). NOTE: the narrative text of the same manuals and third-party GPG14 notes describe 1 flash as lockout after three failed ignition attempts - confirm on the control-compartment door label.",
+     "likelyCauses": [
+      "Failed direct-spark ignition control (PCBAG12x/PCBAG127)",
+      "Ignition lockout after retries (if the label for this board assigns 1 flash to external lockout)"
+     ],
+     "checks": [
+      "Cycle 24 V power to the board for more than 5 seconds; if 1 flash returns immediately with no call for heat, replace the control",
+      "If the label says 1 flash = failed ignition, check spark at the electrode, spark gap, gas pressure and flame sense before condemning the board"
+     ],
+     "severity": "lockout",
+     "source": "Goodman A/GPG13 M Series installation instructions - Ignition Control Diagnostic Indicator Chart p.25 (manualslib 798533); Goodman APG14 M Series installation instructions p.33 (manualslib 2325520); GPG 16 M Series installation instructions (acdirect PDF). Conflict noted from GHAC KB entry 758 'GPG14 - Flashing Code 1: 3 Failed Ignition Attempts'",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "2 flashes (DSI chart, GPG/APG M-series)",
+     "meaning": "External Lockout - per the Ignition Control Diagnostic Indicator Chart (A/GPG13, APG14/GPG14, GPG16 M-series). The control repeats the ignition routine three times if combustion is not established, then shuts off the induced draft blower and goes into lockout.",
+     "likelyCauses": [
+      "No spark or weak spark (electrode gap, cracked ceramic, high-voltage lead)",
+      "Gas valve not opening, low supply/manifold pressure, plugged orifices",
+      "Flame not proven (dirty flame sensor, poor ground, burner misalignment)"
+     ],
+     "checks": [
+      "Observe the sequence: inducer -> pressure switch -> spark (22,000 V DSI) -> gas valve 24 V -> flame proven",
+      "Check spark electrode gap/condition and flame-sense microamps; measure manifold pressure",
+      "Reset by removing the thermostat call or interrupting power for more than 5 seconds; auto-resets after one hour"
+     ],
+     "severity": "lockout",
+     "source": "Goodman A/GPG13 M Series installation instructions - Ignition Control Diagnostic Indicator Chart p.25 and Ignition Control Error Codes p.15 (manualslib 798533); Goodman APG14 M Series installation instructions p.33",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "3 flashes (DSI chart, GPG/APG M-series)",
+     "meaning": "Pressure Switch Stuck Open - per the Ignition Control Diagnostic Indicator Chart (A/GPG13, APG14/GPG14, GPG16 M-series).",
+     "likelyCauses": [
+      "Pressure switch hose blocked, pinched or disconnected",
+      "Blocked flue / combustion air inlet, weak or failed induced draft blower",
+      "Incorrect switch set point or failed switch contacts; loose wiring"
+     ],
+     "checks": [
+      "With the inducer running, read inducer negative pressure at the switch tap with a manometer and compare with the switch rating",
+      "Check the switch closes (0 V across it) and the wiring to the board"
+     ],
+     "severity": "lockout",
+     "source": "Goodman A/GPG13 M Series installation instructions - Ignition Control Diagnostic Indicator Chart p.25 (manualslib 798533); Goodman APG14 M Series installation instructions p.33 (manualslib 2325520)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "4 flashes (DSI chart, GPG/APG M-series)",
+     "meaning": "Pressure Switch Stuck Closed - per the Ignition Control Diagnostic Indicator Chart (A/GPG13, APG14/GPG14, GPG16 M-series).",
+     "likelyCauses": [
+      "Welded/failed pressure switch contacts",
+      "Wiring short to 24 V on the switch input"
+     ],
+     "checks": [
+      "With the unit idle (inducer off) verify the switch is open; replace if closed",
+      "Inspect switch wiring for shorts"
+     ],
+     "severity": "lockout",
+     "source": "Goodman A/GPG13 M Series installation instructions - Ignition Control Diagnostic Indicator Chart p.25 (manualslib 798533); Goodman APG14 M Series installation instructions p.33 (manualslib 2325520)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "5 flashes (DSI chart, GPG/APG M-series)",
+     "meaning": "Thermal Protection Device Open - per the Ignition Control Diagnostic Indicator Chart (A/GPG13, APG14/GPG14, GPG16 M-series). The limit opening de-energizes the burners and powers the air circulation and vent blowers until the limit closes.",
+     "likelyCauses": [
+      "Restricted airflow (dirty filter, closed registers, high external static, wrong blower speed)",
+      "Failed primary/auxiliary limit or open manual-reset rollout switch",
+      "Over-firing (manifold pressure or orifice size)"
+     ],
+     "checks": [
+      "Measure temperature rise against the data plate and external static; correct airflow first",
+      "Check continuity through each limit and the rollout switch(es); reset rollout only after finding the cause"
+     ],
+     "severity": "lockout",
+     "source": "Goodman A/GPG13 M Series installation instructions - Ignition Control Diagnostic Indicator Chart p.25 (manualslib 798533); GHAC KB entry 631 'GPG13 - Flashing Code 4' describes the limit-open behavior (corroboration)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "6 flashes (DSI chart, GPG/APG M-series)",
+     "meaning": "Flame Detected with Gas Valve Closed - per the Ignition Control Diagnostic Indicator Chart in the Goodman GPG13 installation instructions. (The GPG16 M-series narrative assigns this condition five flashes - confirm on the door label.)",
+     "likelyCauses": [
+      "Gas valve leaking through / slow closing",
+      "Flame sensor circuit shorted or moisture on the control"
+     ],
+     "checks": [
+      "Confirm 0 V at the gas valve while flame persists; replace the valve if flame continues",
+      "Check the flame sensor lead for shorts to ground; dry/clean the control if wet"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GPG13 Installation & Operating Instructions - Ignition Control Diagnostic Indicator Chart (manualslib 483769); GPG 16 M Series installation (five flashes variant)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "9 flashes (two-stage DSI, GPG14/GPG16)",
+     "meaning": "High-stage pressure switch circuit will not close during high-stage induced draft blower operation (two-stage boards only).",
+     "likelyCauses": [
+      "Pinched, blocked or mis-routed high-stage pressure switch hose",
+      "Blocked flue or combustion air inlet; inducer not reaching high speed",
+      "Loose wiring or failed high-stage pressure switch"
+     ],
+     "checks": [
+      "Run the unit on high stage (W2) and measure inducer pressure at the high-stage switch tap against its rating",
+      "Verify the inducer changes speed on high stage and the switch closes; check wiring to the board"
+     ],
+     "severity": "lockout",
+     "source": "Third-party Goodman flash-code guides (doityourself.com, appliancehelper.net, afmplumbingheating.com) for the two-stage PCBAG127 board; not seen verbatim in the GPG14 service manual RS6300012 during this pass",
+     "evidence": "multi_secondary"
+    },
+    {
+     "code": "E0",
+     "meaning": "LOCKOUT DUE TO EXCESSIVE RETRIES (ComfortNet communicating furnace status code).",
+     "likelyCauses": [
+      "Failed ignition attempts: dirty flame sensor, low gas pressure, gas valve not opening, cracked igniter",
+      "Flame dropouts during the cycle"
+     ],
+     "checks": [
+      "Clear by interrupting power for 30 seconds (or remove the call for heat); watch the next ignition sequence",
+      "Clean the flame sensor, measure flame microamps, and check 24 V at the gas valve during trial for ignition"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes (manualslib 1084722 p.58, 836277 p.52)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E1",
+     "meaning": "LOW STAGE PRESSURE SWITCH STUCK CLOSED AT START OF HEATING CYCLE (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Welded low-stage pressure switch contacts",
+      "Wiring short on the switch input"
+     ],
+     "checks": [
+      "With the inducer off, confirm the low-stage switch is open; replace if closed",
+      "Inspect wiring for shorts to 24 V"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E2",
+     "meaning": "LOW STAGE PRESSURE SWITCH STUCK OPEN (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Blocked, pinched or disconnected pressure switch hose; condensate in hose",
+      "Blocked vent/intake or drain; weak induced draft blower",
+      "Incorrect switch set point or failed switch; loose wiring"
+     ],
+     "checks": [
+      "Measure inducer pressure at the switch tap with a manometer against the switch rating",
+      "Inspect vent, intake and condensate trap; verify the switch closes with the inducer running"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E3",
+     "meaning": "HIGH LIMIT OPEN - primary limit or auxiliary limit circuit is open, or rollout limit circuit is open (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Restricted airflow (filter, static, blower speed)",
+      "Failed limit switch; tripped manual-reset rollout switch"
+     ],
+     "checks": [
+      "Check temperature rise and external static; correct airflow",
+      "Check continuity of primary, auxiliary and rollout limits; find the cause before resetting a rollout"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E4",
+     "meaning": "IMPROPER FLAME - flame sensed with no call for heat (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Gas valve leaking through or slow to close",
+      "Flame sensor circuit shorted"
+     ],
+     "checks": [
+      "Confirm 0 V at the gas valve while flame is present; replace the valve if flame persists",
+      "Check the flame sensor wiring for shorts"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E5",
+     "meaning": "OPEN FUSE - displayed when the board's low-voltage fuse is open (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Short in the 24 V thermostat or accessory wiring",
+      "Shorted humidifier/condensate pump or other 24 V load"
+     ],
+     "checks": [
+      "Find the short before replacing the 3 A automotive fuse: disconnect thermostat and accessory wires and check for shorts to ground",
+      "Replace the fuse only with the same rating"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E6",
+     "meaning": "WEAK FLAME - flame sense microamp signal is low (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Coated/dirty flame sensor, poor burner ground",
+      "Lazy flame from low gas pressure or misaligned burner"
+     ],
+     "checks": [
+      "Measure flame current (microamps DC); clean the flame rod and check the ground path",
+      "Check manifold pressure and burner alignment"
+     ],
+     "severity": "warning",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E7",
+     "meaning": "IGNITOR FAULT OR IMPROPER GROUNDING (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Open or shorted hot surface igniter",
+      "Missing/poor equipment ground; reversed polarity"
+     ],
+     "checks": [
+      "Measure igniter resistance and check for a short to ground",
+      "Verify hot/neutral polarity and a solid ground at the control"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX / CVC9/95 installation instructions - Status Codes",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E8",
+     "meaning": "HIGH STAGE PRESSURE SWITCH STUCK CLOSED AT START OF HEATING CYCLE (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "Welded high-stage pressure switch contacts",
+      "Wiring short on the high-stage switch input"
+     ],
+     "checks": [
+      "With the inducer off, confirm the high-stage switch is open",
+      "Inspect wiring for shorts"
+     ],
+     "severity": "lockout",
+     "source": "Goodman GMVC950704CX installation instructions - Status Codes (manualslib 1084722 p.58)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "E9",
+     "meaning": "High stage pressure switch stuck open (ComfortNet two-stage furnace status code) - seen only in third-party/expert-Q&A sources during this pass; confirm on the furnace door label.",
+     "likelyCauses": [
+      "Blocked, pinched or mis-routed high-stage pressure switch hose",
+      "Blocked vent/intake, weak inducer, incorrect switch set point"
+     ],
+     "checks": [
+      "Run high stage and measure inducer pressure at the high-stage switch tap against its rating",
+      "Verify the inducer reaches high speed and the switch closes"
+     ],
+     "severity": "lockout",
+     "source": "justanswer.com GMVC96/GMVC95 E9 threads (single secondary); the GMVC950704CX Status Codes page lists E9 but its wording was not seen verbatim",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EA",
+     "meaning": "REVERSED 115 VAC POLARITY - polarity of 115 volt AC power to the furnace or integrated control module is reversed (ComfortNet furnace status code).",
+     "likelyCauses": [
+      "L1 and neutral swapped at the disconnect or junction box",
+      "Poor or missing ground"
+     ],
+     "checks": [
+      "Measure hot-to-ground (~120 V) and neutral-to-ground (~0 V) at the board line plug; correct the wiring",
+      "Verify the equipment ground"
+     ],
+     "severity": "warning",
+     "source": "Goodman GMVC950704CX installation instructions - Status Codes (manualslib 1084722 p.58)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b0",
+     "meaning": "BLOWER MOTOR NOT RUNNING (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "No line voltage to the ECM/variable-speed motor",
+      "Motor control failure, failed motor",
+      "Loose motor communication/power plug"
+     ],
+     "checks": [
+      "Verify line voltage at the motor power plug and the low-voltage/communication plug is seated",
+      "Command a fan-only call and check for motor response; replace the motor/control if powered and commanded but not running"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman Diagnosis Code Identification System (mobile.goodmanmfg.com faultcodes); Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b1",
+     "meaning": "BLOWER MOTOR COMMUNICATION ERROR (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Loose or damaged motor communication harness",
+      "Failed motor control module or board"
+     ],
+     "checks": [
+      "Reseat the motor communication plug at the motor and board; inspect for damaged pins",
+      "Cycle power; if b1 persists with a good harness, check the motor control module"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman Diagnosis Code Identification System (mobile.goodmanmfg.com faultcodes); Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b2",
+     "meaning": "BLOWER MOTOR HP MISMATCH - blower motor horsepower does not match the unit's shared data (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Wrong replacement motor installed",
+      "Wrong shared data loaded on the board (memory card mismatch)"
+     ],
+     "checks": [
+      "Compare the motor part number/HP with the unit parts list",
+      "Reload the correct shared data with the unit's memory card"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b3",
+     "meaning": "BLOWER MOTOR OPERATING IN POWER, TEMP., OR SPEED LIMIT (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "High external static pressure (undersized duct, dirty filter/coil)",
+      "High motor temperature from restricted airflow or high ambient"
+     ],
+     "checks": [
+      "Measure external static; clean filter and coil, open dampers/registers",
+      "Check motor temperature and airflow settings"
+     ],
+     "severity": "warning",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b4",
+     "meaning": "BLOWER MOTOR CURRENT TRIP OR LOST ROTOR (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Blower wheel binding or obstructed",
+      "Failed motor bearings or motor control"
+     ],
+     "checks": [
+      "Spin the blower wheel by hand for binding; check for debris",
+      "Verify line voltage; replace the motor/control if it trips repeatedly with a free wheel"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman Diagnosis Code Identification System (mobile.goodmanmfg.com faultcodes); Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b5",
+     "meaning": "BLOWER MOTOR ROTOR LOCKED (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Seized motor bearings",
+      "Blower wheel jammed"
+     ],
+     "checks": [
+      "Remove power and try to turn the wheel; clear obstructions or replace the motor"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b6",
+     "meaning": "OVER/UNDER VOLTAGE TRIP OR OVER TEMPERATURE TRIP (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Line voltage outside the motor's range (brownout, loose neutral)",
+      "Motor overheating from restricted airflow"
+     ],
+     "checks": [
+      "Measure line voltage at the motor under load and compare with the nameplate",
+      "Check airflow/static and motor ventilation"
+     ],
+     "severity": "warning",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b7",
+     "meaning": "INCOMPLETE PARAMETER SENT TO MOTOR (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Communication noise or a loose harness during motor programming",
+      "Corrupt or missing shared data on the board"
+     ],
+     "checks": [
+      "Cycle power; reseat the motor communication plug",
+      "Reload shared data from the unit's memory card if the code returns"
+     ],
+     "severity": "warning",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "b9",
+     "meaning": "LOW INDOOR AIRFLOW (minor error code) - the blower cannot deliver the requested CFM (ComfortNet blower fault code).",
+     "likelyCauses": [
+      "Dirty filter or coil, closed registers, undersized ductwork (high static)",
+      "Blower speed/airflow setting too high for the duct system"
+     ],
+     "checks": [
+      "Measure external static and compare with the blower table; clean filter/coil",
+      "Check the airflow/trim settings on the thermostat or DIP switches"
+     ],
+     "severity": "warning",
+     "source": "Goodman AVPTC**14 installation instructions - Diagnostic Codes p.31 (manualslib 1289171)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "d0",
+     "meaning": "DATA NOT ON NETWORK - the unit is wired as part of a communicating system and the integrated control module does not contain any shared data (data not yet on network).",
+     "likelyCauses": [
+      "New or replacement control board never loaded with shared data",
+      "Memory card not installed or not read"
+     ],
+     "checks": [
+      "Install the unit's shared-data memory card in the board's card slot and power up; wait for the data to load",
+      "If the card was already used, order the correct memory card for the exact model"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman ComfortNet ASXC/DSXC/GSXC Service and Troubleshooting RS6215001r7; Goodman Diagnosis Code Identification System (mobile.goodmanmfg.com faultcodes)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "d2",
+     "meaning": "Unit is wired as part of a communicating system and the outdoor unit requires airflow greater than the indoor unit's airflow capability; shared data is incompatible with the system or missing parameters.",
+     "likelyCauses": [
+      "Mismatched indoor/outdoor equipment (indoor blower cannot deliver the outdoor unit's required CFM)",
+      "Wrong shared data loaded for the indoor or outdoor unit"
+     ],
+     "checks": [
+      "Verify the indoor/outdoor match is an approved AHRI combination",
+      "Reload the correct shared data from each unit's memory card"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman ComfortNet ASXC/DSXC/GSXC Service and Troubleshooting RS6215001r7",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "d3",
+     "meaning": "Shared data sent to the integrated control module does not match the hardware configuration.",
+     "likelyCauses": [
+      "Memory card for a different model was used",
+      "Replacement board or motor of a different configuration"
+     ],
+     "checks": [
+      "Compare the memory card part number with the unit model; load the correct card",
+      "Verify installed motor/board match the parts list"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman ComfortNet ASXC/DSXC/GSXC Service and Troubleshooting RS6215001r7",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "d4",
+     "meaning": "Shared data on the memory card has been rejected (invalid memory card data).",
+     "likelyCauses": [
+      "Corrupt or wrong memory card",
+      "Card removed before the load completed"
+     ],
+     "checks": [
+      "Power down, reseat the card, power up and wait for the load to complete",
+      "Replace the memory card with the correct part if it is rejected again"
+     ],
+     "severity": "shutdown",
+     "source": "Goodman ComfortNet ASXC/DSXC/GSXC Service and Troubleshooting RS6215001r7; Goodman AVPTC**14 installation instructions - Diagnostic Codes ('Invalid Memory Card Data')",
      "evidence": "manufacturer_doc"
     }
    ],
@@ -2131,6 +2649,27 @@
       "Verify L1/N polarity and a solid ground at the control",
       "Check rollout switch continuity"
      ]
+    },
+    {
+     "pattern": "LED off",
+     "meaning": "No power to the control or internal control failure (White-Rodgers fault index 'Off: control failure'; CPG chart 'internal fault - hard lockout').",
+     "checks": [
+      "Verify line and 24 V at the board; if present and the LED stays off after a >5 s power cycle, replace the control"
+     ]
+    },
+    {
+     "pattern": "Rapid continuous flash",
+     "meaning": "Reversed 115 VAC polarity (White-Rodgers 50A55/50M56 fault index). Flash cadence for coded faults on these boards is ~0.25 s on per flash with a ~2 s pause between groups; an internal failure lights the LED continuously.",
+     "checks": [
+      "Check hot/neutral polarity and ground at the control line plug"
+     ]
+    },
+    {
+     "pattern": "Two-digit code on a dual 7-segment display (E0-EA, b0-b9, d0-d4)",
+     "meaning": "ComfortNet/ComfortBridge communicating control: alphanumeric status code shown on the board; the same fault is also sent as plain text to the CTK04 communicating thermostat.",
+     "checks": [
+      "Read the code on the board and cross-check the plain-language message and fault history on the thermostat (Menu > Equipment Status > Diagnostics)"
+     ]
     }
    ],
    "diagnosticTips": [
@@ -2138,7 +2677,14 @@
     "Lockouts (1 and 5 flashes) auto-reset after one hour; clear immediately by removing the thermostat call for a few seconds or by interrupting power for more than 5 seconds.",
     "The control retries ignition (typically 3 trials) before a 1-flash lockout; flame dropouts during a cycle count as recycles.",
     "Flash-code tables differ between board generations (single-stage vs two-stage, 40-flash/blink-pattern boards on newer furnaces). This table is the single-LED table from the CPG packaged-unit installation instructions; the 6 and 7 flash meanings vary and were not confirmed for packaged units, so they are not listed as codes.",
-    "Three-phase CPG/DCG 7.5-12.5 ton units also carry a phase monitor with its own LED; a unit that is dead with a normal ignition-control LED may be locked out by the phase monitor (check incoming phase rotation and voltage balance)."
+    "Three-phase CPG/DCG 7.5-12.5 ton units also carry a phase monitor with its own LED; a unit that is dead with a normal ignition-control LED may be locked out by the phase monitor (check incoming phase rotation and voltage balance).",
+    "The red diagnostic LED is on the integrated ignition control in the gas-heat control compartment; on packaged units view it through the window in the blower/control door. Count flashes between the ~2-second pauses.",
+    "Lockouts (external lockout, flame with valve closed, repeated limit trips) auto-reset after one hour; clear immediately by removing the thermostat call for a few seconds or by interrupting power for more than 5 seconds. ComfortNet furnaces: interrupt power for 30 seconds or clear the fault history from the thermostat.",
+    "The control retries ignition three times before an external lockout; flame dropouts during a cycle count as recycles.",
+    "Two different flash tables exist on Goodman packaged units: (a) CPG/DCG hot-surface-ignition boards (White-Rodgers 50-series style): 1 = external lockout, 2 = PS stuck open, 3 = PS stuck closed, 4 = limit open, 5 = flame with valve closed, 6 = short-cycle compressor delay; (b) GPG13/GPG14/GPG16 M-series direct-spark PCBAG boards: 1 = internal control failure, 2 = external lockout, 3 = PS stuck open, 4 = PS stuck closed, 5 = thermal protection device open, 6 = flame with valve closed. Goodman furnaces and the White-Rodgers universal 50A55/50M56 reverse the 2/3 pressure-switch codes (2 = stuck closed, 3 = stuck open). Always read the flash-code label on the control-compartment door.",
+    "ComfortNet/ComfortBridge units: the board shows a two-character code on a dual 7-segment display; the CTK04 thermostat stores the last 6 equipment faults - press MENU > EQUIPMENT STATUS > DIAGNOSTICS to view or clear fault history (the ComfortNet User Menu is password-protected with the date code printed on the back of the thermostat or shown under Equipment Status). The thermostat also logs the most recent 25 alerts with date/time.",
+    "ComfortNet d0/d2/d3/d4 codes are shared-data problems: a replacement control board must be loaded from the unit's memory card (insert the card, power up, wait for the load) before the equipment will run.",
+    "Direct-spark (DSI) GPG/APG boards fire a 22,000 V spark and prove flame with a separate flame sensor; check spark gap/ceramic and flame microamps before condemning the PCBAG board."
    ],
    "coverage": "partial",
    "sourceDocs": [
@@ -2155,13 +2701,94 @@
      "title": "Goodman GPG14 Service Instructions RS6300012r4 (July 2017)",
      "docId": "RS6300012",
      "url": "https://hvacdirect.com/media/hvac/pdf/GPG14-Service.pdf"
+    },
+    {
+     "title": "Goodman CPG Series Installation Instructions (3-5 ton package gas) - Diagnostic LED chart and Abnormal Operation - Heating",
+     "url": "https://www.manualslib.com/manual/61600/Goodman-Cpg-Series.html"
+    },
+    {
+     "title": "Goodman CPG Series 7.5-12.5 Ton Package Gas Installation Instructions",
+     "url": "https://resource.ecmdi.com/is/content/Watscocom/Gemaire/goodman_cpg1022103bxxx_article_1371468293571_en_ii.pdf"
+    },
+    {
+     "title": "Daikin DCG Series Service Instructions (light commercial package gas) - diagnostic LED / abnormal heating operation",
+     "url": "https://www.manualslib.com/manual/1642558/Daikin-Dcg-Series.html"
+    },
+    {
+     "title": "White-Rodgers 50M56-743 Universal Integrated Furnace Control Installation Instructions - Fault index (p.8)",
+     "docId": "50M56-743",
+     "url": "https://www.manualslib.com/manual/1585345/White-Rodgers-50m56-743.html?page=8"
+    },
+    {
+     "title": "White-Rodgers 50A55 Troubleshooting Manual - fault index / system lockout and diagnostic features",
+     "docId": "50A55",
+     "url": "https://www.manualslib.com/manual/556709/White-Rodgers-50a55.html"
+    },
+    {
+     "title": "Goodman A/GPG13 M Series (R-410A) Installation & Operating Instructions - Ignition Control Diagnostic Indicator Chart (p.25) and Ignition Control Error Codes (p.15)",
+     "url": "https://www.manualslib.com/manual/798533/Goodman-A-Gpg13-M-Series-W-R410a.html?page=25"
+    },
+    {
+     "title": "Goodman APG14 M Series Installation & Operating Instructions - Ignition Control Diagnostic Indicator Chart (p.33)",
+     "url": "https://www.manualslib.com/manual/2325520/Goodman-Apg14-M-Series.html?page=33"
+    },
+    {
+     "title": "Goodman GPG 16 SEER M Series Installation Instructions - diagnostic indicator chart and Abnormal Operation - Heating",
+     "url": "https://www.acdirect.com/media/specs/Goodman/goodman-gpg16-series-gas-ac-package-unit-installation-instructions.pdf"
+    },
+    {
+     "title": "Goodman APG/GPG 14 SEER Gas-Electric Package Unit Service Instructions RS6300012r4 (July 2017)",
+     "docId": "RS6300012",
+     "url": "https://hvacdirect.com/hvac/pdf/GPG14-Service.pdf"
+    },
+    {
+     "title": "Goodman GMVC950704CX (ComfortNet two-stage furnace) Installation Instructions - Status Codes (p.58); same table in CVC9/95 Installation Instructions p.52",
+     "url": "https://www.manualslib.com/manual/1084722/Goodman-Gmvc950704cx.html?page=58"
+    },
+    {
+     "title": "Goodman AVPTC**14 Series Installation & Operating Instructions - Diagnostic Codes (p.31) (ComfortNet blower/network codes)",
+     "url": "https://www.manualslib.com/manual/1289171/Goodman-Avptc42d14-Series.html?page=31"
+    },
+    {
+     "title": "Goodman ComfortNet ASXC/DSXC/GSXC condensing units and heat pumps Service and Troubleshooting RS6215001r7 (d-codes)",
+     "docId": "RS6215001",
+     "url": "https://partnerlinkmarketing.goodmanmfg.com/Lit/RS6215001r7.pdf"
+    },
+    {
+     "title": "Goodman Diagnosis Code Identification System (mobile fault-code lookup)",
+     "url": "https://mobile.goodmanmfg.com/mobileapp/faultcodes/index.jsp"
+    },
+    {
+     "title": "ComfortNet CTK04 System Installation Manual - ComfortNet User Menu / Diagnostics",
+     "docId": "CTK04",
+     "url": "https://www.manualslib.com/manual/884071/Comfortnet-Ctk04.html"
+    },
+    {
+     "title": "GHAC Knowledgebase - Goodman GPG Fault Codes (third-party, corroboration only)",
+     "url": "https://ghac.makekb.com/entry/261/"
     }
    ],
    "confidence": "medium",
    "sources": [
     "Goodman CPG Series installation instructions - diagnostic LED chart (manualslib 61600)",
     "Goodman Service Bulletin SF-024 (8-flash code)",
-    "Third-party Goodman flash-code guides (furnaceking.ca, pickcomfort.com, northnjhvac.com) - corroboration only"
+    "Third-party Goodman flash-code guides (furnaceking.ca, pickcomfort.com, northnjhvac.com) - corroboration only",
+    "https://www.manualslib.com/manual/61600/Goodman-Cpg-Series.html",
+    "https://resource.ecmdi.com/is/content/Watscocom/Gemaire/goodman_cpg1022103bxxx_article_1371468293571_en_ii.pdf",
+    "https://www.manualslib.com/manual/1642558/Daikin-Dcg-Series.html",
+    "https://mobile.goodmanmfg.com/mobileapp/stellent/Toolkit/TechServices/SB/goodman/SF-Furnace/SF-024+Missing+Identification+of+Eight+(8)+Flash+Fault+Code.pdf",
+    "https://www.manualslib.com/manual/1585345/White-Rodgers-50m56-743.html?page=8",
+    "https://www.manualslib.com/manual/556709/White-Rodgers-50a55.html",
+    "https://www.manualslib.com/manual/798533/Goodman-A-Gpg13-M-Series-W-R410a.html?page=25",
+    "https://www.manualslib.com/manual/2325520/Goodman-Apg14-M-Series.html?page=33",
+    "https://www.acdirect.com/media/specs/Goodman/goodman-gpg16-series-gas-ac-package-unit-installation-instructions.pdf",
+    "https://hvacdirect.com/hvac/pdf/GPG14-Service.pdf",
+    "https://www.manualslib.com/manual/1084722/Goodman-Gmvc950704cx.html?page=58",
+    "https://www.manualslib.com/manual/1289171/Goodman-Avptc42d14-Series.html?page=31",
+    "https://partnerlinkmarketing.goodmanmfg.com/Lit/RS6215001r7.pdf",
+    "https://mobile.goodmanmfg.com/mobileapp/faultcodes/index.jsp",
+    "https://www.manualslib.com/manual/884071/Comfortnet-Ctk04.html",
+    "https://ghac.makekb.com/entry/261/"
    ]
   },
   {

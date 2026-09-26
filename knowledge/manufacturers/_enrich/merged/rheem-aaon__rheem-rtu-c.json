@@ -1,0 +1,313 @@
+{
+  "pack": "rheem-aaon",
+  "platformId": "rheem-rtu-c",
+  "name": "Rheem/Ruud Renaissance Rooftop Unit Controller (RTU-C) with ClearControl (DDC) / PlusOne Diagnostics",
+  "coverage": "partial",
+  "sourceDocs": [
+    {
+      "title": "Rheem 92-103249-01 Rev. 03 ClearControl (DDL) Installation Instructions — RTU-C; section 'RTU-C Alarm Table and Diagnostic Guide' (p.60) and 'BAS Protocol Information (POINTS LIST)'",
+      "docId": "92-103249-01-03",
+      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Accessories/ClearControl/92-103249-01-03_ClearControl_DDL.pdf"
+    },
+    {
+      "title": "Rheem 92-103249-01 Rev. 05 ClearControl (DDC) Installation Instructions — RTU-C Alarm Table and Diagnostic Guide (p.66); RUNTEST / Initial Test Sequence (sec. 6.10)",
+      "docId": "92-103249-01-05",
+      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Accessories/ClearControl/92-103249-01_Current_DDC_Control.pdf"
+    },
+    {
+      "title": "Rheem 92-103249-01-06 Installation Instructions for RTU-C ClearControl (Century AC mirror)",
+      "docId": "92-103249-01-06",
+      "url": "https://www.centuryac.com/documents/RHPCYB_install.pdf"
+    },
+    {
+      "title": "Rheem 92-103249-01 Rev. 05 ClearControl (DDL) Installation Instructions (ClimateMaster mirror 97B0055N18)",
+      "docId": "97B0055N18",
+      "url": "https://files.climatemaster.com/97B0055N18-DDC-IOM.pdf"
+    },
+    {
+      "title": "Rheem IOM 92-23577-80 Rev. 03 — RKNL-B / RKNL-C 6–12.5 ton Package Gas Electric (RTU-C, IFC Modbus, alarms on RTU-C display)",
+      "docId": "92-23577-80-03",
+      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/GE_Package/RKNL/92-23577-80-03_RKNL-B_RKNL-C_6-12.5.pdf"
+    },
+    {
+      "title": "Rheem Form R11-853 — RKNL-C/H 6–12.5 ton Gas/Electric specification sheet (RTU-C description, Smart Logic low-pressure 3-trip protection, sensors CFS/FPS/RAT/DAT/OAT/FS, economizer ELM alarms)",
+      "docId": "R11-853",
+      "url": "https://resource.bakerdist.com/is/content/Watscocom/Gemaire/rheem_rknl-h090-151_ss.pdf"
+    },
+    {
+      "title": "Rheem Form S11-983 Rev. 7 — Commercial 7.5–12.5 ton Renaissance Line (RLNL-C) specification sheet (RTU-C 16x2 LCD / five-button keypad, alarms to display, BAS or thermostat L terminal)",
+      "docId": "S11-983",
+      "url": "https://media.rheem.com/media/uploads/iat/sites/36/2022/08/PR2_S11-983.pdf"
+    },
+    {
+      "title": "Rheem 92-103628-01 BACnet Communication Card RXRX-AY01 Installation Instructions (plugs onto RTU-C; points list reference)",
+      "docId": "92-103628-01",
+      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Accessories/RXRX/92-103628-01_Current_RXRX-AY01.pdf"
+    },
+    {
+      "title": "Rheem PlusOne Diagnostics ClearControl overview (discover.rheem.com)",
+      "docId": "discover-clearcontrol",
+      "url": "https://discover.rheem.com/commercial-air/innovations/clearcontrol"
+    },
+    {
+      "title": "Rheem PlusOne Diagnostics CoreCommand overview — dual 7-segment LED display, 43 fault codes, fault history (sibling non-communicating control on current Renaissance RGEC/RGED/RACC/RHPC)",
+      "docId": "discover-corecommand",
+      "url": "https://discover.rheem.com/commercial-air/innovations/corecommand"
+    },
+    {
+      "title": "Rheem RGED Renaissance 7.5–12.5 ton IOM 92-106166-01 Rev. 2 (CoreCommand fault-code table lives here; not readable via search)",
+      "docId": "92-106166-01",
+      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/Renaissance/pdfs/GED/92-106166-01_Rev2_RGED_IO.pdf"
+    },
+    {
+      "title": "Rheem RGECZR Renaissance 3–6 ton IOM 92-106691-01-02 (CoreCommand; ABR Wholesalers mirror)",
+      "docId": "92-106691-01-02",
+      "url": "https://abrwholesalers.com/media/assets/product/documents/Rheem/RGECZR/InstallationInstructions_92-106691-01-02_Rev02.pdf"
+    },
+    {
+      "title": "JustAnswer HVAC thread — 'How to Clear/Reset Error Codes: A15 Controller Fault' on a Rheem commercial rooftop (third-party; A15 meaning and reset procedure)",
+      "docId": "justanswer-n7ud2",
+      "url": "https://www.justanswer.com/plumbing/n7ud2-clear-reset-error-codes-1-lockout-a15-controller.html"
+    }
+  ],
+  "faultCodes": [
+    {
+      "code": "A15",
+      "meaning": "Controller fault — an error with the RTU-C control board itself ('the only solution is to turn off the power to it and then turn it back on; if the issue persists a new board is necessary').",
+      "likelyCauses": [
+        "RTU-C internal / firmware fault",
+        "Power-quality event (brown-out, transient) on the 24 VAC control supply",
+        "Corroded or loose connections at the controller board",
+        "Failed RTU-C board (47-102883-02/-03 family)"
+      ],
+      "checks": [
+        "Power the unit off for ~5 minutes and back on; see whether A15 clears (source: JustAnswer thread)",
+        "Inspect the controller board connectors for corrosion or loose wiring (source: JustAnswer thread)",
+        "Measure 24 VAC at the RTU-C under load and check the control transformer secondary breaker/fuse (field practice)",
+        "If A15 returns immediately with clean control power, replace the RTU-C board (source: JustAnswer thread)"
+      ],
+      "severity": "lockout",
+      "source": "JustAnswer HVAC thread n7ud2 ('1 lockout, A15 controller fault'); no manufacturer table text seen",
+      "evidence": "single_secondary"
+    },
+    {
+      "code": "LOW PRESSURE TRIP (active protection lockout)",
+      "meaning": "Active unit protection: the RTU-C locks out the compressor circuit when a low pressure trip occurs three times within a thermostat cycle. Spec sheet wording: 'the low-pressure switch shuts off the compressors if low pressure is detected due to loss of charge; built-in Smart Logic reduces nuisance calls by only shutting off compressors after the third detection'.",
+      "likelyCauses": [
+        "Low refrigerant charge / leak",
+        "Low evaporator airflow: dirty filters, dirty coil, blower or belt problem, iced coil",
+        "Restricted metering device or liquid-line drier",
+        "Low-pressure switch, wiring or connector fault (LPS uses a different wire colour and connector size than HPS to prevent cross-wiring)"
+      ],
+      "checks": [
+        "Read the ALARMS menu on the RTU-C LCD to confirm which circuit tripped (source: 92-103249-01)",
+        "Check suction pressure/superheat and charge by subcooling (field practice)",
+        "Check airflow: filters, coil, blower amps/belt, and the dirty-filter switch status (field practice)",
+        "Verify the LPS closes at the correct pressure and the harness connector is seated (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl (DDL/DDC) Installation Instructions — active unit protection paragraph ('three times within a thermostat cycle: low pressure trip, high pressure trip, gas heat limit trip'); Rheem spec sheet R11-853 / S11-983 'Pressure/Loss of charge protection' paragraph",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "HIGH PRESSURE TRIP (active protection lockout)",
+      "meaning": "Active unit protection: the RTU-C locks out the compressor circuit when a high pressure trip occurs three times within a thermostat cycle.",
+      "likelyCauses": [
+        "Dirty or blocked condenser coil, recirculation of condenser discharge air",
+        "Outdoor (condenser) fan not running or wrong rotation",
+        "Refrigerant overcharge or non-condensables",
+        "Failed high-pressure switch or wiring"
+      ],
+      "checks": [
+        "Confirm the tripped circuit in the RTU-C ALARMS menu (source: 92-103249-01)",
+        "Check head pressure versus ambient, condenser fan operation and coil cleanliness (field practice)",
+        "Verify HPS continuity once pressure is below its reset point (field practice)",
+        "After correcting the cause, clear the alarm at the display / cycle the thermostat demand to release the lockout (source: 92-103249-01 'find source and clear ALARMS')"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — active unit protection paragraph ('three times within a thermostat cycle')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "GAS HEAT LIMIT TRIP (active protection lockout)",
+      "meaning": "Active unit protection: the RTU-C locks out heating when the gas heat limit trips three times within a thermostat cycle. The IFC reports the open limit/rollout to the RTU-C over Modbus ('after a call for heat the IFC checks that the high temperature limit and rollout switches are closed; if either is open, the IFC responds with a fault code').",
+      "likelyCauses": [
+        "Low airflow in heating: dirty filters, dirty evaporator coil, blower/belt problem, high external static, closed dampers",
+        "Over-fired heat exchanger (manifold pressure or orifice wrong)",
+        "Rollout switch tripped (blocked flue/heat exchanger) — manual reset",
+        "Failed limit switch"
+      ],
+      "checks": [
+        "Check whether a manual-reset rollout switch is open before anything else (field practice)",
+        "Measure temperature rise against the nameplate range and external static pressure (field practice)",
+        "Verify blower runs at heating speed with correct amps/belt tension (field practice)",
+        "Check manifold pressure and clocked gas input (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — active unit protection paragraph and IFC/Modbus heating sequence paragraph",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IFC FAULT — ignition lockout (IFC LED code 1)",
+      "meaning": "Gas-heat ignition control fault reported to the RTU-C over Modbus: 'the IFC indicates a fault code through MODBUS and the LED flashes a fault code of 1 to indicate lockout is due to failed ignition'.",
+      "likelyCauses": [
+        "No gas / gas valve not opening, low gas pressure",
+        "Failed or cracked hot-surface igniter",
+        "Dirty or misaligned flame sensor, poor burner ground",
+        "Burner/orifice obstruction"
+      ],
+      "checks": [
+        "Read the IFC LED in the burner compartment: 1 flash = ignition lockout (source: 92-103249-01)",
+        "Verify inlet and manifold gas pressure and that the valve opens on trial for ignition (field practice)",
+        "Check igniter resistance/glow and flame-sense microamps; clean the sensor (field practice)",
+        "Reset by cycling the W demand or unit power after the cause is fixed (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — IFC heating sequence paragraph (IFC board communicates to the RTU-C via MODBUS)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "IFC FAULT — inducer pressure switch (IFC LED code 2)",
+      "meaning": "Gas-heat pressure-switch fault reported to the RTU-C over Modbus: 'the IFC checks that both sets of draft inducer pressure switches are open; if either pressure switch set is closed, the IFC will respond with a fault code and flash code 2 on the LED, waiting indefinitely for both sets to open'. Also flashed while the IFC energizes the inducer and waits for the low/high pressure switch to close ('if the high pressure switch does not close within 60 seconds the control flashes 2 and de-energizes the high inducer motor for 5 minutes, then retries').",
+      "likelyCauses": [
+        "Blocked or restricted flue / combustion-air inlet",
+        "Condensate backed up into the pressure-switch tubing",
+        "Two-stage inducer not reaching high speed, weak inducer motor",
+        "Cracked/loose switch tubing, switch stuck closed or open"
+      ],
+      "checks": [
+        "With the inducer off, confirm both switch sets are open; with it running, measure draft at the switch tap against the setpoint printed on the switch (field practice)",
+        "Clear the condensate drain/trap and check the tubing (field practice)",
+        "Verify the inducer changes speed on second-stage heat (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — IFC heating sequence paragraphs (code 2 / pressure switches)",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "FAN PROVING alarm",
+      "meaning": "'The unit mounted fan proving switch monitors the pressure differential across the unit blower to detect when the indoor fan is blowing air. An alarm is sent to the LCD display (and Network if applicable) if the pressure differential indicates that the indoor blower is not operating.'",
+      "likelyCauses": [
+        "Indoor blower not running: motor, contactor/relay, VFD fault, broken belt",
+        "Fan proving switch (FPS) tubing disconnected, reversed or plugged",
+        "FPS setpoint too high for the unit's operating static",
+        "Failed FPS or open wiring to the RTU-C input"
+      ],
+      "checks": [
+        "Confirm the blower actually runs when commanded (amps, belt, VFD status) (field practice)",
+        "Check FPS tubing to the blower section and that the switch closes with the blower running (field practice)",
+        "Verify 24 VAC / closure at the RTU-C FPS input with the fan proven (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Rheem spec sheet R11-853 (RKNL-C) / 92-103249-01 — 'Fan Proving Switch' feature description",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "DIRTY FILTER alarm",
+      "meaning": "'A pressure differential switch across the return air filters is mounted in the filter section and is connected to the RTU-C control.' The RTU-C 'will signal an increase in static pressure across the air filter, indicating a dirty filter condition' on the display and network.",
+      "likelyCauses": [
+        "Loaded return-air filters",
+        "Clogged filter switch (CFS) setpoint too low, tubing reversed or leaking",
+        "Blocked return path raising pressure drop across the filter rack"
+      ],
+      "checks": [
+        "Inspect and replace filters; verify the flex-fit filter rack is fully loaded and seated (field practice)",
+        "Check CFS tubing (high side upstream of the filters) and setpoint (field practice)"
+      ],
+      "severity": "info",
+      "source": "Rheem spec sheet R11-853 (RKNL-C) 'Clogged Filter Switch' description; 92-103249-01 dirty-filter paragraph",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "SMOKE DETECTOR shutdown",
+      "meaning": "Smoke detector input (units equipped with supply and/or return smoke detectors): 'The input will shutdown the unit and requires a manual reset.'",
+      "likelyCauses": [
+        "Smoke or dust in the supply/return air stream tripped the detector",
+        "Detector not reset after a trip (latched)",
+        "Detector sensitivity / dirty sensing chamber, or open wiring at the shutdown input"
+      ],
+      "checks": [
+        "Check the detector's own trouble/alarm LEDs and reset it at the detector after confirming there is no smoke (field practice)",
+        "Verify the shutdown input to the RTU-C is restored (24 VAC / contact closed) after the reset (field practice)",
+        "Clean or replace the detector head if it trips with no smoke present (field practice)"
+      ],
+      "severity": "shutdown",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — smoke detector input description ('only applicable on units equipped with a smoke detector; the input will shutdown the unit and requires a manual reset')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "ECONOMIZER FAULT (ELM alarm)",
+      "meaning": "'Economizer Faults will trigger a network Alarm and can be read at the unit controller display or remotely through a network connection.' The economizer is controlled by the Economizer Logic Module (ELM) supplied with the economizer; the RTU-C communicates with the ELM for control, setpoints and diagnostics.",
+      "likelyCauses": [
+        "Mixed-air, return-enthalpy, outdoor-enthalpy or CO2 sensor open/shorted",
+        "Damper actuator failed, disconnected or not communicating with the ELM",
+        "ELM / RTU-C communication wiring fault"
+      ],
+      "checks": [
+        "Read Economizer Status, mixed air temperature, damper position and CO2 at the RTU-C display (source: R11-853)",
+        "Check the ELM's own diagnostics (JADE-type module: see the honeywell-jade-w7220 platform in this pack) and its sensor wiring (field practice)",
+        "Drive the damper from the ELM checkout and confirm it moves (field practice)"
+      ],
+      "severity": "warning",
+      "source": "Rheem spec sheet R11-853 (RKNL-C) economizer/ELM paragraphs ('Economizer Faults will trigger a network Alarm...')",
+      "evidence": "manufacturer_doc"
+    },
+    {
+      "code": "COMFORT ALERT compressor alarm (circuit 1 / circuit 2)",
+      "meaning": "'The RTU-C control has two inputs to monitor up to two compressor circuits using optional Copeland Comfort Alerts; on dual compressor units only the affected compressor circuit is locked out.' The specific fault is the Comfort Alert flash code (1 long run time, 2 system pressure trip, 3 short cycling, 4 locked rotor, 5 open circuit, 6 open start circuit, 7 open run circuit, 8 welded contactor, 9 low voltage <17 VAC).",
+      "likelyCauses": [
+        "Compressor electrical fault (locked rotor, open winding/circuit, welded contactor)",
+        "Repeated pressure-switch trips seen by the module (code 2)",
+        "Low control voltage (code 9)"
+      ],
+      "checks": [
+        "Read the Comfort Alert module's own ALERT LED flash count on the affected circuit; codes are in the compressors pack (coresense-communications-1ph) (field practice)",
+        "Check compressor amps/megohms, contactor contacts and 24 VAC control voltage per the flash code (field practice)",
+        "Reset by cycling power to the module/unit after the cause is corrected (field practice)"
+      ],
+      "severity": "lockout",
+      "source": "Rheem 92-103249-01 ClearControl Installation Instructions — Comfort Alert inputs paragraph; Emerson Comfort Alert user manual 2006ECT-54 (codes 4–9 seen in search summary)",
+      "evidence": "manufacturer_doc"
+    }
+  ],
+  "ledPatterns": [
+    {
+      "pattern": "IFC LED (gas-heat ignition control) — 1 flash",
+      "meaning": "Lockout due to failed ignition; the same fault is sent to the RTU-C via Modbus and shows as an alarm on the LCD",
+      "checks": [
+        "Check gas supply/manifold pressure, igniter and flame sensor; reset by cycling the heat demand"
+      ]
+    },
+    {
+      "pattern": "IFC LED — 2 flashes",
+      "meaning": "Inducer pressure switch fault: a switch set is closed before the inducer starts, or the low/high pressure switch did not close (high switch retried for 60 s every 5 min)",
+      "checks": [
+        "Check draft at the switch tap, tubing, condensate backup and two-speed inducer operation"
+      ]
+    },
+    {
+      "pattern": "RTU-C 16 x 2 LCD shows ALARMS entry",
+      "meaning": "One or more active alarms; the alarm can also be sent to the BAS network or to the thermostat L terminal",
+      "checks": [
+        "Scroll to ALARMS with the five-button keypad, note every active alarm and its circuit, fix the cause, then clear"
+      ]
+    }
+  ],
+  "diagnosticTips": [
+    "Display: the RTU-C has a 16 x 2 character LCD and a five-button keypad on the board in the unit control panel; it 'displays control parameters, diagnostic codes and sensor readings' and the keypad scrolls the menu and makes field-configurable changes (S11-983 / R11-853).",
+    "Alarms: scroll to ALARMS on the RTU-C display; the IOM start-up checklist says 'if any ALARMS are present, find source and clear ALARMS'. Alarms are also available over the BAS network (Modbus/BACnet RXRX-AY01/LonWorks) and can be wired to the thermostat 'L' terminal for notification (S11-983).",
+    "Clearing: a third-party thread on A15 describes navigating to the current alarms menu and selecting the reset-alarm option; hard faults (controller fault, smoke shutdown) need a power cycle or the device's own manual reset. Diagnostic code information is retained through a power failure (92-103249-01).",
+    "RUNTEST: scroll the RTU-C display to RUNTEST mode, choose Heating or Cooling runtest and enter the password to start (92-103249-01 sec. 6.10 Initial Test Sequence); use it to exercise stages without waiting on thermostat demand.",
+    "Active protection: low pressure trip, high pressure trip or gas heat limit trip three times within one thermostat cycle locks out that function; on two-compressor units only the affected circuit is locked out. Read which circuit before touching anything.",
+    "Gas heat: the IFC talks to the RTU-C over Modbus, so an ignition or pressure-switch fault appears both as an IFC LED flash code (1 = ignition, 2 = pressure switch) and as an RTU-C alarm.",
+    "Sensors the RTU-C uses for diagnostics: return air (RAT), discharge/supply air (DAT/SAT), outdoor air (OAT), suction-line freeze sensors (FS, used in place of freezestats), clogged filter switch (CFS) and fan proving switch (FPS). A sensor reading that is obviously wrong on the STATUS screens points to the sensor before the alarm."
+  ],
+  "notes": [
+    "Coverage is partial: the manufacturer's 'RTU-C Alarm Table and Diagnostic Guide' (92-103249-01 Rev.03 p.60 / Rev.05 p.66) exists but its rows could not be read through search summaries; only alarms whose behaviour is described in prose elsewhere in the same documents (or in the spec sheets) are transcribed here, using the alarm's functional name rather than its A-number. A15 is the only alphanumeric code seen, and only from a third-party thread.",
+    "Alarm code numbering (A1…A15+) on the LCD should be transcribed from the alarm table when the PDF can be read; until then the A-number for each alarm above is unknown.",
+    "Current Renaissance units (RGEC/RGED/RACC/RHPC, 2018+) ship with the non-communicating 'CoreCommand' control — a dual 7-segment LED display with 43 fault codes and fault history, optional phase monitor; the TEST button defeats the short-cycle delay. ClearControl (RTU-C) is the DDC option on those units. The CoreCommand fault-code table is in the RGED IOM 92-106166-01 and RGEC IOM 92-106691-01 and was not readable via search, so no CoreCommand codes are included; it deserves its own platform entry (e.g. rheem-corecommand).",
+    "The Comfort Alert code list itself is already in the compressors pack (coresense-communications-1ph); this entry only records how the RTU-C reports it.",
+    "The existing rheem-ifc-flash entry lists 2 and 3 flashes; the ClearControl document confirms 1 flash = ignition lockout for the two-stage IFC used with the RTU-C — worth adding there.",
+    "Sources searched but not usable: ManualsLib/Yumpu/Scribd have no indexed copy of the RKNL-C IOM alarm pages; justanswer/HVAC-Talk threads for other A-codes were not found."
+  ]
+}
