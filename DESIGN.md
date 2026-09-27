@@ -49,7 +49,7 @@ tests; no new npm dependencies.
 ## Directory layout and ownership
 
 ```
-hvac-assistant/
+(repository root — Dxntehlol/AI-Tech-Support)
   DESIGN.md  README.md  package.json  tsconfig.json  .env.example  .gitignore
   scripts/gen_refrigerants.py           # CoolProp -> knowledge/refrigerants/*.json (+ _generated_meta.json)
   knowledge/

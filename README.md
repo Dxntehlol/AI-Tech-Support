@@ -45,7 +45,8 @@ instead of trusting the pack.
 Requirements: Node.js 22.18 or newer and an Anthropic API key.
 
 ```bash
-cd hvac-assistant
+git clone https://github.com/Dxntehlol/AI-Tech-Support.git
+cd AI-Tech-Support
 npm install
 cp .env.example .env        # put your ANTHROPIC_API_KEY in .env
 npm run dev                 # http://127.0.0.1:8787
