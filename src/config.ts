@@ -17,8 +17,15 @@ export function loadDotEnv(path = resolve(PROJECT_ROOT, ".env")): void {
     if (eq <= 0) continue;
     const key = line.slice(0, eq).trim();
     let value = line.slice(eq + 1).trim();
-    const hash = value.search(/\s#/);
-    if (hash >= 0 && !/^["']/.test(value)) value = value.slice(0, hash).trim();
+    // An unquoted trailing comment (`KEY=value  # note`) is dropped; a comment-only value (`KEY=   # note`)
+    // means empty, so a copied .env.example never turns its notes into passwords or origins.
+    if (!/^["']/.test(value)) {
+      if (value.startsWith("#")) value = "";
+      else {
+        const hash = value.search(/\s#/);
+        if (hash >= 0) value = value.slice(0, hash).trim();
+      }
+    }
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }

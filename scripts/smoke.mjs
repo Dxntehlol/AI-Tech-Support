@@ -60,6 +60,10 @@ check("electrical reference", er.status === 200 && JSON.stringify(er.body).inclu
 // 6. unit + conversation + chat over SSE
 const u = await j("/api/units", { method: "POST", body: JSON.stringify({ model: "48TCDA04A2A5-0A0A0", serial: "3216E54321", unit_tag: "RTU-7", site: "Pharmacy" }) });
 const unit = u.body && u.body.unit;
+if (!unit || !unit.id) {
+  console.log(`FAIL unit create — HTTP ${u.status} ${JSON.stringify(u.body).slice(0, 160)}; the rest of the run depends on it (is the server password-protected? pass the auth server/password as the 2nd and 3rd arguments)`);
+  process.exit(1);
+}
 check("unit create", (u.status === 200 || u.status === 201) && unit && unit.id && unit.tonnage === 3, `id=${unit && unit.id} ${unit && unit.manufacturer} ${unit && unit.tonnage} t ${unit && unit.refrigerant}`);
 const c = await j("/api/conversations", { method: "POST", body: JSON.stringify({ unit_id: unit.id }) });
 const cid = (c.body && (c.body.id || (c.body.conversation && c.body.conversation.id))) || null;
