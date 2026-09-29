@@ -74,6 +74,10 @@ with canned responses so you can explore the UI and calculators.
 
 ## Using it on a phone
 
+**Shortcut:** on the machine that will run the server, `node scripts/setup.mjs` does the whole
+server side (install, build, `.env` with a generated password, pm2 service, Tailscale HTTPS) and
+prints what to enter on the phone. `SETUP.md` walks through every step, including Docker.
+
 The web client is a mobile-first progressive web app (PWA). Phones are the primary platform:
 a bottom tab bar (Chat · Units · Readings · History · Settings), safe-area aware layouts, a
 composer that stays above the keyboard, camera capture for nameplates, and light/dark themes
@@ -156,6 +160,7 @@ Then:
 npm run check            # typecheck sources, server tests and web-client tests
 npm test                 # unit tests (node --test): src/**/*.test.ts and web/*.test.ts
 npm run check:knowledge  # validate every knowledge pack and decode every example
+npm run doctor           # state of a deployed instance (.env, service, health, Tailscale)
 npm run gen:refrigerants # regenerate PT tables (needs: pip install CoolProp)
 node scripts/smoke.mjs http://127.0.0.1:8787   # end-to-end HTTP smoke against a running (demo) server
 ```
@@ -170,6 +175,6 @@ format ships with worked examples that run as tests, and every fault code carrie
 
 ## Backup
 
-`sqlite3 data/hvac.sqlite '.backup data/backup.sqlite'` is WAL-safe; `GET /api/export` returns a
+`npm run backup` writes a WAL-safe copy into `backups/` (no sqlite3 CLI needed); `GET /api/export` returns a
 JSON export of units, conversations, messages (without photos) and findings. The envelope's
 `complete` flag is false when a collection hit the export cap, so a partial backup never looks whole.

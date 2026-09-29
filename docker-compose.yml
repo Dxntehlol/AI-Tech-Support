@@ -1,0 +1,20 @@
+# docker compose up -d --build
+# Needs .env with APP_PASSWORD set (the server refuses to bind 0.0.0.0 without one) and, for the real
+# model, ANTHROPIC_API_KEY. The port is published on localhost only: put Tailscale
+# (`tailscale serve --bg 8787` on the host) or a TLS reverse proxy in front for phones.
+# The database lives in the named volume hvac-data (owned by the container user).
+services:
+  hvac:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8787
+      DB_PATH: /app/data/hvac.sqlite
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - hvac-data:/app/data
+volumes:
+  hvac-data:

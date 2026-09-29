@@ -445,6 +445,25 @@ describe("security", () => {
     });
   });
 
+  test("Origin matching honours X-Forwarded-Host behind a reverse proxy", async () => {
+    await withServer({}, async (c) => {
+      const viaProxy = await c.json("POST", "/api/conversations", {}, { headers: { Origin: "https://shop-pc.tail1234.ts.net", "X-Forwarded-Host": "shop-pc.tail1234.ts.net" } });
+      assert.equal(viaProxy.status, 201, await viaProxy.text());
+      const withPort = await c.json("POST", "/api/conversations", {}, { headers: { Origin: "https://shop.example:8443", "X-Forwarded-Host": "shop.example:8443, 10.0.0.2" } });
+      assert.equal(withPort.status, 201);
+      const forged = await c.json("POST", "/api/conversations", {}, { headers: { Origin: "http://evil.example", "X-Forwarded-Host": "shop-pc.tail1234.ts.net" } });
+      assert.equal(forged.status, 403);
+      const otherHost = await c.json("POST", "/api/conversations", {}, { headers: { Origin: "https://shop-pc.tail1234.ts.net", "X-Forwarded-Host": "other.example" } });
+      assert.equal(otherHost.status, 403);
+    });
+    // A raw client can send Origin == X-Forwarded-Host for any host; the password, not the Origin guard, is the
+    // barrier there (a browser cannot add X-Forwarded-Host cross-site without a CORS preflight).
+    await withServer({ config: { appPassword: "s3cret" } }, async (c) => {
+      const raw = await c.json("POST", "/api/conversations", {}, { headers: { Origin: "http://evil.example", "X-Forwarded-Host": "evil.example" } });
+      assert.equal(raw.status, 401);
+    });
+  });
+
   test("CORS: allowlisted origins get an echoed origin + Vary; preflight passes without auth; others get nothing", async () => {
     const native = "capacitor://localhost";
     await withServer({ config: { appPassword: "s3cret" }, allowOrigins: [native, "http://localhost"] }, async (c) => {

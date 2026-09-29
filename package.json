@@ -4,13 +4,18 @@
   "private": true,
   "description": "Commercial HVAC troubleshooting assistant: refrigeration-cycle diagnostics, model/serial decoding, electrical procedures, and per-unit job memory, powered by Claude.",
   "type": "module",
-  "engines": { "node": ">=22.18.0" },
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.web-test.json",
     "check:knowledge": "node --disable-warning=ExperimentalWarning scripts/check-knowledge.ts",
     "build": "tsc",
     "start": "node --disable-warning=ExperimentalWarning dist/server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch src/server.ts",
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/setup.mjs --check",
+    "backup": "node --disable-warning=ExperimentalWarning scripts/backup.mjs",
     "test": "node --disable-warning=ExperimentalWarning --test \"src/**/*.test.ts\" \"web/*.test.ts\"",
     "gen:refrigerants": "python3 scripts/gen_refrigerants.py"
   },

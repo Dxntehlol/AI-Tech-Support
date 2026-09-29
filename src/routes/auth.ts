@@ -113,8 +113,13 @@ export function originAndContentTypeGuard(allowOrigins: readonly string[] = []):
     const origin = req.headers.origin;
     if (typeof origin === "string" && origin !== "") {
       const host = (req.headers.host ?? "").toLowerCase();
+      // Behind a reverse proxy (Tailscale serve, Caddy, nginx) the Host header may name the backend while the
+      // browser's Origin names the public host; the proxy then carries the public host in X-Forwarded-Host.
+      // A cross-site browser request cannot set that header (it is not CORS-safelisted), so trusting it is safe.
+      const forwardedRaw = req.headers["x-forwarded-host"];
+      const forwardedHost = ((Array.isArray(forwardedRaw) ? forwardedRaw[0] : forwardedRaw) ?? "").split(",")[0]!.trim().toLowerCase();
       const originHost = hostOf(origin);
-      const sameHost = originHost !== null && originHost === host;
+      const sameHost = originHost !== null && (originHost === host || (forwardedHost !== "" && originHost === forwardedHost));
       if (!sameHost && !allowed.has(origin.toLowerCase())) {
         sendError(res, 403, "forbidden", "Cross-origin request rejected (Origin does not match Host).");
         return;
