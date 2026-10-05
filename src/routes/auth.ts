@@ -7,7 +7,7 @@ const REALM = "HVAC Field Assistant";
 const STATE_CHANGING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const WITH_BODY = new Set(["POST", "PUT", "PATCH"]);
 const CORS_ALLOW_HEADERS = "Authorization, Content-Type";
-const CORS_ALLOW_METHODS = "GET, POST, PATCH, DELETE, OPTIONS";
+const CORS_ALLOW_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 const CORS_MAX_AGE_S = 600;
 
 /** Paths that never require auth: health, the client config, and the PWA files a browser must fetch before it can sign in. */

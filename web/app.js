@@ -375,12 +375,14 @@ function parseHash(raw) {
     case "units":
       r.screen = "units";
       if (parts[1] === "decode") r.sheet = "decode";
+      else if (parts[1] === "import") r.sheet = "import";
       break;
     case "unit":
       r.screen = "units";
       if (isId(parts[1])) r.unit = parts[1];
       if (parts[2] === "actions") r.sheet = "actions";
       else if (parts[2] === "edit") r.sheet = "decode";
+      else if (parts[2] === "correct" && r.unit) r.sheet = "correct";
       break;
     case "readings":
       r.screen = "readings";
@@ -442,9 +444,273 @@ const QUICK_PROMPTS = {
   history: "What did we do last time on this unit? Summarize prior findings, open items and any refrigerant added.",
 };
 
+/* ---------- AI connection + usage helpers ---------- */
+
+const EFFORT_LEVELS = ["low", "medium", "high", "xhigh", "max"];
+
+/** "$0.42", "< $0.01", "$1,234", "—" for null/unknown. Always an estimate; callers add the caption. */
+function formatUsd(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  const v = Number(n);
+  if (v === 0) return "$0.00";
+  if (v > 0 && v < 0.01) return "< $0.01";
+  if (v < 1000) return `$${v.toFixed(2)}`;
+  return `$${Math.round(v).toLocaleString("en-US")}`;
+}
+
+/** Compact token count: 950, 12.3K, 4.5M. */
+function formatTokens(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return "0";
+  if (v < 1000) return String(Math.round(v));
+  if (v < 1e6) return `${(v / 1e3).toFixed(v < 1e4 ? 1 : 0).replace(/\.0$/, "")}K`;
+  return `${(v / 1e6).toFixed(v < 1e7 ? 1 : 0).replace(/\.0$/, "")}M`;
+}
+
+/** Integer with thousands separators. */
+function formatCount(n) {
+  const v = Number(n);
+  return Number.isFinite(v) ? Math.round(v).toLocaleString("en-US") : "0";
+}
+
+/**
+ * Bar widths (percent of the largest value) for a horizontal bar list. Null/negative → 0; any
+ * positive value gets at least `minPct` so a tiny day is still visible next to a big one.
+ */
+function barWidths(values, minPct = 2) {
+  const nums = values.map((v) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0));
+  const max = Math.max(0, ...nums);
+  if (max === 0) return nums.map(() => 0);
+  return nums.map((v) => (v === 0 ? 0 : Math.max(minPct, Math.round((v / max) * 1000) / 10)));
+}
+
+/** Which measure the per-day bars use: estimated cost when anything was priced, else request counts. */
+function usageBarMetric(summary) {
+  const t = summary && summary.totals;
+  return t && typeof t.estimatedCostUsd === "number" && t.estimatedCostUsd > 0 ? "cost" : "requests";
+}
+
+/**
+ * Rows for the per-day bar list, newest first. Windows longer than 7 days hide empty days (reported
+ * as `hidden`) so a phone isn't a wall of zeros.
+ */
+function usageDayRows(summary) {
+  const days = (summary && Array.isArray(summary.byDay) ? summary.byDay : []).slice().reverse();
+  const metric = usageBarMetric(summary);
+  const keep = days.length > 7 ? days.filter((d) => d.requests > 0) : days;
+  const widths = barWidths(keep.map((d) => (metric === "cost" ? d.estimatedCostUsd : d.requests)));
+  return {
+    metric,
+    hidden: days.length - keep.length,
+    rows: keep.map((d, i) => ({ date: d.date, label: usageDayLabel(d.date), requests: d.requests, cost: d.estimatedCostUsd, width: widths[i] })),
+  };
+}
+
+/** "Mon 5 Oct" for a YYYY-MM-DD (read as a local calendar date, not UTC). */
+function usageDayLabel(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || ""));
+  if (!m) return String(ymd || "");
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
+  const mo = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()];
+  return `${wd} ${d.getDate()} ${mo}`;
+}
+
+/** Status chip copy for the AI connection card. */
+function aiStatusCopy(view) {
+  if (!view) return { tone: "muted", label: "Unknown", detail: "AI connection status is unavailable." };
+  if (!view.demo) {
+    return { tone: "ok", label: "Live", detail: `${view.model} · effort ${view.effort}${view.webSearch ? " · web search on" : ""}` };
+  }
+  if (view.fakeForced) {
+    return {
+      tone: "warn",
+      label: "Demo mode",
+      detail: "CLAUDE_FAKE=1 on the server forces demo mode. Your settings are saved and take effect once it is removed.",
+    };
+  }
+  return { tone: "warn", label: "Demo mode", detail: "No API key yet, so answers are canned. Paste your Anthropic API key below." };
+}
+
+/** Placeholder and hint for the API key field. */
+function apiKeyFieldCopy(view) {
+  const src = view && view.keySource;
+  if (src === "settings" && view.keyHint) return { placeholder: `Saved key ${view.keyHint}`, hint: "Saved in the app. Paste a new key to replace it." };
+  if (src === "env") return { placeholder: view.keyHint ? `Server key ${view.keyHint}` : "Set on the server", hint: "Using the key from the server's .env. A key saved here overrides it." };
+  if (src === "profile") return { placeholder: "Using server sign-in", hint: "Using the server's “ant auth login” profile. A key saved here overrides it." };
+  return { placeholder: "sk-ant-…", hint: "Create a key in the Claude Console under API keys. It is stored on the server, never on this phone." };
+}
+
+/** Client-side check matching the server's (sk-ant-, no whitespace, 20–300 chars). Returns an error sentence or "". */
+function apiKeyProblem(raw) {
+  const key = String(raw || "").trim();
+  if (!key) return "";
+  if (!key.startsWith("sk-ant-")) return "An Anthropic API key starts with sk-ant-.";
+  if (/\s/.test(key)) return "The key can't contain spaces. Paste it again.";
+  if (key.length < 20) return "That key looks too short. Copy the whole key.";
+  if (key.length > 300) return "That key looks too long. Copy just the key.";
+  return "";
+}
+
+/** Model picker options: known models, then models the test found, with the current value always present. */
+function mergeModelLists(known, available, current) {
+  const out = [];
+  for (const m of [...(known || []), ...(available || []), current]) {
+    if (typeof m === "string" && m && !out.includes(m)) out.push(m);
+  }
+  return out;
+}
+
+const TEST_TITLES = {
+  ok: "Connected",
+  invalid_key: "Key rejected",
+  permission: "Permission denied",
+  model_unavailable: "Model not available",
+  billing: "No credit on the account",
+  rate_limited: "Rate limited",
+  overloaded: "Anthropic is busy",
+  network: "Can't reach Anthropic",
+  server_unreachable: "Can't reach the server",
+  no_key: "No API key",
+  unknown: "Test failed",
+};
+const SERVER_UNREACHABLE_COPY = "Your phone can't reach the HVAC server. Check Wi-Fi or mobile data and try again.";
+
+/**
+ * UI copy for a POST /api/settings/ai/test result.
+ * opts.typedKey: the test used a key typed into the field but not saved yet, so the assistant is not using it.
+ * Code "server_unreachable" is client-side only (the phone → HVAC server request failed); "network" is the server's own
+ * result (the server couldn't reach Anthropic).
+ */
+function testResultCopy(r, opts) {
+  if (!r || typeof r !== "object") return { tone: "danger", title: TEST_TITLES.unknown, body: "No result.", suggestion: "", useModel: null, saveHint: false };
+  const typed = !!(opts && opts.typedKey);
+  const code = TEST_TITLES[r.code] ? r.code : "unknown";
+  const ok = !!r.ok && code === "ok";
+  const tone = ok ? "ok" : code === "rate_limited" || code === "overloaded" || code === "no_key" || code === "server_unreachable" ? "warn" : "danger";
+  const secs = typeof r.latencyMs === "number" ? `${(r.latencyMs / 1000).toFixed(1)} s` : "";
+  const body = ok
+    ? `${r.model} answered in ${secs}. ${typed ? "Tap Save to use this key." : "The assistant is ready."}`
+    : code === "server_unreachable"
+      ? SERVER_UNREACHABLE_COPY
+      : String(r.message || "The test failed.");
+  const avail = Array.isArray(r.availableModels) ? r.availableModels.filter((m) => m && m !== r.model) : [];
+  const useModel = code === "model_unavailable" && avail.length ? avail[0] : null;
+  return { tone, title: ok && typed ? "Key works" : TEST_TITLES[code], body, suggestion: r.suggestion ? String(r.suggestion) : "", useModel, saveHint: ok && typed };
+}
+
+/**
+ * Which chat demo banner to show: null (none), "demo" (no key yet → "Add API key") or "forced" (CLAUDE_FAKE=1 on the server).
+ * The AI settings view wins, then /api/health. When neither is known and the server is unreachable, the page's
+ * config.js may be a stale cached copy from before a key was saved, so it is not trusted.
+ */
+function demoBannerMode(input) {
+  const i = input || {};
+  if (i.ai) return i.ai.demo ? (i.ai.fakeForced ? "forced" : "demo") : null;
+  if (i.health) return i.health.demo ? (i.health.fakeForced ? "forced" : "demo") : null;
+  if (i.unreachable) return null;
+  return i.configDemo ? "demo" : null;
+}
+
+/** Toast after a corrections export. The server marks rows exported before the file reaches the phone. */
+function correctionsExportToast(outcome, name) {
+  if (outcome === "cancelled") return "Export cancelled — corrections were marked exported; export again to resend";
+  return `Exported ${name}`;
+}
+
 /* ------------------------------------------------------------------------------------------
  * Browser app
  * ---------------------------------------------------------------------------------------- */
+
+/* ---------- fleet import + decode corrections (pure) ---------- */
+
+/** Spreadsheet template the Import sheet copies to the clipboard (header row matches the server's aliases). */
+const IMPORT_TEMPLATE_COLUMNS = ["Model", "Serial", "Site", "Tag"];
+function importTemplateText() {
+  return `${IMPORT_TEMPLATE_COLUMNS.join(",")}\n48TCDD08A2A5,1219C12345,Main St store,RTU-1\nYSC060A3RHA,130410355L,Main St store,RTU-2\n`;
+}
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/** "12 new · 2 duplicates · 1 error" (new always shown; zero duplicates/errors omitted). */
+function importSummaryText(summary) {
+  const s = summary || {};
+  const n = (k) => (Number.isFinite(s[k]) ? s[k] : 0);
+  const parts = [`${n("new")} new`];
+  if (n("duplicate")) parts.push(plural(n("duplicate"), "duplicate", "duplicates"));
+  if (n("error")) parts.push(plural(n("error"), "error", "errors"));
+  return parts.join(" · ");
+}
+
+/** Primary button label once a preview is in: "Import 12 units" / "Import 1 unit" / "Nothing new" (fits a phone footer half). */
+function importButtonLabel(newCount) {
+  const n = Number.isFinite(newCount) ? newCount : 0;
+  return n > 0 ? `Import ${plural(n, "unit", "units")}` : "Nothing new";
+}
+
+/** Import report row → { title, subtitle, ident } for the preview list. */
+function importRowText(row) {
+  const input = (row && row.input) || {};
+  const d = (row && row.decoded) || {};
+  const tag = (input.unit_tag || "").trim();
+  const model = (input.model || "").trim();
+  const rowNo = (row && row.line) || ((row && row.index) || 0) + 1;
+  const title = tag || model || (input.serial ? `S/N ${input.serial}` : `Row ${rowNo}`);
+  const age = typeof d.ageYears === "number" ? `${fmtNum(d.ageYears)} yr` : d.manufactureDate || "";
+  const subtitle = [d.manufacturer || input.manufacturer, typeof d.tonnage === "number" ? `${d.tonnage} ton` : "", d.refrigerant, age].filter(Boolean).join(" · ");
+  const ident = [tag && model ? model : "", input.serial ? `S/N ${input.serial}` : "", input.site].filter(Boolean).join(" · ");
+  return { title, subtitle, ident };
+}
+
+const CORRECTION_FIELDS = [
+  ["manufacturer", "Manufacturer"],
+  ["family", "Model family / series"],
+  ["tonnage", "Tonnage"],
+  ["voltage", "Voltage"],
+  ["phase", "Phase"],
+  ["refrigerant", "Refrigerant"],
+  ["manufacture_date", "Manufacture date"],
+  ["control_platform", "Control board / platform"],
+  ["fault_code", "Fault code meaning"],
+  ["other", "Something else"],
+];
+const CORRECTION_FIELD_LABEL = Object.fromEntries(CORRECTION_FIELDS);
+/** Fields that map onto a unit column (server: APPLICABLE_CORRECTION_FIELDS). */
+const APPLICABLE_CORRECTION_FIELDS = ["manufacturer", "tonnage", "voltage", "phase", "refrigerant"];
+function canApplyCorrection(field) {
+  return APPLICABLE_CORRECTION_FIELDS.includes(field);
+}
+
+/** What the app currently shows for `field` — prefills "App says" (mirrors the server's currentAppValue). */
+function correctionPrefill(field, unit, decoded) {
+  const u = unit || {};
+  const s = (v) => (v === null || v === undefined ? "" : String(v));
+  const bestModel = decoded && Array.isArray(decoded.model) ? decoded.model[0] : null;
+  const bestSerial = decoded && Array.isArray(decoded.serial) ? decoded.serial[0] : null;
+  switch (field) {
+    case "manufacturer":
+      return s(u.manufacturer || u.brand);
+    case "tonnage":
+    case "voltage":
+    case "phase":
+    case "refrigerant":
+    case "control_platform":
+      return s(u[field]);
+    case "family":
+      return s(bestModel && bestModel.family);
+    case "manufacture_date":
+      return s(bestSerial && bestSerial.manufactureDate);
+    default:
+      return "";
+  }
+}
+
+/** Download name from Content-Disposition, else hvac-corrections-YYYY-MM-DD.json. */
+function correctionsExportFilename(disposition, now = new Date()) {
+  const m = /filename="?([^";]+)"?/i.exec(disposition || "");
+  if (m && /^[\w.-]+$/.test(m[1])) return m[1];
+  return `hvac-corrections-${now.toISOString().slice(0, 10)}.json`;
+}
 
 function boot() {
   const doc = document;
@@ -605,6 +871,7 @@ function boot() {
     health: null,
     authNeeded: false,
     serverDown: false,
+    healthFailed: false,
     installPrompt: null,
     swWaiting: null,
     lastAppliedHash: null,
@@ -626,6 +893,11 @@ function boot() {
     sheetDecode: $("sheet-decode"), unitForm: $("unit-form"), unitFormError: $("unit-form-error"), decodeCard: $("decode-card"), decodeTitle: $("decode-title"),
     btnSaveUnit: $("btn-save-unit"), btnDecode: $("btn-decode"), btnDecodePhoto: $("btn-decode-photo"),
     sheetUnitActions: $("sheet-unit-actions"), unitActionsList: $("unit-actions-list"), unitActionsTitle: $("unit-actions-title"),
+    sheetImport: $("sheet-import"), importForm: $("import-form"), importText: $("import-text"), importFile: $("import-file"), importFileName: $("import-file-name"),
+    importError: $("import-error"), importPreview: $("import-preview"), btnImportPreview: $("btn-import-preview"), btnImportRun: $("btn-import-run"),
+    sheetCorrect: $("sheet-correct"), correctForm: $("correct-form"), correctError: $("correct-error"), correctSub: $("correct-sub"), cField: $("c-field"), cApp: $("c-app"),
+    cActual: $("c-actual"), cNote: $("c-note"), cApply: $("c-apply"), cApplyHint: $("c-apply-hint"), btnCorrectSave: $("btn-correct-save"),
+    correctionsCount: $("corrections-count"), btnCorrectionsExport: $("btn-corrections-export"),
     readingsForm: $("readings-form"), readingsResult: $("readings-result"), readingsError: $("readings-error"), readingsUnitChip: $("readings-unit-chip"), readingsSub: $("readings-sub"),
     btnReadingsSend: $("btn-readings-send"), btnReadingsClear: $("btn-readings-clear"),
     settingsForm: $("settings-form"), settingsError: $("settings-error"), settingsNotice: $("settings-notice"), healthInfo: $("health-info"),
@@ -759,11 +1031,12 @@ function boot() {
     setTabs(r.screen);
 
     // sheets
-    hideSheet(els.sheetDecode);
-    hideSheet(els.sheetUnitActions);
+    for (const sh of allSheets()) hideSheet(sh);
     els.backdrop.hidden = true;
     if (r.sheet === "decode") showDecodeSheet(r.unit);
     else if (r.sheet === "actions" && r.unit) showUnitActions(r.unit);
+    else if (r.sheet === "import") showImportSheet(prev.sheet === "import");
+    else if (r.sheet === "correct" && r.unit) showCorrectSheet(r.unit);
 
     // screens
     if (r.screen === "chat") {
@@ -801,6 +1074,8 @@ function boot() {
   /* ---------- sheets ---------- */
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]):not(.sr-only), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   let sheetOpener = null;
+  const allSheets = () => [els.sheetDecode, els.sheetUnitActions, els.sheetImport, els.sheetCorrect];
+  const noSheetOpen = () => allSheets().every((sh) => sh.hidden);
   function setInert(on) {
     // The page behind a sheet is inert for keyboard and AT; aria-hidden is the fallback for browsers without `inert`.
     if ("inert" in els.app) els.app.inert = on;
@@ -808,7 +1083,7 @@ function boot() {
     else els.app.removeAttribute("aria-hidden");
   }
   function showSheet(sheet) {
-    const noneOpen = els.sheetDecode.hidden && els.sheetUnitActions.hidden;
+    const noneOpen = noSheetOpen();
     const active = doc.activeElement;
     if (noneOpen && active && active !== doc.body && !active.closest(".sheet")) sheetOpener = active;
     sheet.hidden = false;
@@ -822,7 +1097,7 @@ function boot() {
   function hideSheet(sheet) {
     const wasOpen = !sheet.hidden;
     sheet.hidden = true;
-    if (wasOpen && els.sheetDecode.hidden && els.sheetUnitActions.hidden) {
+    if (wasOpen && noSheetOpen()) {
       setInert(false);
       const opener = sheetOpener;
       sheetOpener = null;
@@ -844,7 +1119,7 @@ function boot() {
       first.focus();
     }
   }
-  for (const sheet of [els.sheetDecode, els.sheetUnitActions]) sheet.addEventListener("keydown", trapTab);
+  for (const sheet of allSheets()) sheet.addEventListener("keydown", trapTab);
   els.backdrop.addEventListener("click", closeSheets);
   for (const b of doc.querySelectorAll(".btn-sheet-close")) b.addEventListener("click", closeSheets);
   doc.addEventListener("keydown", (e) => {
@@ -952,7 +1227,7 @@ function boot() {
     const body = h("div", { class: "banner-body" }, ...content);
     const banner = h("div", { class: `banner ${cls}`, role: cls === "banner-error" ? "alert" : "status", dataset: { kind } }, body);
     if (opts.dismiss !== false) {
-      banner.append(h("button", { class: "icon-btn", type: "button", "aria-label": "Dismiss", onclick: () => banner.remove() }, icon("close", "icon icon-sm")));
+      banner.append(h("button", { class: "icon-btn", type: "button", "aria-label": "Dismiss", onclick: () => { banner.remove(); if (opts.onDismiss) opts.onDismiss(); } }, icon("close", "icon icon-sm")));
     }
     els.banners.append(banner);
     return banner;
@@ -1890,7 +2165,7 @@ function boot() {
           decoded = null;
         }
       }
-      state.panelUnit = { unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations") };
+      state.panelUnit = { unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations"), corrections: pickList(data.corrections || [], "corrections") };
       state.unitsById.set(unit.id, unit);
       renderUnitDetail();
       markActiveRows();
@@ -1975,6 +2250,7 @@ function boot() {
         h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
+        h("button", { class: "btn btn-ghost np-report", type: "button", onclick: () => navigate(`#unit/${u.id}/correct`) }, icon("flag"), "Report a wrong detail"),
       ) : null,
     );
   }
@@ -2006,6 +2282,7 @@ function boot() {
     const attached = !!(state.unit && state.unit.id === u.id);
 
     els.unitContent.append(buildPlate(u, d, { attached }));
+    if (pu.corrections && pu.corrections.length) els.unitContent.append(buildCorrectionsCard(pu.corrections, u.id));
 
     // Decode details
     if (d) {
@@ -2178,6 +2455,7 @@ function boot() {
       action("gauge", "Enter readings", "Prefilled with refrigerant and elevation", () => { if (u) prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); }),
       action("history", "Show its conversations", "Filter History to this unit", () => { if (u) setConvFilter(u); navigate("#history"); }),
       action("edit", "Edit or re-decode", "Change model, serial, tag, site…", () => navigate(`#unit/${unitId}/edit`)),
+      action("flag", "Report a wrong detail", "Correct what the decoder got wrong", () => navigate(`#unit/${unitId}/correct`)),
       action("share", navigator.share ? "Share unit" : "Copy unit details", null, async () => {
         if (!u) return;
         const text = unitText(u);
@@ -2190,6 +2468,324 @@ function boot() {
     );
     showSheet(els.sheetUnitActions);
   }
+
+  /* ---------- bulk fleet import sheet ---------- */
+  const imp = { previewText: null, result: null, busy: false };
+  $("btn-unit-import").addEventListener("click", () => navigate("#units/import"));
+  function showImportSheet() {
+    els.importError.hidden = true;
+    renderImportPreview();
+    showSheet(els.sheetImport);
+  }
+  function importInvalidate() {
+    if (imp.previewText === null) return;
+    imp.previewText = null;
+    imp.result = null;
+    renderImportPreview();
+  }
+  function showImportError(msg) {
+    els.importError.hidden = !msg;
+    els.importError.textContent = msg || "";
+  }
+  const IMPORT_STATUS = { new: ["chip-ok", "New"], duplicate: ["chip-warn", "Duplicate"], error: ["chip-danger", "Error"] };
+  const IMPORT_CONF = { high: ["chip-ok", "High"], medium: ["chip-warn", "Medium"], low: ["chip-danger", "Low"], none: ["chip-outline", "No match"] };
+  function importRow(row) {
+    const t = importRowText(row);
+    const d = row.decoded;
+    const [stCls, stText] = IMPORT_STATUS[row.status] || IMPORT_STATUS.error;
+    const conf = d ? IMPORT_CONF[d.confidence] || IMPORT_CONF.none : null;
+    const warnings = d && Array.isArray(d.warnings) ? d.warnings : [];
+    const rowNo = row.line || row.index + 1;
+    return h("div", { class: `imp-row imp-${row.status}`, role: "listitem" },
+      h("div", { class: "imp-title" }, h("span", { class: "imp-no", text: `${rowNo}`, title: `Row ${rowNo}` }), h("span", { class: "imp-name", text: t.title, title: t.title })),
+      h("div", { class: "imp-chips" },
+        conf ? h("span", { class: `chip ${conf[0]}`, title: "Decode confidence", text: conf[1] }) : null,
+        h("span", { class: `chip ${stCls}`, text: stText }),
+      ),
+      t.subtitle ? h("div", { class: "imp-sub", text: t.subtitle, title: t.subtitle }) : null,
+      t.ident ? h("div", { class: "imp-ident mono", text: t.ident, title: t.ident }) : null,
+      row.error ? h("div", { class: `imp-note${row.status === "error" ? " danger" : ""}`, text: row.error }) : null,
+      warnings.length ? h("details", { class: "imp-warn" },
+        h("summary", null, icon("alert", "icon icon-sm"), h("span", { text: plural(warnings.length, "warning", "warnings") })),
+        h("ul", null, ...warnings.map((w) => h("li", { text: w }))),
+      ) : null,
+    );
+  }
+  function renderImportPreview() {
+    const r = imp.result;
+    const box = els.importPreview;
+    box.textContent = "";
+    box.hidden = !r;
+    els.btnImportRun.disabled = !r || !r.summary.new || imp.busy;
+    els.btnImportRun.textContent = r ? importButtonLabel(r.summary.new) : "Import units";
+    if (!r) return;
+    const notes = (r.warnings || []).filter(Boolean);
+    box.append(...[
+      h("div", { class: "imp-summary" },
+        h("span", { class: "imp-summary-text", text: importSummaryText(r.summary) }),
+        h("span", { class: "muted small", text: plural(r.summary.total, "row", "rows") }),
+      ),
+      notes.length ? h("ul", { class: "kv-list imp-notes" }, ...notes.map((n) => h("li", { text: n }))) : null,
+      h("div", { class: "list-card imp-list", role: "list", "aria-label": "Import preview" }, ...r.rows.map(importRow)),
+    ].filter(Boolean));
+  }
+  async function runImport(dryRun) {
+    const text = dryRun ? els.importText.value : imp.previewText;
+    if (!text || !text.trim()) {
+      showImportError("Paste rows or choose a CSV file first.");
+      return;
+    }
+    if (imp.busy) return;
+    imp.busy = true;
+    showImportError("");
+    const btn = dryRun ? els.btnImportPreview : els.btnImportRun;
+    btn.disabled = true;
+    btn.setAttribute("aria-busy", "true");
+    try {
+      const res = await apiJson("/api/units/import", { method: "POST", json: { text, dryRun } });
+      if (dryRun) {
+        imp.previewText = text;
+        imp.result = res;
+      } else {
+        const n = res && res.summary ? res.summary.created : 0;
+        imp.previewText = null;
+        imp.result = null;
+        els.importText.value = "";
+        els.importFileName.hidden = true;
+        toast(n ? `Imported ${plural(n, "unit", "units")}` : "Nothing new to import");
+        closeSheets();
+        loadUnits();
+      }
+    } catch (e) {
+      showImportError(e.code === "network" ? "Can't reach the server — import needs a connection." : e.message);
+    } finally {
+      imp.busy = false;
+      btn.disabled = false;
+      btn.removeAttribute("aria-busy");
+      renderImportPreview();
+      if (dryRun && imp.result) {
+        const first = els.importPreview.querySelector(".imp-summary");
+        if (first) first.scrollIntoView({ block: "nearest", behavior: scrollBehavior() });
+      }
+    }
+  }
+  els.importForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    runImport(true);
+  });
+  els.btnImportRun.addEventListener("click", () => runImport(false));
+  els.importText.addEventListener("input", () => {
+    showImportError("");
+    if (imp.previewText !== null && els.importText.value !== imp.previewText) importInvalidate();
+  });
+  $("btn-import-template").addEventListener("click", async () => {
+    const text = importTemplateText();
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Template copied — paste it into a spreadsheet");
+    } catch {
+      if (!els.importText.value.trim()) {
+        els.importText.value = text;
+        importInvalidate();
+        toast("Template added to the box");
+      } else toast("Copy not available in this browser");
+    }
+  });
+  $("btn-import-file").addEventListener("click", () => els.importFile.click());
+  els.importFile.addEventListener("change", async () => {
+    const file = els.importFile.files && els.importFile.files[0];
+    els.importFile.value = "";
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      showImportError("That file is larger than 1 MB — split it into smaller imports.");
+      return;
+    }
+    try {
+      els.importText.value = await file.text();
+      els.importFileName.hidden = false;
+      els.importFileName.textContent = `Loaded ${file.name}`;
+      showImportError("");
+      importInvalidate();
+      runImport(true);
+    } catch (e) {
+      showImportError(`Could not read the file: ${e.message || e}`);
+    }
+  });
+
+  /* ---------- decode corrections ---------- */
+  const corr = { unitId: null, appDirty: false };
+  for (const [value, label] of CORRECTION_FIELDS) els.cField.append(h("option", { value, text: label }));
+  function correctionUnit(unitId) {
+    const pu = state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit : null;
+    return { unit: pu ? pu.unit : state.unitsById.get(unitId) || null, decoded: pu ? pu.decoded : null };
+  }
+  const CORRECTION_PLACEHOLDER = { manufacturer: "Trane", tonnage: "7.5", voltage: "460", phase: "3", refrigerant: "R-454B", manufacture_date: "2019-03", family: "Voyager", control_platform: "ReliaTel", fault_code: "Code 31 = pressure switch" };
+  function syncCorrectionField() {
+    const field = els.cField.value;
+    const { unit, decoded } = correctionUnit(corr.unitId);
+    if (!corr.appDirty) els.cApp.value = correctionPrefill(field, unit, decoded);
+    els.cActual.placeholder = CORRECTION_PLACEHOLDER[field] ? `e.g. ${CORRECTION_PLACEHOLDER[field]}` : "From the nameplate";
+    els.cActual.inputMode = field === "tonnage" || field === "phase" || field === "voltage" ? "decimal" : "text";
+    const can = canApplyCorrection(field);
+    els.cApply.disabled = !can;
+    if (!can) els.cApply.checked = false;
+    els.cApplyHint.hidden = can;
+    $("c-apply-row").classList.toggle("disabled", !can);
+  }
+  function showCorrectSheet(unitId) {
+    const { unit } = correctionUnit(unitId);
+    if (corr.unitId !== unitId) {
+      corr.unitId = unitId;
+      els.correctForm.reset();
+      corr.appDirty = false;
+    }
+    els.correctSub.textContent = `${unit ? `${unitLabel(unit)}: ` : ""}the assistant trusts your correction over the decoder for this unit.`;
+    els.correctError.hidden = true;
+    els.cActual.removeAttribute("aria-invalid");
+    syncCorrectionField();
+    showSheet(els.sheetCorrect);
+  }
+  els.cField.addEventListener("change", () => {
+    corr.appDirty = false;
+    syncCorrectionField();
+  });
+  els.cApp.addEventListener("input", () => {
+    corr.appDirty = true;
+  });
+  els.cActual.addEventListener("input", () => {
+    els.cActual.removeAttribute("aria-invalid");
+    els.correctError.hidden = true;
+  });
+  els.correctForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const unitId = corr.unitId;
+    const actual = els.cActual.value.trim();
+    if (!actual) {
+      els.cActual.setAttribute("aria-invalid", "true");
+      els.correctError.hidden = false;
+      els.correctError.textContent = "Enter what the nameplate actually says.";
+      els.cActual.focus();
+      return;
+    }
+    const field = els.cField.value;
+    const apply = els.cApply.checked && canApplyCorrection(field);
+    els.btnCorrectSave.disabled = true;
+    try {
+      await apiJson(`/api/units/${encodeURIComponent(unitId)}/corrections`, {
+        method: "POST",
+        json: { field, app_value: els.cApp.value.trim(), actual_value: actual, note: els.cNote.value.trim() || undefined, apply },
+      });
+      corr.unitId = null;
+      toast(apply ? "Correction saved — unit updated" : "Correction saved");
+      closeSheets();
+      await loadUnitPanel(unitId, { quiet: true });
+      if (apply) loadUnits();
+    } catch (err) {
+      els.correctError.hidden = false;
+      els.correctError.textContent = err.message;
+      if (err.status === 400) els.cActual.setAttribute("aria-invalid", "true");
+    } finally {
+      els.btnCorrectSave.disabled = false;
+    }
+  });
+  function correctionItem(c, unitId) {
+    const label = CORRECTION_FIELD_LABEL[c.field] || c.field;
+    const del = async () => {
+      if (!confirm(`Delete this ${label.toLowerCase()} correction?`)) return;
+      try {
+        await apiJson(`/api/corrections/${encodeURIComponent(c.id)}`, { method: "DELETE" });
+        toast("Correction deleted");
+        loadUnitPanel(unitId, { quiet: true });
+      } catch (e) {
+        toast(`${e.code}: ${e.message}`);
+      }
+    };
+    return h("div", { class: "corr-item", role: "listitem" },
+      h("div", { class: "corr-body" },
+        h("div", { class: "corr-field" }, h("span", { text: label }),
+          c.applied ? h("span", { class: "chip chip-accent", text: "Applied" }) : null,
+          c.status === "exported" ? h("span", { class: "chip chip-outline", text: "Exported" }) : null),
+        h("div", { class: "corr-change" },
+          h("span", { class: "corr-old", text: c.app_value || "not shown", title: c.app_value ? `App said ${c.app_value}` : "App showed nothing" }),
+          h("span", { class: "corr-arrow", "aria-label": "corrected to", text: "→" }),
+          h("span", { class: "corr-new", text: c.actual_value, title: `Actually ${c.actual_value}` })),
+        c.note ? h("div", { class: "corr-note", text: c.note }) : null,
+        h("div", { class: "corr-date" }, h("time", { datetime: c.created_at, title: new Date(c.created_at).toLocaleString(), text: relTime(c.created_at) })),
+      ),
+      h("button", { class: "icon-btn", type: "button", "aria-label": `Delete ${label} correction`, onclick: del }, icon("trash")),
+    );
+  }
+  function buildCorrectionsCard(list, unitId) {
+    const card = h("div", { class: "card corr-card" }, h("div", { class: "card-title" }, h("span", { text: `Corrections (${list.length})` }),
+      h("button", { class: "text-btn", type: "button", text: "Add", onclick: () => navigate(`#unit/${unitId}/correct`) })));
+    card.append(
+      h("p", { class: "hint corr-hint", text: "The assistant trusts these over the decoder for this unit." }),
+      h("div", { class: "corr-list", role: "list" }, ...list.map((c) => correctionItem(c, unitId))),
+    );
+    return card;
+  }
+
+  /* settings: export corrections */
+  async function loadCorrectionsCount() {
+    try {
+      const all = pickList(await apiJson("/api/corrections"), "corrections");
+      const open = all.filter((c) => c.status === "open").length;
+      const exported = all.length - open;
+      els.correctionsCount.textContent = all.length
+        ? [plural(open, "open correction", "open corrections"), exported ? `${exported} exported` : ""].filter(Boolean).join(" · ")
+        : "No corrections yet. Use “Report a wrong detail” on a unit.";
+      els.btnCorrectionsExport.disabled = !all.length;
+    } catch (e) {
+      els.correctionsCount.textContent = e.code === "auth" ? "Enter the access password to see corrections." : `Couldn't load corrections: ${e.message}`;
+      els.btnCorrectionsExport.disabled = true;
+    }
+  }
+  const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  els.btnCorrectionsExport.addEventListener("click", async () => {
+    const btn = els.btnCorrectionsExport;
+    btn.disabled = true;
+    try {
+      const res = await api("/api/corrections/export", { method: "POST", json: {} });
+      if (!res.ok) throw await readError(res);
+      const name = correctionsExportFilename(res.headers.get("content-disposition"));
+      const blob = new Blob([await res.blob()], { type: "application/json" });
+      let done = false;
+      let outcome = "saved";
+      if (isIOS()) {
+        // iOS ignores <a download> in some contexts (installed PWA); prefer the share sheet, else open the JSON in a tab.
+        const file = typeof File === "function" ? new File([blob], name, { type: "application/json" }) : null;
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: name });
+            done = true;
+          } catch (err) {
+            if (err && err.name === "AbortError") {
+              done = true;
+              outcome = "cancelled";
+            }
+          }
+        }
+        if (!done) {
+          const url = URL.createObjectURL(blob);
+          window.open(url, "_blank") || (location.href = url);
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+          done = true;
+        }
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = h("a", { href: url, download: name });
+        doc.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+      toast(correctionsExportToast(outcome, name));
+    } catch (e) {
+      toast(`Export failed: ${e.message}`);
+    } finally {
+      loadCorrectionsCount();
+    }
+  });
 
   /* ---------- decode sheet ---------- */
   function unitFormValues() {
@@ -2898,6 +3494,9 @@ function boot() {
     applyTheme(store.get("hvac.theme"));
     renderInstallState();
     renderOfflineInfo();
+    loadAiSettings();
+    loadUsage();
+    loadCorrectionsCount();
   }
   els.settingsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2928,11 +3527,23 @@ function boot() {
   }
   async function loadHealth() {
     setStatus(null, "Checking…");
+    // api() clears serverDown on the first reachable response, so remember the outage before the request.
+    const wasDown = !!state.serverDown || !!state.healthFailed;
     try {
       const hlth = await apiJson("/api/health");
       state.health = hlth;
-      els.demoBadge.hidden = !hlth.demo;
-      els.demoBadgeSettings.hidden = !hlth.demo;
+      if (!state.ai) {
+        applyDemo(!!hlth.demo);
+        // The AI view tells the chat banner whether CLAUDE_FAKE=1 forces demo, and the Settings card stays
+        // "Unknown" with disabled controls until it loads (e.g. after an outage).
+        loadAiSettings();
+      } else if (!!hlth.demo !== !!state.ai.demo) loadAiSettings();
+      state.healthFailed = false;
+      // Back from an outage with Settings open: the usage and corrections cards still show "Couldn't load…".
+      if (wasDown && state.route && state.route.screen === "settings") {
+        loadUsage();
+        loadCorrectionsCount();
+      }
       const where = apiBase() || `${location.origin} (same origin)`;
       setStatus(true, `Connected to ${where}${hlth.demo ? " · demo mode" : ""}`);
       updateOnline(false);
@@ -2947,11 +3558,384 @@ function boot() {
       );
     } catch (e) {
       state.health = null;
+      state.healthFailed = true;
       els.demoBadge.hidden = true;
       if (isNetworkError(e)) updateOnline(true);
+      renderDemoBanner();
       setStatus(false, e.code === "auth" ? "Password required" : `Unreachable: ${e.message}`);
       els.healthInfo.textContent = "";
       els.healthInfo.append(h("div", { class: "list-empty", text: "Server status unavailable." }));
+    }
+  }
+
+
+  /* ---------- AI connection (Settings) ---------- */
+  const ai = {
+    card: $("ai-card"), chip: $("ai-chip"), detail: $("ai-status-detail"), form: $("ai-form"), key: $("ai-key"), keyHint: $("ai-key-hint"),
+    keyError: $("ai-key-error"), model: $("ai-model"), effort: $("ai-effort"), webSearch: $("ai-websearch"), result: $("ai-test-result"),
+    btnTest: $("btn-ai-test"), btnSave: $("btn-ai-save"), btnRemove: $("btn-ai-remove"), path: $("ai-settings-path"),
+  };
+  state.ai = null;
+  state.aiExtraModels = [];
+  state.aiLoading = null;
+
+  const session = {
+    get(k) {
+      try {
+        return sessionStorage.getItem(k);
+      } catch {
+        return null;
+      }
+    },
+    set(k, v) {
+      try {
+        sessionStorage.setItem(k, v);
+      } catch {
+        /* blocked */
+      }
+    },
+  };
+  const DEMO_DISMISS_KEY = "hvac.demoBannerDismissed";
+
+  function demoMode() {
+    return demoBannerMode({
+      ai: state.ai,
+      health: state.health,
+      unreachable: !!state.serverDown || navigator.onLine === false,
+      configDemo: !!(window.APP_CONFIG && window.APP_CONFIG.demo),
+    });
+  }
+  function isDemo() {
+    return demoMode() !== null;
+  }
+  /** Demo flag changed (or first known): badges, the chat banner and window.APP_CONFIG stay in step without a reload. */
+  function applyDemo(demo) {
+    if (window.APP_CONFIG && typeof window.APP_CONFIG === "object") window.APP_CONFIG.demo = !!demo;
+    els.demoBadge.hidden = !demo;
+    els.demoBadgeSettings.hidden = !demo;
+    renderDemoBanner();
+  }
+  function focusAiKey() {
+    const go = () => {
+      // Scroll only the settings scroller: scrollIntoView would also shift overflow:hidden ancestors (the app frame).
+      const scroller = ai.card.closest(".scroll");
+      if (scroller) {
+        const top = scroller.scrollTop + ai.card.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 8;
+        scroller.scrollTo({ top: Math.max(0, top), behavior: scrollBehavior() });
+      }
+      ai.key.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+  }
+  function renderDemoBanner() {
+    const mode = demoMode();
+    if (!mode || session.get(DEMO_DISMISS_KEY) === "1") {
+      clearBanner("demo");
+      return;
+    }
+    const existing = els.banners.querySelector('[data-kind="demo"]');
+    if (existing && existing.dataset.mode === mode) return;
+    if (existing) clearBanner("demo");
+    const content = mode === "forced"
+      ? [h("span", { class: "demo-banner-text" }, h("strong", { text: "Demo mode is forced on the server (CLAUDE_FAKE=1)." }), " Answers are canned until it is removed there.")]
+      : [
+        h("span", { class: "demo-banner-text" }, h("strong", { text: "Demo mode — answers are canned." }), " Add your Anthropic API key in Settings → AI connection."),
+        h("button", {
+          class: "btn btn-sm demo-banner-btn",
+          type: "button",
+          onclick: () => {
+            navigate("#settings");
+            focusAiKey();
+          },
+        }, icon("settings", "icon icon-sm"), "Add API key"),
+      ];
+    const banner = showBanner("demo", "banner-warn", content, { onDismiss: () => session.set(DEMO_DISMISS_KEY, "1") });
+    banner.classList.add("banner-demo");
+    banner.dataset.mode = mode;
+  }
+
+  function selectedEffort() {
+    const r = ai.effort.querySelector("input:checked");
+    return r ? r.value : null;
+  }
+  function renderModelOptions(current) {
+    const list = mergeModelLists(state.ai ? state.ai.models : [], state.aiExtraModels, current);
+    ai.model.textContent = "";
+    for (const m of list) ai.model.append(h("option", { value: m, text: m, selected: m === current }));
+    ai.model.value = current;
+  }
+  function renderAi() {
+    const v = state.ai;
+    const s = aiStatusCopy(v);
+    ai.chip.className = `chip ${s.tone === "ok" ? "chip-ok" : s.tone === "warn" ? "chip-warn" : "chip-outline"}`;
+    ai.chip.textContent = "";
+    ai.chip.append(icon(s.tone === "ok" ? "check" : "alert", "icon"), s.label);
+    ai.detail.textContent = s.detail;
+    ai.detail.className = `ai-detail${s.tone === "ok" ? " mono-detail" : ""}`;
+    const disabled = !v;
+    for (const el of [ai.key, ai.model, ai.webSearch, ai.btnTest, ai.btnSave]) el.disabled = disabled;
+    for (const r of ai.effort.querySelectorAll("input")) r.disabled = disabled;
+    if (!v) return;
+    const k = apiKeyFieldCopy(v);
+    ai.key.placeholder = k.placeholder;
+    ai.keyHint.textContent = k.hint;
+    renderModelOptions(v.model);
+    const er = ai.effort.querySelector(`input[value="${v.effort}"]`);
+    if (er) er.checked = true;
+    ai.webSearch.checked = !!v.webSearch;
+    ai.btnRemove.hidden = v.keySource !== "settings";
+    ai.path.textContent = v.settingsPath ? `Saved on the server in ${v.settingsPath}.` : "";
+  }
+  function showAiKeyError(msg) {
+    ai.keyError.hidden = !msg;
+    ai.keyError.textContent = msg || "";
+    if (msg) ai.key.setAttribute("aria-invalid", "true");
+    else ai.key.removeAttribute("aria-invalid");
+  }
+  async function loadAiSettings() {
+    if (state.aiLoading) return state.aiLoading;
+    state.aiLoading = (async () => {
+      try {
+        state.ai = await apiJson("/api/settings/ai");
+        renderAi();
+        applyDemo(state.ai.demo);
+      } catch (e) {
+        if (!state.ai) {
+          renderAi();
+          ai.detail.textContent = e.code === "auth" ? "Enter the access password below first." : `Couldn't load the AI connection: ${e.message}`;
+        }
+      } finally {
+        state.aiLoading = null;
+      }
+    })();
+    return state.aiLoading;
+  }
+
+  function setBtnBusy(btn, busy, label) {
+    if (busy) {
+      btn.dataset.label = btn.innerHTML;
+      btn.disabled = true;
+      btn.setAttribute("aria-busy", "true");
+      btn.textContent = "";
+      btn.append(h("span", { class: "spinner" }), label);
+    } else {
+      if (btn.dataset.label !== undefined) btn.innerHTML = btn.dataset.label;
+      delete btn.dataset.label;
+      btn.disabled = !state.ai;
+      btn.removeAttribute("aria-busy");
+    }
+  }
+
+  function renderTestResult(r, opts) {
+    const c = testResultCopy(r, opts);
+    ai.result.hidden = false;
+    ai.result.className = `test-result test-${c.tone}`;
+    ai.result.textContent = "";
+    const head = h("div", { class: "test-head" }, icon(c.tone === "ok" ? "ok" : "alert", "icon"), h("strong", { text: c.title }));
+    ai.result.append(head, h("p", { class: "test-body", text: c.body }));
+    if (c.suggestion) ai.result.append(h("p", { class: "test-suggestion", text: c.suggestion }));
+    if (!c.saveHint && state.ai && ai.model.value && r && r.model && ai.model.value !== r.model) {
+      ai.result.append(h("p", { class: "test-suggestion", text: `This tested the saved model (${r.model}). Save to switch to ${ai.model.value}.` }));
+    }
+    if (c.useModel) {
+      ai.result.append(
+        h("div", { class: "btn-row" }, h("button", {
+          class: "btn btn-sm",
+          type: "button",
+          onclick: () => {
+            renderModelOptions(c.useModel);
+            toast(`Model set to ${c.useModel} — tap Save to keep it`);
+            ai.btnSave.focus();
+          },
+        }, `Use ${c.useModel}`)),
+      );
+    }
+  }
+
+  ai.btnTest.addEventListener("click", async () => {
+    const raw = ai.key.value.trim();
+    let saveHint = false;
+    const problem = apiKeyProblem(raw);
+    showAiKeyError(problem);
+    if (problem) return ai.key.focus();
+    setBtnBusy(ai.btnTest, true, "Testing…");
+    try {
+      const r = await apiJson("/api/settings/ai/test", { method: "POST", json: raw ? { apiKey: raw } : {} });
+      if (r && Array.isArray(r.availableModels) && r.availableModels.length) {
+        state.aiExtraModels = r.availableModels;
+        renderModelOptions(ai.model.value || (state.ai && state.ai.model));
+      }
+      renderTestResult(r, { typedKey: !!raw });
+      if (r && r.ok && raw) saveHint = true;
+    } catch (e) {
+      // A thrown "network" code means this phone never reached the HVAC server; Anthropic was not involved.
+      if (e.code === "validation") showAiKeyError(e.message);
+      else renderTestResult({ ok: false, code: e.code === "rate_limited" ? "rate_limited" : e.code === "network" ? "server_unreachable" : "unknown", message: e.message });
+    } finally {
+      setBtnBusy(ai.btnTest, false);
+      if (saveHint) ai.btnSave.focus();
+    }
+  });
+
+  async function saveAi(patch, okMsg) {
+    try {
+      const v = await apiJson("/api/settings/ai", { method: "PUT", json: patch });
+      state.ai = v;
+      ai.key.value = "";
+      showAiKeyError("");
+      // The last test described the old key/model; it would contradict the new status chip.
+      ai.result.hidden = true;
+      renderAi();
+      applyDemo(v.demo);
+      toast(okMsg(v));
+      // Refresh the service worker's cached config.js so a later offline start doesn't boot with a stale demo flag.
+      fetch("config.js", { cache: "no-store" }).catch(() => {});
+      loadHealth();
+      loadUsage();
+      return true;
+    } catch (e) {
+      if (e.code === "validation" && /key/i.test(e.message)) showAiKeyError(e.message);
+      else toast(`${e.code}: ${e.message}`);
+      return false;
+    }
+  }
+  ai.form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!state.ai) return;
+    const raw = ai.key.value.trim();
+    const problem = apiKeyProblem(raw);
+    showAiKeyError(problem);
+    if (problem) return ai.key.focus();
+    const patch = { model: ai.model.value, webSearch: ai.webSearch.checked };
+    const effort = selectedEffort();
+    if (effort) patch.effort = effort;
+    if (raw) patch.apiKey = raw;
+    setBtnBusy(ai.btnSave, true, "Saving…");
+    try {
+      await saveAi(patch, (v) => (v.demo ? (v.fakeForced ? "Saved · CLAUDE_FAKE=1 keeps demo on" : "Saved · still demo (no key)") : "Saved · assistant is live"));
+    } finally {
+      setBtnBusy(ai.btnSave, false);
+    }
+  });
+  ai.btnRemove.addEventListener("click", async () => {
+    if (!confirm("Remove the API key saved in the app? The server falls back to its .env key, or demo mode if it has none.")) return;
+    ai.btnRemove.disabled = true;
+    try {
+      await saveAi({ apiKey: null }, (v) => (v.demo ? "Key removed · demo mode" : "Key removed · using server key"));
+    } finally {
+      ai.btnRemove.disabled = false;
+    }
+  });
+  ai.key.addEventListener("input", () => {
+    if (!ai.keyError.hidden) showAiKeyError("");
+  });
+
+  /* ---------- usage (Settings) ---------- */
+  const usage = { seg: $("usage-seg"), body: $("usage-body") };
+  state.usageDays = (() => {
+    const v = Number(store.get("hvac.usageDays"));
+    return v === 7 || v === 90 ? v : 30;
+  })();
+  {
+    const r = usage.seg.querySelector(`input[value="${state.usageDays}"]`);
+    if (r) r.checked = true;
+  }
+  usage.seg.addEventListener("change", (e) => {
+    const v = Number(e.target && e.target.value);
+    if (![7, 30, 90].includes(v)) return;
+    state.usageDays = v;
+    store.set("hvac.usageDays", String(v));
+    loadUsage();
+  });
+  let usageSeq = 0;
+  async function loadUsage() {
+    const seq = ++usageSeq;
+    if (!usage.body.firstChild) usage.body.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
+    usage.body.setAttribute("aria-busy", "true");
+    try {
+      const s = await apiJson(`/api/usage?days=${state.usageDays}`);
+      if (seq !== usageSeq) return;
+      renderUsage(s);
+    } catch (e) {
+      if (seq !== usageSeq) return;
+      usage.body.textContent = "";
+      usage.body.append(h("div", { class: "list-empty", text: e.code === "auth" ? "Enter the access password to see usage." : `Couldn't load usage: ${e.message}` }));
+    } finally {
+      if (seq === usageSeq) usage.body.removeAttribute("aria-busy");
+    }
+  }
+  function usageStat(label, value, sub) {
+    return h("div", { class: "stat" }, h("div", { class: "stat-label", text: label }), h("div", { class: "stat-value", text: value }), sub ? h("div", { class: "stat-sub", text: sub }) : null);
+  }
+  function renderUsage(s) {
+    usage.body.textContent = "";
+    const t = s.totals || {};
+    if (!t.requests) {
+      const demo = isDemo();
+      usage.body.append(
+        h("div", { class: "empty empty-compact" },
+          h("div", { class: "empty-icon" }, icon("gauge")),
+          h("div", { class: "empty-title", text: "No usage yet" }),
+          h("p", {
+            class: "empty-sub",
+            text: demo
+              ? "Usage is recorded once the real model is connected. Demo answers are free and not counted."
+              : `No assistant requests in the last ${s.days} days. Usage shows here after the next answer.`,
+          }),
+          demoMode() === "demo" ? h("button", { class: "btn", type: "button", onclick: focusAiKey }, "Add API key") : null,
+        ),
+      );
+      return;
+    }
+    const days = s.days;
+    usage.body.append(
+      h("div", { class: "stats usage-stats" },
+        usageStat("Requests", formatCount(t.requests), `${formatTokens(t.inputTokens + t.cacheReadTokens + t.cacheWriteTokens)} in · ${formatTokens(t.outputTokens)} out`),
+        usageStat("Estimated cost", formatUsd(t.estimatedCostUsd), `last ${days} days`),
+        usageStat("Avg per conversation", formatUsd(s.perConversationAvgUsd), null),
+        usageStat("Web searches", formatCount(t.webSearches), null),
+      ),
+      h("p", { class: "hint usage-caption", text: `Costs are ${s.priceLabel || "estimated at list price"} (USD); your invoice is the source of truth.` }),
+    );
+    if (t.costComplete === false) {
+      usage.body.append(h("p", { class: "usage-note" }, icon("info", "icon icon-sm"), h("span", { text: "Cost not estimated for some models (no list price on file), so totals are partial." })));
+    }
+
+    const dr = usageDayRows(s);
+    usage.body.append(h("h3", { class: "form-subhead usage-subhead", text: dr.metric === "cost" ? "By day · estimated cost" : "By day · requests" }));
+    if (!dr.rows.length) {
+      usage.body.append(h("div", { class: "list-empty", text: "No requests in this period." }));
+    } else {
+      const list = h("ul", { class: "bars", role: "list" });
+      for (const r of dr.rows) {
+        const costText = r.cost === null || r.cost === undefined ? "cost not estimated" : formatUsd(r.cost);
+        const value = dr.metric === "cost" ? costText : `${formatCount(r.requests)} req`;
+        const sub = dr.metric === "cost" ? `${formatCount(r.requests)} req` : r.requests ? costText : "";
+        const full = `${r.label}: ${formatCount(r.requests)} request${r.requests === 1 ? "" : "s"}, ${costText}`;
+        list.append(
+          h("li", { class: "bar-row", title: full, "aria-label": full },
+            h("span", { class: "bar-label", text: r.label, "aria-hidden": "true" }),
+            h("span", { class: "bar-track", "aria-hidden": "true" }, h("span", { class: "bar-fill", style: `width:${r.width}%` })),
+            h("span", { class: "bar-value", "aria-hidden": "true" }, h("span", { text: value }), sub ? h("small", { text: sub }) : null),
+          ),
+        );
+      }
+      usage.body.append(list);
+      if (dr.hidden) usage.body.append(h("p", { class: "hint", text: `${dr.hidden} day${dr.hidden === 1 ? "" : "s"} with no requests not shown.` }));
+    }
+
+    if (Array.isArray(s.byModel) && s.byModel.length) {
+      usage.body.append(h("h3", { class: "form-subhead usage-subhead", text: "By model" }));
+      const models = h("div", { class: "list" });
+      for (const m of s.byModel) {
+        models.append(
+          h("div", { class: "kv" },
+            h("span", { class: "kv-key mono", text: m.model }),
+            h("span", { class: "kv-value" }, `${formatCount(m.requests)} req · `, m.estimatedCostUsd === null ? h("span", { class: "muted", text: "cost not estimated" }) : formatUsd(m.estimatedCostUsd)),
+          ),
+        );
+      }
+      usage.body.append(models);
     }
   }
 
@@ -3084,6 +4068,7 @@ function boot() {
   }
   renderMessages();
   renderHeader();
+  renderDemoBanner();
   renderReadingsUnitChip();
   renderInstallState();
   registerServiceWorker();
@@ -3099,6 +4084,10 @@ globalThis.HVAC_UI = {
   needsNameplateVerify, toNum, buildMeasurements, composeReadingsMessage, composeCalcMessage, pickList, fmtNum,
   parseHash, groupSearchHits, filterUnits, timeOfDay,
   pumpSse, conversationFingerprint, dropLocalEcho, serverReachable, healthRetryDelay,
+  formatUsd, formatTokens, formatCount, barWidths, usageBarMetric, usageDayRows, usageDayLabel, aiStatusCopy,
+  apiKeyFieldCopy, apiKeyProblem, mergeModelLists, testResultCopy, demoBannerMode, correctionsExportToast, EFFORT_LEVELS,
+  importTemplateText, importSummaryText, importButtonLabel, importRowText, canApplyCorrection, correctionPrefill,
+  correctionsExportFilename, CORRECTION_FIELDS, APPLICABLE_CORRECTION_FIELDS,
   DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION, SSE_IDLE_MS,
 };
 

@@ -105,7 +105,82 @@ check("finding PATCH resolved", fp2.status === 200 && ((fp2.body.finding && fp2.
 const ex = await j("/api/export");
 check("export envelope", ex.status === 200 && ex.body.complete === true && Array.isArray(ex.body.truncated) && ex.body.limit === 1000 && ex.body.findings.length >= 1, `complete=${ex.body.complete} limit=${ex.body.limit}`);
 
-// 8. auth server: dot-segment bypass closed, Bearer accepted
+// 8. AI settings (read-only here: a smoke run must never overwrite a real server's key)
+const ai = await j("/api/settings/ai");
+const aiText = JSON.stringify(ai.body);
+check("settings/ai 200 with view fields", ai.status === 200 && typeof ai.body.demo === "boolean" && typeof ai.body.model === "string" && ["settings", "env", "profile", "none"].includes(ai.body.keySource) && Array.isArray(ai.body.models) && typeof ai.body.settingsPath === "string", `demo=${ai.body.demo} keySource=${ai.body.keySource} model=${ai.body.model} path=${ai.body.settingsPath}`);
+check("settings/ai leaks no key", !/sk-ant-[A-Za-z0-9_-]{5,}/.test(aiText) && !("apiKey" in (ai.body || {})) && (ai.body.keyHint === null || /^….{0,4}$/.test(ai.body.keyHint)), `keyHint=${ai.body.keyHint}`);
+const aiBad = await j("/api/settings/ai", { method: "PUT", body: JSON.stringify({ apiKey: "not-a-key" }) });
+check("settings/ai PUT bad key → 400 envelope", aiBad.status === 400 && aiBad.body.error && aiBad.body.error.code === "validation" && !JSON.stringify(aiBad.body).includes("not-a-key"), JSON.stringify(aiBad.body).slice(0, 140));
+
+// 9. usage
+const us = await j("/api/usage");
+check("usage 200 default 30 days", us.status === 200 && us.body.days === 30 && us.body.priceLabel === "estimated at list price" && typeof us.body.totals.requests === "number" && Array.isArray(us.body.byDay) && us.body.byDay.length === 30 && Array.isArray(us.body.byModel), `requests=${us.body.totals && us.body.totals.requests} cost=${us.body.totals && us.body.totals.estimatedCostUsd}`);
+const us7 = await j("/api/usage?days=7");
+const usBig = await j("/api/usage?days=9999");
+check("usage days=7 and clamp to 365", us7.status === 200 && us7.body.days === 7 && us7.body.byDay.length === 7 && usBig.status === 200 && usBig.body.days === 365, `7→${us7.body.days} 9999→${usBig.body.days}`);
+if (h.body.demo === true) check("usage: demo chat not recorded", !(us.body.byModel || []).some((m) => /fake|demo/i.test(m.model)), JSON.stringify(us.body.byModel).slice(0, 120));
+
+// 10. fleet import: dry run writes nothing, real run creates, re-run is all duplicates
+const tagSuffix = Date.now().toString(36).slice(-5).toUpperCase();
+const serialA = `3216E${String(Math.floor(Math.random() * 90000) + 10000)}`;
+const importText = [
+  "Model,Serial,Site,Tag",
+  `48TCDA04A2A5-0A0A0,${serialA},Smoke Plaza,RTU-S${tagSuffix}`,
+  `48TCDA04A2A5-0A0A0,${serialA.toLowerCase()},Smoke Plaza,RTU-S${tagSuffix}b`,
+  ",,Smoke Plaza,",
+  `,,Smoke Plaza,AHU-S${tagSuffix}`,
+].join("\n");
+const smokeSite = () => j("/api/units?site=" + encodeURIComponent("Smoke Plaza") + "&limit=500");
+const unitsBefore = await smokeSite();
+const countOf = (r) => (Array.isArray(r.body) ? r.body : (r.body && r.body.units) || []).length;
+const dry = await j("/api/units/import", { method: "POST", body: JSON.stringify({ text: importText, dryRun: true }) });
+const sum = dry.body && dry.body.summary;
+check("import dryRun classifies rows", dry.status === 200 && dry.body.dryRun === true && dry.body.header === true && sum && sum.total === 4 && sum.new === 2 && sum.duplicate === 1 && sum.error === 1 && sum.created === 0 && dry.body.createdIds.length === 0, JSON.stringify(sum));
+const dr0 = dry.body.rows && dry.body.rows[0];
+check("import dryRun decodes row 1", dr0 && dr0.status === "new" && dr0.decoded && dr0.decoded.tonnage === 3 && dr0.decoded.refrigerant === "R-410A" && ["high", "medium", "low"].includes(dr0.decoded.confidence), dr0 && JSON.stringify(dr0.decoded).slice(0, 160));
+const unitsMid = await smokeSite();
+check("import dryRun wrote nothing", countOf(unitsMid) === countOf(unitsBefore), `before=${countOf(unitsBefore)} after=${countOf(unitsMid)}`);
+const real = await j("/api/units/import", { method: "POST", body: JSON.stringify({ text: importText, dryRun: false }) });
+check("import real creates the new rows", real.status === 200 && real.body.dryRun === false && real.body.summary.created === 2 && real.body.createdIds.length === 2, JSON.stringify(real.body.summary));
+const unitsAfter = await smokeSite();
+check("import real: exactly 2 more units at the site", countOf(unitsAfter) === countOf(unitsBefore) + 2, `before=${countOf(unitsBefore)} after=${countOf(unitsAfter)}`);
+const imported = real.body.createdIds && real.body.createdIds[0] ? await j(`/api/units/${real.body.createdIds[0]}`) : { status: 0, body: {} };
+check("imported unit is saved and decoded", imported.status === 200 && imported.body.unit && imported.body.unit.serial === serialA && imported.body.unit.tonnage === 3, imported.body.unit && `${imported.body.unit.unit_tag} ${imported.body.unit.manufacturer}`);
+const again = await j("/api/units/import", { method: "POST", body: JSON.stringify({ text: importText, dryRun: true }) });
+check("import re-run: saved rows are duplicates", again.status === 200 && again.body.summary.new === 0 && again.body.summary.duplicate === 3 && again.body.rows[0].existingUnitId === real.body.createdIds[0], JSON.stringify(again.body.summary));
+const impBad = await j("/api/units/import", { method: "POST", body: JSON.stringify({ text: "", dryRun: true }) });
+check("import empty → 400 envelope", impBad.status === 400 && impBad.body.error && impBad.body.error.code === "validation", JSON.stringify(impBad.body).slice(0, 120));
+
+// 11. decode corrections: create, list, export (marks exported), delete
+const corrUnit = real.body.createdIds && real.body.createdIds[0];
+const cr = await j(`/api/units/${corrUnit}/corrections`, { method: "POST", body: JSON.stringify({ field: "tonnage", actual_value: "4", note: "smoke: nameplate says 4 ton" }) });
+const corr = cr.body && cr.body.correction;
+check("correction create 201", cr.status === 201 && corr && corr.id && corr.field === "tonnage" && corr.app_value === "3" && corr.actual_value === "4" && corr.status === "open" && !corr.applied && corr.pack_id === "carrier", corr && `app=${corr.app_value} actual=${corr.actual_value} pack=${corr.pack_id} format=${corr.format_id} applied=${corr.applied}`);
+check("correction without apply leaves the unit", cr.body.unit && cr.body.unit.tonnage === 3);
+const crApply = await j(`/api/units/${corrUnit}/corrections`, { method: "POST", body: JSON.stringify({ field: "refrigerant", actual_value: "R-454B", apply: true }) });
+check("correction apply updates the unit", crApply.status === 201 && Number(crApply.body.correction.applied) === 1 && crApply.body.unit.refrigerant === "R-454B", `refrigerant=${crApply.body.unit && crApply.body.unit.refrigerant}`);
+const crBad = await j(`/api/units/${corrUnit}/corrections`, { method: "POST", body: JSON.stringify({ field: "tonnage" }) });
+check("correction missing actual_value → 400", crBad.status === 400 && crBad.body.error && crBad.body.error.code === "validation", JSON.stringify(crBad.body).slice(0, 120));
+const cl = await j("/api/corrections?status=open");
+check("corrections list (open) has both", cl.status === 200 && Array.isArray(cl.body.corrections) && [corr.id, crApply.body.correction.id].every((id) => cl.body.corrections.some((c) => c.id === id)), `open=${(cl.body.corrections || []).length}`);
+const unitWithCorr = await j(`/api/units/${corrUnit}`);
+check("unit detail carries its corrections", unitWithCorr.status === 200 && Array.isArray(unitWithCorr.body.corrections) && unitWithCorr.body.corrections.length === 2);
+const exRes = await fetch(BASE + "/api/corrections/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+const exBody = await exRes.json().catch(() => ({}));
+const cd = exRes.headers.get("content-disposition") || "";
+check("corrections export attachment", exRes.status === 200 && /attachment; filename="hvac-corrections-\d{4}-\d{2}-\d{2}\.json"/.test(cd) && exBody.kind === "hvac-corrections" && exBody.version === 1 && exBody.newlyExported >= 2 && exBody.count === exBody.corrections.length, `${cd} count=${exBody.count} newlyExported=${exBody.newlyExported}`);
+const exMine = (exBody.corrections || []).find((c) => c.id === corr.id);
+check("export marks rows exported", exMine && exMine.status === "exported" && exMine.model === "48TCDA04A2A5-0A0A0" && exMine.serial === serialA);
+const clOpen = await j("/api/corrections?status=open");
+check("no open corrections after export", clOpen.status === 200 && !clOpen.body.corrections.some((c) => c.id === corr.id));
+const cdel = await j(`/api/corrections/${corr.id}`, { method: "DELETE" });
+const cdel404 = await j(`/api/corrections/${corr.id}`, { method: "DELETE" });
+check("correction delete, then 404", cdel.status === 200 && cdel.body.deleted === true && cdel404.status === 404 && cdel404.body.error && cdel404.body.error.code, `${cdel.status}/${cdel404.status}`);
+const bk = await j("/api/export");
+check("backup export includes corrections", bk.status === 200 && Array.isArray(bk.body.corrections) && bk.body.corrections.some((c) => c.id === crApply.body.correction.id));
+
+// 12. auth server: dot-segment bypass closed, Bearer accepted
 if (AUTH_BASE && PASSWORD) {
   const url = new URL(AUTH_BASE);
   const raw = (path) => new Promise((resolve, reject) => {

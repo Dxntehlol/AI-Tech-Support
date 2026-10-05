@@ -13,6 +13,8 @@ export interface ChatDeps {
   log?: (msg: string) => void;
   /** Clock for dates in tool results / unit context (tests inject a fixed one). */
   now?: () => Date;
+  /** True when the assistant runs on the fake client (no credentials / CLAUDE_FAKE=1): usage is not recorded. */
+  demo?: boolean;
 }
 
 export interface UserTurnInput {
@@ -256,7 +258,7 @@ function isAbort(err: unknown, signal: AbortSignal): boolean {
 
 function mapApiError(err: unknown): Terminal {
   if (err instanceof Anthropic.AuthenticationError) {
-    return { type: "error", code: "auth", message: "Anthropic API key missing or invalid — set ANTHROPIC_API_KEY" };
+    return { type: "error", code: "auth", message: "Anthropic rejected the API key. Open Settings → AI connection, paste a valid key, then Test and Save." };
   }
   if (err instanceof Anthropic.RateLimitError) {
     return { type: "error", code: "rate_limit", message: `Rate limited by the Anthropic API — wait a moment and retry (${err.message})` };
@@ -315,8 +317,11 @@ export async function runTurn(deps: ChatDeps, conversationId: string, input: Use
   }
   const ac = new AbortController();
   running.set(conversationId, ac);
+  // Snapshot the swappable parts (client / config / demo may be live getters over the runtime holder):
+  // a connection saved in Settings mid-turn applies to the next turn, never to this one.
+  const turnDeps: ChatDeps = { ...deps, client: deps.client, config: deps.config, demo: deps.demo };
   try {
-    await runTurnInner(deps, conversationId, input, send, ac, log);
+    await runTurnInner(turnDeps, conversationId, input, send, ac, log);
   } catch (err) {
     log(`runTurn crashed: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
     send({ type: "error", code: "internal", message: `Internal error: ${err instanceof Error ? err.message : String(err)}` });
@@ -384,7 +389,14 @@ async function runTurnInner(
     const c = repos.conversations.get(conversationId);
     const unit = c?.unit_id ? repos.units.get(c.unit_id) : undefined;
     if (!unit) return [staticBlock];
-    const block = unitContextBlock(unit, repos.findings.list({ unitId: unit.id, limit: 200 }), repos.conversations.list({ unitId: unit.id, limit: 50 }), conversationId, now());
+    const block = unitContextBlock(
+      unit,
+      repos.findings.list({ unitId: unit.id, limit: 200 }),
+      repos.conversations.list({ unitId: unit.id, limit: 50 }),
+      conversationId,
+      now(),
+      repos.corrections.list({ unitId: unit.id, limit: 50 }),
+    );
     return [staticBlock, { type: "text", text: block }];
   };
 
@@ -439,6 +451,7 @@ async function runTurnInner(
     usage.output += final.usage?.output_tokens ?? 0;
     usage.cacheRead += final.usage?.cache_read_input_tokens ?? 0;
     model = final.model ?? model;
+    recordUsage(deps, conversationId, final, log);
     log(`turn ${conversationId} request ${requestIndex}: stop=${final.stop_reason} in=${final.usage?.input_tokens ?? 0} out=${final.usage?.output_tokens ?? 0} cache_read_input_tokens=${final.usage?.cache_read_input_tokens ?? 0}`);
     const content = Array.isArray(final.content) ? final.content : [];
     const serverToolUses = content.filter((b) => b.type === "server_tool_use").length;
@@ -513,6 +526,26 @@ async function runTurnInner(
         return;
       }
     }
+  }
+}
+
+/** Persist one request's usage (Settings → Usage). Skipped in demo mode; never breaks the turn. */
+function recordUsage(deps: ChatDeps, conversationId: string, final: Anthropic.Beta.BetaMessage, log: (msg: string) => void): void {
+  if (deps.demo) return;
+  try {
+    const u = final.usage;
+    deps.repos.usage.record({
+      conversation_id: conversationId,
+      model: final.model || deps.config.claudeModel,
+      input_tokens: u?.input_tokens ?? 0,
+      output_tokens: u?.output_tokens ?? 0,
+      cache_read_tokens: u?.cache_read_input_tokens ?? 0,
+      cache_write_tokens: u?.cache_creation_input_tokens ?? 0,
+      web_searches: u?.server_tool_use?.web_search_requests ?? 0,
+      stop_reason: final.stop_reason ?? null,
+    });
+  } catch (err) {
+    log(`usage record failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

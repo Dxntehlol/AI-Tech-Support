@@ -444,7 +444,7 @@ test("error mapping: auth, rate_limit, network, context_full, api_error, interna
   }
   const h = harness([{ throw: apiError(401, "bad key") }]);
   const [e] = terminal(await h.run("x"));
-  assert.match((e as Extract<ChatEvent, { type: "error" }>).message, /ANTHROPIC_API_KEY/);
+  assert.match((e as Extract<ChatEvent, { type: "error" }>).message, /Settings → AI connection/);
   const ctx = harness([{ throw: apiError(400, "context window exceeded") }]);
   const [ce] = terminal(await ctx.run("x"));
   assert.match((ce as Extract<ChatEvent, { type: "error" }>).message, /start a new conversation on this unit/);

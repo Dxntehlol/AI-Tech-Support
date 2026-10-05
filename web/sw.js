@@ -6,7 +6,7 @@
  */
 "use strict";
 
-const VERSION = "0.1.0-2026.09.26.3";
+const VERSION = "0.1.0-2026.10.05.4";
 const SHELL_CACHE = `hvac-shell-${VERSION}`;
 const API_CACHE = `hvac-api-${VERSION}`;
 const SHELL = [

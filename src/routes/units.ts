@@ -3,6 +3,8 @@ import type { AppDeps } from "../app.ts";
 import { normalizeCode, type FindingInput, type FindingPatch, type UnitInput } from "../db/repos.ts";
 import { decodeUnit } from "../knowledge/decoder.ts";
 import type { DecodeResult, FindingRow, UnitRow } from "../types.ts";
+import { runFleetImport } from "./fleetImport.ts";
+import { createCorrection } from "./corrections.ts";
 import { HttpError, badRequest, body, notFound, optBoolean, optEnum, optNumber, optString, optionalId, queryBool, queryInt, queryString, requireId, requireString, safeParseJson, type Body } from "./util.ts";
 
 // ---------------------------------------------------------------------------
@@ -119,6 +121,34 @@ function decodedOf(unit: UnitRow): DecodeResult | null {
   return parsed && typeof parsed === "object" ? (parsed as DecodeResult) : null;
 }
 
+export interface PreparedUnit {
+  /** Validated body columns merged over decoder-derived columns (body wins); ready for units.create/update. */
+  columns: UnitInput;
+  decoded: DecodeResult | null;
+  model: string | null;
+  serial: string | null;
+}
+
+/**
+ * The single decode-and-store preparation used by POST /api/units and the bulk import: identity check
+ * (model, unit_tag or nickname), decode when a model is given (manufacturer/brand as the hint), and merge.
+ */
+export function prepareUnitCreate(deps: AppDeps, parsed: UnitInput): PreparedUnit {
+  const input = parsed as Record<string, unknown>;
+  const model = typeof input.model === "string" ? input.model : null;
+  const serial = typeof input.serial === "string" ? input.serial : null;
+  const hasIdentity = [input.model, input.unit_tag, input.nickname].some((v) => typeof v === "string" && v.trim() !== "");
+  if (!hasIdentity) throw badRequest("At least one of model, unit_tag or nickname is required.");
+  const hint = (typeof input.manufacturer === "string" && input.manufacturer) || (typeof input.brand === "string" && input.brand) || undefined;
+  let decoded: DecodeResult | null = null;
+  let derived: Record<string, unknown> = {};
+  if (model) {
+    decoded = decodeFor(deps, model, serial, hint);
+    derived = columnsFromDecode(deps, decoded, hint) as Record<string, unknown>;
+  }
+  return { columns: { ...derived, ...input } as UnitInput, decoded, model, serial };
+}
+
 // ---------------------------------------------------------------------------
 // Findings input
 // ---------------------------------------------------------------------------
@@ -207,29 +237,21 @@ export function unitsRouter(deps: AppDeps): Router {
 
   // POST /api/units {model?, serial?, manufacturer?, unit_tag?, ...}
   r.post("/", (req, res) => {
-    const b = body(req);
-    const input = parseUnitInput(b) as Record<string, unknown>;
-    const model = typeof input.model === "string" ? input.model : null;
-    const serial = typeof input.serial === "string" ? input.serial : null;
-    const hasIdentity = [input.model, input.unit_tag, input.nickname].some((v) => typeof v === "string" && v.trim() !== "");
-    if (!hasIdentity) throw badRequest("At least one of model, unit_tag or nickname is required.");
-    const hint = (typeof input.manufacturer === "string" && input.manufacturer) || (typeof input.brand === "string" && input.brand) || undefined;
-    let decoded: DecodeResult | null = null;
-    let derived: Record<string, unknown> = {};
-    if (model) {
-      decoded = decodeFor(deps, model, serial, hint);
-      derived = columnsFromDecode(deps, decoded, hint) as Record<string, unknown>;
-    }
-    const existing = model ? repos.units.findByModelSerial(model, serial) : undefined;
+    const prepared = prepareUnitCreate(deps, parseUnitInput(body(req)));
+    const existing = prepared.model ? repos.units.findByModelSerial(prepared.model, prepared.serial) : undefined;
     if (existing) {
       // Explicit body fields win over decoded columns; decoded_json is always refreshed.
-      const patch = { ...derived, ...input } as UnitInput;
-      const unit = repos.units.update(existing.id, patch) ?? existing;
+      const unit = repos.units.update(existing.id, prepared.columns) ?? existing;
       res.status(200).json({ unit, decoded: decodedOf(unit), existing: true });
       return;
     }
-    const unit = repos.units.create({ ...derived, ...input } as UnitInput);
+    const unit = repos.units.create(prepared.columns);
     res.status(201).json({ unit, decoded: decodedOf(unit), existing: false });
+  });
+
+  // POST /api/units/import {text?, rows?, dryRun} — bulk fleet import (see routes/fleetImport.ts)
+  r.post("/import", (req, res) => {
+    res.json(runFleetImport(deps, body(req)));
   });
 
   // GET /api/units/:id → {unit, decoded, findings, conversations}
@@ -242,7 +264,17 @@ export function unitsRouter(deps: AppDeps): Router {
       decoded: decodedOf(unit),
       findings: repos.findings.list({ unitId: id, limit: 500 }),
       conversations: repos.conversations.list({ unitId: id, limit: 200 }),
+      corrections: repos.corrections.list({ unitId: id, limit: 500 }),
     });
+  });
+
+  // POST /api/units/:id/corrections {field, app_value?, actual_value, note?, apply?}
+  r.post("/:id/corrections", (req, res) => {
+    const id = requireId(req.params.id);
+    const unit = repos.units.get(id);
+    if (!unit) throw notFound("Unit not found.");
+    const { correction, unit: updated } = createCorrection(deps, unit, body(req));
+    res.status(201).json({ correction, unit: updated, decoded: decodedOf(updated) });
   });
 
   // PATCH /api/units/:id (whitelist; re-decode when model/serial change)

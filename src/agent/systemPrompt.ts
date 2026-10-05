@@ -1,4 +1,4 @@
-import type { ConversationRow, DecodeResult, FindingRow, UnitRow } from "../types.ts";
+import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, UnitRow } from "../types.ts";
 
 /** Soft character cap for the unit context block (~1500 tokens). */
 export const UNIT_CONTEXT_MAX_CHARS = 6000;
@@ -343,6 +343,28 @@ function refrigerantAddedLine(findings: FindingRow[]): string | null {
   return `Refrigerant added in the 12 months before the last finding (${anchorDate}): ${rounded} lb over ${count} finding${count === 1 ? "" : "s"}. Repeated top-offs mean a leak that needs finding, not more gas.`;
 }
 
+const MAX_CORRECTIONS = 10;
+
+/** Technician decode corrections, newest first; empty when none. */
+function correctionsSection(corrections: CorrectionRow[]): string[] {
+  const rows = Array.isArray(corrections) ? corrections.filter((c) => isRecord(c) && str(c.actual_value)) : [];
+  if (rows.length === 0) return [];
+  const sorted = [...rows].sort((a, b) => (parseMs(b.created_at) ?? 0) - (parseMs(a.created_at) ?? 0));
+  const lines = [
+    `TECHNICIAN CORRECTIONS - trust these over the decoder (${rows.length}${rows.length > MAX_CORRECTIONS ? `, newest ${MAX_CORRECTIONS} shown` : ""}). Where a correction contradicts the decoded data above, the correction wins; say so when it matters.`,
+  ];
+  for (const c of sorted.slice(0, MAX_CORRECTIONS)) {
+    const date = dateOnly(c.created_at) ?? "undated";
+    const field = String(c.field).replace(/_/g, " ");
+    const was = str(c.app_value);
+    const note = str(c.note);
+    lines.push(
+      `- ${date} ${field}: ${was ? `app said "${clip(was, 80)}", ` : ""}actual "${clip(String(c.actual_value), 120)}"${c.applied === 1 ? " (unit record updated)" : ""}${note ? ` — ${clip(note, 160)}` : ""}`,
+    );
+  }
+  return lines;
+}
+
 /**
  * Second system block: unit record, decoded data, findings, related conversations.
  * Plain text, capped near UNIT_CONTEXT_MAX_CHARS. Never throws on malformed JSON.
@@ -354,6 +376,7 @@ export function unitContextBlock(
   conversations: ConversationRow[],
   currentConversationId: string,
   now: Date = new Date(),
+  corrections: CorrectionRow[] = [],
 ): string {
   const safeFindings = Array.isArray(findings) ? findings.filter((f) => isRecord(f)) : [];
   const safeConvos = Array.isArray(conversations) ? conversations.filter((c) => isRecord(c)) : [];
@@ -365,6 +388,11 @@ export function unitContextBlock(
   if (decoded.lines.length) {
     out.push("");
     out.push(...decoded.lines);
+  }
+  const corr = correctionsSection(corrections);
+  if (corr.length) {
+    out.push("");
+    out.push(...corr);
   }
 
   const byNewest = (a: FindingRow, b: FindingRow) => findingMs(b) - findingMs(a);

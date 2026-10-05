@@ -2,6 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { Repos, UnitInput } from "../db/repos.ts";
 import type {
   ControlPlatform,
+  CorrectionRow,
   DecodeResult,
   DxMeasurements,
   ElectricalCalcRequest,
@@ -490,7 +491,7 @@ const SPECS: ToolSpec[] = [
   {
     name: "get_unit_history",
     description:
-      "Full job memory for a unit: record, nameplate data, decoded attributes, every finding (open/monitor first, hypotheses marked) and past conversations with summaries. Defaults to the unit attached to this conversation; pass unit_id to read another unit (ids come from find_unit / search_history).",
+      "Full job memory for a unit: record, nameplate data, decoded attributes, technician decode corrections (trust these over the decoder), every finding (open/monitor first, hypotheses marked) and past conversations with summaries. Defaults to the unit attached to this conversation; pass unit_id to read another unit (ids come from find_unit / search_history).",
     props: {
       unit_id: opt("string", "Unit id (16 hex chars). Omit for the attached unit.", { maxLength: 32 }),
     },
@@ -1287,6 +1288,17 @@ function toolSearchHistory(v: Validated, ctx: ToolContext): ToolOutcome {
   return ok(out, results.length ? `${results.length} hit${results.length === 1 ? "" : "s"} for "${query}"` : `No history for "${query}"`);
 }
 
+function trimCorrection(c: CorrectionRow): Record<string, unknown> {
+  return {
+    date: c.created_at.slice(0, 10),
+    field: c.field,
+    appValue: c.app_value ?? undefined,
+    actualValue: clip(c.actual_value, 200),
+    note: c.note ? clip(c.note, 300) : undefined,
+    appliedToUnit: c.applied === 1 ? true : undefined,
+  };
+}
+
 function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
   const unitId = str(v.unit_id) ?? ctx.unitId;
   if (!unitId) return fail("No unit attached to this conversation and no unit_id given. Call decode_unit with save=true or find_unit first.", "Unit history: no unit attached");
@@ -1294,6 +1306,7 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
   if (!unit) return fail(`Unit ${unitId} not found.`, "Unit history: unit not found");
   const findings = ctx.repos.findings.list({ unitId, limit: 100 });
   const conversations = ctx.repos.conversations.list({ unitId, limit: 20 });
+  const corrections = ctx.repos.corrections.list({ unitId, limit: 100 });
   const decoded = safeParse(unit.decoded_json) as Partial<DecodeResult> | undefined;
   const out = {
     unit: unitSummaryRecord(unit),
@@ -1301,6 +1314,13 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
       decoded && typeof decoded === "object"
         ? { summary: decoded.summary, warnings: decoded.warnings, bestModel: decoded.model?.[0]?.attributes, family: decoded.model?.[0]?.family, serial: decoded.serial?.[0] }
         : undefined,
+    technicianCorrections: corrections.length
+      ? {
+          note: "Technician corrections - trust these over the decoder. Each says what the app showed (appValue) and what the nameplate/tech found (actualValue).",
+          items: corrections.slice(0, 20).map(trimCorrection),
+          more: corrections.length > 20 ? corrections.length - 20 : undefined,
+        }
+      : undefined,
     findingCount: findings.length,
     findings: findings.slice(0, 20).map(trimFinding),
     moreFindings: findings.length > 20 ? findings.length - 20 : undefined,
@@ -1313,7 +1333,8 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
     })),
   };
   const open = findings.filter((f) => f.status === "open" || f.status === "monitor").length;
-  return ok(out, `${unitLabel(unit)}: ${findings.length} finding${findings.length === 1 ? "" : "s"} (${open} open/monitor), ${conversations.length} conversation${conversations.length === 1 ? "" : "s"}`);
+  const corr = corrections.length ? `, ${corrections.length} correction${corrections.length === 1 ? "" : "s"}` : "";
+  return ok(out, `${unitLabel(unit)}: ${findings.length} finding${findings.length === 1 ? "" : "s"} (${open} open/monitor), ${conversations.length} conversation${conversations.length === 1 ? "" : "s"}${corr}`);
 }
 
 function toolSaveFinding(v: Validated, ctx: ToolContext): ToolOutcome {

@@ -165,4 +165,32 @@ describe("server startup: demo mode vs stored credentials", () => {
       }
     });
   });
+
+  test("data/settings.env (saved from the app) overrides the environment and can be cleared without a restart", async () => {
+    await withScratch(async (configDir, dataDir) => {
+      const key = "sk-ant-test-serverstartup0000ABCD";
+      writeFileSync(join(dataDir, "settings.env"), `ANTHROPIC_API_KEY=${key}\nCLAUDE_MODEL=claude-fable-5-1\nCLAUDE_EFFORT=\n`);
+      const r = await startServer({ CLAUDE_MODEL: "claude-opus-5-5", CLAUDE_EFFORT: "low" }, configDir, dataDir);
+      try {
+        const res = await fetch(`http://127.0.0.1:${r.port}/api/health`);
+        const h = (await res.json()) as { demo: boolean; model: string; effort: string };
+        assert.equal(h.demo, false);
+        assert.equal(h.model, "claude-fable-5-1", "settings.env wins over the environment");
+        assert.equal(h.effort, "low", "an empty settings value does not override");
+        const put = await fetch(`http://127.0.0.1:${r.port}/api/settings/ai`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: null }),
+        });
+        assert.equal(put.status, 200);
+        const v = (await put.json()) as { demo: boolean; keySource: string };
+        assert.equal(v.demo, true);
+        assert.equal(v.keySource, "none");
+        assert.equal((await health(r.port)).demo, true);
+        assert.ok(!r.output().includes(key), "the key is never logged");
+      } finally {
+        await stopServer(r);
+      }
+    });
+  });
 });

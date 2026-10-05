@@ -87,6 +87,43 @@ CREATE TABLE IF NOT EXISTS findings (
 CREATE INDEX IF NOT EXISTS idx_findings_unit ON findings(unit_id);
 CREATE INDEX IF NOT EXISTS idx_findings_conversation ON findings(conversation_id);
 
+-- One row per model request in the chat loop (Settings → Usage). conversation_id survives as NULL when the
+-- conversation is deleted so the cost history stays whole. Rows older than 400 days are pruned at startup.
+CREATE TABLE IF NOT EXISTS usage_events (
+  id INTEGER PRIMARY KEY,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  model TEXT NOT NULL,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+  web_searches INTEGER NOT NULL DEFAULT 0,
+  stop_reason TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_usage_events_created ON usage_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_usage_events_conversation ON usage_events(conversation_id);
+
+-- Technician decode corrections ("it got this wrong"), exported as JSON to improve the knowledge packs.
+CREATE TABLE IF NOT EXISTS corrections (
+  id TEXT PRIMARY KEY,
+  unit_id TEXT REFERENCES units(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  field TEXT NOT NULL CHECK (field IN ('manufacturer','family','tonnage','voltage','phase','refrigerant','manufacture_date','control_platform','fault_code','other')),
+  app_value TEXT,
+  actual_value TEXT NOT NULL,
+  note TEXT,
+  model TEXT,
+  serial TEXT,
+  manufacturer TEXT,
+  pack_id TEXT,
+  format_id TEXT,
+  applied INTEGER NOT NULL DEFAULT 0 CHECK (applied IN (0,1)),
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','exported'))
+);
+CREATE INDEX IF NOT EXISTS idx_corrections_unit ON corrections(unit_id);
+CREATE INDEX IF NOT EXISTS idx_corrections_status ON corrections(status, created_at);
+
 -- Full-text search (external content tables kept in sync by triggers)
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
   text, content='messages', content_rowid='rid', tokenize='porter unicode61'

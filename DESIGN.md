@@ -65,10 +65,12 @@ tests; no new npm dependencies.
     config.ts           # env/config loading (loadDotEnv, loadConfig, PROJECT_ROOT)
     server.ts           # entry: builds deps, starts listening, graceful shutdown
     app.ts              # createApp(deps) — express app factory
-    routes/*.ts         # conversations, units, reference, search, auth
+    routes/*.ts         # conversations, units, fleetImport, corrections, reference, search, auth, settings, usage
+    importParse.ts      # pure CSV/TSV/plain-line fleet parser (bulk import)
+    settingsStore.ts  aiSettings.ts  runtime.ts   # settings.env + hot-swappable client (Settings → AI connection)
     db/schema.ts        # SCHEMA_SQL constant (idempotent)
     db/index.ts         # openDatabase(path), newId(), isId(), nowIso()
-    db/repos.ts         # createRepos(db): units/conversations/messages/findings + search
+    db/repos.ts         # createRepos(db): units/conversations/messages/findings/usage/corrections + search, transaction
     knowledge/loader.ts # loads + validates all JSON packs (KnowledgeBase)
     knowledge/refrigerants.ts   # PT lookup, interpolation, SH/SC, elevation correction (DONE)
     knowledge/diagnostics.ts    # DX rule engine
@@ -80,6 +82,7 @@ tests; no new npm dependencies.
     agent/systemPrompt.ts       # static system prompt + unit-context builder
     agent/tools.ts              # tool definitions + dispatcher
     agent/chat.ts               # runTurn(): streaming manual tool loop, persistence, events
+    agent/pricing.ts  agent/usage.ts  agent/connectionTest.ts   # list-price cost, usage rollups, key/model test
   web/
     index.html  app.js  styles.css  vendor/
 ```
@@ -106,10 +109,20 @@ the contract; extend types with optional fields only.
   (comma-separated lowercase tokens), circuit, `status` (open|resolved|monitor),
   service_date, refrigerant, refrigerant_added_lbs, refrigerant_recovered_lbs, follow_up,
   `origin` (tech|assistant), `confirmed` (0|1).
+- `usage_events`: one row per model request (conversation_id SET NULL on delete, created_at, model
+  served, input/output/cache-read/cache-write tokens, web_searches, stop_reason); pruned after 400 days.
+- `corrections` (technician "it got this wrong" list): unit_id (SET NULL on hard delete), created_at,
+  `field` (manufacturer|family|tonnage|voltage|phase|refrigerant|manufacture_date|control_platform|
+  fault_code|other), app_value (what the app showed; derived from the unit/decode when not sent),
+  actual_value (required), note, snapshot of model/serial/manufacturer, `pack_id` + `format_id` from the
+  unit's decoded_json (model format; serial format for manufacture_date), `applied` (0|1: unit column
+  updated too), `status` (open|exported). Indexed on unit_id and (status, created_at).
 - FTS5 external-content tables over messages (chat rows) and findings, kept in sync by
   triggers on `rid`.
 - IDs: 16 lowercase hex (`crypto.randomBytes(8)`), validated by `isId()`; all `:id` params
   and `unit_id`/`conversation_id` body fields → 400 otherwise. Timestamps ISO-8601 UTC.
+- New tables use `CREATE TABLE/INDEX IF NOT EXISTS` only, so an existing database gains them at startup.
+  `repos.transaction(fn)` wraps `BEGIN IMMEDIATE … COMMIT` (not reentrant) for multi-row writes.
 - `messages.append` allocates `seq` atomically (single `INSERT … SELECT COALESCE(MAX(seq),0)+1`
   or inside `BEGIN IMMEDIATE`) and touches `conversations.updated_at` in the same transaction.
 - Deleting a unit archives it (soft delete); findings and conversations keep their link. The UI
@@ -385,7 +398,9 @@ enabled; `betas: ["server-side-fallback-2026-07-01"]` + `fallbacks: "default"` w
 `claudeFallbacks === "default"`. If the first request of a turn fails with
 `Anthropic.BadRequestError` whose message matches /fallback/i, retry once without fallbacks,
 set a process-wide `fallbacksSupported = false`, and emit a notice. Any other 400 → error
-`api_error`. Log `usage.cache_read_input_tokens` per turn.
+`api_error`. Log `usage.cache_read_input_tokens` per turn and record one `usage_events` row per
+request (skipped in demo; a failed write is logged, never fatal). `runTurn` snapshots client/config/demo
+at turn start, so a key or model saved in Settings mid-turn applies from the next turn.
 
 Custom tools (strict JSON schemas, `additionalProperties: false`; optional fields expressed as
 nullable so `required` lists every property; results are compact JSON ≤ 8 kB):
@@ -398,7 +413,9 @@ DxMeasurements fields in snake_case) — returns derived, validity, findings (to
 summary; `electrical_reference` (query, kind); `calc_electrical`; `lookup_fault_code` (code,
 manufacturer?, platform?; accepts LED patterns like "IGC 3 flashes") — result text includes the
 platform's `coverage` and each entry's `source`; `search_history` (query, unit_only?, site?,
-since?) ≤ 10 hits, 300-char snippets; `get_unit_history` (unit_id?); `save_finding` (symptom,
+since?) ≤ 10 hits, 300-char snippets; `get_unit_history` (unit_id?) — record, decode, findings,
+conversations, and `technicianCorrections` ("Technician corrections - trust these over the decoder";
+≤ 20: field/appValue/actualValue/note/appliedToUnit); `save_finding` (symptom,
 cause?, resolution?, measurements?, parts?, tags?, circuit?, status?, refrigerant?,
 refrigerant_added_lbs?, follow_up?, confirmed?) — `origin: "assistant"`, `confirmed` only when
 the tech explicitly confirmed; `update_unit` (nickname, unit_tag, site, customer,
@@ -448,7 +465,9 @@ Turn loop (`runTurn`), write order and stop reasons:
 
 Unit context block (second system block, ≤ ~1500 tokens): unit record (tag, model, serial, site/
 customer, refrigerant, tonnage, voltage/phase, circuits, charge, nameplate data, control
-platform, age), decoded summary + warnings, open/monitor findings first, then the last 5
+platform, age), decoded summary + warnings, "TECHNICIAN CORRECTIONS - trust these over the decoder"
+(newest 10: date, field, app said → actual, applied, note; placed before findings so truncation never
+drops it; omitted when none), open/monitor findings first, then the last 5
 confirmed findings (date, circuit, symptom → cause → resolution, measurements condensed),
 assistant hypotheses (unconfirmed) listed separately, refrigerant added in the last 12 months,
 last 5 conversation titles + summaries + dates excluding the current one; no "now" timestamps.
@@ -506,11 +525,17 @@ DELETE /api/conversations/:id
 POST /api/conversations/:id/messages {text, images?} -> SSE (409 if busy)
 POST /api/conversations/:id/stop                   {stopped: boolean}
 GET  /api/units?q=&site=&limit=&include_archived=   POST /api/units {model?, serial?, manufacturer?, unit_tag?, ...} (decodes when model given; 200 if exists)
-GET  /api/units/:id                 {unit, decoded, findings, conversations}   PATCH / DELETE (archives)
+GET  /api/units/:id                 {unit, decoded, findings, conversations, corrections}   PATCH / DELETE (archives)
+POST /api/units/import {text?|rows?, dryRun}   {dryRun, source, delimiter?, header?, ignoredColumns, warnings,
+                                                  summary{total,new,duplicate,error,created}, createdIds, rows[]}
+POST /api/units/:id/corrections {field, app_value?, actual_value, note?, apply?}   201 {correction, unit, decoded}
+GET  /api/corrections?status=open|exported         {corrections}   DELETE /api/corrections/:id
+POST /api/corrections/export {}                    attachment hvac-corrections-YYYY-MM-DD.json
+                                                  {kind, version, appVersion, exportedAt, count, newlyExported, corrections}; marks all exported
 POST /api/decode {model, serial?, manufacturer?}   DecodeResult
 GET  /api/search?q=&unit_id=&site=&since=&limit=   SearchHit[] (messages + findings + units)
 GET  /api/findings?unit_id=&conversation_id=       POST /api/findings   DELETE /api/findings/:id
-GET  /api/export                                   JSON of units, conversations, messages (no image data), findings;
+GET  /api/export                                   JSON of units, conversations, messages (no image data), findings, corrections;
                                                   `complete`/`truncated[]`/`limit` say whether any collection hit the per-list cap
 GET  /api/reference/refrigerants
 GET  /api/reference/pt?refrigerant=&psig=|temp_f=&elevation_ft=   (bubble, dew, midpoint, glide, safety class, notes)
@@ -519,6 +544,10 @@ POST /api/calc/diagnose              {DxMeasurements-like}
 POST /api/calc/electrical            {ElectricalCalcRequest}
 GET  /api/reference/electrical?component=|symptom=|q=
 GET  /api/reference/fault?code=&manufacturer=&platform=
+GET  /api/settings/ai                {demo, model, effort, webSearch, keySource, keyHint, settingsPath, fakeForced, models}
+PUT  /api/settings/ai {apiKey?|null, model?|null, effort?|null, webSearch?|null}   same shape as GET (null = back to .env)
+POST /api/settings/ai/test {apiKey?} {ok, stage, model, latencyMs, message, code, availableModels?, suggestion?}  (1 per 3 s, else 429)
+GET  /api/usage?days=7|30|90         {days, totals, byDay, byModel, perConversationAvgUsd, priceLabel}  (default 30, clamped 1–365)
 ```
 
 SSE wire format: headers `Content-Type: text/event-stream; charset=utf-8`, `Cache-Control:
@@ -545,8 +574,105 @@ Graceful shutdown: on SIGINT/SIGTERM stop accepting connections, wait up to 30 s
 turns (`turnsInFlight()`), end open SSE responses with error `aborted`, close the DB, then
 `server.closeAllConnections()`. Backup: `sqlite3 data/hvac.sqlite '.backup data/backup.sqlite'`.
 
-Demo mode: `CLAUDE_FAKE=1`, or no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` in the environment,
-uses `createFakeClient()` and logs loudly; `/api/health` reports `demo: true`.
+Demo mode: `CLAUDE_FAKE=1`, or no credentials at all (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`
+in the environment, none saved in `settings.env`, no `ant auth login` profile), uses
+`createFakeClient()` and logs loudly; `/api/health` and `/config.js` report `demo: true`.
+
+### In-app AI connection (`src/settingsStore.ts`, `src/aiSettings.ts`, `src/runtime.ts`, `src/routes/settings.ts`)
+
+A technician can finish setup from the phone. `settings.env` sits next to the database
+(`dirname(DB_PATH)`, i.e. `data/settings.env`; `/app/data` in Docker) and holds only
+`ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_EFFORT`, `ENABLE_WEB_SEARCH`. At startup the server
+loads `.env` as before, then applies `settings.env` with override semantics for those keys only
+(an empty value means "not set by the UI"; unknown keys are ignored). Same quoting rules as `.env`
+(`parseDotEnvText` is shared). Writes are atomic (temp file + rename), mode 0600, comments kept.
+
+Hot swap: `Runtime` holds `{client, config, demo}`. `createApp` exposes live getters over it to
+every router, `/api/health` and `/config.js` read it per request, and `runTurn` snapshots
+client/config/demo when a turn starts, so an in-flight turn keeps the client it began with; the
+busy lock is process-wide and unaffected. `PUT /api/settings/ai` validates (key: `sk-ant-…`, no
+whitespace, 20–300 chars, trimmed; effort `low|medium|high|xhigh|max`; model
+`/^claude-[a-z0-9-]+$/`), writes `settings.env`, rebuilds config and client. With `CLAUDE_FAKE=1`
+it still saves but `fakeForced: true` explains why demo stays on. `keySource` is
+`settings|env|profile|none`; `keyHint` is `…` + last 4 chars; the key is never returned or logged.
+
+Connection test (`src/agent/connectionTest.ts`, injected as `AppDeps.connectionTester`):
+`models.retrieve(model)` (free; proves key and model; failure stage `auth` or `model`), then one
+`messages.create` (max_tokens 16, effort low, "Reply with OK."; stage `message`) to prove billing.
+No retries, 20 s budget. Errors map to `invalid_key` (401), `permission` (403),
+`model_unavailable` (404, with `availableModels` from `models.list()` and a suggestion),
+`billing` (400 mentioning credit balance/billing), `rate_limited` (429), `overloaded` (≥500),
+`network` (connection/timeout), `no_key`, `unknown`. Any `sk-ant-…` substring in a message is
+scrubbed to `sk-ant-…<last4>`.
+Client: Settings → AI connection card (status chip, key field `type=password` with the hint, model
+select from `models` plus any `availableModels` a test returned, effort segmented control, web-search
+switch, Test, Save, "Remove saved key" shown only when `keySource` is `settings`). Save sends the model,
+effort and web search shown on the card (and the key when one was typed), so after the first save those
+three come from `settings.env`; "Remove saved key" sends `{apiKey: null}` only.
+
+### Usage and cost (`usage_events`, `src/agent/pricing.ts`, `src/agent/usage.ts`, `src/routes/usage.ts`)
+
+One `usage_events` row per model request in the chat loop (input, output, cache read, cache write
+tokens, `server_tool_use.web_search_requests`, stop reason, model actually served). Not recorded in
+demo mode; a failed write is logged and never breaks the turn. Rows older than 400 days are pruned
+at startup; deleting a conversation keeps its rows (`conversation_id` → NULL). Cost is
+"estimated at list price" from `PRICES_PER_MTOK` (claude-opus-5 $5/$25; claude-opus-5-5 $4/$20,
+cache read $0.20; claude-fable-5-1 $10/$50, cache read $0.25; other cache reads 0.1x input; cache
+writes 1.25x input; web search $10 / 1,000). Any other model has cost `null` ("cost not
+estimated") and makes `costComplete` false. `byDay` is zero-filled by server-local date.
+`perConversationAvgUsd` averages only conversations whose every request was priced (null when none).
+Client: Settings → Usage card with a 7 / 30 / 90 day segmented control (remembered in localStorage):
+requests with tokens in/out, estimated cost, average per conversation, web searches, the price label,
+a partial-total note when `costComplete` is false, bars by day and a by-model list; demo mode shows an
+empty state with "Add API key". The server log line per request stays as the fallback.
+
+### Bulk fleet import (`src/importParse.ts`, `src/routes/fleetImport.ts`)
+
+`POST /api/units/import` takes pasted `text` (≤ 1 MB, else 413) or `rows[]` (objects keyed by the same
+aliases), ≤ 200 rows (else 400, checked while parsing: the parser stops after 201 rows, reads at most 64
+header columns and keeps at most 20 warnings), `dryRun` (default true). Parser (pure): delimiter from the
+first non-empty line outside quotes (tab > comma > semicolon > whitespace; a semicolon only when that line is
+a recognized header, or at least half the lines have one and the unquoted first cell has no spaces),
+RFC 4180 quotes, BOM, CRLF/CR/LF.
+Header row matched case-insensitively (spaces ≡ underscores, trailing ":" ignored): model (model, model
+number, model #, model_no), serial (serial, serial number, serial #, s/n, sn), manufacturer (manufacturer,
+brand, make, mfr), site (site, location, building, customer site), unit_tag (tag, unit tag, unit, rtu,
+name), nickname, customer, location_note (notes, note, location note); a header needs ≥ 1 identity column
+and ≥ 2 recognized cells (1 for a 1–2 cell row); when under half are recognized the rest must look like
+labels (no digits), so a wide export (`Site,Unit,Model,Serial,Tons,Volts,…`) is a header; a space-separated
+header needs ≥ half its words recognized; unknown columns are ignored and reported; a repeated field keeps
+the first column. Under a space-separated header a site column absorbs extra words (`model serial site tag`
++ `48TC 1234 Main Street RTU-1` keeps the tag); other leftover values are dropped with a warning. No header →
+each non-empty line is `model serial [site] [tag]` (whitespace mode: 5+ tokens = model, serial, site words…,
+tag). Duplicate messages name the earlier row by its source line (the number the preview shows). Each row goes through `parseUnitInput` + `prepareUnitCreate` (the same
+decode-and-merge POST /api/units uses; manufacturer is the decoder hint) and is reported as `{index, line?,
+input, status: new|duplicate|error, error?, existingUnitId?, duplicateOf?, unitId?, decoded: {manufacturer,
+family, tonnage, refrigerant, voltage, manufactureDate, ageYears, confidence (lowest of best model/serial,
+"none" when unmatched), warnings[]}}`. Duplicates: same model + serial (case-insensitive, non-archived) as
+a saved unit or an earlier row; serial-less rows compare site + tag. `dryRun: false` creates every `new`
+row with `units.create` in one transaction.
+Client: Units top bar "Import units" → `#units/import` bottom sheet (paste textarea, "Copy template"
+= `Model,Serial,Site,Tag` + two example rows, "Choose CSV file" read client-side) → Preview (dry run:
+summary "12 new · 2 duplicates · 1 error", per-row title tag-or-model, manufacturer · tonnage ·
+refrigerant · age, confidence + status chips, warnings collapsed) → "Import 12 units" re-sends the
+previewed text with `dryRun: false`; editing the text invalidates the preview.
+
+### Decode corrections (`corrections`, `src/routes/corrections.ts`)
+
+The tech's "it got this wrong" list. `POST /api/units/:id/corrections` validates `field`, requires
+`actual_value` (≤ 500), snapshots the unit identity and decoder match; `apply: true` on manufacturer,
+tonnage, voltage, phase or refrigerant also patches that unit column through `parseUnitInput` (PATCH
+validation; a bad value → 400 and nothing stored), in the same transaction; other fields ignore `apply`.
+The export file is for improving the knowledge packs offline; `GET /api/export` (backup) includes
+corrections without changing their status. The assistant sees them in the unit context block and
+`get_unit_history`, and treats them as overriding the decoder.
+Client: unit card "Report a wrong detail" (also in unit actions) → `#unit/<id>/correct` sheet (field
+select, "App says" prefilled per field, "Actually" required, note, "Also update this unit" enabled only
+for the five applicable fields); a "Corrections" card on the unit lists field, app said → actual, date,
+delete. Export is a POST (`{}` body) so the Origin / Content-Type guard applies and a cross-site `<img>` or a link
+prefetcher cannot mark corrections exported; a GET of the path is a 404.
+Settings → Decode corrections shows the open count and Export (authenticated POST → Blob
+download; on iOS `navigator.share` with a File, else the JSON opens in a new tab).
 
 ## Web UI
 
@@ -603,7 +729,7 @@ hosted backend — without code changes.
   opens the Settings screen.
 - **CORS for native shells.** `ALLOW_ORIGINS` (comma-separated; e.g. `capacitor://localhost,
   http://localhost, ionic://localhost`) enables CORS (`Access-Control-Allow-Origin` echo for
-  allowlisted origins, `Allow-Headers: Authorization, Content-Type`, `Allow-Methods`,
+  allowlisted origins, `Allow-Headers: Authorization, Content-Type`, `Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS`,
   preflight 204, `Vary: Origin`). The Origin/Host check passes for allowlisted origins. Same-origin
   requests need no configuration.
 - **PWA.** `web/manifest.webmanifest` (name "HVAC Field Assistant", short_name "HVAC Assist",
@@ -678,6 +804,9 @@ PORT=8787  HOST=127.0.0.1  DB_PATH=./data/hvac.sqlite  APP_PASSWORD=   CLAUDE_FA
 ALLOW_ORIGINS=               comma-separated origins allowed via CORS (native shells), empty = same-origin only
 ```
 
+`data/settings.env` (written by Settings → AI connection) overrides `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`,
+`CLAUDE_EFFORT` and `ENABLE_WEB_SEARCH` above (not `CLAUDE_FALLBACKS` or anything else).
+
 ## Testing
 
 - `npm run check` typechecks sources and tests (tsconfig.test.json); `npm run check:knowledge`
@@ -688,3 +817,8 @@ ALLOW_ORIGINS=               comma-separated origins allowed via CORS (native sh
   history repair, unit context, busy lock, title, refusal, max_tokens, pause_turn, iteration
   cap, fallback retry, stop/abort).
 - API tested with `fetch` against `createApp()` on an ephemeral port with an in-memory DB.
+- Features A–D: `settingsStore.test.ts` (parse/merge/atomic 0600 write), `routes/settings.test.ts` (validation,
+  hot swap, injected fake connection tester, key never returned), `agent/connectionTest.test.ts`
+  (error mapping, key scrubbing), `agent/usage.test.ts` (pricing, rollups), `importParse.test.ts` (parser),
+  `routes/fleet.test.ts` (import dry run / real / duplicates, corrections create / apply / export); pure
+  client helpers in `web/app.test.ts`. `scripts/smoke.mjs` covers the same routes end to end over HTTP.

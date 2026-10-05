@@ -27,7 +27,7 @@ export function searchRouter(deps: AppDeps): Router {
 export const EXPORT_LIST_CAP = 1000;
 
 /**
- * GET /api/export → JSON of units, conversations, messages (image data omitted) and findings.
+ * GET /api/export → JSON of units, conversations, messages (image data omitted), findings and corrections.
  * `truncated` lists the collections that filled the cap (and so may be incomplete); `complete` is its negation.
  */
 export function exportRouter(deps: AppDeps): Router {
@@ -53,11 +53,14 @@ export function exportRouter(deps: AppDeps): Router {
       }
     }
     const findings = repos.findings.list({ limit: EXPORT_LIST_CAP });
+    // The backup copy of corrections; it does not mark them exported (that is POST /api/corrections/export).
+    const corrections = repos.corrections.list({ limit: EXPORT_LIST_CAP });
     const truncated = (
       [
         ["units", units.length],
         ["conversations", conversations.length],
         ["findings", findings.length],
+        ["corrections", corrections.length],
       ] as const
     )
       .filter(([, n]) => n >= EXPORT_LIST_CAP)
@@ -74,6 +77,7 @@ export function exportRouter(deps: AppDeps): Router {
       conversations,
       messages,
       findings,
+      corrections,
     });
   });
   return r;

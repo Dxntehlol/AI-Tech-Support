@@ -14,7 +14,9 @@
  * The Anthropic key is taken from the ANTHROPIC_API_KEY environment variable when the script runs (it is
  * written into .env, mode 600) or added to .env by hand afterwards; it is never a command-line argument.
  * The server is always started with a scrubbed environment so it reads .env and nothing else: editing
- * .env and re-running this script (or "pm2 restart hvac") is the only way settings change.
+ * .env and re-running this script (or "pm2 restart hvac") is how settings change. The exception is the AI
+ * connection (key, model, effort, web search): the app's Settings → AI connection saves it to settings.env
+ * next to the database (data/settings.env), which wins over .env and applies without a restart.
  */
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -183,8 +185,13 @@ if (!CHECK) {
   if (passwordGenerated && !created) warn("Access password", "a NEW password was generated because APP_PASSWORD was empty — re-enter it on every phone");
 } else if (!existsSync(envPath)) warn(".env", "missing — run: node scripts/setup.mjs");
 else ok(".env", "present");
-if (env.ANTHROPIC_API_KEY) ok("Anthropic API key", "set in .env");
-else warn("Anthropic API key", "not set — the assistant runs in DEMO MODE until ANTHROPIC_API_KEY is in .env (then re-run this script)");
+// settings.env (saved from the app's Settings → AI connection) sits next to the database and wins over .env.
+const settingsEnvPath = join(dirname(resolve(ROOT, (env.DB_PATH || "").trim() || "./data/hvac.sqlite")), "settings.env");
+const uiSettings = readEnv(settingsEnvPath);
+const uiKey = (uiSettings.ANTHROPIC_API_KEY || "").trim();
+if (uiKey) ok("Anthropic API key", "set (saved from the app's Settings)");
+else if (env.ANTHROPIC_API_KEY) ok("Anthropic API key", "set in .env");
+else warn("Anthropic API key", "not set — the assistant runs in DEMO MODE until ANTHROPIC_API_KEY is in .env (then re-run this script) or paste it in the app under Settings → AI connection");
 if (env.APP_PASSWORD) ok("Access password", CHECK ? "set in .env (APP_PASSWORD)" : "set (printed at the end)");
 else warn("Access password", "APP_PASSWORD is empty — required for phone access; re-run this script to generate one");
 const port = Number.parseInt(env.PORT ?? "", 10) || (portGiven ? PORT : DEFAULT_PORT);
@@ -337,7 +344,7 @@ if (tailnetUrl) note(`  2. On the phone:  install Tailscale, sign in to the same
 else note("  2. On the phone:  install Tailscale on this machine and the phone (same account); re-run this script to publish the app over HTTPS.");
 note(`  3. In the app:    Settings → Access password → ${CHECK ? "the APP_PASSWORD value in .env" : env.APP_PASSWORD || "(set APP_PASSWORD in .env)"}   (keeps the installed app signed in)`);
 note("  4. Install it:    iOS: Share → Add to Home Screen.   Android: browser menu → Install app.");
-if (!env.ANTHROPIC_API_KEY) note("  5. Real model:    put ANTHROPIC_API_KEY in .env, then re-run: node scripts/setup.mjs   (until then it runs in demo mode).");
+if (!env.ANTHROPIC_API_KEY && !uiKey) note("  5. Real model:    paste your Anthropic API key in the app under Settings → AI connection, or put ANTHROPIC_API_KEY in .env and re-run: node scripts/setup.mjs   (until then it runs in demo mode).");
 note("  Anytime:          node scripts/setup.mjs --check      after editing .env: node scripts/setup.mjs");
 process.exit(results.some((r) => r.state === "fail") ? 1 : 0);
 

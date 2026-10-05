@@ -16,9 +16,10 @@ export interface MessagesStreamer {
   stream(params: StreamParams, opts?: { signal?: AbortSignal }): StreamLike;
 }
 
-export function createAnthropicClient(_config: AppConfig): MessagesStreamer {
-  // Credentials resolve from ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN / `ant auth login` profile.
-  const client = new Anthropic();
+export function createAnthropicClient(_config: AppConfig, opts: { apiKey?: string } = {}): MessagesStreamer {
+  // An explicit key (saved in Settings → AI connection, or ANTHROPIC_API_KEY) wins; otherwise credentials
+  // resolve from ANTHROPIC_AUTH_TOKEN / the `ant auth login` profile (the SDK's default chain).
+  const client = opts.apiKey ? new Anthropic({ apiKey: opts.apiKey }) : new Anthropic();
   return {
     stream: (params, opts) => client.beta.messages.stream(params, opts),
   };

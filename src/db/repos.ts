@@ -1,7 +1,8 @@
 import type { StatementSync } from "node:sqlite";
+import type { UsageEventInput, UsageEventRow } from "../agent/usage.ts";
 import type { Db } from "./index.ts";
 import { newId, nowIso } from "./index.ts";
-import type { ConversationRow, FindingRow, MessageRow, SearchHit, UnitRow } from "../types.ts";
+import type { ConversationRow, CorrectionField, CorrectionRow, CorrectionStatus, FindingRow, MessageRow, SearchHit, UnitRow } from "../types.ts";
 
 /** At least one of model / unit_tag / nickname must be non-empty. */
 export type UnitInput = Partial<Omit<UnitRow, "id" | "created_at" | "updated_at">>;
@@ -28,6 +29,34 @@ export type FindingPatch = Partial<
   >
 >;
 
+export const CORRECTION_FIELDS: readonly CorrectionField[] = [
+  "manufacturer",
+  "family",
+  "tonnage",
+  "voltage",
+  "phase",
+  "refrigerant",
+  "manufacture_date",
+  "control_platform",
+  "fault_code",
+  "other",
+];
+export const CORRECTION_STATUSES: readonly CorrectionStatus[] = ["open", "exported"];
+
+export interface CorrectionInput {
+  unit_id?: string | null;
+  field: CorrectionField;
+  app_value?: string | null;
+  actual_value: string;
+  note?: string | null;
+  model?: string | null;
+  serial?: string | null;
+  manufacturer?: string | null;
+  pack_id?: string | null;
+  format_id?: string | null;
+  applied?: boolean | 0 | 1;
+}
+
 /**
  * Errors thrown by the repos for caller mistakes. `code` lets routes map them to 400 / 404 without
  * string-matching messages. Anything else that escapes is a real database failure.
@@ -53,6 +82,11 @@ export interface Repos {
     archive(id: string): boolean;
     /** Hard delete (findings/conversations keep rows with unit_id = NULL). */
     remove(id: string): boolean;
+    /**
+     * Non-archived unit that the import would duplicate: same model + serial (case-insensitive) when a serial is
+     * given; without a serial, same model (or none), no serial, and same site + unit_tag (case-insensitive).
+     */
+    findDuplicate(key: { model?: string | null; serial?: string | null; site?: string | null; unit_tag?: string | null }): UnitRow | undefined;
   };
   conversations: {
     create(input?: { title?: string; unit_id?: string | null }): ConversationRow;
@@ -82,6 +116,25 @@ export interface Repos {
   };
   /** FTS over messages (chat rows only) + findings, plus LIKE over units (model/serial/tag/site/customer). */
   search(query: string, opts?: { unitId?: string; site?: string; since?: string; limit?: number }): SearchHit[];
+  corrections: {
+    create(input: CorrectionInput): CorrectionRow;
+    get(id: string): CorrectionRow | undefined;
+    /** Newest first. */
+    list(opts?: { unitId?: string; status?: CorrectionStatus; limit?: number }): CorrectionRow[];
+    /** Set status = 'exported' for the given ids; returns the count changed. */
+    markExported(ids: string[]): number;
+    remove(id: string): boolean;
+  };
+  /** Run fn inside BEGIN IMMEDIATE … COMMIT (ROLLBACK on throw). Not reentrant. */
+  transaction<T>(fn: () => T): T;
+  usage: {
+    /** Store one model request's usage. */
+    record(input: UsageEventInput): void;
+    /** Rows created at or after `sinceIso`, oldest first. */
+    listSince(sinceIso: string): UsageEventRow[];
+    /** Delete rows created before `beforeIso`; returns the count removed. */
+    prune(beforeIso: string): number;
+  };
 }
 
 export interface RepoOptions {
@@ -422,6 +475,26 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       if (typeof id !== "string") return false;
       const res = prep("DELETE FROM units WHERE id = ?").run(id);
       return Number(res.changes) > 0;
+    },
+
+    findDuplicate(key) {
+      const model = normalizeCode(key.model);
+      const serial = normalizeCode(key.serial);
+      if (serial) {
+        if (!model) return undefined;
+        const row = prep(
+          "SELECT * FROM units WHERE upper(model) = ? AND upper(serial) = ? AND archived_at IS NULL ORDER BY updated_at DESC, rowid DESC LIMIT 1",
+        ).get(model, serial);
+        return row ? plain<UnitRow>(row) : undefined;
+      }
+      const tag = typeof key.unit_tag === "string" ? key.unit_tag.trim() : "";
+      if (!tag) return undefined;
+      const site = typeof key.site === "string" ? key.site.trim() : "";
+      const row = prep(
+        "SELECT * FROM units WHERE serial IS NULL AND archived_at IS NULL AND lower(unit_tag) = lower(?) AND lower(coalesce(site, '')) = lower(?) " +
+          "AND (? IS NULL OR model IS NULL OR upper(model) = ?) ORDER BY updated_at DESC, rowid DESC LIMIT 1",
+      ).get(tag, site, model, model);
+      return row ? plain<UnitRow>(row) : undefined;
     },
   };
 
@@ -883,7 +956,96 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     }
   };
 
-  return { units, conversations, messages, findings, search };
+  const usage: Repos["usage"] = {
+    record(input) {
+      const n = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.trunc(v) : 0);
+      prep(
+        `INSERT INTO usage_events (conversation_id, created_at, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, web_searches, stop_reason)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        input.conversation_id ?? null,
+        input.created_at ?? now(),
+        input.model || "unknown",
+        n(input.input_tokens),
+        n(input.output_tokens),
+        n(input.cache_read_tokens),
+        n(input.cache_write_tokens),
+        n(input.web_searches),
+        input.stop_reason ?? null,
+      );
+    },
+    listSince(sinceIso) {
+      return prep("SELECT * FROM usage_events WHERE created_at >= ? ORDER BY created_at, id").all(sinceIso) as unknown as UsageEventRow[];
+    },
+    prune(beforeIso) {
+      return Number(prep("DELETE FROM usage_events WHERE created_at < ?").run(beforeIso).changes);
+    },
+  };
+
+  const CORRECTION_FIELD_SET = new Set<string>(CORRECTION_FIELDS);
+  const getCorrection = (id: string): CorrectionRow | undefined => {
+    const row = prep("SELECT * FROM corrections WHERE id = ?").get(id);
+    return row ? plain<CorrectionRow>(row) : undefined;
+  };
+  const corrections: Repos["corrections"] = {
+    create(input) {
+      if (!input || typeof input !== "object") throw validation("correction input required");
+      if (!CORRECTION_FIELD_SET.has(input.field)) throw validation(`field must be one of: ${CORRECTION_FIELDS.join(", ")}`);
+      const actual = textOrNull(input.actual_value, "actual_value");
+      if (!actual) throw validation("actual_value required");
+      const unitId = input.unit_id ?? null;
+      if (unitId !== null && !unitExists(unitId)) throw new RepoError("not_found", "unit not found");
+      const id = newId();
+      prep(
+        `INSERT INTO corrections (id, unit_id, created_at, field, app_value, actual_value, note, model, serial, manufacturer, pack_id, format_id, applied, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
+      ).run(
+        id,
+        unitId,
+        now(),
+        input.field,
+        textOrNull(input.app_value, "app_value"),
+        actual,
+        textOrNull(input.note, "note"),
+        normalizeCode(input.model),
+        normalizeCode(input.serial),
+        textOrNull(input.manufacturer, "manufacturer"),
+        textOrNull(input.pack_id, "pack_id"),
+        textOrNull(input.format_id, "format_id"),
+        boolToInt(input.applied, "applied") ?? 0,
+      );
+      return getCorrection(id)!;
+    },
+    get(id) {
+      return typeof id === "string" ? getCorrection(id) : undefined;
+    },
+    list(opts = {}) {
+      const where: string[] = [];
+      const params: SqlValue[] = [];
+      if (opts.unitId) {
+        where.push("unit_id = ?");
+        params.push(opts.unitId);
+      }
+      if (opts.status) {
+        where.push("status = ?");
+        params.push(opts.status);
+      }
+      params.push(clampLimit(opts.limit, 500, 5000));
+      return prep(`SELECT * FROM corrections${where.length ? ` WHERE ${where.join(" AND ")}` : ""} ORDER BY created_at DESC, rowid DESC LIMIT ?`)
+        .all(...params)
+        .map((r) => plain<CorrectionRow>(r));
+    },
+    markExported(ids) {
+      let n = 0;
+      for (const id of ids) n += Number(prep("UPDATE corrections SET status = 'exported' WHERE id = ? AND status <> 'exported'").run(id).changes);
+      return n;
+    },
+    remove(id) {
+      return typeof id === "string" && Number(prep("DELETE FROM corrections WHERE id = ?").run(id).changes) > 0;
+    },
+  };
+
+  return { units, conversations, messages, findings, search, usage, corrections, transaction };
 }
 
 /** Bracket the first case-insensitive occurrence of each token (mirrors the FTS snippet markers). */

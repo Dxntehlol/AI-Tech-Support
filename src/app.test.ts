@@ -475,7 +475,15 @@ describe("security", () => {
       assert.equal(pre.status, 204);
       assert.equal(pre.headers.get("access-control-allow-origin"), native);
       assert.equal(pre.headers.get("access-control-allow-headers"), "Authorization, Content-Type");
-      assert.equal(pre.headers.get("access-control-allow-methods"), "GET, POST, PATCH, DELETE, OPTIONS");
+      assert.equal(pre.headers.get("access-control-allow-methods"), "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+      // PUT /api/settings/ai (Settings → AI connection) must pass the preflight from a native shell.
+      const prePut = await fetch(`${c.base}/api/settings/ai`, {
+        method: "OPTIONS",
+        headers: { Origin: native, "Access-Control-Request-Method": "PUT", "Access-Control-Request-Headers": "authorization, content-type" },
+      });
+      assert.equal(prePut.status, 204);
+      assert.equal(prePut.headers.get("access-control-allow-origin"), native);
+      assert.ok((prePut.headers.get("access-control-allow-methods") ?? "").split(/,\s*/).includes("PUT"));
       assert.equal(pre.headers.get("access-control-allow-credentials"), null);
       assert.match(pre.headers.get("vary") ?? "", /\bOrigin\b/);
       assert.match(pre.headers.get("access-control-max-age") ?? "", /^\d+$/);

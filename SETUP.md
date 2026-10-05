@@ -8,9 +8,18 @@ database. Everything below can be re-run safely.
 
 1. Sign in at https://console.anthropic.com, add a payment method or credits, open **API Keys**
    and create a key. Copy it now; it is shown once.
-2. It goes into `.env` on the server, either by editing the `ANTHROPIC_API_KEY=` line or by
-   handing it to the setup script through the environment (step 2). Never paste it into chat
-   logs or command-line arguments.
+2. **Easiest: paste it in the app.** Once the server runs (step 2), open the app on the phone or
+   in a browser on the server machine and go to **Settings → AI connection**. Paste the key, tap
+   **Test** (it checks the key, the model and that the account can be billed, and says which one
+   failed), then **Save**. It takes effect immediately, no restart, and the card shows only the
+   last four characters from then on.
+3. **Alternative: the terminal.** Put the key into `.env` on the server, either by editing the
+   `ANTHROPIC_API_KEY=` line or by handing it to the setup script through the environment
+   (step 2). Never paste it into chat logs or command-line arguments.
+
+A key saved in the app is written to `settings.env` next to the database (`data/settings.env`,
+mode 600; the `hvac-data` volume in Docker) and wins over `.env`, as do the model, effort and web
+search set on the same card (**Remove saved key** clears only the key, so the `.env` key applies again).
 
 Without a key the app still runs, in **demo mode** with canned answers, so the rest of the setup
 can be done first.
@@ -45,7 +54,7 @@ Options: `--port 9000` (remembered in `.env`), `--no-tailscale` for a machine-on
 Check: `node scripts/setup.mjs --check` prints OK on every line except Tailscale (until the
 next section) and, on Linux without root, "Start on boot" until you run the `sudo` command it
 shows once. Running the script with a key in the environment again replaces the key in `.env`;
-editing `.env` by hand works too.
+editing `.env` by hand works too (a key saved in the app still wins over either).
 
 Open `http://127.0.0.1:8787` on that machine. The browser asks for a username and password
 first: type anything as the username and the printed access password.
@@ -86,37 +95,60 @@ calculators must still work.
 
 ## 4. Seed it with your own fleet (an afternoon, then ongoing)
 
-1. Add five to ten real units from **Units → +** (type model and serial, or photograph the
-   nameplate in chat and ask the assistant to decode and save it).
+1. Import the fleet in one go: **Units → Import units** (the upload icon in the Units top bar).
+   Paste rows copied from a spreadsheet (columns **Model, Serial, Site, Tag**; a header row is
+   optional, Manufacturer, Customer and Notes columns are read too), or **Choose CSV file**.
+   **Copy template** puts a header plus two example rows on the clipboard. Tap **Preview**: every
+   row is decoded and marked new, duplicate (already saved, or repeated in the paste) or error,
+   with manufacturer, tonnage, refrigerant, age and a confidence chip. Nothing is saved yet. Then
+   tap **Import N units** to save the new rows (duplicates and errors are skipped). Up to 200
+   units per import. Single units still go in through **Units → +** (type model and serial, or
+   photograph the nameplate in chat and ask the assistant to decode and save it).
 2. Compare each decode with the nameplate and the IOM: manufacturer, tonnage, refrigerant,
    voltage, manufacture date and age, control platform. Anything below **high** confidence is a
    claim to verify, not a fact.
-3. Look up two or three fault codes you meet often on those platforms and confirm them against the
+3. When something is wrong, open the unit and tap **Report a wrong detail** (also under **More**
+   on the unit card). Pick what is wrong, type what the nameplate actually says, and tick **Also
+   update this unit** to fix the saved manufacturer, tonnage, voltage, phase or refrigerant as
+   well. The assistant trusts the correction over the decoder for that unit from then on.
+4. Look up two or three fault codes you meet often on those platforms and confirm them against the
    manual.
-4. After the next few calls, let the assistant save the finding when the cause is confirmed (or add
+5. After the next few calls, let the assistant save the finding when the cause is confirmed (or add
    it on the unit card). History and the assistant's memory become useful once real findings exist.
-5. Keep a list of anything it gets wrong (model, serial, what it said, what was true). Each is a
-   one-line correction to a manufacturer pack under `knowledge/manufacturers/`.
+6. Every so often, **Settings → Decode corrections → Export** downloads
+   `hvac-corrections-YYYY-MM-DD.json` (on iPhone it opens the share sheet) with every correction,
+   the model and serial it was about and the decoder format that produced it, and marks them
+   exported. Send that file to whoever maintains the manufacturer packs under
+   `knowledge/manufacturers/`; each entry is a one-line fix there.
 
 ## 5. Cost knobs (after a week)
 
-Every model request logs its input, output and cached-input token counts (`pm2 logs hvac`).
-After a few days of real use, compare with the usage page in the Anthropic console and adjust
-in `.env`:
+**Settings → Usage** shows the last 7, 30 or 90 days: requests, tokens in and out, web searches,
+the cost estimated at list price, an average per conversation, and a breakdown by day and by model.
+Models without a list price on file show "cost not estimated". Your Anthropic invoice (the usage
+page in the console) is the source of truth; compare the two after a few days of real use. Demo
+answers are not counted. If the app is not reachable, `pm2 logs hvac` still prints the input,
+output and cached-input token counts of every model request.
 
-- `CLAUDE_EFFORT=medium` trades some reasoning depth for cost (default `high`).
-- `ENABLE_WEB_SEARCH=0` if you rarely need literature it does not already know.
-- `REPLAY_IMAGE_WINDOW` lower if conversations carry many photos.
+Adjust on **Settings → AI connection** and tap **Save** (applies immediately):
 
-Apply any `.env` change with `node scripts/setup.mjs` (it restarts the server with exactly what
-is in `.env`; a plain `pm2 restart hvac` also works, ignore its `--update-env` hint).
+- **Effort** Med trades some reasoning depth for cost (default High).
+- **Web search** off if you rarely need literature it does not already know ($10 per 1,000
+  searches).
+- **Model**: a cheaper model lowers the per-token price.
+
+Saving that card writes the model, effort and web search into `data/settings.env`, so from then on
+those three win over `CLAUDE_MODEL`, `CLAUDE_EFFORT` and `ENABLE_WEB_SEARCH` in `.env`. The other
+knobs live only in `.env`, for example `REPLAY_IMAGE_WINDOW` lower if conversations carry many
+photos. Apply a `.env` change with `node scripts/setup.mjs` (it restarts the server with exactly
+what is in `.env`; a plain `pm2 restart hvac` also works, ignore its `--update-env` hint).
 
 ## Everyday commands
 
 ```bash
 node scripts/setup.mjs --check      # doctor: state of every step, changes nothing
 node scripts/setup.mjs              # apply .env changes / update after git pull (restarts the server)
-pm2 logs hvac                       # live server log (token counts per request, errors)
+pm2 logs hvac                       # live server log (token counts per request, errors; Settings → Usage is the friendlier view)
 npm run backup                      # WAL-safe copy of the database into backups/ (no sqlite3 needed)
 ```
 

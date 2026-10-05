@@ -613,6 +613,38 @@ export interface UnitRow {
   updated_at: string;
 }
 
+/** Fields a technician can flag as decoded wrong (`corrections.field`; runtime list: CORRECTION_FIELDS in db/repos.ts). */
+export type CorrectionField =
+  | "manufacturer"
+  | "family"
+  | "tonnage"
+  | "voltage"
+  | "phase"
+  | "refrigerant"
+  | "manufacture_date"
+  | "control_platform"
+  | "fault_code"
+  | "other";
+export type CorrectionStatus = "open" | "exported";
+
+/** A technician's "the app got this wrong" record, snapshotting the unit identity and the decoder match. */
+export interface CorrectionRow {
+  id: string;
+  unit_id: string | null;
+  created_at: string;
+  field: CorrectionField;
+  app_value: string | null; // what the app showed
+  actual_value: string; // what the nameplate / tech says
+  note: string | null;
+  model: string | null;
+  serial: string | null;
+  manufacturer: string | null;
+  pack_id: string | null; // matched manufacturer pack (from decoded_json)
+  format_id: string | null; // matched model format (serial format for manufacture_date)
+  applied: 0 | 1; // 1 when the unit column was updated too
+  status: CorrectionStatus;
+}
+
 export interface ConversationRow {
   id: string;
   title: string;

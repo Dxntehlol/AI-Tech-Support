@@ -8,11 +8,29 @@ import { conversationsRouter } from "./routes/conversations.ts";
 import { calcRouter, referenceRouter } from "./routes/reference.ts";
 import { exportRouter, searchRouter } from "./routes/search.ts";
 import { decodeRouter, findingsRouter, unitsRouter } from "./routes/units.ts";
+import { settingsRouter } from "./routes/settings.ts";
+import { usageRouter } from "./routes/usage.ts";
+import { correctionsRouter } from "./routes/corrections.ts";
 import { apiNotFound, errorHandler } from "./routes/util.ts";
+import { createRuntime, type Runtime } from "./runtime.ts";
+import type { AiSettings } from "./aiSettings.ts";
+import type { ConnectionTester } from "./agent/connectionTest.ts";
 
 export interface AppDeps extends ChatDeps {
-  /** True when the assistant runs on the fake client (no API key / CLAUDE_FAKE=1). Reported by /api/health. */
-  demo?: boolean;
+  /**
+   * The swappable client/config/demo holder (Settings → AI connection). When given, it is the source of
+   * truth for client, config and demo (the plain fields are only the fallback used to create one).
+   * `demo` (from ChatDeps) is reported by /api/health and /config.js.
+   */
+  runtime?: Runtime;
+  /** Reads/writes settings.env and swaps the runtime; without it /api/settings/ai answers 503. */
+  aiSettings?: AiSettings;
+  /** POST /api/settings/ai/test implementation (tests inject a fake; default: the real SDK). */
+  connectionTester?: ConnectionTester;
+  /** Minimum gap between connection tests (default 3000 ms). */
+  connectionTestIntervalMs?: number;
+  /** Connection test budget (default 20 s). */
+  connectionTestTimeoutMs?: number;
   /** Origins allowed via CORS (native shells); overrides config.allowOrigins; empty = same-origin only. */
   allowOrigins?: string[];
   /** App version reported by /config.js (defaults to package.json's). */
@@ -54,7 +72,22 @@ export function staticHeaders(res: Response, filePath: string): void {
 }
 
 /** Build the Express app (routes + static UI). Does not listen. */
-export function createApp(deps: AppDeps): Express {
+export function createApp(appDeps: AppDeps): Express {
+  const runtime = appDeps.runtime ?? createRuntime({ client: appDeps.client, config: appDeps.config, demo: appDeps.demo === true });
+  // Every router sees the live client/config/demo; a chat turn snapshots them when it starts.
+  const deps: AppDeps = {
+    ...appDeps,
+    runtime,
+    get client() {
+      return runtime.get().client;
+    },
+    get config() {
+      return runtime.get().config;
+    },
+    get demo() {
+      return runtime.get().demo;
+    },
+  };
   const { config, kb } = deps;
   const log = deps.log ?? (() => {});
   const app = express();
@@ -78,12 +111,13 @@ export function createApp(deps: AppDeps): Express {
   api.use(jsonByRoute);
 
   api.get("/health", (_req, res) => {
+    const live = runtime.get().config;
     res.json({
       ok: true,
-      model: config.claudeModel,
-      effort: config.claudeEffort,
-      webSearch: config.enableWebSearch,
-      fallbacks: config.claudeFallbacks === "default" && isFallbacksSupported() ? "default" : "off",
+      model: live.claudeModel,
+      effort: live.claudeEffort,
+      webSearch: live.enableWebSearch,
+      fallbacks: live.claudeFallbacks === "default" && isFallbacksSupported() ? "default" : "off",
       packs: kb.manufacturers.length,
       refrigerants: kb.refrigerants.tables.size,
       rules: kb.diagnostics.rules.rules.length,
@@ -99,12 +133,15 @@ export function createApp(deps: AppDeps): Express {
   api.use("/export", exportRouter(deps));
   api.use("/reference", referenceRouter(deps));
   api.use("/calc", calcRouter(deps));
+  api.use("/settings", settingsRouter(deps));
+  api.use("/usage", usageRouter(deps));
+  api.use("/corrections", correctionsRouter(deps));
   api.use(apiNotFound);
   app.use("/api", api);
 
   // ----- static UI (public paths — config.js, manifest, sw.js, icons — are exempted in authMiddleware) -----
-  const configJs = renderConfigJs({ apiBase: "", version, demo: deps.demo === true });
   app.get("/config.js", (_req, res) => {
+    const configJs = renderConfigJs({ apiBase: "", version, demo: runtime.get().demo });
     res.type("application/javascript").set("Cache-Control", "no-store").send(configJs);
   });
   app.use(express.static(config.webDir, { index: "index.html", fallthrough: true, etag: true, setHeaders: staticHeaders }));

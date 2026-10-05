@@ -22,6 +22,17 @@ Claude-powered chat assistant with a local knowledge base and a job memory:
 - **Job memory** — units, conversations, and findings live in SQLite with full-text search.
   Attach a conversation to a unit and the assistant sees its history (open items, confirmed
   fixes, refrigerant added) before you ask.
+- **Fleet import** — paste rows from a spreadsheet or pick a CSV (Model, Serial, Site, Tag; up to
+  200 units), preview every row decoded and marked new / duplicate / error, then import the new ones
+  in one transaction (**Units → Import units**, `POST /api/units/import`).
+- **Decode corrections** — "Report a wrong detail" on a unit records what the app said and what the
+  nameplate says (optionally fixing the unit too); the assistant trusts it over the decoder, and
+  **Settings → Decode corrections → Export** downloads them as JSON for fixing the manufacturer packs.
+- **In-app AI connection** — paste the API key on the phone (**Settings → AI connection**), test it
+  (key, model and billing are checked separately), pick model, effort and web search; changes apply
+  without a restart.
+- **Usage and cost** — **Settings → Usage** shows requests, tokens, web searches and cost estimated
+  at list price over 7/30/90 days, by day and by model.
 
 Everything runs on one machine with Node.js; the only external call is to the Anthropic API.
 
@@ -52,6 +63,9 @@ cp .env.example .env        # put your ANTHROPIC_API_KEY in .env
 npm run dev                 # http://127.0.0.1:8787
 ```
 
+Instead of editing `.env` you can paste the key in the running app under **Settings → AI connection**
+(Test, then Save).
+
 Production: `npm run build && npm start`. Without an API key the server starts in **demo mode**
 with canned responses so you can explore the UI and calculators.
 
@@ -59,11 +73,11 @@ with canned responses so you can explore the UI and calculators.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | — | Required for the assistant (or `ANTHROPIC_AUTH_TOKEN` / an `ant auth login` profile). |
-| `CLAUDE_MODEL` | `claude-opus-5` | Model id. |
-| `CLAUDE_EFFORT` | `high` | `low` … `max`; trade thinking depth for cost. |
+| `ANTHROPIC_API_KEY` | — | Required for the assistant (or `ANTHROPIC_AUTH_TOKEN` / an `ant auth login` profile). Overridden by a key saved in the app. |
+| `CLAUDE_MODEL` | `claude-opus-5` | Model id. Overridden by Settings → AI connection once saved there. |
+| `CLAUDE_EFFORT` | `high` | `low`, `medium`, `high`, `xhigh`, `max`; trade thinking depth for cost. Overridden once saved in the app. |
 | `CLAUDE_FALLBACKS` | `default` | Server-side refusal fallback (`off` to disable). |
-| `ENABLE_WEB_SEARCH` | `1` in `.env.example` | Let the assistant search the web for manufacturer literature (each search adds API cost). |
+| `ENABLE_WEB_SEARCH` | `1` in `.env.example` | Let the assistant search the web for manufacturer literature ($10 per 1,000 searches). Overridden once saved in the app. |
 | `REPLAY_IMAGE_WINDOW` | `10` | Photos older than this many user turns are dropped from model context (0 = keep all). |
 | `PORT` / `HOST` | `8787` / `127.0.0.1` | Bind address. The server refuses to start on a non-loopback host without `APP_PASSWORD`. |
 | `APP_PASSWORD` | — | Enables HTTP basic auth (any username). |
@@ -71,6 +85,21 @@ with canned responses so you can explore the UI and calculators.
 | `CLAUDE_FAKE` | `0` | `1` forces demo mode. |
 | `ALLOW_ORIGINS` | — | Comma-separated origins allowed via CORS, for native app shells (e.g. `capacitor://localhost,http://localhost`). Empty = same-origin only. |
 | `MAX_TOOL_ITERATIONS` | `12` | Tool calls the assistant may make in one turn before it must answer. |
+
+**Settings in the app.** **Settings → AI connection** writes `settings.env` next to the database
+(`data/settings.env`, mode 600; the `/app/data` volume in Docker). It holds only `ANTHROPIC_API_KEY`,
+`CLAUDE_MODEL`, `CLAUDE_EFFORT` and `ENABLE_WEB_SEARCH`; values there override `.env` and the process
+environment, apply without a restart, and an empty value means "use `.env`". Saving the card stores
+the model, effort and web search it shows (and the key, if one was typed); **Remove saved key** clears
+only the key. `GET /api/settings/ai` reports the key's source and last four characters, never the key.
+With `CLAUDE_FAKE=1` the settings still save but demo mode stays on.
+
+**Usage.** Every real model request is recorded in the database (tokens, cache reads and writes, web
+searches; demo answers are not). **Settings → Usage** (`GET /api/usage?days=7|30|90`) shows totals,
+by day and by model, with cost **estimated at list price** for `claude-opus-5`, `claude-opus-5-5` and
+`claude-fable-5-1` (cache writes 1.25x input, cache reads at the stated price or 0.1x input, web
+search $10 per 1,000). Other models show "cost not estimated". Records older than 400 days are pruned
+at startup.
 
 ## Using it on a phone
 
@@ -162,7 +191,7 @@ npm test                 # unit tests (node --test): src/**/*.test.ts and web/*.
 npm run check:knowledge  # validate every knowledge pack and decode every example
 npm run doctor           # state of a deployed instance (.env, service, health, Tailscale)
 npm run gen:refrigerants # regenerate PT tables (needs: pip install CoolProp)
-node scripts/smoke.mjs http://127.0.0.1:8787   # end-to-end HTTP smoke against a running (demo) server
+node scripts/smoke.mjs http://127.0.0.1:8787   # end-to-end HTTP smoke against a running (demo) server (incl. settings, usage, import, corrections)
 ```
 
 The UI is plain HTML/CSS/JS with no build step (`web/`). It was reviewed with screenshots at
@@ -176,5 +205,5 @@ format ships with worked examples that run as tests, and every fault code carrie
 ## Backup
 
 `npm run backup` writes a WAL-safe copy into `backups/` (no sqlite3 CLI needed); `GET /api/export` returns a
-JSON export of units, conversations, messages (without photos) and findings. The envelope's
+JSON export of units, conversations, messages (without photos), findings and decode corrections. The envelope's
 `complete` flag is false when a collection hit the export cap, so a partial backup never looks whole.

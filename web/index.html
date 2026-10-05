@@ -50,6 +50,10 @@
       <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><rect x="8" y="9" width="8" height="6" rx="1"/></symbol>
       <symbol id="i-theme" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.5 0-1-.1-1.4A5.5 5.5 0 0 1 13.4 3.1C13 3 12.5 3 12 3z"/></symbol>
       <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 6-3.5M12 5c3.5 0 7 1.5 10 4M5 13a10 10 0 0 1 4-2.5M12 10c2.5 0 5 1 7 3M8.5 16.5a5 5 0 0 1 3.5-1.5c1.3 0 2.5.5 3.5 1.5M12 20h.01M3 3l18 18"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></symbol>
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></symbol>
       <symbol id="i-install" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 8v7M9 12l3 3 3-3M10 18h4"/></symbol>
       <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></symbol>
@@ -178,6 +182,7 @@
             <div class="topbar-text"><h2 class="topbar-title topbar-title-lg">Units</h2></div>
             <div class="topbar-actions">
               <button id="btn-units-refresh" class="icon-btn" type="button" aria-label="Refresh units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></button>
+              <button id="btn-unit-import" class="icon-btn" type="button" aria-label="Import units" title="Import units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-upload"/></svg></button>
               <button id="btn-unit-add" class="icon-btn icon-btn-accent" type="button" aria-label="Add or decode a unit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button>
             </div>
           </div>
@@ -435,6 +440,42 @@
             <div class="settings-wrap">
               <div id="settings-notice" class="banner banner-warn" role="alert" hidden><div class="banner-body"></div></div>
 
+              <section id="ai-card" class="card" aria-labelledby="ai-card-title">
+                <div class="card-title"><h2 id="ai-card-title" class="card-title-text">AI connection</h2><span id="ai-chip" class="chip chip-outline">Checking…</span></div>
+                <p id="ai-status-detail" class="ai-detail">Checking the assistant connection…</p>
+                <form id="ai-form" class="form" novalidate autocomplete="off">
+                  <label class="field"><span class="field-label">Anthropic API key</span><input id="ai-key" name="apiKey" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="sk-ant-…" aria-describedby="ai-key-hint"><span id="ai-key-hint" class="hint"></span></label>
+                  <div id="ai-key-error" class="field-error" role="alert" hidden></div>
+                  <label class="field"><span class="field-label">Model</span><select id="ai-model" name="model"></select></label>
+                  <fieldset class="field fieldset">
+                    <legend class="field-label">Effort</legend>
+                    <div class="seg seg-sm seg-accent" role="radiogroup" aria-label="Effort" id="ai-effort">
+                      <label><input type="radio" name="effort" value="low"><span>Low</span></label>
+                      <label><input type="radio" name="effort" value="medium"><span>Med</span></label>
+                      <label><input type="radio" name="effort" value="high"><span>High</span></label>
+                      <label><input type="radio" name="effort" value="xhigh"><span>X-high</span></label>
+                      <label><input type="radio" name="effort" value="max"><span>Max</span></label>
+                    </div>
+                    <span class="hint">Higher = deeper reasoning, higher cost.</span>
+                  </fieldset>
+                  <label class="switch-row"><span class="switch-text"><span class="switch-title">Web search</span><span class="hint">Looks up manufacturer literature online. Adds $10 per 1,000 searches.</span></span><input id="ai-websearch" name="webSearch" type="checkbox" class="switch" role="switch"></label>
+                  <div id="ai-test-result" class="test-result" role="status" aria-live="polite" hidden></div>
+                  <div class="btn-row ai-actions"><button id="btn-ai-test" class="btn grow" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bolt"/></svg>Test</button><button id="btn-ai-save" class="btn btn-primary grow" type="submit">Save</button></div>
+                  <button id="btn-ai-remove" class="btn btn-danger btn-sm ai-remove" type="button" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg>Remove saved key</button>
+                  <p id="ai-settings-path" class="hint"></p>
+                </form>
+              </section>
+
+              <section id="usage-card" class="card" aria-labelledby="usage-card-title">
+                <div class="card-title"><h2 id="usage-card-title" class="card-title-text">Usage</h2></div>
+                <div class="seg seg-sm" role="radiogroup" aria-label="Usage period" id="usage-seg">
+                  <label><input type="radio" name="usage-days" value="7"><span>7 days</span></label>
+                  <label><input type="radio" name="usage-days" value="30" checked><span>30 days</span></label>
+                  <label><input type="radio" name="usage-days" value="90"><span>90 days</span></label>
+                </div>
+                <div id="usage-body" class="usage-body" aria-live="polite"></div>
+              </section>
+
               <form id="settings-form" class="card form" novalidate>
                 <div class="card-title">Server</div>
                 <div id="settings-status" class="settings-status"><span class="status-dot"></span><span id="settings-status-text">Checking…</span></div>
@@ -444,6 +485,17 @@
                 <div id="settings-error" class="field-error" role="alert" hidden></div>
                 <div class="btn-row"><button class="btn btn-primary" type="submit">Save connection</button><button class="btn" type="button" id="btn-health-refresh"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg>Test</button></div>
               </form>
+
+              <section id="corrections-card" class="card" aria-labelledby="corrections-card-title">
+                <div class="card-title"><h2 id="corrections-card-title" class="card-title-text">Decode corrections</h2></div>
+                <div class="corr-export">
+                  <div class="corr-export-text">
+                    <div id="corrections-count" class="corr-export-count">Checking…</div>
+                    <p class="hint">Send this file to whoever maintains the manufacturer data.</p>
+                  </div>
+                  <button id="btn-corrections-export" class="btn" type="button" disabled><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-download"/></svg>Export</button>
+                </div>
+              </section>
 
               <div class="card">
                 <div class="card-title">Appearance</div>
@@ -534,6 +586,59 @@
       <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
     </div>
     <div class="sheet-actions" id="unit-actions-list"></div>
+  </section>
+
+  <!-- Bulk fleet import sheet -->
+  <section id="sheet-import" class="sheet" role="dialog" aria-modal="true" aria-labelledby="import-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="import-title" tabindex="-1">Import units</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <form id="import-form" class="form" autocomplete="off" novalidate>
+        <label class="field"><span class="field-label">Paste rows from a spreadsheet</span><textarea id="import-text" name="text" rows="6" wrap="off" spellcheck="false" autocapitalize="off" autocorrect="off" aria-describedby="import-hint" placeholder="Model, Serial, Site, Tag&#10;48TCDD08A2A5, 1219C12345, Main St store, RTU-1"></textarea><span id="import-hint" class="hint">Columns: <b>Model, Serial, Site, Tag</b>. A header row is optional; Manufacturer, Customer and Notes columns are read too. Up to 200 units.</span></label>
+        <div class="btn-row">
+          <button id="btn-import-template" class="btn btn-sm grow" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy template</button>
+          <button id="btn-import-file" class="btn btn-sm grow" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-file"/></svg>Choose CSV file</button>
+          <input id="import-file" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" aria-label="CSV file to import" hidden>
+        </div>
+        <div id="import-file-name" class="hint" hidden></div>
+        <div id="import-error" class="field-error" role="alert" hidden></div>
+        <div id="import-preview" class="imp-preview" aria-live="polite" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button id="btn-import-preview" class="btn" type="submit" form="import-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>Preview</button>
+      <button id="btn-import-run" class="btn btn-primary" type="button" disabled>Import units</button>
+    </div>
+  </section>
+
+  <!-- Report a wrong detail (decode correction) sheet -->
+  <section id="sheet-correct" class="sheet" role="dialog" aria-modal="true" aria-labelledby="correct-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="correct-title" tabindex="-1">Report a wrong detail</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <form id="correct-form" class="form" autocomplete="off" novalidate>
+        <p id="correct-sub" class="hint" style="margin-top:0">The assistant trusts your correction over the decoder for this unit.</p>
+        <label class="field"><span class="field-label">What's wrong</span><select id="c-field" name="field"></select></label>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">App says</span><input id="c-app" name="app_value" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Not shown"></label>
+          <label class="field"><span class="field-label">Actually <span class="req" aria-hidden="true">*</span></span><input id="c-actual" name="actual_value" type="text" required aria-required="true" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="From the nameplate"></label>
+        </div>
+        <label class="field"><span class="field-label">Note (optional)</span><textarea id="c-note" name="note" rows="2" placeholder="Where you read it, e.g. nameplate inside the control door"></textarea></label>
+        <label class="checkbox" id="c-apply-row"><input id="c-apply" name="apply" type="checkbox"><span>Also update this unit</span></label>
+        <p id="c-apply-hint" class="hint" style="margin-top:-8px">Only manufacturer, tonnage, voltage, phase and refrigerant can be written to the unit.</p>
+        <div id="correct-error" class="field-error" role="alert" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-correct-save" class="btn btn-primary" type="submit" form="correct-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Save correction</button>
+    </div>
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

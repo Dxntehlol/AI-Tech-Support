@@ -7,18 +7,22 @@ const here = dirname(fileURLToPath(import.meta.url));
 /** Project root (works from src/ and from dist/). */
 export const PROJECT_ROOT = resolve(here, "..");
 
-/** Minimal .env loader (no dependency). Does not override existing env vars. */
-export function loadDotEnv(path = resolve(PROJECT_ROOT, ".env")): void {
-  if (!existsSync(path)) return;
-  for (const raw of readFileSync(path, "utf8").split(/\r?\n/)) {
+/**
+ * Parse .env text: `KEY=value` lines, `#` comment lines and blank lines skipped, the first occurrence of a
+ * key wins. An unquoted trailing comment (`KEY=value  # note`) is dropped; a comment-only value
+ * (`KEY=   # note`) means empty, so a copied .env.example never turns its notes into passwords or origins.
+ * One pair of matching outer quotes ('…' or "…") is removed; there are no escapes. Shared by
+ * loadDotEnv and src/settingsStore.ts so both files follow identical quoting rules.
+ */
+export function parseDotEnvText(text: string): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line || line.startsWith("#")) continue;
     const eq = line.indexOf("=");
     if (eq <= 0) continue;
     const key = line.slice(0, eq).trim();
     let value = line.slice(eq + 1).trim();
-    // An unquoted trailing comment (`KEY=value  # note`) is dropped; a comment-only value (`KEY=   # note`)
-    // means empty, so a copied .env.example never turns its notes into passwords or origins.
     if (!/^["']/.test(value)) {
       if (value.startsWith("#")) value = "";
       else {
@@ -29,6 +33,15 @@ export function loadDotEnv(path = resolve(PROJECT_ROOT, ".env")): void {
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
+    if (!out.has(key)) out.set(key, value);
+  }
+  return out;
+}
+
+/** Minimal .env loader (no dependency). Does not override existing env vars. */
+export function loadDotEnv(path = resolve(PROJECT_ROOT, ".env")): void {
+  if (!existsSync(path)) return;
+  for (const [key, value] of parseDotEnvText(readFileSync(path, "utf8"))) {
     if (process.env[key] === undefined) process.env[key] = value;
   }
 }

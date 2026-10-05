@@ -5,17 +5,26 @@ import { loadConfig, loadDotEnv } from "./config.ts";
 import { openDatabase } from "./db/index.ts";
 import { createRepos } from "./db/repos.ts";
 import { loadKnowledge } from "./knowledge/loader.ts";
-import { createAnthropicClient, hasApiCredentialsInEnv, type MessagesStreamer } from "./agent/client.ts";
 import { createFakeClient } from "./agent/fakeClient.ts";
 import { turnsInFlight } from "./agent/chat.ts";
+import { USAGE_RETENTION_DAYS } from "./agent/usage.ts";
 import { abortOpenStreams } from "./routes/conversations.ts";
 import { createApp } from "./app.ts";
+import { createAiSettings, displayPath } from "./aiSettings.ts";
+import { createRuntime } from "./runtime.ts";
+import { applySettings, MANAGED_KEYS, readSettings, settingsPathFor } from "./settingsStore.ts";
 
 const SHUTDOWN_WAIT_MS = 30_000;
 const SHUTDOWN_POLL_MS = 250;
 const SHUTDOWN_HARD_EXIT_MS = SHUTDOWN_WAIT_MS + 5_000;
 
 loadDotEnv();
+// settings.env (saved from Settings → AI connection) lives next to the database and overrides .env and the
+// process environment for the managed keys only; an empty value there means "use .env".
+const settingsPath = settingsPathFor(loadConfig().dbPath);
+const baseEnv: Record<string, string | undefined> = {};
+for (const key of [...MANAGED_KEYS, "ANTHROPIC_AUTH_TOKEN", "CLAUDE_FAKE"]) baseEnv[key] = process.env[key];
+const appliedSettings = applySettings(process.env, readSettings(settingsPath));
 const config = loadConfig();
 
 /** Loopback hosts may run without a password; anything else must set APP_PASSWORD. */
@@ -53,29 +62,39 @@ export async function hasStoredApiProfile(): Promise<boolean> {
 }
 
 const fakeRequested = /^(1|true|yes)$/i.test(process.env.CLAUDE_FAKE ?? "");
-const demo = fakeRequested || !(hasApiCredentialsInEnv() || (await hasStoredApiProfile()));
-let client: MessagesStreamer;
+const log = (m: string): void => console.log(`[${new Date().toISOString()}] ${m}`);
+const runtime = createRuntime({ client: createFakeClient(), config, demo: true });
+const aiSettings = createAiSettings({ settingsPath, runtime, baseEnv, hasProfile: await hasStoredApiProfile(), syncEnv: process.env, log });
+runtime.set(aiSettings.buildState(config));
+const demo = runtime.get().demo;
+if (appliedSettings.length) console.log(`  ${displayPath(settingsPath)} overrides: ${appliedSettings.join(", ")}`);
 if (demo) {
   console.log("=".repeat(72));
   console.log(
     fakeRequested
       ? "  DEMO MODE: CLAUDE_FAKE=1 — the assistant runs on canned responses (no API calls)."
-      : "  DEMO MODE: no ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN in the environment and no `ant auth login` profile.\n  The assistant runs on canned responses. Set ANTHROPIC_API_KEY in .env (or run `ant auth login`) for the real model.",
+      : "  DEMO MODE: no ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN in the environment and no `ant auth login` profile.\n  The assistant runs on canned responses. Paste a key in the app under Settings → AI connection,\n  or set ANTHROPIC_API_KEY in .env (or run `ant auth login`) for the real model.",
   );
   console.log("=".repeat(72));
-  client = createFakeClient();
-} else {
-  client = createAnthropicClient(config);
+}
+
+try {
+  const cutoff = new Date(Date.now() - USAGE_RETENTION_DAYS * 86_400_000).toISOString();
+  const pruned = repos.usage.prune(cutoff);
+  if (pruned) console.log(`  usage: pruned ${pruned} request record(s) older than ${USAGE_RETENTION_DAYS} days`);
+} catch (err) {
+  console.error(`  usage prune failed: ${err instanceof Error ? err.message : String(err)}`);
 }
 
 const allowOrigins = config.allowOrigins ?? [];
 
-const app = createApp({ client, config, kb, repos, demo, allowOrigins, log: (m) => console.log(`[${new Date().toISOString()}] ${m}`) });
+const app = createApp({ client: runtime.get().client, config, kb, repos, demo, runtime, aiSettings, allowOrigins, log });
 
 const server = app.listen(config.port, config.host, () => {
   const host = config.host.includes(":") ? `[${config.host}]` : config.host;
   console.log(`HVAC Field Assistant listening on http://${host}:${config.port}`);
-  console.log(`  model=${config.claudeModel} effort=${config.claudeEffort} fallbacks=${config.claudeFallbacks} webSearch=${config.enableWebSearch ? "on" : "off"}${demo ? " demo=on" : ""}`);
+  const live = runtime.get().config;
+  console.log(`  model=${live.claudeModel} effort=${live.claudeEffort} fallbacks=${live.claudeFallbacks} webSearch=${live.enableWebSearch ? "on" : "off"}${demo ? " demo=on" : ""}`);
   console.log(`  knowledge: ${kb.manufacturers.length} manufacturer packs, ${kb.refrigerants.tables.size} refrigerants, ${kb.diagnostics.rules.rules.length} diagnostic rules, ${kb.electrical.components.length} electrical components, ${kb.electrical.procedures.length} procedures`);
   console.log(`  db=${config.dbPath}${config.appPassword ? " auth=basic|bearer" : " auth=none (loopback only)"}`);
   console.log(allowOrigins.length ? `  cors=on origins=${allowOrigins.join(",")}` : "  cors=off (same-origin only; set ALLOW_ORIGINS for native shells)");
