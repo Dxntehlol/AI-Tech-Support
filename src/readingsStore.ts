@@ -5,7 +5,7 @@
  */
 import type { Repos } from "./db/repos.ts";
 import { trendFromReadings, type TrendResult } from "./knowledge/trend.ts";
-import type { DxResult, ReadingRow, ReadingSource } from "./types.ts";
+import type { ChillerResult, DxResult, ReadingRow, ReadingSource } from "./types.ts";
 
 function safeParseJson(text: string | null | undefined): unknown {
   if (typeof text !== "string" || text === "") return null;
@@ -79,6 +79,30 @@ export function storeReading(
     refrigerant: r.measurements.refrigerant,
     metering_device: r.measurements.meteringDevice,
     measurements_json: r.measurements,
+    derived_json: r.derived,
+    validity_json: r.validity,
+    findings_json: r.findings.map((f) => ({ ruleId: f.ruleId, severity: f.severity })),
+    note: opts.note ?? null,
+    source: opts.source,
+  });
+}
+
+/**
+ * Persist a chiller evaluation as a readings row (mode "chiller", metering "unknown"): measurements as entered,
+ * derived approach/ΔT/tons, the validity verdict and findings reduced to ruleId + severity.
+ */
+export function storeChillerReading(
+  repos: Repos,
+  opts: { unitId: string; conversationId?: string | null; result: ChillerResult; note?: string | null; source: ReadingSource },
+): ReadingRow {
+  const r = opts.result;
+  return repos.readings.create({
+    unit_id: opts.unitId,
+    conversation_id: opts.conversationId ?? null,
+    mode: "chiller",
+    refrigerant: r.measurements.refrigerant ?? "unknown",
+    metering_device: "unknown",
+    measurements_json: { ...r.measurements, condenserType: r.condenserType },
     derived_json: r.derived,
     validity_json: r.validity,
     findings_json: r.findings.map((f) => ({ ruleId: f.ruleId, severity: f.severity })),

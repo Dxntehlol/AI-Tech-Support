@@ -2,6 +2,7 @@ import { Router, type Response } from "express";
 import type { AppDeps } from "../app.ts";
 import { readPackageVersion } from "../config.ts";
 import { buildConversationReport, buildUnitReport, renderReport, REPORT_FORMATS, type ReportFormat } from "../reports.ts";
+import { unitCompliance } from "../complianceStore.ts";
 import { badRequest, notFound, queryString, requireId } from "./util.ts";
 
 /** `?format=md|html|json|markdown` → ReportFormat (default md); anything else → 400. */
@@ -38,6 +39,8 @@ export function reportsRouter(deps: AppDeps): Router {
     const conversation = repos.conversations.get(id);
     if (!conversation) throw notFound("Conversation not found.");
     const unit = conversation.unit_id ? (repos.units.get(conversation.unit_id) ?? null) : null;
+    const today = now().toISOString().slice(0, 10);
+    const unitEvents = unit ? repos.refrigerantEvents.list({ unitId: unit.id, limit: 500 }) : [];
     const report = buildConversationReport({
       conversation,
       unit,
@@ -45,6 +48,10 @@ export function reportsRouter(deps: AppDeps): Router {
       findings: repos.findings.list({ conversationId: id, limit: 500 }),
       now: now(),
       appVersion: version(),
+      refrigerantEvents: unitEvents.filter((e) => e.conversation_id === id),
+      compliance: unit ? unitCompliance(repos, unit, today, unitEvents) : null,
+      pmVisits: unit ? repos.pmVisits.list({ unitId: unit.id, limit: 20 }).filter((v) => v.conversation_id === id) : [],
+      signaturePng: repos.conversations.signaturePng(id),
     });
     send(res, renderReport(report, format));
   });
@@ -54,6 +61,7 @@ export function reportsRouter(deps: AppDeps): Router {
     const format = parseReportFormat(queryString(req, "format"));
     const unit = repos.units.get(id);
     if (!unit) throw notFound("Unit not found.");
+    const events = repos.refrigerantEvents.list({ unitId: id, limit: 500 });
     const report = buildUnitReport({
       unit,
       findings: repos.findings.list({ unitId: id, limit: 500 }),
@@ -61,6 +69,9 @@ export function reportsRouter(deps: AppDeps): Router {
       conversations: repos.conversations.list({ unitId: id, limit: 200 }),
       now: now(),
       appVersion: version(),
+      refrigerantEvents: events,
+      compliance: unitCompliance(repos, unit, now().toISOString().slice(0, 10), events),
+      pmVisits: repos.pmVisits.list({ unitId: id, limit: 20 }),
     });
     send(res, renderReport(report, format));
   });

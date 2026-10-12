@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Repos, UnitInput } from "../db/repos.ts";
+import { REFRIGERANT_EVENT_TYPES, type Repos, type UnitInput } from "../db/repos.ts";
 import type {
+  ChillerMeasurements,
   ControlPlatform,
   CorrectionRow,
   DecodeResult,
@@ -13,12 +14,17 @@ import type {
 } from "../types.ts";
 import { decodeUnit } from "../knowledge/decoder.ts";
 import { diagnose } from "../knowledge/diagnostics.ts";
-import { calcElectrical, lookupElectrical } from "../knowledge/electrical.ts";
+import { CALC_KINDS, calcElectrical, lookupElectrical } from "../knowledge/electrical.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
 import { ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import { DX_MEASUREMENT_ENUM_CODED_KEYS, DX_MEASUREMENT_NUMERIC_KEYS } from "../knowledge/loader.ts";
 import { toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
-import { storeReading } from "../readingsStore.ts";
+import { storeChillerReading, storeReading } from "../readingsStore.ts";
+import { CHILLER_CONDENSER_TYPES, CHILLER_NUMERIC_KEYS, evaluateChiller } from "../knowledge/chiller.ts";
+import { APPLIANCE_TYPES } from "../knowledge/refrigerantCompliance.ts";
+import { refrigerantEventView, unitCompliance } from "../complianceStore.ts";
+import { PM_TEMPLATE_IDS, findTemplate, suggestPmTemplate, templateSummary } from "../knowledge/pm.ts";
+import { unitLastPm } from "../pmStore.ts";
 
 export interface ToolContext {
   kb: KnowledgeBase;
@@ -368,18 +374,38 @@ function buildDiagnoseProps(): Record<string, Prop> {
   return props;
 }
 
-const CALC_KINDS = [
-  "voltage_imbalance",
-  "current_imbalance",
-  "capacitor_under_load",
-  "amps_vs_rla",
-  "temp_rise_cfm",
-  "ohms_law",
-  "electric_heat_kw",
-  "psychrometrics",
-  "winding_check",
-  "megohm",
-] as const;
+const CHILLER_DESCRIPTIONS: Record<(typeof CHILLER_NUMERIC_KEYS)[number], string> = {
+  chwSupplyF: "Leaving (supply) chilled-water temperature, °F.",
+  chwReturnF: "Entering (return) chilled-water temperature, °F.",
+  chwFlowGpm: "Chilled-water flow, gpm (tons = 500 × gpm × ΔT ÷ 12000).",
+  evapSatF: "Evaporator saturated refrigerant temperature from the controller, °F (or give evap_pressure_psig + refrigerant).",
+  evapPressurePsig: "Evaporator (suction) pressure, psig; needs refrigerant.",
+  condSatF: "Condenser saturated refrigerant temperature, °F (or give cond_pressure_psig + refrigerant).",
+  condPressurePsig: "Condenser pressure, psig; needs refrigerant.",
+  condWaterInF: "Entering condenser water temperature, °F (water-cooled).",
+  condWaterOutF: "Leaving condenser water temperature, °F (water-cooled; condenser approach).",
+  outdoorDbF: "Entering air / outdoor dry bulb, °F (air-cooled; condenser approach).",
+  oilPressurePsig: "Oil pressure (net) as the controller shows it, psig.",
+  oilTempF: "Oil temperature, °F.",
+  compressorAmps: "Compressor amps (one leg or the controller's reading).",
+  rla: "Compressor RLA from the nameplate, amps.",
+  percentLoad: "Controller-reported load, 0–100 %.",
+  elevationFt: "Site elevation, feet, for gauge correction.",
+};
+
+function buildChillerProps(): Record<string, Prop> {
+  const props: Record<string, Prop> = {
+    refrigerant: opt("string", "Refrigerant on the chiller nameplate (R-134a, R-513A, R-123, R-1233zd(E), R-410A, R-32…). Required when pressures are given; defaults to the attached unit's refrigerant.", { maxLength: 40 }),
+    condenser_type: opt("string", "water_cooled or air_cooled; inferred from which condenser readings are given when omitted.", { enum: CHILLER_CONDENSER_TYPES }),
+  };
+  for (const key of CHILLER_NUMERIC_KEYS) {
+    const range = /Psig$/.test(key) ? PSIG : /F$/.test(key) ? TEMP : key === "percentLoad" ? { min: 0, max: 100 } : key === "elevationFt" ? { min: -1500, max: 30000 } : { min: 0, max: 100000 };
+    props[camelToSnake(key)] = opt("number", CHILLER_DESCRIPTIONS[key], range);
+  }
+  props.circuit = opt("string", "Circuit / compressor identifier on multi-circuit chillers.", { maxLength: 20 });
+  props.notes = opt("string", "Anything else observed (purge counts, alarms, tower condition).", { maxLength: 500 });
+  return props;
+}
 
 const SPECS: ToolSpec[] = [
   {
@@ -450,7 +476,7 @@ const SPECS: ToolSpec[] = [
   {
     name: "calc_electrical",
     description:
-      "Electrical calculators. Pick a kind and pass its inputs: voltage_imbalance (vab, vbc, vca in volts → %, NEMA derate); current_imbalance (ia, ib, ic amps); capacitor_under_load (amps on the capacitor lead, volts across it, rated_uf → measured µF and pass/fail); amps_vs_rla (amps, rla); temp_rise_cfm (input_btuh, efficiency_percent, rise_f → CFM); ohms_law (any two of volts, amps, ohms, watts); electric_heat_kw (volts, amps, phase 1|3, nameplate_kw); psychrometrics (db_f, wb_f, elevation_ft → RH, dew point, enthalpy, grains); winding_check (phase, r1, r2, r3 ohms: 1-ph r1=C-S r2=C-R r3=S-R; 3-ph T1-T2, T2-T3, T3-T1); megohm (megohms, test_volts).",
+      "Field calculators. Pick a kind and pass its inputs: voltage_imbalance (vab, vbc, vca → %, NEMA derate); current_imbalance (ia, ib, ic); capacitor_under_load (amps on the capacitor lead, volts, rated_uf); amps_vs_rla (amps, rla); temp_rise_cfm (input_btuh, efficiency_percent, rise_f); ohms_law (any two of volts, amps, ohms, watts); electric_heat_kw (volts, amps, phase, nameplate_kw); psychrometrics (db_f, wb_f, elevation_ft); winding_check (phase, r1, r2, r3); megohm (megohms, test_volts); leak_rate (added_lbs, full_charge_lbs, days_since_last_add, appliance_type → EPA annualized leak rate vs threshold); gas_meter_clock (dial_cuft, seconds_per_rev, revolutions, heating_value_btu_per_cuft, nameplate_input_btuh → CFH, BTU/h, ±5 %); combustion_co (co_ppm, o2_pct, ambient_co_ppm → CO air-free, 100/400 ppm flags, stop-work); sensible_cfm (btuh, delta_t_f, tons → CFM, CFM/ton); static_pressure (supply_in_wc, return_in_wc, rated_max_in_wc or blower_type psc|ecm → TESP, over-max); fan_laws (rpm1, rpm2, cfm1, sp1, bhp1); belt_drive (motor_rpm, motor_sheave_in, fan_sheave_in, center_distance_in → fan rpm, belt length, deflection); voltage_drop (volts, amps, one_way_ft, awg or circular_mils, material cu|al, phase); motor_fla (hp, volts, phase → NEC 430.248/430.250 FLA, 125 % conductor); capacitor_replacement (rated_uf, rated_v, replacement_uf, replacement_v); motor_replacement (hp, rpm, volts, phase, frame, rotation_from_shaft_end, shaft_dia_in, enclosure → what must match).",
     props: {
       kind: req("string", "Calculator to run.", { enum: CALC_KINDS }),
       vab: opt("number", "Line voltage A-B, volts (voltage_imbalance).", { min: 0, max: 1000 }),
@@ -478,6 +504,79 @@ const SPECS: ToolSpec[] = [
       r3: opt("number", "Winding resistance 3, ohms (winding_check: 1-ph S-R; 3-ph T3-T1).", { min: 0, max: 1e6 }),
       megohms: opt("number", "Insulation resistance reading, MΩ (megohm).", { min: 0, max: 1e6 }),
       test_volts: opt("number", "Megger test voltage, VDC (megohm), typically 500.", { min: 0, max: 5000 }),
+      added_lbs: opt("number", "Refrigerant added, lb (leak_rate).", { min: 0, max: 100000 }),
+      full_charge_lbs: opt("number", "Appliance full charge, lb (leak_rate).", { min: 0, max: 100000 }),
+      days_since_last_add: opt("number", "Days since the previous add (leak_rate; < 1 counts as 1).", { min: 0, max: 36500 }),
+      appliance_type: opt("string", "EPA appliance category (leak_rate): comfort_cooling 10 %, commercial_refrigeration 20 %, industrial_process 30 %, other 10 %.", { enum: APPLIANCE_TYPES }),
+      dial_cuft: opt("number", "Meter test dial size, ft³ per revolution: 0.5, 1, 2, 5 (gas_meter_clock).", { min: 0, max: 100 }),
+      seconds_per_rev: opt("number", "Seconds for the revolutions timed (gas_meter_clock).", { min: 0, max: 36000 }),
+      revolutions: opt("number", "Revolutions timed, default 1 (gas_meter_clock).", { min: 0, max: 100 }),
+      heating_value_btu_per_cuft: opt("number", "Gas heating value, BTU/ft³, default 1000 (gas_meter_clock).", { min: 0, max: 5000 }),
+      nameplate_input_btuh: opt("number", "Rated input from the plate, BTU/h, to compare ±5 % (gas_meter_clock).", { min: 0, max: 50_000_000 }),
+      co_ppm: opt("number", "Flue CO as measured, ppm (combustion_co).", { min: 0, max: 100000 }),
+      o2_pct: opt("number", "Flue O2, % (combustion_co).", { min: 0, max: 21 }),
+      ambient_co_ppm: opt("number", "CO in the room/space, ppm (combustion_co; > 20 = stop work).", { min: 0, max: 100000 }),
+      btuh: opt("number", "Sensible heat, BTU/h (sensible_cfm).", { min: 0, max: 50_000_000 }),
+      delta_t_f: opt("number", "Temperature change across the coil/heater, °F (sensible_cfm).", { min: 0, max: 200 }),
+      tons: opt("number", "Nominal tons for CFM/ton (sensible_cfm).", { min: 0, max: 10000 }),
+      supply_in_wc: opt("number", "Supply static, in. wc (static_pressure).", { min: -10, max: 10 }),
+      return_in_wc: opt("number", "Return static, in. wc; negative or magnitude (static_pressure).", { min: -10, max: 10 }),
+      rated_max_in_wc: opt("number", "Nameplate maximum external static, in. wc (static_pressure).", { min: 0, max: 10 }),
+      blower_type: opt("string", "psc (default max 0.5 in. wc) or ecm (0.8) when no rated maximum is given (static_pressure).", { enum: ["psc", "ecm"] }),
+      rpm1: opt("number", "Current fan RPM (fan_laws).", { min: 0, max: 100000 }),
+      rpm2: opt("number", "New fan RPM (fan_laws).", { min: 0, max: 100000 }),
+      cfm1: opt("number", "Current CFM (fan_laws).", { min: 0, max: 10_000_000 }),
+      sp1: opt("number", "Current static pressure, in. wc (fan_laws).", { min: 0, max: 50 }),
+      bhp1: opt("number", "Current brake horsepower (fan_laws).", { min: 0, max: 10000 }),
+      motor_rpm: opt("number", "Motor RPM (belt_drive).", { min: 0, max: 100000 }),
+      motor_sheave_in: opt("number", "Motor sheave pitch diameter, in. (belt_drive).", { min: 0, max: 100 }),
+      fan_sheave_in: opt("number", "Fan sheave pitch diameter, in. (belt_drive).", { min: 0, max: 100 }),
+      center_distance_in: opt("number", "Shaft center distance, in. (belt_drive: belt length and deflection).", { min: 0, max: 1000 }),
+      one_way_ft: opt("number", "One-way conductor run, feet (voltage_drop).", { min: 0, max: 100000 }),
+      awg: opt("string", "Conductor size: 14…4/0 AWG or 250…500 kcmil (voltage_drop).", { maxLength: 20 }),
+      circular_mils: opt("number", "Conductor area in circular mils when the size is not a standard AWG (voltage_drop).", { min: 0, max: 10_000_000 }),
+      material: opt("string", "Conductor material: cu (default) or al (voltage_drop).", { enum: ["cu", "al"] }),
+      hp: opt("number", "Motor horsepower (motor_fla, motor_replacement).", { min: 0, max: 10000 }),
+      rated_v: opt("number", "Original capacitor voltage rating (capacitor_replacement).", { min: 0, max: 1000 }),
+      replacement_uf: opt("number", "Replacement capacitor µF (capacitor_replacement).", { min: 0, max: 2000 }),
+      replacement_v: opt("number", "Replacement capacitor voltage rating (capacitor_replacement).", { min: 0, max: 1000 }),
+      rpm: opt("number", "Motor nameplate RPM (motor_replacement).", { min: 0, max: 100000 }),
+      frame: opt("string", "NEMA frame, e.g. 48Y, 56, 143T (motor_replacement).", { maxLength: 40 }),
+      rotation_from_shaft_end: opt("string", "Rotation seen from the shaft end: cw or ccw (motor_replacement).", { enum: ["cw", "ccw"] }),
+      shaft_dia_in: opt("number", "Shaft diameter, in. (motor_replacement).", { min: 0, max: 10 }),
+      enclosure: opt("string", "Enclosure: ODP, TEFC, TEAO, weatherproof… (motor_replacement).", { maxLength: 40 }),
+    },
+  },
+  {
+    name: "diagnose_chiller",
+    description:
+      "Chiller readings mode: evaluate chilled-water supply/return (ΔT, tons with gpm), evaporator approach (CHW supply − evap saturated temp), condenser approach (cond saturated temp − leaving condenser water, or − entering air on air-cooled), amps as % RLA and oil pressure/temperature bands. Pressures convert through the PT tables when a refrigerant is given. Returns derived values, ranked findings (fouled tubes / low flow / dirty coil / overload / oil) and a summary; never judges charge from gauges. With a unit attached the readings are stored (mode chiller) for trending.",
+    props: buildChillerProps(),
+  },
+  {
+    name: "log_refrigerant",
+    description:
+      "Log a refrigerant event on the attached unit: add (pounds added; the EPA annualized leak rate is computed from the unit's full charge and the previous add and compared with the 10/20/30 % threshold), recover, leak_check (leak_found), verification_initial / verification_followup (passed), repair, or retrofit_plan. An add that exceeds the threshold opens a follow-up finding (repair within 30 days and verify). Returns the event with its leak rate and the unit's compliance status and open obligations — relay an exceedance and the 30-day repair clock to the tech. Requires an attached unit with full_charge_lbs set (update_unit) for a leak rate.",
+    props: {
+      event_type: req("string", "add, recover, leak_check, verification_initial, verification_followup, repair or retrofit_plan.", { enum: REFRIGERANT_EVENT_TYPES }),
+      refrigerant: opt("string", "Refrigerant handled; defaults to the unit's.", { maxLength: 40 }),
+      amount_lbs: opt("number", "Pounds added or recovered (decimal lb; 8 oz = 0.5). Required for add and recover.", { min: 0, max: 100000 }),
+      circuit: opt("integer", "Circuit number the event applies to on multi-circuit units (1, 2, …).", { min: 1, max: 64 }),
+      cylinder_id: opt("string", "Cylinder / tank id the refrigerant came from or went into.", { maxLength: 120 }),
+      tech_name: opt("string", "Technician name.", { maxLength: 120 }),
+      tech_cert: opt("string", "Technician EPA 608 certification number.", { maxLength: 120 }),
+      leak_found: opt("boolean", "leak_check: whether a leak was found."),
+      passed: opt("boolean", "verification_initial / verification_followup: whether the test passed."),
+      note: opt("string", "Where the leak was, what was repaired, test pressure / method, anything for the owner record.", { maxLength: 2000 }),
+      date: opt("string", "Event date YYYY-MM-DD when logging a past event; defaults to today.", { maxLength: 10 }),
+    },
+  },
+  {
+    name: "get_pm_checklist",
+    description:
+      "Get the preventive-maintenance checklist template for an equipment type (sections and items with pass/fail, numeric as-found/as-left fields and nameplate comparisons: volts ±10 %, amps vs RLA, capacitor ±6 %), plus the attached unit's last PM visit summary. Omit equipment_type to let the decoded unit pick it (packaged rooftop with gas heat → rtu_gas, etc.). Use it to walk the tech through a PM or to interpret a saved visit.",
+    props: {
+      equipment_type: opt("string", "Template id: rtu_gas, rtu_electric_or_cooling_only, split_ac, heat_pump, chiller_air_cooled, chiller_water_cooled, walk_in_cooler, walk_in_freezer, ice_machine, mau_exhaust, boiler.", { enum: PM_TEMPLATE_IDS }),
     },
   },
   {
@@ -534,7 +633,7 @@ const SPECS: ToolSpec[] = [
   {
     name: "update_unit",
     description:
-      "Update the unit attached to this conversation with nameplate data the decoder cannot infer: tag, nickname, site, customer, location note, refrigerant, tonnage, voltage, phase, number of circuits, factory charge per circuit, nameplate electrical data (MCA/MOP/RLA/LRA/fan FLA/heat kW or MBH), control platform, heat type, metering device, install year, elevation, notes. Pass only the fields to change. Requires an attached unit (decode_unit with save=true or find_unit first).",
+      "Update the unit attached to this conversation with nameplate data the decoder cannot infer: tag, nickname, site, customer, location note, refrigerant, tonnage, voltage, phase, number of circuits, factory charge per circuit, nameplate electrical data (MCA/MOP/RLA/LRA/fan FLA/heat kW or MBH), control platform, heat type, metering device, install year, elevation, notes, and the EPA compliance fields (full_charge_lbs, appliance_type, circuits_count). Pass only the fields to change. Requires an attached unit (decode_unit with save=true or find_unit first).",
     props: {
       nickname: opt("string", "Nickname for the unit.", { maxLength: 60 }),
       unit_tag: opt("string", "Unit tag such as RTU-7.", { maxLength: 40 }),
@@ -554,6 +653,9 @@ const SPECS: ToolSpec[] = [
       install_year: opt("integer", "Year installed (not the manufacture year).", { min: 1900, max: 2100 }),
       elevation_ft: opt("integer", "Site elevation in feet.", { min: -1500, max: 30000 }),
       notes: opt("string", "Free-form notes about the unit (access, quirks, history).", { maxLength: 1000 }),
+      full_charge_lbs: opt("number", "Total nameplate refrigerant charge of the appliance, lb (enables EPA leak-rate calculation).", { min: 0, max: 100000 }),
+      appliance_type: opt("string", "EPA category for the leak-rate threshold: comfort_cooling (10 %), commercial_refrigeration (20 %), industrial_process (30 %), other (10 %).", { enum: APPLIANCE_TYPES }),
+      circuits_count: opt("integer", "Independent refrigerant circuits sharing full_charge_lbs equally (each circuit is its own EPA appliance).", { min: 1, max: 64 }),
     },
   },
   {
@@ -769,6 +871,14 @@ export function describeToolCall(name: string, input: unknown): string {
       if (i.summary) parts.push("summary");
       return `Set conversation ${parts.join(" + ") || "metadata"}`;
     }
+    case "diagnose_chiller":
+      return `Chiller readings${i.circuit ? ` ckt ${s("circuit")}` : ""}`;
+    case "log_refrigerant": {
+      const amt = typeof i.amount_lbs === "number" ? ` ${i.amount_lbs} lb` : "";
+      return `Log refrigerant ${s("event_type").replace(/_/g, " ")}${amt}${i.refrigerant ? ` ${s("refrigerant")}` : ""}`;
+    }
+    case "get_pm_checklist":
+      return `PM checklist${i.equipment_type ? ` ${s("equipment_type").replace(/_/g, " ")}` : ""}`;
     case "web_search":
       return `Web search: ${s("query", 60)}`;
     default:
@@ -1231,6 +1341,17 @@ const CALC_REQUIRED: Record<(typeof CALC_KINDS)[number], string[]> = {
   psychrometrics: ["db_f", "wb_f"],
   winding_check: ["phase", "r1", "r2", "r3"],
   megohm: ["megohms"],
+  leak_rate: ["added_lbs", "full_charge_lbs", "days_since_last_add"],
+  gas_meter_clock: ["dial_cuft", "seconds_per_rev"],
+  combustion_co: ["co_ppm", "o2_pct"],
+  sensible_cfm: ["btuh", "delta_t_f"],
+  static_pressure: ["supply_in_wc", "return_in_wc"],
+  fan_laws: ["rpm1", "rpm2"],
+  belt_drive: ["motor_rpm", "motor_sheave_in", "fan_sheave_in"],
+  voltage_drop: ["volts", "amps", "one_way_ft"],
+  motor_fla: ["hp", "volts", "phase"],
+  capacitor_replacement: ["rated_uf", "rated_v", "replacement_uf", "replacement_v"],
+  motor_replacement: [],
 };
 
 function toolCalcElectrical(v: Validated): ToolOutcome {
@@ -1242,8 +1363,14 @@ function toolCalcElectrical(v: Validated): ToolOutcome {
     if (given.length < 2) return fail("ohms_law needs any two of volts, amps, ohms, watts.", "Calc ohms law: need two values");
   }
   const phase = num(v.phase);
-  if ((kind === "electric_heat_kw" || kind === "winding_check") && phase !== 1 && phase !== 3) {
+  if ((kind === "electric_heat_kw" || kind === "winding_check" || kind === "motor_fla") && phase !== 1 && phase !== 3) {
     return fail("phase must be 1 or 3.", `Calc ${kind}: phase must be 1 or 3`);
+  }
+  if ((kind === "voltage_drop" || kind === "motor_replacement") && phase !== undefined && phase !== 1 && phase !== 3) {
+    return fail("phase must be 1 or 3.", `Calc ${kind}: phase must be 1 or 3`);
+  }
+  if (kind === "voltage_drop" && str(v.awg) === undefined && num(v.circular_mils) === undefined) {
+    return fail("voltage_drop needs awg (14…4/0, 250…500 kcmil) or circular_mils.", "Calc voltage drop: conductor size missing");
   }
   let request: ElectricalCalcRequest;
   switch (kind) {
@@ -1276,6 +1403,39 @@ function toolCalcElectrical(v: Validated): ToolOutcome {
       break;
     case "megohm":
       request = { kind, megohms: num(v.megohms)!, testVolts: num(v.test_volts) };
+      break;
+    case "leak_rate":
+      request = { kind, addedLbs: num(v.added_lbs)!, fullChargeLbs: num(v.full_charge_lbs)!, daysSinceLastAdd: num(v.days_since_last_add)!, applianceType: str(v.appliance_type) as ElectricalCalcRequest extends { applianceType?: infer T } ? T : never };
+      break;
+    case "gas_meter_clock":
+      request = { kind, dialCuft: num(v.dial_cuft)!, secondsPerRev: num(v.seconds_per_rev)!, heatingValueBtuPerCuft: num(v.heating_value_btu_per_cuft), revolutions: num(v.revolutions), nameplateInputBtuh: num(v.nameplate_input_btuh) };
+      break;
+    case "combustion_co":
+      request = { kind, coPpm: num(v.co_ppm)!, o2Pct: num(v.o2_pct)!, ambientCoPpm: num(v.ambient_co_ppm) };
+      break;
+    case "sensible_cfm":
+      request = { kind, btuh: num(v.btuh)!, deltaTF: num(v.delta_t_f)!, tons: num(v.tons) };
+      break;
+    case "static_pressure":
+      request = { kind, supplyInWc: num(v.supply_in_wc)!, returnInWc: num(v.return_in_wc)!, ratedMaxInWc: num(v.rated_max_in_wc), blowerType: str(v.blower_type) as "psc" | "ecm" | undefined };
+      break;
+    case "fan_laws":
+      request = { kind, rpm1: num(v.rpm1)!, rpm2: num(v.rpm2)!, cfm1: num(v.cfm1), sp1: num(v.sp1), bhp1: num(v.bhp1) };
+      break;
+    case "belt_drive":
+      request = { kind, motorRpm: num(v.motor_rpm)!, motorSheaveIn: num(v.motor_sheave_in)!, fanSheaveIn: num(v.fan_sheave_in)!, centerDistanceIn: num(v.center_distance_in) };
+      break;
+    case "voltage_drop":
+      request = { kind, volts: num(v.volts)!, amps: num(v.amps)!, oneWayFt: num(v.one_way_ft)!, awg: str(v.awg), circularMils: num(v.circular_mils), material: str(v.material) as "cu" | "al" | undefined, phase: phase as 1 | 3 | undefined };
+      break;
+    case "motor_fla":
+      request = { kind, hp: num(v.hp)!, volts: num(v.volts)!, phase: phase as 1 | 3 };
+      break;
+    case "capacitor_replacement":
+      request = { kind, ratedUf: num(v.rated_uf)!, ratedV: num(v.rated_v)!, replacementUf: num(v.replacement_uf)!, replacementV: num(v.replacement_v)! };
+      break;
+    case "motor_replacement":
+      request = { kind, hp: num(v.hp), rpm: num(v.rpm), volts: num(v.volts), phase: phase as 1 | 3 | undefined, frame: str(v.frame), rotationFromShaftEnd: str(v.rotation_from_shaft_end) as "cw" | "ccw" | undefined, shaftDiaIn: num(v.shaft_dia_in), enclosure: str(v.enclosure) };
       break;
   }
   const r = calcElectrical(request);
@@ -1465,7 +1625,152 @@ const UPDATE_UNIT_FIELDS = [
   "install_year",
   "elevation_ft",
   "notes",
+  "full_charge_lbs",
+  "appliance_type",
+  "circuits_count",
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Wave 2 tools: chiller readings, refrigerant log, PM checklist
+// ---------------------------------------------------------------------------
+
+function toolDiagnoseChiller(v: Validated, ctx: ToolContext): ToolOutcome {
+  const m: Record<string, unknown> = {};
+  for (const key of CHILLER_NUMERIC_KEYS) {
+    const n = num(v[camelToSnake(key)]);
+    if (n !== undefined) m[key] = n;
+  }
+  if (str(v.refrigerant)) m.refrigerant = str(v.refrigerant);
+  if (str(v.condenser_type)) m.condenserType = str(v.condenser_type);
+  if (str(v.circuit)) m.circuit = str(v.circuit);
+  if (str(v.notes)) m.notes = str(v.notes);
+  const unit = ctx.unitId ? ctx.repos.units.get(ctx.unitId) : undefined;
+  if (!m.refrigerant && unit?.refrigerant) m.refrigerant = unit.refrigerant;
+  if (Object.keys(m).every((k) => ["refrigerant", "condenserType", "circuit", "notes"].includes(k))) {
+    return fail("No chiller readings given. Pass chw_supply_f / chw_return_f and evap_sat_f (or evap_pressure_psig + refrigerant), cond_sat_f (or cond_pressure_psig) with cond_water_out_f or outdoor_db_f.", "Chiller: no readings");
+  }
+  if (typeof m.refrigerant === "string" && !resolveRefrigerant(ctx.kb, m.refrigerant)) {
+    return fail(`Unknown refrigerant "${m.refrigerant}". Check the chiller nameplate or call refrigerant_pt to list known refrigerants.`, "Chiller: unknown refrigerant");
+  }
+  const r = evaluateChiller(ctx.kb, m as ChillerMeasurements);
+  let readingId: string | undefined;
+  if (unit) {
+    try {
+      readingId = storeChillerReading(ctx.repos, { unitId: unit.id, conversationId: ctx.conversationId, result: r, source: "chat" }).id;
+    } catch {
+      readingId = undefined;
+    }
+  }
+  const out = {
+    condenserType: r.condenserType,
+    derived: r.derived,
+    validity: r.validity,
+    findings: r.findings.slice(0, 6),
+    moreFindings: r.findings.length > 6 ? r.findings.length - 6 : undefined,
+    missing: r.missing,
+    summary: r.summary,
+    readingId,
+    scope: "Chiller charge is by weight / manufacturer procedure; approaches and ΔT judge heat-exchanger health and load. Log any refrigerant added with log_refrigerant.",
+  };
+  const top = r.findings.find((f) => f.severity !== "info");
+  const bits: string[] = [];
+  if (r.derived.evapApproachF !== undefined) bits.push(`evap approach ${fmt(r.derived.evapApproachF)}`);
+  if (r.derived.condApproachF !== undefined) bits.push(`cond approach ${fmt(r.derived.condApproachF)}`);
+  if (r.derived.chwDeltaTF !== undefined) bits.push(`ΔT ${fmt(r.derived.chwDeltaTF)}`);
+  return ok(out, `${top ? `${top.severity}: ${clip(top.condition, 70)}` : "chiller readings within band"}${bits.length ? ` (${bits.join(", ")})` : ""}`);
+}
+
+function toolLogRefrigerant(v: Validated, ctx: ToolContext): ToolOutcome {
+  if (!ctx.unitId) return fail("No unit is attached to this conversation. Call decode_unit with save=true or find_unit first, then log_refrigerant.", "Log refrigerant: no unit attached");
+  const unit = ctx.repos.units.get(ctx.unitId);
+  if (!unit) return fail(`Attached unit ${ctx.unitId} no longer exists.`, "Log refrigerant: unit missing");
+  const eventType = str(v.event_type)!;
+  const amount = num(v.amount_lbs);
+  if ((eventType === "add" || eventType === "recover") && !(amount !== undefined && amount > 0)) return fail(`amount_lbs (> 0) is required for ${eventType}.`, `Log refrigerant: amount missing`);
+  const date = str(v.date);
+  if (date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail(`date must be YYYY-MM-DD; got "${date}".`, "Log refrigerant: bad date");
+  const row = ctx.repos.refrigerantEvents.create({
+    unit_id: unit.id,
+    conversation_id: ctx.conversationId,
+    event_type: eventType,
+    refrigerant: str(v.refrigerant) ?? null,
+    amount_lbs: amount ?? null,
+    circuit: num(v.circuit) ?? null,
+    cylinder_id: str(v.cylinder_id) ?? null,
+    tech_name: str(v.tech_name) ?? null,
+    tech_cert: str(v.tech_cert) ?? null,
+    leak_found: bool(v.leak_found) ?? null,
+    passed: bool(v.passed) ?? null,
+    note: str(v.note) ?? null,
+    date: date ?? null,
+  });
+  const today = (ctx.now ?? new Date()).toISOString().slice(0, 10);
+  const compliance = unitCompliance(ctx.repos, unit, today);
+  const event = refrigerantEventView(row);
+  const finding = row.finding_id ? ctx.repos.findings.get(row.finding_id) : undefined;
+  const notes: string[] = [];
+  if (eventType === "add") {
+    if (row.leak_rate_pct === null) notes.push(`Leak rate not computed: ${compliance.fullChargeLbs === null ? "the unit has no full_charge_lbs — ask for the nameplate charge and call update_unit" : "no previous add or install year on record; the next add will be annualized from this one"}.`);
+    else if (row.exceeded === 1) notes.push(`EXCEEDANCE: ${row.leak_rate_pct} % per year exceeds the ${row.threshold_pct} % threshold. Tell the tech: repair within 30 days of ${event.date} (120 if a shutdown is needed), initial verification test before adding refrigerant again, follow-up verification within 10 days, records kept 3 years. A follow-up finding was opened${finding ? ` (due ${finding.follow_up_due})` : ""}.`);
+    else notes.push(`${row.leak_rate_pct} % per year is below the ${row.threshold_pct} % threshold.`);
+  }
+  const out = { event, finding: finding ? trimFinding(finding) : undefined, compliance, notes: notes.length ? notes : undefined, formula: compliance.formula };
+  const label = eventType.replace(/_/g, " ");
+  const summary =
+    eventType === "add"
+      ? `Logged add ${amount} lb${row.refrigerant ? ` ${row.refrigerant}` : ""}: ${row.leak_rate_pct === null ? "leak rate n/a" : `${row.leak_rate_pct} %/yr${row.exceeded === 1 ? ` EXCEEDS ${row.threshold_pct} %` : ` (limit ${row.threshold_pct} %)`}`}`
+      : `Logged ${label}${amount !== undefined ? ` ${amount} lb` : ""}${compliance.obligations.length ? ` — ${compliance.obligations.length} open obligation${compliance.obligations.length === 1 ? "" : "s"}` : ""}`;
+  return ok(out, summary);
+}
+
+function toolGetPmChecklist(v: Validated, ctx: ToolContext): ToolOutcome {
+  const pm = ctx.kb.pm;
+  if (!pm) return fail("No PM checklist templates are loaded on this server.", "PM checklist: none loaded");
+  const unit = ctx.unitId ? ctx.repos.units.get(ctx.unitId) : undefined;
+  let templateId = str(v.equipment_type);
+  let suggestion: { templateId: string | null; reason: string } | undefined;
+  if (!templateId) {
+    if (!unit) return fail(`No unit attached and no equipment_type given. Pass one of: ${pm.templates.map((t) => t.id).join(", ")}.`, "PM checklist: equipment type needed");
+    suggestion = suggestPmTemplate(unit);
+    if (!suggestion.templateId) return fail(`Could not pick a template for the attached unit (${suggestion.reason}). Pass equipment_type: ${pm.templates.map((t) => t.id).join(", ")}.`, "PM checklist: equipment type needed");
+    templateId = suggestion.templateId;
+  }
+  const template = findTemplate(pm, templateId);
+  if (!template) return fail(`Unknown template "${templateId}". Known: ${pm.templates.map((t) => t.id).join(", ")}.`, "PM checklist: unknown template");
+  const lastPm = unit ? unitLastPm(ctx.repos, unit.id, ctx.kb) : null;
+  const out = {
+    template: {
+      id: template.id,
+      name: template.name,
+      appliesTo: template.appliesTo,
+      sections: template.sections.map((s) => ({
+        title: s.title,
+        items: s.items.map((i) => ({ id: i.id, label: i.label, kind: i.kind, unit: i.unit, nameplateCompare: i.nameplateCompare, asFoundAsLeft: i.asFoundAsLeft, safety: i.safety, hint: i.hint })),
+      })),
+    },
+    suggestedFrom: suggestion ? suggestion.reason : undefined,
+    availableTemplates: pm.templates.map((t) => t.id),
+    lastPm: lastPm
+      ? {
+          date: lastPm.date,
+          status: lastPm.status,
+          templateId: lastPm.template_id,
+          templateName: lastPm.template_name,
+          techName: lastPm.tech_name,
+          total: lastPm.summary?.total,
+          pass: lastPm.summary?.pass,
+          fail: lastPm.summary?.fail,
+          na: lastPm.summary?.na,
+          fails: lastPm.summary?.items.filter((i) => i.status === "fail").map((i) => `${i.label}${i.note ? ` — ${clip(i.note, 120)}` : ""}`),
+          flagged: lastPm.summary?.items.filter((i) => i.flagged).map((i) => `${i.label}: ${i.value ?? i.asLeft ?? i.asFound} vs ${i.reference}`),
+          note: lastPm.note ?? undefined,
+        }
+      : undefined,
+    hint: "Walk the tech through the sections; the app's PM sheet stores results per item (value / checked / as-found / as-left) and evaluates nameplate deviations.",
+  };
+  const n = templateSummary(template).itemCount;
+  return ok(out, `PM checklist ${template.name} (${n} items)${suggestion ? " — picked from the unit" : ""}${lastPm ? `; last PM ${lastPm.date}: ${lastPm.summary?.fail ?? 0} fail` : ""}`);
+}
 
 function toolUpdateUnit(v: Validated, ctx: ToolContext): ToolOutcome {
   if (!ctx.unitId) return fail("No unit is attached to this conversation. Call decode_unit with save=true or find_unit first, then update_unit.", "Update unit: no unit attached");
@@ -1534,6 +1839,12 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
         return toolUpdateUnit(v, ctx);
       case "set_conversation":
         return toolSetConversation(v);
+      case "diagnose_chiller":
+        return toolDiagnoseChiller(v, ctx);
+      case "log_refrigerant":
+        return toolLogRefrigerant(v, ctx);
+      case "get_pm_checklist":
+        return toolGetPmChecklist(v, ctx);
       default:
         return fail(`Tool "${name}" has no implementation.`, `Unknown tool ${name}`);
     }

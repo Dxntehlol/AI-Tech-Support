@@ -8,6 +8,8 @@ import type {
   ElectricalProcedure,
   KnowledgeBase,
   ManufacturerPack,
+  PmChecklists,
+  PmTemplate,
   RefrigerantMeta,
   RefrigerantTable,
   SerialFormat,
@@ -718,6 +720,89 @@ export function validateElectricalReference(reference: unknown, problems: string
 }
 
 // ---------------------------------------------------------------------------
+// PM checklists (pm/checklists.json)
+// ---------------------------------------------------------------------------
+
+export const PM_ITEM_KINDS = new Set(["check", "number", "text"]);
+export const PM_NAMEPLATE_COMPARES = new Set(["volts", "amps", "capacitor_uf"]);
+/** Spec minimum items per template (DESIGN.md "PM checklists"). */
+export const MIN_PM_ITEMS_PER_TEMPLATE = 10;
+
+/** Shape checks for PmChecklists: version, sources[], templates[] with unique ids, sections/items well-formed, item ids unique per template. */
+export function validatePmChecklists(pm: unknown, problems: string[], where = "pm/checklists.json"): void {
+  if (!pm || typeof pm !== "object" || Array.isArray(pm)) {
+    problems.push(`${where}: not an object`);
+    return;
+  }
+  const p = pm as Partial<PmChecklists>;
+  checkString(where, "version", p.version, problems);
+  if (!Array.isArray(p.sources) || p.sources.length === 0 || !p.sources.every((x) => typeof x === "string" && x.trim())) problems.push(`${where}: sources[] (non-empty strings) required`);
+  if (!Array.isArray(p.templates)) {
+    problems.push(`${where}: templates[] required`);
+    return;
+  }
+  const seenTemplates = new Set<string>();
+  p.templates.forEach((t: Partial<PmTemplate> | null, i) => {
+    const w = `${where}: templates[${i}]${t?.id ? ` (${t.id})` : ""}`;
+    if (!t || typeof t !== "object") {
+      problems.push(`${w}: not an object`);
+      return;
+    }
+    checkString(w, "id", t.id, problems);
+    checkString(w, "name", t.name, problems);
+    checkString(w, "appliesTo", t.appliesTo, problems);
+    if (typeof t.id === "string") {
+      if (!/^[a-z0-9_]+$/.test(t.id)) problems.push(`${w}: id must be lowercase snake_case`);
+      if (seenTemplates.has(t.id)) problems.push(`${w}: duplicate template id`);
+      seenTemplates.add(t.id);
+    }
+    if (!Array.isArray(t.sections) || t.sections.length === 0) {
+      problems.push(`${w}: sections[] required`);
+      return;
+    }
+    const seenItems = new Set<string>();
+    let count = 0;
+    t.sections.forEach((s, j) => {
+      const sw = `${w}.sections[${j}]`;
+      if (!s || typeof s !== "object") {
+        problems.push(`${sw}: not an object`);
+        return;
+      }
+      checkString(sw, "title", s.title, problems);
+      if (!Array.isArray(s.items) || s.items.length === 0) {
+        problems.push(`${sw}: items[] required`);
+        return;
+      }
+      s.items.forEach((item, k) => {
+        const iw = `${sw}.items[${k}]`;
+        if (!item || typeof item !== "object") {
+          problems.push(`${iw}: not an object`);
+          return;
+        }
+        count++;
+        checkString(iw, "id", item.id, problems);
+        checkString(iw, "label", item.label, problems);
+        if (typeof item.id === "string") {
+          if (seenItems.has(item.id)) problems.push(`${iw}: duplicate item id "${item.id}" in template`);
+          seenItems.add(item.id);
+        }
+        if (!PM_ITEM_KINDS.has(item.kind as string)) problems.push(`${iw}: kind must be check|number|text (got ${JSON.stringify(item.kind)})`);
+        if (item.unit !== undefined && typeof item.unit !== "string") problems.push(`${iw}: unit must be a string`);
+        if (item.nameplateCompare !== undefined) {
+          if (!PM_NAMEPLATE_COMPARES.has(item.nameplateCompare as string)) problems.push(`${iw}: unknown nameplateCompare ${JSON.stringify(item.nameplateCompare)}`);
+          if (item.kind !== "number") problems.push(`${iw}: nameplateCompare only applies to number items`);
+        }
+        if (item.asFoundAsLeft !== undefined && typeof item.asFoundAsLeft !== "boolean") problems.push(`${iw}: asFoundAsLeft must be a boolean`);
+        if (item.asFoundAsLeft === true && item.kind !== "number") problems.push(`${iw}: asFoundAsLeft only applies to number items`);
+        if (item.safety !== undefined && typeof item.safety !== "boolean") problems.push(`${iw}: safety must be a boolean`);
+        if (item.hint !== undefined && typeof item.hint !== "string") problems.push(`${iw}: hint must be a string`);
+      });
+    });
+    if (count < MIN_PM_ITEMS_PER_TEMPLATE) problems.push(`${w}: ${count} items, spec minimum is ${MIN_PM_ITEMS_PER_TEMPLATE}`);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Loader
 // ---------------------------------------------------------------------------
 
@@ -842,8 +927,22 @@ export function loadKnowledge(dir: string, opts: LoadOptions = {}): KnowledgeBas
     }
   }
 
+  const pmPath = join(dir, "pm", "checklists.json");
+  let pm: PmChecklists | undefined;
+  if (existsSync(pmPath)) {
+    try {
+      const raw = readJson<PmChecklists>(pmPath);
+      validatePmChecklists(raw, problems, pmPath);
+      if (raw && typeof raw === "object" && Array.isArray(raw.templates)) pm = raw;
+    } catch (e) {
+      problems.push(`${pmPath}: ${(e as Error).message}`);
+    }
+  }
+
   if (problems.length && strict) throw new KnowledgeValidationError(problems);
   if (problems.length) console.warn(`[knowledge] ${problems.length} problem(s):\n- ${problems.join("\n- ")}`);
 
-  return { manufacturers, refrigerants: { meta, tables }, diagnostics: { rules, charging }, electrical };
+  const kb: KnowledgeBase = { manufacturers, refrigerants: { meta, tables }, diagnostics: { rules, charging }, electrical };
+  if (pm) kb.pm = pm;
+  return kb;
 }

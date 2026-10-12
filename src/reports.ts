@@ -9,8 +9,10 @@
  * non-http(s) links.
  */
 import { Marked } from "marked";
-import type { ConversationRow, CorrectionRow, DecodeResult, DxDerived, DxFinding, FindingRow, MessageRow, UnitRow } from "./types.ts";
+import type { ConversationRow, CorrectionRow, DecodeResult, DxDerived, DxFinding, FindingRow, MessageRow, PmVisitRow, RefrigerantEventRow, UnitRow } from "./types.ts";
 import { camelize, safeParseJson } from "./routes/util.ts";
+import type { ComplianceSummary } from "./knowledge/refrigerantCompliance.ts";
+import { parseSummary } from "./knowledge/pm.ts";
 
 export type ReportFormat = "md" | "html" | "json";
 export const REPORT_FORMATS: readonly ReportFormat[] = ["md", "html", "json"];
@@ -109,6 +111,71 @@ export interface ReportConversationRef {
   summary: string | null;
 }
 
+/** One refrigerant log line for the owner documentation block. */
+export interface ReportRefrigerantEvent {
+  date: string;
+  type: string;
+  refrigerant: string | null;
+  amountLbs: number | null;
+  circuit: number | null;
+  cylinderId: string | null;
+  techName: string | null;
+  techCert: string | null;
+  leakFound: boolean | null;
+  passed: boolean | null;
+  leakRatePct: number | null;
+  thresholdPct: number | null;
+  exceeded: boolean | null;
+  note: string | null;
+}
+
+/** "Owner documentation" (EPA 40 CFR 84.106 record the tech hands the owner): events, formula, obligations. */
+export interface ReportOwnerDocumentation {
+  fullChargeLbs: number | null;
+  applianceType: string | null;
+  thresholdPct: number;
+  applies: boolean;
+  circuitsCount: number;
+  formula: string;
+  source: string;
+  lastLeakRatePct: number | null;
+  exceeded: boolean;
+  events: ReportRefrigerantEvent[];
+  obligations: { kind: string; dueDate: string | null; text: string; overdue: boolean }[];
+  notes: string[];
+}
+
+/** Last PM visit summary for a report. */
+export interface ReportPm {
+  date: string;
+  templateId: string;
+  templateName: string;
+  status: string;
+  techName: string | null;
+  total: number;
+  pass: number;
+  fail: number;
+  na: number;
+  fails: string[];
+  flagged: string[];
+  safetyFails: string[];
+  note: string | null;
+}
+
+export interface ReportJob {
+  startedAt: string | null;
+  endedAt: string | null;
+  minutesOnSite: number | null;
+}
+
+export interface ReportSignature {
+  signedBy: string | null;
+  signedAt: string | null;
+  note: string | null;
+  /** PNG data URL; embedded in the HTML report, noted in Markdown. */
+  png: string | null;
+}
+
 export interface ConversationReport {
   kind: "conversation";
   generatedAt: string;
@@ -120,6 +187,10 @@ export interface ConversationReport {
   findings: ReportFinding[];
   openItems: string[];
   assistantSummary: string | null;
+  job: ReportJob;
+  signature: ReportSignature | null;
+  ownerDocumentation: ReportOwnerDocumentation | null;
+  pm: ReportPm | null;
 }
 
 export interface UnitReport {
@@ -131,6 +202,8 @@ export interface UnitReport {
   corrections: ReportCorrection[];
   conversations: ReportConversationRef[];
   totals: { findings: number; open: number; conversations: number };
+  ownerDocumentation: ReportOwnerDocumentation | null;
+  pm: ReportPm | null;
 }
 
 export type Report = ConversationReport | UnitReport;
@@ -485,6 +558,96 @@ export interface ConversationReportInput {
   findings: FindingRow[];
   now: Date;
   appVersion: string;
+  /** Refrigerant events logged in this conversation (conversation report) or on the unit (unit report). */
+  refrigerantEvents?: RefrigerantEventRow[];
+  compliance?: ComplianceSummary | null;
+  /** PM visits, newest first; the newest is reported. */
+  pmVisits?: PmVisitRow[];
+  signaturePng?: string | null;
+}
+
+function flag(v: 0 | 1 | null | undefined): boolean | null {
+  return v === null || v === undefined ? null : v === 1;
+}
+
+export function reportRefrigerantEvent(e: RefrigerantEventRow): ReportRefrigerantEvent {
+  return {
+    date: dateOnly(e.created_at),
+    type: e.event_type,
+    refrigerant: e.refrigerant,
+    amountLbs: e.amount_lbs,
+    circuit: e.circuit,
+    cylinderId: e.cylinder_id,
+    techName: e.tech_name,
+    techCert: e.tech_cert,
+    leakFound: flag(e.leak_found),
+    passed: flag(e.passed),
+    leakRatePct: e.leak_rate_pct,
+    thresholdPct: e.threshold_pct,
+    exceeded: flag(e.exceeded),
+    note: e.note,
+  };
+}
+
+/** Owner documentation block from the unit's compliance summary and the events; null when there is nothing to document. */
+export function ownerDocumentationOf(compliance: ComplianceSummary | null | undefined, events: RefrigerantEventRow[] | undefined): ReportOwnerDocumentation | null {
+  const rows = [...(events ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  if (!compliance) return null;
+  if (rows.length === 0 && compliance.fullChargeLbs === null && compliance.obligations.length === 0) return null;
+  return {
+    fullChargeLbs: compliance.fullChargeLbs,
+    applianceType: compliance.applianceType,
+    thresholdPct: compliance.thresholdPct,
+    applies: compliance.applies,
+    circuitsCount: compliance.circuitsCount,
+    formula: compliance.formula,
+    source: compliance.source,
+    lastLeakRatePct: compliance.lastLeakRatePct,
+    exceeded: compliance.exceeded,
+    events: rows.map(reportRefrigerantEvent),
+    obligations: compliance.obligations.map((o) => ({ kind: o.kind, dueDate: o.dueDate, text: o.text, overdue: o.overdue })),
+    notes: compliance.notes,
+  };
+}
+
+/** The newest PM visit as a report block, or null. */
+export function reportPmOf(visits: PmVisitRow[] | undefined): ReportPm | null {
+  const rows = [...(visits ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const v = rows[0];
+  if (!v) return null;
+  const s = parseSummary(v.summary_json);
+  const label = (i: { label: string; note?: string; value?: unknown; asLeft?: number; asFound?: number; reference?: string }): string => i.label;
+  return {
+    date: dateOnly(v.created_at),
+    templateId: v.template_id,
+    templateName: s?.templateName ?? v.template_id,
+    status: v.status,
+    techName: v.tech_name,
+    total: s?.total ?? 0,
+    pass: s?.pass ?? 0,
+    fail: s?.fail ?? 0,
+    na: s?.na ?? 0,
+    fails: s ? s.items.filter((i) => i.status === "fail").map((i) => `${label(i)}${i.note ? ` — ${i.note}` : ""}`) : [],
+    flagged: s ? s.items.filter((i) => i.flagged).map((i) => `${i.label}: ${String(i.asLeft ?? i.asFound ?? i.value ?? "")} vs ${i.reference ?? "nameplate"}`) : [],
+    safetyFails: s ? s.items.filter((i) => i.status === "fail" && i.safety).map(label) : [],
+    note: v.note,
+  };
+}
+
+function minutesBetween(startedAt: string | null | undefined, endedAt: string | null | undefined): number | null {
+  if (!startedAt || !endedAt) return null;
+  const a = Date.parse(startedAt);
+  const b = Date.parse(endedAt);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
+  return Math.round((b - a) / 60_000);
+}
+
+/** "2 h 05 min" / "45 min". */
+export function formatMinutes(min: number | null): string {
+  if (min === null) return "";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h > 0 ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min`;
 }
 
 export function openItemsOf(findings: ReportFinding[]): string[] {
@@ -502,6 +665,7 @@ export function buildConversationReport(input: ConversationReportInput): Convers
   const firstUser = messages.find((m) => m.role === "user" && m.kind === "chat" && m.text.trim() !== "");
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m.text.trim() !== "");
   const findings = input.findings.map(reportFinding);
+  const signed = !!conversation.signed_at || !!input.signaturePng;
   return {
     kind: "conversation",
     generatedAt: input.now.toISOString(),
@@ -513,6 +677,10 @@ export function buildConversationReport(input: ConversationReportInput): Convers
     findings,
     openItems: openItemsOf(findings),
     assistantSummary: lastAssistant ? lastAssistant.text : null,
+    job: { startedAt: conversation.job_started_at ?? null, endedAt: conversation.job_ended_at ?? null, minutesOnSite: minutesBetween(conversation.job_started_at, conversation.job_ended_at) },
+    signature: signed ? { signedBy: conversation.signed_by ?? null, signedAt: conversation.signed_at ?? null, note: conversation.signature_note ?? null, png: input.signaturePng ?? null } : null,
+    ownerDocumentation: ownerDocumentationOf(input.compliance, input.refrigerantEvents),
+    pm: reportPmOf(input.pmVisits),
   };
 }
 
@@ -523,6 +691,9 @@ export interface UnitReportInput {
   conversations: ConversationRow[];
   now: Date;
   appVersion: string;
+  refrigerantEvents?: RefrigerantEventRow[];
+  compliance?: ComplianceSummary | null;
+  pmVisits?: PmVisitRow[];
 }
 
 export function buildUnitReport(input: UnitReportInput): UnitReport {
@@ -552,6 +723,8 @@ export function buildUnitReport(input: UnitReportInput): UnitReport {
       .map((c) => ({ date: c.created_at, field: c.field, appValue: c.app_value, actualValue: c.actual_value, note: c.note, applied: Number(c.applied) === 1 })),
     conversations,
     totals: { findings: findings.length, open: findings.filter((f) => f.status === "open" || f.status === "monitor").length, conversations: input.conversations.length },
+    ownerDocumentation: ownerDocumentationOf(input.compliance, input.refrigerantEvents),
+    pm: reportPmOf(input.pmVisits),
   };
 }
 
@@ -625,6 +798,57 @@ function readingsMd(r: ReportReadings): string[] {
   return lines;
 }
 
+function eventLineMd(e: ReportRefrigerantEvent): string {
+  const bits: string[] = [`**${mdCell(e.type.replace(/_/g, " "))}**`];
+  if (e.amountLbs !== null) bits.push(`${e.amountLbs} lb${e.refrigerant ? ` ${mdCell(e.refrigerant)}` : ""}`);
+  else if (e.refrigerant) bits.push(mdCell(e.refrigerant));
+  if (e.circuit !== null) bits.push(`circuit ${e.circuit}`);
+  if (e.leakFound !== null) bits.push(e.leakFound ? "leak found" : "no leak found");
+  if (e.passed !== null) bits.push(e.passed ? "passed" : "failed");
+  if (e.leakRatePct !== null) bits.push(`leak rate ${e.leakRatePct} %/yr${e.thresholdPct !== null ? ` vs ${e.thresholdPct} % threshold` : ""}${e.exceeded ? " — EXCEEDED" : ""}`);
+  if (e.cylinderId) bits.push(`cylinder ${mdCell(e.cylinderId)}`);
+  if (e.techName || e.techCert) bits.push(`tech ${[e.techName, e.techCert ? `cert ${e.techCert}` : null].filter(Boolean).map(mdCell).join(" ")}`);
+  if (e.note) bits.push(mdCell(e.note));
+  return `- ${e.date} · ${bits.join(" · ")}`;
+}
+
+function ownerDocMd(doc: ReportOwnerDocumentation | null): string[] {
+  const out: string[] = ["## Owner documentation (refrigerant / EPA leak-repair record)", ""];
+  if (!doc) {
+    out.push("_No refrigerant events or full charge recorded._", "");
+    return out;
+  }
+  out.push(`- **Full charge:** ${doc.fullChargeLbs !== null ? `${doc.fullChargeLbs} lb${doc.circuitsCount > 1 ? ` (${doc.circuitsCount} circuits)` : ""}` : "not recorded"}`);
+  out.push(`- **Appliance type / threshold:** ${doc.applianceType ? mdCell(doc.applianceType.replace(/_/g, " ")) : "not set (comfort cooling assumed)"} · ${doc.thresholdPct} % per year${doc.applies ? "" : " · rule applicability: below 15 lb"}`);
+  out.push(`- **Last leak rate:** ${doc.lastLeakRatePct !== null ? `${doc.lastLeakRatePct} %/yr${doc.exceeded ? " — EXCEEDS the threshold" : ""}` : "none computed"}`);
+  out.push(`- **Formula:** ${mdCell(doc.formula)} (${mdCell(doc.source)})`);
+  out.push("", "### Refrigerant events", "");
+  if (doc.events.length) for (const e of doc.events) out.push(eventLineMd(e));
+  else out.push("_None logged._");
+  out.push("", "### Open obligations", "");
+  if (doc.obligations.length) for (const o of doc.obligations) out.push(`- ${o.overdue ? "**OVERDUE** " : ""}${mdCell(o.text)}${o.dueDate ? ` _(due ${o.dueDate})_` : ""}`);
+  else out.push("_None._");
+  if (doc.notes.length) out.push("", ...doc.notes.map((n) => `_${mdCell(n)}_`));
+  out.push("");
+  return out;
+}
+
+function pmMd(pm: ReportPm | null): string[] {
+  const out: string[] = ["## Preventive maintenance", ""];
+  if (!pm) {
+    out.push("_No PM visit recorded._", "");
+    return out;
+  }
+  out.push(`- **Last PM:** ${pm.date} · ${mdCell(pm.templateName)} · ${mdCell(pm.status.replace(/_/g, " "))}${pm.techName ? ` · ${mdCell(pm.techName)}` : ""}`);
+  out.push(`- **Result:** ${pm.pass} pass / ${pm.fail} fail / ${pm.na} n/a of ${pm.total} items`);
+  if (pm.safetyFails.length) out.push(`- **Safety items failed:** ${pm.safetyFails.map(mdCell).join("; ")}`);
+  if (pm.fails.length) out.push(`- **Failed items:** ${pm.fails.map(mdCell).join("; ")}`);
+  if (pm.flagged.length) out.push(`- **Nameplate deviations:** ${pm.flagged.map(mdCell).join("; ")}`);
+  if (pm.note) out.push(`- **Note:** ${mdCell(pm.note)}`);
+  out.push("");
+  return out;
+}
+
 export function renderReportMarkdown(report: Report): string {
   const out: string[] = [];
   const stamp = `Generated ${dateTime(report.generatedAt)} · HVAC Field Assistant v${report.appVersion}`;
@@ -634,6 +858,7 @@ export function renderReportMarkdown(report: Report): string {
     if (report.unit) for (const [k, v] of unitLines(report.unit)) out.push(`- **${k}:** ${mdCell(v)}`);
     else out.push("- No unit attached to this conversation.");
     out.push(`- **Date:** ${dateTime(report.conversation.createdAt)}${report.conversation.updatedAt !== report.conversation.createdAt ? ` (last activity ${dateTime(report.conversation.updatedAt)})` : ""}`);
+    if (report.job.startedAt) out.push(`- **Time on site:** ${report.job.minutesOnSite !== null ? formatMinutes(report.job.minutesOnSite) : "clock running"} (${dateTime(report.job.startedAt)}${report.job.endedAt ? ` → ${dateTime(report.job.endedAt)}` : " → …"})`);
     out.push("- **Technician:** ______________________", "");
     out.push("## Complaint", "", report.complaint ? mdCell(report.complaint) : "_No complaint recorded._", "");
     out.push("## Readings", "");
@@ -645,8 +870,13 @@ export function renderReportMarkdown(report: Report): string {
     out.push("", "## Open items / follow-up", "");
     if (report.openItems.length) for (const i of report.openItems) out.push(`- ${mdCell(i)}`);
     else out.push("_None._");
-    out.push("", "## Assistant summary", "");
+    out.push("", ...ownerDocMd(report.ownerDocumentation));
+    out.push(...pmMd(report.pm));
+    out.push("## Assistant summary", "");
     out.push(report.assistantSummary ? report.assistantSummary.trim() : "_No assistant reply yet._", "");
+    out.push("## Customer signature", "");
+    if (report.signature) out.push(`Signed by ${mdCell(report.signature.signedBy ?? "customer")}${report.signature.signedAt ? ` on ${dateTime(report.signature.signedAt)}` : ""}${report.signature.note ? ` — ${mdCell(report.signature.note)}` : ""} (signature image in the printable report).`, "");
+    else out.push("_Not signed._", "");
     return out.join("\n");
   }
   const u = report.unit;
@@ -664,7 +894,9 @@ export function renderReportMarkdown(report: Report): string {
   out.push("## Corrections", "");
   if (report.corrections.length) for (const c of report.corrections) out.push(`- ${dateOnly(c.date)} · **${mdCell(c.field)}**: app said ${mdCell(c.appValue ?? "—")} → actually ${mdCell(c.actualValue)}${c.applied ? " (unit updated)" : ""}${c.note ? ` — ${mdCell(c.note)}` : ""}`);
   else out.push("_None._");
-  out.push("", `## Recent conversations (${Math.min(report.totals.conversations, UNIT_REPORT_CONVERSATIONS)} of ${report.totals.conversations})`, "");
+  out.push("", ...ownerDocMd(report.ownerDocumentation));
+  out.push(...pmMd(report.pm));
+  out.push(`## Recent conversations (${Math.min(report.totals.conversations, UNIT_REPORT_CONVERSATIONS)} of ${report.totals.conversations})`, "");
   if (report.conversations.length) for (const c of report.conversations) out.push(`- ${dateOnly(c.date)} — ${mdCell(c.title)}${c.summary ? ` — ${mdCell(c.summary)}` : ""}`);
   else out.push("_None._");
   out.push("");
@@ -729,6 +961,10 @@ ul { padding-left: 20px; } li { margin: 4px 0; }
 .muted { color: var(--muted); }
 .sign { margin-top: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .sign div { border-top: 1px solid var(--ink); padding-top: 6px; font-size: 12px; color: var(--muted); }
+.sign img { display: block; max-width: 100%; max-height: 120px; margin-bottom: 6px; }
+.sign .who { color: var(--ink); font-size: 13px; }
+.events li { margin: 6px 0; }
+.events .ex { color: #a01f18; font-weight: 700; }
 footer { margin-top: 28px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
 @media print {
   .page { max-width: none; padding: 0; }
@@ -785,6 +1021,62 @@ function readingsHtml(r: ReportReadings): string {
   return `<div class="readings">${parts.join("")}</div>`;
 }
 
+function eventHtml(e: ReportRefrigerantEvent): string {
+  const bits: string[] = [`<b>${escapeHtml(e.type.replace(/_/g, " "))}</b>`];
+  if (e.amountLbs !== null) bits.push(`${escapeHtml(e.amountLbs)} lb${e.refrigerant ? ` ${escapeHtml(e.refrigerant)}` : ""}`);
+  else if (e.refrigerant) bits.push(escapeHtml(e.refrigerant));
+  if (e.circuit !== null) bits.push(`circuit ${escapeHtml(e.circuit)}`);
+  if (e.leakFound !== null) bits.push(e.leakFound ? "leak found" : "no leak found");
+  if (e.passed !== null) bits.push(e.passed ? "passed" : "failed");
+  if (e.leakRatePct !== null) bits.push(`leak rate ${escapeHtml(e.leakRatePct)} %/yr${e.thresholdPct !== null ? ` vs ${escapeHtml(e.thresholdPct)} %` : ""}${e.exceeded ? ' <span class="ex">EXCEEDED</span>' : ""}`);
+  if (e.cylinderId) bits.push(`cylinder ${escapeHtml(e.cylinderId)}`);
+  if (e.techName || e.techCert) bits.push(`tech ${escapeHtml([e.techName, e.techCert ? `cert ${e.techCert}` : null].filter(Boolean).join(" "))}`);
+  if (e.note) bits.push(escapeHtml(e.note));
+  return `<li>${escapeHtml(e.date)} · ${bits.join(" · ")}</li>`;
+}
+
+function ownerDocHtml(doc: ReportOwnerDocumentation | null): string {
+  const parts = ["<h2>Owner documentation (refrigerant / EPA leak-repair record)</h2>"];
+  if (!doc) {
+    parts.push('<p class="muted">No refrigerant events or full charge recorded.</p>');
+    return parts.join("\n");
+  }
+  parts.push(
+    `<div class="grid"><div class="kv"><b>Full charge</b>${doc.fullChargeLbs !== null ? `${escapeHtml(doc.fullChargeLbs)} lb${doc.circuitsCount > 1 ? ` (${doc.circuitsCount} circuits)` : ""}` : "not recorded"}</div>` +
+      `<div class="kv"><b>Appliance type</b>${doc.applianceType ? escapeHtml(doc.applianceType.replace(/_/g, " ")) : "not set (comfort cooling assumed)"}</div>` +
+      `<div class="kv"><b>Threshold</b>${escapeHtml(doc.thresholdPct)} % per year${doc.applies ? "" : " · below 15 lb applicability"}</div>` +
+      `<div class="kv"><b>Last leak rate</b>${doc.lastLeakRatePct !== null ? `${escapeHtml(doc.lastLeakRatePct)} %/yr${doc.exceeded ? ' <span class="chip bad">exceeds threshold</span>' : ' <span class="chip ok">within threshold</span>'}` : "none computed"}</div></div>`,
+  );
+  parts.push(`<p class="muted">Formula: ${escapeHtml(doc.formula)} — ${escapeHtml(doc.source)}.</p>`);
+  parts.push("<h3>Refrigerant events</h3>", doc.events.length ? `<ul class="events">${doc.events.map(eventHtml).join("")}</ul>` : '<p class="muted">None logged.</p>');
+  parts.push("<h3>Open obligations</h3>", doc.obligations.length ? `<ul>${doc.obligations.map((o) => `<li>${o.overdue ? '<span class="chip bad">overdue</span>' : ""}${escapeHtml(o.text)}${o.dueDate ? ` <span class="muted">(due ${escapeHtml(o.dueDate)})</span>` : ""}</li>`).join("")}</ul>` : '<p class="muted">None.</p>');
+  if (doc.notes.length) parts.push(`<p class="muted">${doc.notes.map(escapeHtml).join(" ")}</p>`);
+  return parts.join("\n");
+}
+
+function pmHtml(pm: ReportPm | null): string {
+  const parts = ["<h2>Preventive maintenance</h2>"];
+  if (!pm) {
+    parts.push('<p class="muted">No PM visit recorded.</p>');
+    return parts.join("\n");
+  }
+  parts.push(
+    `<div class="grid"><div class="kv"><b>Last PM</b>${escapeHtml(pm.date)} · ${escapeHtml(pm.templateName)}</div><div class="kv"><b>Status</b>${escapeHtml(pm.status.replace(/_/g, " "))}${pm.techName ? ` · ${escapeHtml(pm.techName)}` : ""}</div><div class="kv"><b>Result</b><span class="chip ok">${pm.pass} pass</span><span class="chip ${pm.fail ? "bad" : ""}">${pm.fail} fail</span><span class="chip">${pm.na} n/a</span> of ${pm.total}</div></div>`,
+  );
+  if (pm.safetyFails.length) parts.push(`<p><span class="chip bad">safety</span> ${pm.safetyFails.map(escapeHtml).join("; ")}</p>`);
+  if (pm.fails.length) parts.push(`<p><b>Failed items:</b> ${pm.fails.map(escapeHtml).join("; ")}</p>`);
+  if (pm.flagged.length) parts.push(`<p><b>Nameplate deviations:</b> ${pm.flagged.map(escapeHtml).join("; ")}</p>`);
+  if (pm.note) parts.push(`<p class="muted">${escapeHtml(pm.note)}</p>`);
+  return parts.join("\n");
+}
+
+function signatureHtml(sig: ReportSignature | null): string {
+  const customer = sig
+    ? `${sig.png && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sig.png) ? `<img src="${sig.png}" alt="Customer signature">` : ""}<div class="who">${escapeHtml(sig.signedBy ?? "Customer")}${sig.signedAt ? ` · ${escapeHtml(dateTime(sig.signedAt))}` : ""}${sig.note ? ` · ${escapeHtml(sig.note)}` : ""}</div>Customer signature`
+    : "Customer signature";
+  return `<div class="sign"><div>Technician signature</div><div>${customer}</div></div>`;
+}
+
 function pageHtml(title: string, bodyHtml: string, report: Report): string {
   return `<!doctype html>
 <html lang="en">
@@ -816,14 +1108,16 @@ export function renderReportHtml(report: Report): string {
     body.push("<h2>Unit</h2>");
     body.push(report.unit ? kvHtml(report.unit) : '<p class="muted">No unit attached to this conversation.</p>');
     body.push(
-      `<div class="grid" style="margin-top:8px"><div class="kv"><b>Date</b>${escapeHtml(dateTime(report.conversation.createdAt))}</div><div class="kv"><b>Last activity</b>${escapeHtml(dateTime(report.conversation.updatedAt))}</div><div class="kv"><b>Technician</b>&nbsp;</div></div>`,
+      `<div class="grid" style="margin-top:8px"><div class="kv"><b>Date</b>${escapeHtml(dateTime(report.conversation.createdAt))}</div><div class="kv"><b>Last activity</b>${escapeHtml(dateTime(report.conversation.updatedAt))}</div>${report.job.startedAt ? `<div class="kv"><b>Time on site</b>${report.job.minutesOnSite !== null ? escapeHtml(formatMinutes(report.job.minutesOnSite)) : "clock running"} <span class="muted">(${escapeHtml(dateTime(report.job.startedAt))}${report.job.endedAt ? ` → ${escapeHtml(dateTime(report.job.endedAt))}` : " → …"})</span></div>` : ""}<div class="kv"><b>Technician</b>&nbsp;</div></div>`,
     );
     body.push("<h2>Complaint</h2>", report.complaint ? `<p>${escapeHtml(report.complaint)}</p>` : '<p class="muted">No complaint recorded.</p>');
     body.push("<h2>Readings</h2>", report.readings.length ? report.readings.map(readingsHtml).join("") : '<p class="muted">No readings or diagnoses in this conversation.</p>');
     body.push("<h2>Findings</h2>", report.findings.length ? report.findings.map(findingHtml).join("") : '<p class="muted">No findings saved from this conversation.</p>');
     body.push("<h2>Open items / follow-up</h2>", report.openItems.length ? `<ul>${report.openItems.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : '<p class="muted">None.</p>');
+    body.push(ownerDocHtml(report.ownerDocumentation));
+    body.push(pmHtml(report.pm));
     body.push("<h2>Assistant summary</h2>", report.assistantSummary ? `<div class="summary">${renderMarkdownSafe(report.assistantSummary)}</div>` : '<p class="muted">No assistant reply yet.</p>');
-    body.push('<div class="sign"><div>Technician signature</div><div>Customer signature</div></div>');
+    body.push(signatureHtml(report.signature));
     return pageHtml(`Service report — ${report.conversation.title}`, body.join("\n"), report);
   }
   const u = report.unit;
@@ -840,6 +1134,8 @@ export function renderReportHtml(report: Report): string {
           .join("")}</ul>`
       : '<p class="muted">None.</p>',
   );
+  body.push(ownerDocHtml(report.ownerDocumentation));
+  body.push(pmHtml(report.pm));
   body.push(`<h2>Recent conversations (${Math.min(report.totals.conversations, UNIT_REPORT_CONVERSATIONS)} of ${report.totals.conversations})</h2>`);
   body.push(report.conversations.length ? `<ul>${report.conversations.map((c) => `<li>${escapeHtml(dateOnly(c.date))} — ${escapeHtml(c.title)}${c.summary ? ` <span class="muted">— ${escapeHtml(c.summary)}</span>` : ""}</li>`).join("")}</ul>` : '<p class="muted">None.</p>');
   return pageHtml(`Unit report — ${unitTitle(u)}`, body.join("\n"), report);

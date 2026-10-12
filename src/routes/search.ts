@@ -55,12 +55,16 @@ export function exportRouter(deps: AppDeps): Router {
     const findings = repos.findings.list({ limit: EXPORT_LIST_CAP });
     // The backup copy of corrections; it does not mark them exported (that is POST /api/corrections/export).
     const corrections = repos.corrections.list({ limit: EXPORT_LIST_CAP });
+    const refrigerantEvents = repos.refrigerantEvents.listAll({ limit: EXPORT_LIST_CAP });
+    const pmVisits = repos.pmVisits.listAll({ limit: EXPORT_LIST_CAP });
     const truncated = (
       [
         ["units", units.length],
         ["conversations", conversations.length],
         ["findings", findings.length],
         ["corrections", corrections.length],
+        ["refrigerantEvents", refrigerantEvents.length],
+        ["pmVisits", pmVisits.length],
       ] as const
     )
       .filter(([, n]) => n >= EXPORT_LIST_CAP)
@@ -78,6 +82,8 @@ export function exportRouter(deps: AppDeps): Router {
       messages,
       findings,
       corrections,
+      refrigerantEvents,
+      pmVisits,
     });
   });
   return r;

@@ -12,11 +12,16 @@ import type {
   MessageRow,
   TesterEventRow,
   TesterRow,
+  PmVisitRow,
+  PmVisitStatus,
   ReadingRow,
   ReadingSource,
+  RefrigerantEventRow,
+  RefrigerantEventType,
   SearchHit,
   UnitRow,
 } from "../types.ts";
+import { APPLIANCE_TYPES, addDays, dateOnly, evaluateAdd } from "../knowledge/refrigerantCompliance.ts";
 
 /** At least one of model / unit_tag / nickname must be non-empty. */
 export type UnitInput = Partial<Omit<UnitRow, "id" | "created_at" | "updated_at">>;
@@ -65,6 +70,49 @@ export interface ReadingInput {
 export type FollowUpStatus = "open" | "done" | "all";
 export const FOLLOW_UP_STATUSES: readonly FollowUpStatus[] = ["open", "done", "all"];
 export const READING_SOURCES: readonly ReadingSource[] = ["sheet", "chat", "import"];
+export const REFRIGERANT_EVENT_TYPES: readonly RefrigerantEventType[] = ["add", "recover", "leak_check", "verification_initial", "verification_followup", "repair", "retrofit_plan"];
+export const PM_VISIT_STATUSES: readonly PmVisitStatus[] = ["in_progress", "complete"];
+
+/** Input for refrigerantEvents.create. `created_at` (ISO) or `date` (YYYY-MM-DD) back-date an event; default = repo clock. */
+export interface RefrigerantEventInput {
+  unit_id: string;
+  conversation_id?: string | null;
+  event_type: RefrigerantEventType | string;
+  refrigerant?: string | null;
+  amount_lbs?: number | null;
+  circuit?: number | null;
+  cylinder_id?: string | null;
+  tech_name?: string | null;
+  tech_cert?: string | null;
+  leak_found?: boolean | 0 | 1 | null;
+  passed?: boolean | 0 | 1 | null;
+  note?: string | null;
+  created_at?: string | null;
+  date?: string | null;
+}
+
+/** A refrigerant event joined with its unit identity (CSV export). */
+export interface RefrigerantEventExportRow extends RefrigerantEventRow {
+  unit_site: string | null;
+  unit_tag: string | null;
+  unit_model: string | null;
+  unit_serial: string | null;
+  unit_nickname: string | null;
+}
+
+export interface PmVisitInput {
+  unit_id: string;
+  conversation_id?: string | null;
+  template_id: string;
+  status?: PmVisitStatus | string | null;
+  tech_name?: string | null;
+  results_json?: unknown;
+  summary_json?: unknown;
+  note?: string | null;
+  created_at?: string | null;
+}
+
+export type PmVisitPatch = Partial<Pick<PmVisitInput, "status" | "tech_name" | "results_json" | "summary_json" | "note">>;
 
 export const CORRECTION_FIELDS: readonly CorrectionField[] = [
   "manufacturer",
@@ -133,6 +181,13 @@ export interface Repos {
     update(id: string, patch: Partial<Pick<ConversationRow, "title" | "unit_id" | "summary">>): ConversationRow | undefined;
     touch(id: string): void;
     remove(id: string): boolean;
+    /** Job clock: set/clear job_started_at / job_ended_at (ISO or null). */
+    setJob(id: string, patch: { job_started_at?: string | null; job_ended_at?: string | null }): ConversationRow | undefined;
+    /** Store the customer signature (PNG data URL, already validated by the route) with who/when/note. */
+    setSignature(id: string, sig: { png: string; signed_by?: string | null; note?: string | null; signed_at?: string }): ConversationRow | undefined;
+    clearSignature(id: string): ConversationRow | undefined;
+    /** The stored signature data URL (never on the row itself). */
+    signaturePng(id: string): string | null;
   };
   messages: {
     /**
@@ -167,6 +222,34 @@ export interface Repos {
     /** The newest row for a unit, or undefined. */
     latest(unitId: string): ReadingRow | undefined;
     remove(id: string): boolean;
+  };
+  /**
+   * Refrigerant log per unit. `create` computes leak_rate_pct / threshold_pct / exceeded for an add from the
+   * unit's full charge (per circuit when the add names one) and the previous add, and — when the threshold
+   * is exceeded — creates the open follow-up finding ("repair within 30 days and verify") once, storing its
+   * id on the event (finding_id).
+   */
+  refrigerantEvents: {
+    create(input: RefrigerantEventInput): RefrigerantEventRow;
+    get(id: string): RefrigerantEventRow | undefined;
+    /** Newest first. */
+    list(opts: { unitId: string; limit?: number }): RefrigerantEventRow[];
+    /** The newest add on the unit (on that circuit when given; any circuit otherwise). */
+    latestAdd(unitId: string, circuit?: number | null): RefrigerantEventRow | undefined;
+    remove(id: string): boolean;
+    /** Every event joined with its unit (site, tag, model, serial, nickname), oldest first (CSV export / backup). */
+    listAll(opts?: { limit?: number }): RefrigerantEventExportRow[];
+  };
+  /** PM checklist visits per unit (results/summary JSON are stored as given; evaluation happens in src/pmStore.ts). */
+  pmVisits: {
+    create(input: PmVisitInput): PmVisitRow;
+    get(id: string): PmVisitRow | undefined;
+    /** Newest first. */
+    list(opts: { unitId: string; limit?: number }): PmVisitRow[];
+    latest(unitId: string): PmVisitRow | undefined;
+    update(id: string, patch: PmVisitPatch): PmVisitRow | undefined;
+    remove(id: string): boolean;
+    listAll(opts?: { limit?: number }): PmVisitRow[];
   };
   /** FTS over messages (chat rows only) + findings, plus LIKE over units (model/serial/tag/site/customer). */
   search(query: string, opts?: { unitId?: string; site?: string; since?: string; limit?: number }): SearchHit[];
@@ -342,7 +425,7 @@ function plain<T>(row: unknown): T {
 // Column whitelists
 // ---------------------------------------------------------------------------
 
-type ColKind = "text" | "code" | "json" | "num";
+type ColKind = "text" | "code" | "json" | "num" | "appliance_type";
 
 const NUM_RULES: Record<string, NumRule> = {
   tonnage: { int: false, min: 0, max: 10000 },
@@ -351,6 +434,10 @@ const NUM_RULES: Record<string, NumRule> = {
   elevation_ft: { int: true, min: -1500, max: 30000 },
   refrigerant_added_lbs: { int: false, min: 0, max: 100000 },
   refrigerant_recovered_lbs: { int: false, min: 0, max: 100000 },
+  full_charge_lbs: { int: false, min: 0, max: 100000 },
+  circuits_count: { int: true, min: 1, max: 64 },
+  amount_lbs: { int: false, min: 0, max: 100000 },
+  circuit: { int: true, min: 1, max: 64 },
 };
 
 const UNIT_COLUMNS: Record<string, ColKind> = {
@@ -379,8 +466,12 @@ const UNIT_COLUMNS: Record<string, ColKind> = {
   last_service_at: "text",
   elevation_ft: "num",
   archived_at: "text",
+  full_charge_lbs: "num",
+  appliance_type: "appliance_type",
+  circuits_count: "num",
 };
 const UNIT_COLUMN_NAMES = Object.keys(UNIT_COLUMNS);
+const APPLIANCE_TYPE_SET = new Set<string>(APPLIANCE_TYPES);
 
 const FINDING_STATUSES = new Set(["open", "resolved", "monitor"]);
 const FINDING_ORIGINS = new Set(["tech", "assistant"]);
@@ -396,6 +487,13 @@ function coerceUnitColumn(col: string, value: unknown): SqlValue {
       return jsonOrNull(value, col);
     case "num":
       return numberOrNull(value, col, NUM_RULES[col] ?? { int: false, min: -Infinity, max: Infinity });
+    case "appliance_type": {
+      const s = textOrNull(value, col);
+      if (s === null) return null;
+      const t = s.toLowerCase();
+      if (!APPLIANCE_TYPE_SET.has(t)) throw validation(`appliance_type must be one of: ${APPLIANCE_TYPES.join(", ")}`);
+      return t;
+    }
     default:
       throw validation(`unknown unit column ${col}`);
   }
@@ -411,7 +509,14 @@ const FINDING_COLS =
   "service_date, refrigerant, refrigerant_added_lbs, refrigerant_recovered_lbs, follow_up, follow_up_due, follow_up_done, origin, confirmed, created_at";
 const READING_COLS =
   "id, unit_id, conversation_id, created_at, mode, refrigerant, metering_device, measurements_json, derived_json, validity_json, findings_json, note, source";
-const READING_MODES = new Set(["ac_cooling", "heat_pump_cooling", "heat_pump_heating", "refrigeration"]);
+const READING_MODES = new Set(["ac_cooling", "heat_pump_cooling", "heat_pump_heating", "refrigeration", "chiller"]);
+const CONVERSATION_COLS = "id, title, unit_id, summary, created_at, updated_at, job_started_at, job_ended_at, signed_by, signed_at, signature_note, tester_id";
+const REFRIGERANT_EVENT_COLS =
+  "id, unit_id, conversation_id, created_at, event_type, refrigerant, amount_lbs, circuit, cylinder_id, tech_name, tech_cert, leak_found, passed, note, " +
+  "leak_rate_pct, threshold_pct, exceeded, finding_id";
+const REFRIGERANT_EVENT_TYPE_SET = new Set<string>(REFRIGERANT_EVENT_TYPES);
+const PM_VISIT_COLS = "id, unit_id, conversation_id, created_at, updated_at, template_id, status, tech_name, results_json, summary_json, note";
+const PM_VISIT_STATUS_SET = new Set<string>(PM_VISIT_STATUSES);
 const READING_METERING = new Set(["txv", "fixed", "eev", "unknown"]);
 const READING_SOURCE_SET = new Set<string>(READING_SOURCES);
 
@@ -590,7 +695,7 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
   // ----- conversations --------------------------------------------------------
 
   const getConversation = (id: string): ConversationRow | undefined => {
-    const row = prep("SELECT id, title, unit_id, summary, created_at, updated_at, tester_id FROM conversations WHERE id = ?").get(id);
+    const row = prep(`SELECT ${CONVERSATION_COLS} FROM conversations WHERE id = ?`).get(id);
     return row ? plain<ConversationRow>(row) : undefined;
   };
 
@@ -641,7 +746,7 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
         params.push(pattern, pattern);
       }
       const sql =
-        "SELECT id, title, unit_id, summary, created_at, updated_at, tester_id FROM conversations" +
+        `SELECT ${CONVERSATION_COLS} FROM conversations` +
         (where.length ? ` WHERE ${where.join(" AND ")}` : "") +
         " ORDER BY updated_at DESC, rowid DESC LIMIT ?";
       params.push(clampLimit(opts.limit, 100));
@@ -683,6 +788,50 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       if (typeof id !== "string") return false;
       const res = prep("DELETE FROM conversations WHERE id = ?").run(id);
       return Number(res.changes) > 0;
+    },
+
+    setJob(id, patch) {
+      if (typeof id !== "string" || !getConversation(id)) return undefined;
+      if (!patch || typeof patch !== "object") throw validation("patch required");
+      const cols: string[] = [];
+      const values: SqlValue[] = [];
+      for (const col of ["job_started_at", "job_ended_at"] as const) {
+        if (!(col in patch)) continue;
+        const v = textOrNull(patch[col], col);
+        if (v !== null && !Number.isFinite(Date.parse(v))) throw validation(`${col} must be an ISO timestamp`);
+        cols.push(col);
+        values.push(v);
+      }
+      if (cols.length === 0) return getConversation(id);
+      prep(`UPDATE conversations SET ${cols.map((c) => `${c} = ?`).concat("updated_at = ?").join(", ")} WHERE id = ?`).run(...values, now(), id);
+      return getConversation(id);
+    },
+
+    setSignature(id, sig) {
+      if (typeof id !== "string" || !getConversation(id)) return undefined;
+      if (!sig || typeof sig.png !== "string" || !sig.png.startsWith("data:image/png;base64,")) throw validation("signature png must be a PNG data URL");
+      const ts = now();
+      prep("UPDATE conversations SET signature_png = ?, signed_by = ?, signed_at = ?, signature_note = ?, updated_at = ? WHERE id = ?").run(
+        sig.png,
+        textOrNull(sig.signed_by, "signed_by"),
+        textOrNull(sig.signed_at, "signed_at") ?? ts,
+        textOrNull(sig.note, "signature_note"),
+        ts,
+        id,
+      );
+      return getConversation(id);
+    },
+
+    clearSignature(id) {
+      if (typeof id !== "string" || !getConversation(id)) return undefined;
+      prep("UPDATE conversations SET signature_png = NULL, signed_by = NULL, signed_at = NULL, signature_note = NULL, updated_at = ? WHERE id = ?").run(now(), id);
+      return getConversation(id);
+    },
+
+    signaturePng(id) {
+      if (typeof id !== "string") return null;
+      const row = prep("SELECT signature_png FROM conversations WHERE id = ?").get(id) as { signature_png?: unknown } | undefined;
+      return typeof row?.signature_png === "string" && row.signature_png !== "" ? row.signature_png : null;
     },
   };
 
@@ -926,7 +1075,7 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
         conversationId = input.conversation_id;
       }
       const mode = textOrNull(input.mode, "mode") ?? "";
-      if (!READING_MODES.has(mode)) throw validation("mode must be ac_cooling, heat_pump_cooling, heat_pump_heating or refrigeration");
+      if (!READING_MODES.has(mode)) throw validation("mode must be ac_cooling, heat_pump_cooling, heat_pump_heating, refrigeration or chiller");
       const refrigerant = textOrNull(input.refrigerant, "refrigerant");
       if (!refrigerant) throw validation("refrigerant required");
       const metering = textOrNull(input.metering_device, "metering_device") ?? "unknown";
@@ -976,6 +1125,258 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     remove(id) {
       if (typeof id !== "string") return false;
       return Number(prep("DELETE FROM readings WHERE id = ?").run(id).changes) > 0;
+    },
+  };
+
+  // ----- refrigerant log --------------------------------------------------------
+
+  const getRefrigerantEvent = (id: string): RefrigerantEventRow | undefined => {
+    const row = prep(`SELECT ${REFRIGERANT_EVENT_COLS} FROM refrigerant_events WHERE id = ?`).get(id);
+    return row ? plain<RefrigerantEventRow>(row) : undefined;
+  };
+
+  const latestAddRow = (unitId: string, circuit: number | null | undefined, before?: string): RefrigerantEventRow | undefined => {
+    const hasCircuit = typeof circuit === "number" && Number.isFinite(circuit);
+    const sql =
+      `SELECT ${REFRIGERANT_EVENT_COLS} FROM refrigerant_events WHERE unit_id = ? AND event_type = 'add'` +
+      (hasCircuit ? " AND circuit = ?" : "") +
+      (before !== undefined ? " AND created_at <= ?" : "") +
+      " ORDER BY created_at DESC, rowid DESC LIMIT 1";
+    const params: SqlValue[] = [unitId];
+    if (hasCircuit) params.push(Math.round(circuit as number));
+    if (before !== undefined) params.push(before);
+    const row = prep(sql).get(...params);
+    return row ? plain<RefrigerantEventRow>(row) : undefined;
+  };
+
+  const refrigerantEvents: Repos["refrigerantEvents"] = {
+    create(input) {
+      if (!input || typeof input !== "object") throw validation("refrigerant event input required");
+      if (typeof input.unit_id !== "string" || input.unit_id === "") throw validation("unit_id required");
+      const unit = getUnit(input.unit_id);
+      if (!unit) throw new RepoError("not_found", "unit not found");
+      let conversationId: string | null = null;
+      if (input.conversation_id !== null && input.conversation_id !== undefined && input.conversation_id !== "") {
+        if (typeof input.conversation_id !== "string") throw validation("conversation_id must be a string");
+        if (!conversationExists(input.conversation_id)) throw new RepoError("not_found", "conversation not found");
+        conversationId = input.conversation_id;
+      }
+      const type = (textOrNull(input.event_type, "event_type") ?? "").toLowerCase();
+      if (!REFRIGERANT_EVENT_TYPE_SET.has(type)) throw validation(`event_type must be one of: ${REFRIGERANT_EVENT_TYPES.join(", ")}`);
+      const amount = numberOrNull(input.amount_lbs, "amount_lbs", NUM_RULES.amount_lbs!);
+      if ((type === "add" || type === "recover") && !(amount !== null && amount > 0)) throw validation(`amount_lbs must be a positive number for ${type}`);
+      const circuit = numberOrNull(input.circuit, "circuit", NUM_RULES.circuit!);
+      const refrigerant = textOrNull(input.refrigerant, "refrigerant") ?? unit.refrigerant ?? null;
+      let createdAt = textOrNull(input.created_at, "created_at");
+      if (createdAt !== null && !Number.isFinite(Date.parse(createdAt))) throw validation("created_at must be an ISO timestamp");
+      if (createdAt === null) {
+        const day = isoDateOrNull(input.date, "date");
+        createdAt = day ? `${day}T12:00:00.000Z` : now();
+      }
+      const leakFound = boolToInt(input.leak_found, "leak_found");
+      const passed = boolToInt(input.passed, "passed");
+      const note = textOrNull(input.note, "note");
+      let leakRate: number | null = null;
+      let threshold: number | null = null;
+      let exceeded: 0 | 1 | null = null;
+      let previous: RefrigerantEventRow | undefined;
+      if (type === "add") {
+        previous = latestAddRow(unit.id, circuit, createdAt);
+        const ev = evaluateAdd({
+          amountLbs: amount as number,
+          date: createdAt,
+          circuit,
+          previousAddDate: previous?.created_at ?? null,
+          unit: { fullChargeLbs: unit.full_charge_lbs ?? null, applianceType: unit.appliance_type ?? null, circuitsCount: unit.circuits_count ?? null, installYear: unit.install_year },
+        });
+        leakRate = ev.leakRatePct;
+        threshold = ev.thresholdPct;
+        exceeded = ev.leakRatePct === null ? null : ev.exceeded ? 1 : 0;
+      }
+      const id = newId();
+      return transaction(() => {
+        prep(
+          `INSERT INTO refrigerant_events (${REFRIGERANT_EVENT_COLS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+        ).run(
+          id,
+          unit.id,
+          conversationId,
+          createdAt,
+          type,
+          refrigerant,
+          amount,
+          circuit,
+          textOrNull(input.cylinder_id, "cylinder_id"),
+          textOrNull(input.tech_name, "tech_name"),
+          textOrNull(input.tech_cert, "tech_cert"),
+          leakFound,
+          passed,
+          note,
+          leakRate,
+          threshold,
+          exceeded,
+        );
+        if (exceeded === 1) {
+          const day = dateOnly(createdAt) ?? createdAt.slice(0, 10);
+          const finding = findings.create({
+            unit_id: unit.id,
+            conversation_id: conversationId,
+            symptom: `Refrigerant added: ${amount} lb${refrigerant ? ` ${refrigerant}` : ""}${circuit !== null ? ` on circuit ${circuit}` : ""} — annualized leak rate ${leakRate} % exceeds the ${threshold} % EPA threshold`,
+            cause: null,
+            resolution: null,
+            status: "open",
+            service_date: day,
+            refrigerant,
+            refrigerant_added_lbs: amount,
+            tags: "refrigerant,leak,epa",
+            circuit: circuit !== null ? String(circuit) : null,
+            follow_up: `EPA leak rate ${leakRate} % exceeds ${threshold} % - repair within 30 days and verify`,
+            follow_up_due: addDays(day, 30),
+            follow_up_done: 0,
+            origin: "tech",
+            confirmed: 1,
+          });
+          prep("UPDATE refrigerant_events SET finding_id = ? WHERE id = ?").run(finding.id, id);
+        }
+        return getRefrigerantEvent(id)!;
+      });
+    },
+
+    get(id) {
+      return typeof id === "string" ? getRefrigerantEvent(id) : undefined;
+    },
+
+    list(opts) {
+      if (!opts || typeof opts.unitId !== "string" || opts.unitId === "") return [];
+      return prep(`SELECT ${REFRIGERANT_EVENT_COLS} FROM refrigerant_events WHERE unit_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?`)
+        .all(opts.unitId, clampLimit(opts.limit, 100, 1000))
+        .map((r) => plain<RefrigerantEventRow>(r));
+    },
+
+    latestAdd(unitId, circuit) {
+      if (typeof unitId !== "string" || unitId === "") return undefined;
+      return latestAddRow(unitId, circuit ?? null);
+    },
+
+    remove(id) {
+      if (typeof id !== "string") return false;
+      return Number(prep("DELETE FROM refrigerant_events WHERE id = ?").run(id).changes) > 0;
+    },
+
+    listAll(opts = {}) {
+      const cols = REFRIGERANT_EVENT_COLS.split(", ")
+        .map((c) => `e.${c}`)
+        .join(", ");
+      return prep(
+        `SELECT ${cols}, u.site AS unit_site, u.unit_tag AS unit_tag, u.model AS unit_model, u.serial AS unit_serial, u.nickname AS unit_nickname ` +
+          "FROM refrigerant_events e LEFT JOIN units u ON u.id = e.unit_id ORDER BY e.created_at ASC, e.rowid ASC LIMIT ?",
+      )
+        .all(clampLimit(opts.limit, 5000, 50000))
+        .map((r) => plain<RefrigerantEventExportRow>(r));
+    },
+  };
+
+  // ----- PM visits -------------------------------------------------------------
+
+  const getPmVisit = (id: string): PmVisitRow | undefined => {
+    const row = prep(`SELECT ${PM_VISIT_COLS} FROM pm_visits WHERE id = ?`).get(id);
+    return row ? plain<PmVisitRow>(row) : undefined;
+  };
+
+  const pmStatus = (value: unknown, fallback: PmVisitStatus): PmVisitStatus => {
+    const s = textOrNull(value, "status");
+    if (s === null) return fallback;
+    if (!PM_VISIT_STATUS_SET.has(s)) throw validation("status must be in_progress or complete");
+    return s as PmVisitStatus;
+  };
+
+  const pmVisits: Repos["pmVisits"] = {
+    create(input) {
+      if (!input || typeof input !== "object") throw validation("pm visit input required");
+      if (typeof input.unit_id !== "string" || input.unit_id === "") throw validation("unit_id required");
+      if (!unitExists(input.unit_id)) throw new RepoError("not_found", "unit not found");
+      let conversationId: string | null = null;
+      if (input.conversation_id !== null && input.conversation_id !== undefined && input.conversation_id !== "") {
+        if (typeof input.conversation_id !== "string") throw validation("conversation_id must be a string");
+        if (!conversationExists(input.conversation_id)) throw new RepoError("not_found", "conversation not found");
+        conversationId = input.conversation_id;
+      }
+      const templateId = textOrNull(input.template_id, "template_id");
+      if (!templateId) throw validation("template_id required");
+      const id = newId();
+      const ts = textOrNull(input.created_at, "created_at") ?? now();
+      prep(`INSERT INTO pm_visits (${PM_VISIT_COLS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+        id,
+        input.unit_id,
+        conversationId,
+        ts,
+        ts,
+        templateId,
+        pmStatus(input.status, "in_progress"),
+        textOrNull(input.tech_name, "tech_name"),
+        jsonOrNull(input.results_json, "results_json") ?? "{}",
+        jsonOrNull(input.summary_json, "summary_json") ?? "{}",
+        textOrNull(input.note, "note"),
+      );
+      return getPmVisit(id)!;
+    },
+
+    get(id) {
+      return typeof id === "string" ? getPmVisit(id) : undefined;
+    },
+
+    list(opts) {
+      if (!opts || typeof opts.unitId !== "string" || opts.unitId === "") return [];
+      return prep(`SELECT ${PM_VISIT_COLS} FROM pm_visits WHERE unit_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?`)
+        .all(opts.unitId, clampLimit(opts.limit, 20, 200))
+        .map((r) => plain<PmVisitRow>(r));
+    },
+
+    latest(unitId) {
+      if (typeof unitId !== "string" || unitId === "") return undefined;
+      const row = prep(`SELECT ${PM_VISIT_COLS} FROM pm_visits WHERE unit_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1`).get(unitId);
+      return row ? plain<PmVisitRow>(row) : undefined;
+    },
+
+    update(id, patch) {
+      if (typeof id !== "string" || !getPmVisit(id)) return undefined;
+      if (!patch || typeof patch !== "object") throw validation("patch required");
+      const cols: string[] = [];
+      const values: SqlValue[] = [];
+      if ("status" in patch) {
+        cols.push("status");
+        values.push(pmStatus(patch.status, "in_progress"));
+      }
+      if ("tech_name" in patch) {
+        cols.push("tech_name");
+        values.push(textOrNull(patch.tech_name, "tech_name"));
+      }
+      if ("note" in patch) {
+        cols.push("note");
+        values.push(textOrNull(patch.note, "note"));
+      }
+      if ("results_json" in patch) {
+        cols.push("results_json");
+        values.push(jsonOrNull(patch.results_json, "results_json") ?? "{}");
+      }
+      if ("summary_json" in patch) {
+        cols.push("summary_json");
+        values.push(jsonOrNull(patch.summary_json, "summary_json") ?? "{}");
+      }
+      if (cols.length === 0) return getPmVisit(id);
+      prep(`UPDATE pm_visits SET ${cols.map((c) => `${c} = ?`).concat("updated_at = ?").join(", ")} WHERE id = ?`).run(...values, now(), id);
+      return getPmVisit(id);
+    },
+
+    remove(id) {
+      if (typeof id !== "string") return false;
+      return Number(prep("DELETE FROM pm_visits WHERE id = ?").run(id).changes) > 0;
+    },
+
+    listAll(opts = {}) {
+      return prep(`SELECT ${PM_VISIT_COLS} FROM pm_visits ORDER BY created_at ASC, rowid ASC LIMIT ?`)
+        .all(clampLimit(opts.limit, 5000, 50000))
+        .map((r) => plain<PmVisitRow>(r));
     },
   };
 
@@ -1358,7 +1759,7 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     },
   };
 
-  return { units, conversations, messages, findings, readings, search, usage, corrections, testers, transaction };
+  return { units, conversations, messages, findings, readings, refrigerantEvents, pmVisits, search, usage, corrections, testers, transaction };
 }
 
 /** Bracket the first case-insensitive occurrence of each token (mirrors the FTS snippet markers). */

@@ -167,6 +167,7 @@ export const MODE_LABEL: Record<string, string> = {
   heat_pump_cooling: "heat pump cooling",
   heat_pump_heating: "heat pump heating",
   refrigeration: "refrigeration",
+  chiller: "chiller",
 };
 
 /**

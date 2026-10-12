@@ -2,9 +2,35 @@ import { Router, type Response } from "express";
 import type { AppDeps } from "../app.ts";
 import { isTurnRunning, runTurn, stopTurn, type UserTurnInput } from "../agent/chat.ts";
 import type { ChatEvent, ConversationRow, UnitRow } from "../types.ts";
-import { HttpError, badRequest, body, foldMessages, notFound, optString, optionalId, parseImages, queryInt, queryString, requireId, sendError } from "./util.ts";
+import { HttpError, badRequest, body, foldMessages, notFound, optEnum, optString, optionalId, parseImages, parseSignaturePng, queryInt, queryString, requireId, sendError } from "./util.ts";
 import { principalOf, testerIdOf } from "./auth.ts";
 import { capMessage, testerBudget } from "../testers.ts";
+
+export const JOB_ACTIONS = ["start", "stop", "clear"] as const;
+export type JobAction = (typeof JOB_ACTIONS)[number];
+
+/** Whole minutes between job start and end (null unless both are set and ordered). */
+export function minutesOnSite(startedAt: string | null | undefined, endedAt: string | null | undefined): number | null {
+  if (!startedAt || !endedAt) return null;
+  const a = Date.parse(startedAt);
+  const b = Date.parse(endedAt);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
+  return Math.round((b - a) / 60_000);
+}
+
+/** Conversation row for the API: job clock + signature metadata (never the PNG), minutes on site. */
+export function conversationPayload(c: ConversationRow): Record<string, unknown> {
+  return {
+    ...c,
+    job_started_at: c.job_started_at ?? null,
+    job_ended_at: c.job_ended_at ?? null,
+    signed_by: c.signed_by ?? null,
+    signed_at: c.signed_at ?? null,
+    signature_note: c.signature_note ?? null,
+    minutes_on_site: minutesOnSite(c.job_started_at, c.job_ended_at),
+    signed: !!c.signed_at,
+  };
+}
 
 export const SSE_HEARTBEAT_MS = 15_000;
 export const MAX_TEXT_CHARS = 100_000;
@@ -45,7 +71,7 @@ function unitBadge(u: UnitRow | undefined): Record<string, unknown> | null {
 function withUnit(deps: AppDeps, c: ConversationRow, testerNames?: Map<string, string>): Record<string, unknown> {
   const unit = c.unit_id ? deps.repos.units.get(c.unit_id) : undefined;
   const testerName = c.tester_id ? (testerNames?.get(c.tester_id) ?? null) : null;
-  return { ...c, unit: unitBadge(unit), unit_tag: unit?.unit_tag ?? null, unit_model: unit?.model ?? null, tester_name: testerName };
+  return { ...conversationPayload(c), unit: unitBadge(unit), unit_tag: unit?.unit_tag ?? null, unit_model: unit?.model ?? null, tester_name: testerName };
 }
 
 export function conversationsRouter(deps: AppDeps): Router {
@@ -86,13 +112,60 @@ export function conversationsRouter(deps: AppDeps): Router {
     res.status(201).json({ conversation: withUnit(deps, conversation) });
   });
 
-  // GET /api/conversations/:id → {conversation, unit, messages, busy}
+  // GET /api/conversations/:id[?include=signature] → {conversation, unit, messages, busy, signature?}
   r.get("/:id", (req, res) => {
     const id = requireId(req.params.id);
     const conversation = ownConversation(req, id);
     const unit = conversation.unit_id ? (repos.units.get(conversation.unit_id) ?? null) : null;
     const messages = foldMessages(repos.messages.list(id));
-    res.json({ conversation, unit, messages, busy: isTurnRunning(id) });
+    const out: Record<string, unknown> = { conversation: conversationPayload(conversation), unit, messages, busy: isTurnRunning(id) };
+    const include = (queryString(req, "include") ?? "").split(",").map((s) => s.trim());
+    if (include.includes("signature")) {
+      const png = repos.conversations.signaturePng(id);
+      out.signature = png ? { png, signed_by: conversation.signed_by ?? null, signed_at: conversation.signed_at ?? null, note: conversation.signature_note ?? null } : null;
+    }
+    res.json(out);
+  });
+
+  // POST /api/conversations/:id/job {action: start|stop|clear} → {conversation}
+  r.post("/:id/job", (req, res) => {
+    const id = requireId(req.params.id);
+    const existing = repos.conversations.get(id);
+    if (!existing) throw notFound("Conversation not found.");
+    const action = optEnum<JobAction>(body(req).action, "action", JOB_ACTIONS);
+    if (!action) throw badRequest(`action is required: one of ${JOB_ACTIONS.join(", ")}.`);
+    const nowIso = (deps.now ? deps.now() : new Date()).toISOString();
+    let patch: { job_started_at?: string | null; job_ended_at?: string | null };
+    if (action === "start") patch = { job_started_at: nowIso, job_ended_at: null };
+    else if (action === "stop") {
+      if (!existing.job_started_at) throw badRequest("The job clock has not been started.");
+      patch = { job_ended_at: nowIso };
+    } else patch = { job_started_at: null, job_ended_at: null };
+    const conversation = repos.conversations.setJob(id, patch);
+    if (!conversation) throw notFound("Conversation not found.");
+    res.json({ conversation: withUnit(deps, conversation) });
+  });
+
+  // POST /api/conversations/:id/signature {png (data:image/png;base64,…), signed_by?, note?} → {conversation}
+  r.post("/:id/signature", (req, res) => {
+    const id = requireId(req.params.id);
+    if (!repos.conversations.get(id)) throw notFound("Conversation not found.");
+    const b = body(req);
+    const png = parseSignaturePng(b.png);
+    const signedBy = optString(b.signed_by, "signed_by", 120)?.trim() || null;
+    const note = optString(b.note, "note", 500)?.trim() || null;
+    const conversation = repos.conversations.setSignature(id, { png, signed_by: signedBy, note, signed_at: (deps.now ? deps.now() : new Date()).toISOString() });
+    if (!conversation) throw notFound("Conversation not found.");
+    res.status(201).json({ conversation: withUnit(deps, conversation) });
+  });
+
+  // DELETE /api/conversations/:id/signature → {conversation}
+  r.delete("/:id/signature", (req, res) => {
+    const id = requireId(req.params.id);
+    if (!repos.conversations.get(id)) throw notFound("Conversation not found.");
+    const conversation = repos.conversations.clearSignature(id);
+    if (!conversation) throw notFound("Conversation not found.");
+    res.json({ conversation: withUnit(deps, conversation) });
   });
 
   // PATCH /api/conversations/:id {title?, unit_id?|null}

@@ -127,9 +127,16 @@ let loadedPacks: ManufacturerPack[] = [];
 try {
   const kb = loadKnowledge(knowledgeDir, { strict: true });
   loadedPacks = kb.manufacturers;
+  const pmTemplates = kb.pm?.templates ?? [];
+  const pmItems = pmTemplates.reduce((n, t) => n + t.sections.reduce((m, s) => m + s.items.length, 0), 0);
   console.log(
-    `strict load OK: ${kb.manufacturers.length} pack(s), ${kb.refrigerants.tables.size} refrigerant table(s), ${kb.refrigerants.meta.length} index entries, ${kb.diagnostics.rules.rules.length} dx rule(s), ${kb.electrical.components.length} electrical component(s), ${kb.electrical.procedures.length} procedure(s)`,
+    `strict load OK: ${kb.manufacturers.length} pack(s), ${kb.refrigerants.tables.size} refrigerant table(s), ${kb.refrigerants.meta.length} index entries, ${kb.diagnostics.rules.rules.length} dx rule(s), ${kb.electrical.components.length} electrical component(s), ${kb.electrical.procedures.length} procedure(s), ${pmTemplates.length} PM template(s) / ${pmItems} item(s)`,
   );
+  if (pmTemplates.length === 0) fail("knowledge/pm/checklists.json: no PM templates loaded");
+  for (const t of pmTemplates) {
+    const n = t.sections.reduce((m, s) => m + s.items.length, 0);
+    console.log(`  pm ${t.id.padEnd(30)} ${String(n).padStart(3)} items in ${t.sections.length} section(s)`);
+  }
 } catch (e) {
   if (e instanceof KnowledgeValidationError) {
     console.log(`strict load FAILED with ${e.problems.length} problem(s):`);
