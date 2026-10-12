@@ -6,7 +6,7 @@ import { loadKnowledge } from "../knowledge/loader.ts";
 import { openDatabase } from "../db/index.ts";
 import { createRepos, type Repos } from "../db/repos.ts";
 import type { KnowledgeBase } from "../types.ts";
-import { compactJson, describeToolCall, executeTool, STRICT_UNSUPPORTED_KEYWORDS, toolDefinitions, toolNames, TOOL_RESULT_MAX_CHARS, type ToolContext } from "./tools.ts";
+import { compactJson, describeToolCall, executeTool, STRICT_UNSUPPORTED_KEYWORDS, toolDefinitions, toolNames, TOOL_RESULT_MAX_CHARS, UNION_PARAMETER_LIMIT, type ToolContext } from "./tools.ts";
 
 const NOW = new Date("2026-09-26T12:00:00Z");
 const CARRIER_MODEL = "48TCDA04A2A5-0A0A0";
@@ -32,7 +32,7 @@ function parse(content: string): Record<string, unknown> {
 // ---------------------------------------------------------------------------
 
 describe("toolDefinitions", () => {
-  test("covers every tool in DESIGN.md with strict schemas listing every property as required", () => {
+  test("covers every tool in DESIGN.md; required lists exactly the required inputs; strict only when nothing is optional", () => {
     const defs = toolDefinitions();
     const names = defs.map((d) => d.name);
     for (const expected of [
@@ -54,58 +54,58 @@ describe("toolDefinitions", () => {
     }
     assert.deepEqual(names, toolNames());
     for (const d of defs) {
-      assert.equal(d.strict, true, `${d.name} strict`);
       assert.ok(d.description && d.description.length > 40, `${d.name} description`);
       const schema = d.input_schema as { type: string; properties: Record<string, { type: string | string[] }>; required: string[]; additionalProperties: boolean };
       assert.equal(schema.type, "object");
       assert.equal(schema.additionalProperties, false, `${d.name} additionalProperties`);
       const props = Object.keys(schema.properties);
-      assert.deepEqual([...schema.required].sort(), [...props].sort(), `${d.name} required must list every property`);
+      for (const r of schema.required) assert.ok(props.includes(r), `${d.name} required names unknown property ${r}`);
+      assert.equal(d.strict, schema.required.length === props.length, `${d.name} strict only when every input is required`);
       for (const [key, p] of Object.entries(schema.properties)) {
-        assert.ok(p.type || Array.isArray((p as { anyOf?: unknown[] }).anyOf), `${d.name}.${key} has a type (or anyOf for an optional enum)`);
+        assert.equal(typeof p.type, "string", `${d.name}.${key} has a single type`);
         assert.ok((p as { description?: string }).description, `${d.name}.${key} has a description`);
       }
     }
   });
 
-  test("optional inputs are nullable, required ones are not", () => {
+  test("optional inputs are plain single-typed properties left out of required (the API caps union-typed parameters)", () => {
     const decode = toolDefinitions().find((d) => d.name === "decode_unit")!;
-    const props = (decode.input_schema as { properties: Record<string, { type: string | string[]; enum?: unknown[] }> }).properties;
+    const schema = decode.input_schema as { properties: Record<string, { type: string | string[]; enum?: unknown[] }>; required: string[] };
+    const props = schema.properties;
     assert.equal(props.model!.type, "string");
-    assert.deepEqual(props.serial!.type, ["string", "null"]);
-    assert.deepEqual(props.save!.type, ["boolean", "null"]);
+    assert.equal(props.serial!.type, "string");
+    assert.equal(props.save!.type, "boolean");
+    assert.deepEqual(schema.required, ["model"]);
+    assert.equal(decode.strict, false);
     const dx = toolDefinitions().find((d) => d.name === "diagnose_refrigeration")!;
-    const dxProps = (dx.input_schema as { properties: Record<string, { type: string | string[]; enum?: unknown[] }> }).properties;
+    const dxSchema = dx.input_schema as { properties: Record<string, { type: string | string[]; enum?: unknown[] }>; required: string[] };
+    const dxProps = dxSchema.properties;
     assert.equal(dxProps.metering_device!.type, "string");
     assert.deepEqual(dxProps.metering_device!.enum, ["txv", "fixed", "eev", "unknown"]);
+    assert.ok(dxSchema.required.includes("metering_device"));
     assert.ok(dxProps.suction_psig, "snake_case measurement present");
     assert.ok(dxProps.compressor_amps_l2, "compressorAmpsL2 → compressor_amps_l2");
-    const econ = dxProps.economizer_position as unknown as { anyOf?: { type: string; enum?: unknown[] }[] };
-    assert.deepEqual(econ.anyOf, [{ type: "string", enum: ["closed", "minimum", "open", "unknown"] }, { type: "null" }], "optional enum is anyOf(string enum | null)");
+    assert.equal(dxProps.economizer_position!.type, "string");
+    assert.deepEqual(dxProps.economizer_position!.enum, ["closed", "minimum", "open", "unknown"]);
+    assert.ok(!dxSchema.required.includes("economizer_position"), "optional enum is not required");
   });
 
-  test("optional enums are anyOf(string enum | null): the strict validator rejects enum next to a type array", () => {
-    let nullableEnums = 0;
+  test(`the whole tool set carries no union-typed parameters (API limit ${UNION_PARAMETER_LIMIT} per request)`, () => {
+    let unions = 0;
     const walk = (node: unknown, path: string): void => {
+      if (Array.isArray(node)) {
+        node.forEach((n, i) => walk(n, `${path}[${i}]`));
+        return;
+      }
       if (!node || typeof node !== "object") return;
       const o = node as Record<string, unknown>;
-      assert.ok(!(Array.isArray(o.type) && o.enum), `${path} pairs enum with a type array`);
-      if (Array.isArray(o.anyOf)) {
-        const [first, second] = o.anyOf as Record<string, unknown>[];
-        if (first && Array.isArray(first.enum)) {
-          nullableEnums++;
-          assert.equal(first.type, "string");
-          assert.ok(!(first.enum as unknown[]).includes(null), `${path} enum must not list null`);
-          assert.deepEqual(second, { type: "null" });
-        }
-      }
+      if (Array.isArray(o.type) || Array.isArray(o.anyOf) || Array.isArray(o.oneOf)) unions++;
+      if (Array.isArray(o.enum)) assert.ok(!o.enum.includes(null), `${path} enum must not list null`);
       for (const [k, v] of Object.entries(o)) walk(v, `${path}.${k}`);
     };
     for (const def of toolDefinitions()) walk(def.input_schema, def.name);
-    const dx = toolDefinitions().find((d) => d.name === "diagnose_refrigeration")!;
-    const econ = (dx.input_schema as { properties: Record<string, { anyOf?: unknown[] }> }).properties.economizer_position;
-    assert.ok(econ && Array.isArray(econ.anyOf), "economizer_position is an optional enum encoded with anyOf");
-    assert.ok(nullableEnums >= 3, `expected several optional enums, saw ${nullableEnums}`);
+    assert.equal(unions, 0, `expected no union-typed parameters, saw ${unions}`);
+    assert.ok(unions <= UNION_PARAMETER_LIMIT);
   });
 
   test("strict schemas carry no unsupported keywords; numeric ranges live in the description and are still enforced", async () => {

@@ -531,8 +531,10 @@ set a process-wide `fallbacksSupported = false`, and emit a notice. Any other 40
 request (skipped in demo; a failed write is logged, never fatal). `runTurn` snapshots client/config/demo
 at turn start, so a key or model saved in Settings mid-turn applies from the next turn.
 
-Custom tools (strict JSON schemas, `additionalProperties: false`; optional fields expressed as
-nullable so `required` lists every property; results are compact JSON ≤ 8 kB):
+Custom tools (JSON schemas with `additionalProperties: false`; optional fields are plain single-typed
+properties left out of `required`, never nullable unions, because the API caps union-typed parameters at
+16 across the whole request; `strict: true` only on a tool whose every input is required; results are
+compact JSON ≤ 8 kB):
 `decode_unit` (model, serial?, manufacturer?, save?, site?, unit_tag?, nickname?) — upserts a
 unit when `save` or a matching unit exists and returns `attachUnitId`; `find_unit` (query over
 site/customer/tag/nickname/model/serial → top matches with last finding date; may attach);
@@ -911,7 +913,7 @@ shown (best effort).
   (`.tab-count`) with the number of overdue follow-ups; it is refreshed at boot, on the History screen
   and after any finding patch.
 - Chat: markdown via marked + DOMPurify (links target=_blank rel=noopener), user images as
-  thumbnails, tool chips inline in order (spinner → ✓/✗ + summary; click to expand input/
+  thumbnails, tool chips inline in order (hidden unless Settings → Appearance → "Show tool activity" is on, stored as `hvac.showTools`; spinner → ✓/✗ + summary; click to expand input/
   result), streaming deltas, auto-scroll unless scrolled up, notices muted, errors as a banner
   with the code; Stop button (POST /stop); composer (Enter sends on desktop, newline on touch;
   Send button), photo attach (`capture="environment"`, client-side resize ≤ 1568 px JPEG 0.85,
