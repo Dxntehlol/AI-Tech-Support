@@ -6,6 +6,9 @@ import type { DecodeResult, FindingRow, UnitRow } from "../types.ts";
 import { runFleetImport } from "./fleetImport.ts";
 import { createCorrection } from "./corrections.ts";
 import { unitReadingsSummary } from "../readingsStore.ts";
+import { unitCompliance } from "../complianceStore.ts";
+import { unitLastPm } from "../pmStore.ts";
+import { APPLIANCE_TYPES } from "../knowledge/refrigerantCompliance.ts";
 import { HttpError, badRequest, body, notFound, optBoolean, optEnum, optNumber, optString, optionalId, queryBool, queryInt, queryString, requireId, requireString, safeParseJson, type Body } from "./util.ts";
 
 // ---------------------------------------------------------------------------
@@ -35,6 +38,8 @@ const UNIT_NUM_FIELDS: Record<string, { min: number; max: number }> = {
   circuits: { min: 0, max: 64 },
   install_year: { min: 1900, max: 2100 },
   elevation_ft: { min: -1500, max: 30000 },
+  full_charge_lbs: { min: 0, max: 100000 },
+  circuits_count: { min: 1, max: 64 },
 };
 /** JSON columns and their friendlier aliases (charge → charge_json, nameplate → nameplate_json). */
 const UNIT_JSON_FIELDS: Record<string, string> = { charge_json: "charge_json", charge: "charge_json", nameplate_json: "nameplate_json", nameplate: "nameplate_json" };
@@ -68,6 +73,11 @@ export function parseUnitInput(b: Body): UnitInput {
     optEnum(String(out.metering_device).toLowerCase(), "metering_device", ["txv", "fixed", "eev", "unknown"]);
     out.metering_device = String(out.metering_device).toLowerCase();
   }
+  if ("appliance_type" in b) {
+    const s = optString(b.appliance_type, "appliance_type", 40)?.trim().toLowerCase();
+    out.appliance_type = s ? optEnum(s, "appliance_type", APPLIANCE_TYPES) : null;
+  }
+  if ("circuits_count" in out && out.circuits_count !== null && !Number.isInteger(out.circuits_count)) throw badRequest("circuits_count must be a whole number.");
   return out as UnitInput;
 }
 
@@ -266,12 +276,13 @@ export function unitsRouter(deps: AppDeps): Router {
     res.json(runFleetImport(deps, body(req)));
   });
 
-  // GET /api/units/:id → {unit, decoded, findings, conversations, corrections, lastReading, trend}
+  // GET /api/units/:id → {unit, decoded, findings, conversations, corrections, lastReading, trend, compliance, lastPm}
   r.get("/:id", (req, res) => {
     const id = requireId(req.params.id);
     const unit = repos.units.get(id);
     if (!unit) throw notFound("Unit not found.");
     const { lastReading, trend } = unitReadingsSummary(repos, id);
+    const today = (deps.now ? deps.now() : new Date()).toISOString().slice(0, 10);
     res.json({
       unit,
       decoded: decodedOf(unit),
@@ -280,6 +291,8 @@ export function unitsRouter(deps: AppDeps): Router {
       corrections: repos.corrections.list({ unitId: id, limit: 500 }),
       lastReading,
       trend,
+      compliance: unitCompliance(repos, unit, today),
+      lastPm: unitLastPm(repos, id, deps.kb),
     });
   });
 

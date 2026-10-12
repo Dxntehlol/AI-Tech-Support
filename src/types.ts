@@ -43,6 +43,12 @@ export type SystemMode =
   | "heat_pump_heating"
   | "refrigeration";
 
+/** Modes a readings row can carry: the DX engine modes plus "chiller" (src/knowledge/chiller.ts). */
+export type ReadingMode = SystemMode | "chiller";
+
+/** EPA appliance category for leak-rate thresholds (40 CFR 84.106: 10 / 20 / 30 %). */
+export type ApplianceType = "comfort_cooling" | "commercial_refrigeration" | "industrial_process" | "other";
+
 // ---------------------------------------------------------------------------
 // Manufacturer packs  (knowledge/manufacturers/<id>.json)
 // ---------------------------------------------------------------------------
@@ -569,7 +575,29 @@ export type ElectricalCalcRequest =
   | { kind: "electric_heat_kw"; volts: number; amps: number; phase: 1 | 3; nameplateKw?: number }
   | { kind: "psychrometrics"; dbF: number; wbF: number; elevationFt?: number }
   | { kind: "winding_check"; phase: 1 | 3; r1: number; r2: number; r3: number } // 1-phase: r1=C-S, r2=C-R, r3=S-R; 3-phase: T1-T2, T2-T3, T3-T1
-  | { kind: "megohm"; megohms: number; testVolts?: number };
+  | { kind: "megohm"; megohms: number; testVolts?: number }
+  // Wave 2 calculators (DESIGN.md "Calculators"); formulas are spelled out in each result's interpretation.
+  | { kind: "leak_rate"; addedLbs: number; fullChargeLbs: number; daysSinceLastAdd: number; applianceType?: ApplianceType }
+  | { kind: "gas_meter_clock"; dialCuft: number; secondsPerRev: number; heatingValueBtuPerCuft?: number; revolutions?: number; nameplateInputBtuh?: number }
+  | { kind: "combustion_co"; coPpm: number; o2Pct: number; ambientCoPpm?: number }
+  | { kind: "sensible_cfm"; btuh: number; deltaTF: number; tons?: number }
+  | { kind: "static_pressure"; supplyInWc: number; returnInWc: number; ratedMaxInWc?: number; blowerType?: "psc" | "ecm" }
+  | { kind: "fan_laws"; rpm1: number; rpm2: number; cfm1?: number; sp1?: number; bhp1?: number }
+  | { kind: "belt_drive"; motorRpm: number; motorSheaveIn: number; fanSheaveIn: number; centerDistanceIn?: number }
+  | { kind: "voltage_drop"; volts: number; amps: number; oneWayFt: number; awg?: string; circularMils?: number; material?: "cu" | "al"; phase?: 1 | 3 }
+  | { kind: "motor_fla"; hp: number; volts: number; phase: 1 | 3 }
+  | { kind: "capacitor_replacement"; ratedUf: number; ratedV: number; replacementUf: number; replacementV: number }
+  | {
+      kind: "motor_replacement";
+      hp?: number;
+      rpm?: number;
+      volts?: number;
+      phase?: 1 | 3;
+      frame?: string;
+      rotationFromShaftEnd?: "cw" | "ccw";
+      shaftDiaIn?: number;
+      enclosure?: string;
+    };
 
 export interface ElectricalCalcResult {
   kind: ElectricalCalcRequest["kind"];
@@ -611,6 +639,10 @@ export interface UnitRow {
   archived_at: string | null; // soft delete
   created_at: string;
   updated_at: string;
+  // Refrigerant log / EPA compliance (optional additions; added to old databases by UNITS_COLUMN_MIGRATIONS)
+  full_charge_lbs?: number | null; // total nameplate charge of the appliance, lb
+  appliance_type?: ApplianceType | null;
+  circuits_count?: number | null; // independent refrigerant circuits sharing full_charge_lbs equally (null = 1)
 }
 
 /** Fields a technician can flag as decoded wrong (`corrections.field`; runtime list: CORRECTION_FIELDS in db/repos.ts). */
@@ -652,6 +684,13 @@ export interface ConversationRow {
   summary: string | null;
   created_at: string;
   updated_at: string;
+  // Job clock + customer signature (optional additions; CONVERSATIONS_COLUMN_MIGRATIONS). The PNG itself
+  // (signature_png) is never on the row: repos.conversations.signaturePng(id) returns it on request.
+  job_started_at?: string | null;
+  job_ended_at?: string | null;
+  signed_by?: string | null;
+  signed_at?: string | null;
+  signature_note?: string | null;
 }
 
 export interface MessageRow {
@@ -707,15 +746,145 @@ export interface ReadingRow {
   unit_id: string;
   conversation_id: string | null;
   created_at: string;
-  mode: SystemMode;
+  mode: ReadingMode;
   refrigerant: string;
   metering_device: MeteringDevice;
-  measurements_json: string; // DxMeasurements as entered
+  measurements_json: string; // DxMeasurements (or ChillerMeasurements for mode "chiller") as entered
   derived_json: string; // DxDerived
   validity_json: string; // DxResult.validity
   findings_json: string; // [{ruleId, severity}] only
   note: string | null;
   source: ReadingSource;
+}
+
+// ---------------------------------------------------------------------------
+// Refrigerant log (per unit; DESIGN.md "Refrigerant log + compliance")
+// ---------------------------------------------------------------------------
+
+export type RefrigerantEventType = "add" | "recover" | "leak_check" | "verification_initial" | "verification_followup" | "repair" | "retrofit_plan";
+
+export interface RefrigerantEventRow {
+  id: string;
+  unit_id: string;
+  conversation_id: string | null;
+  created_at: string;
+  event_type: RefrigerantEventType;
+  refrigerant: string | null;
+  amount_lbs: number | null; // add / recover
+  circuit: number | null;
+  cylinder_id: string | null;
+  tech_name: string | null;
+  tech_cert: string | null; // EPA 608 certification number
+  leak_found: 0 | 1 | null; // leak_check
+  passed: 0 | 1 | null; // verification tests
+  note: string | null;
+  leak_rate_pct: number | null; // computed on add (annualized, EPA method)
+  threshold_pct: number | null;
+  exceeded: 0 | 1 | null;
+  finding_id: string | null; // follow-up finding created when the add exceeded the threshold
+}
+
+// ---------------------------------------------------------------------------
+// PM checklists (knowledge/pm/checklists.json + pm_visits rows)
+// ---------------------------------------------------------------------------
+
+export type PmItemKind = "check" | "number" | "text";
+export type PmNameplateCompare = "volts" | "amps" | "capacitor_uf";
+
+export interface PmItem {
+  id: string;
+  label: string;
+  kind: PmItemKind;
+  unit?: string; // "V", "A", "µF", "°F", "in. wc", "ppm" …
+  nameplateCompare?: PmNameplateCompare; // tolerance: volts ±10 %, amps ≤ 110 % RLA, capacitor ±6 %
+  asFoundAsLeft?: boolean; // number recorded twice (as found / as left)
+  safety?: boolean; // a failed safety item is called out first
+  hint?: string;
+}
+
+export interface PmSection {
+  title: string;
+  items: PmItem[];
+}
+
+export interface PmTemplate {
+  id: string; // rtu_gas, chiller_water_cooled, …
+  name: string;
+  appliesTo: string;
+  sections: PmSection[];
+}
+
+export interface PmChecklists {
+  version: string;
+  sources: string[];
+  templates: PmTemplate[];
+}
+
+export type PmVisitStatus = "in_progress" | "complete";
+
+export interface PmVisitRow {
+  id: string;
+  unit_id: string;
+  conversation_id: string | null;
+  created_at: string;
+  updated_at: string;
+  template_id: string;
+  status: PmVisitStatus;
+  tech_name: string | null;
+  results_json: string; // PmResults: per item { value | checked | asFound, asLeft, pass, note, rated }
+  summary_json: string; // PmSummary: { total, pass, fail, na, flagged[], fails[], items[] }
+  note: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Chiller readings mode (src/knowledge/chiller.ts)
+// ---------------------------------------------------------------------------
+
+export type ChillerCondenserType = "water_cooled" | "air_cooled";
+
+export interface ChillerMeasurements {
+  refrigerant?: string; // required when pressures are given
+  condenserType?: ChillerCondenserType; // inferred from condWaterOutF / outdoorDbF when omitted
+  chwSupplyF?: number; // leaving chilled water
+  chwReturnF?: number; // entering chilled water
+  chwFlowGpm?: number;
+  evapSatF?: number; // evaporator saturated refrigerant temperature (or from evapPressurePsig)
+  evapPressurePsig?: number;
+  condSatF?: number; // condenser saturated refrigerant temperature (or from condPressurePsig)
+  condPressurePsig?: number;
+  condWaterInF?: number; // entering condenser water (water-cooled)
+  condWaterOutF?: number; // leaving condenser water (water-cooled)
+  outdoorDbF?: number; // air-cooled condenser entering air
+  oilPressurePsig?: number;
+  oilTempF?: number;
+  compressorAmps?: number;
+  rla?: number;
+  percentLoad?: number; // controller-reported load 0–100
+  elevationFt?: number;
+  circuit?: string;
+  notes?: string;
+}
+
+export interface ChillerDerived {
+  evapSatF?: number;
+  condSatF?: number;
+  chwDeltaTF?: number; // return − supply
+  tons?: number; // 500 × gpm × ΔT / 12000
+  evapApproachF?: number; // chwSupply − evapSat
+  condApproachF?: number; // condSat − condWaterOut (water-cooled) or condSat − outdoorDb (air-cooled)
+  condWaterDeltaTF?: number; // out − in
+  ampsPercentRla?: number;
+  patmPsia?: number;
+}
+
+export interface ChillerResult {
+  measurements: ChillerMeasurements;
+  condenserType: ChillerCondenserType | "unknown";
+  derived: ChillerDerived;
+  validity: { ok: boolean; issues: string[] };
+  findings: DxFinding[];
+  missing: string[];
+  summary: string;
 }
 
 export interface SearchHit {
@@ -738,6 +907,8 @@ export interface KnowledgeBase {
   refrigerants: { meta: RefrigerantMeta[]; tables: Map<string, RefrigerantTable> };
   diagnostics: { rules: DxRuleSet; charging: ChargingTargets };
   electrical: ElectricalKnowledge;
+  /** PM checklist templates (knowledge/pm/checklists.json); absent when the file is missing. */
+  pm?: PmChecklists;
 }
 
 // ---------------------------------------------------------------------------

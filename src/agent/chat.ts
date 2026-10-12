@@ -397,6 +397,8 @@ async function runTurnInner(
       now(),
       repos.corrections.list({ unitId: unit.id, limit: 50 }),
       repos.readings.list({ unitId: unit.id, limit: 20 }),
+      repos.refrigerantEvents.list({ unitId: unit.id, limit: 50 }),
+      repos.pmVisits.list({ unitId: unit.id, limit: 5 }),
     );
     return [staticBlock, { type: "text", text: block }];
   };

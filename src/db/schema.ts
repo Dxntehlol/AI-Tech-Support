@@ -1,3 +1,28 @@
+/** Modes a readings row may carry (DX engine modes + chiller). Mirrors ReadingMode in types.ts. */
+export const READING_MODES_SQL = "'ac_cooling','heat_pump_cooling','heat_pump_heating','refrigeration','chiller'";
+
+/**
+ * DDL of the readings table. Exported as a function so db/index.ts can create a replacement table (the
+ * mode CHECK gained 'chiller'; SQLite cannot ALTER a CHECK constraint, so an old table is rebuilt).
+ */
+export function READINGS_TABLE_SQL(name: string): string {
+  return `CREATE TABLE IF NOT EXISTS ${name} (
+  id TEXT PRIMARY KEY,
+  unit_id TEXT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  mode TEXT NOT NULL CHECK (mode IN (${READING_MODES_SQL})),
+  refrigerant TEXT NOT NULL,
+  metering_device TEXT NOT NULL CHECK (metering_device IN ('txv','fixed','eev','unknown')),
+  measurements_json TEXT NOT NULL,
+  derived_json TEXT NOT NULL,
+  validity_json TEXT NOT NULL,
+  findings_json TEXT NOT NULL,
+  note TEXT,
+  source TEXT NOT NULL DEFAULT 'sheet' CHECK (source IN ('sheet','chat','import'))
+);`;
+}
+
 /** SQLite schema (idempotent). Kept as a TS constant so dist/ is self-contained. */
 export const SCHEMA_SQL = `
 -- HVAC Field Assistant schema (idempotent)
@@ -32,7 +57,10 @@ CREATE TABLE IF NOT EXISTS units (
   elevation_ft INTEGER,
   archived_at TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  full_charge_lbs REAL,
+  appliance_type TEXT,
+  circuits_count INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_units_model_serial ON units(model, serial);
 CREATE INDEX IF NOT EXISTS idx_units_site ON units(site);
@@ -43,7 +71,13 @@ CREATE TABLE IF NOT EXISTS conversations (
   unit_id TEXT REFERENCES units(id) ON DELETE SET NULL,
   summary TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  job_started_at TEXT,
+  job_ended_at TEXT,
+  signature_png TEXT,
+  signed_by TEXT,
+  signed_at TEXT,
+  signature_note TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_conversations_unit ON conversations(unit_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at DESC);
@@ -91,23 +125,10 @@ CREATE INDEX IF NOT EXISTS idx_findings_conversation ON findings(conversation_id
 -- follow_up_due / follow_up_done are also added to pre-existing databases by a guarded ALTER TABLE in
 -- db/index.ts (FINDINGS_COLUMN_MIGRATIONS); the follow-up index is created there, after the migration.
 
--- Readings history: one row per saved set of refrigeration-cycle readings on a unit (Readings sheet
--- "Save to unit", the assistant's diagnose_refrigeration tool on an attached unit, or an import).
-CREATE TABLE IF NOT EXISTS readings (
-  id TEXT PRIMARY KEY,
-  unit_id TEXT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
-  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
-  created_at TEXT NOT NULL,
-  mode TEXT NOT NULL CHECK (mode IN ('ac_cooling','heat_pump_cooling','heat_pump_heating','refrigeration')),
-  refrigerant TEXT NOT NULL,
-  metering_device TEXT NOT NULL CHECK (metering_device IN ('txv','fixed','eev','unknown')),
-  measurements_json TEXT NOT NULL,
-  derived_json TEXT NOT NULL,
-  validity_json TEXT NOT NULL,
-  findings_json TEXT NOT NULL,
-  note TEXT,
-  source TEXT NOT NULL DEFAULT 'sheet' CHECK (source IN ('sheet','chat','import'))
-);
+-- Readings history: one row per saved set of refrigeration-cycle (or chiller) readings on a unit (Readings
+-- sheet "Save to unit", the assistant's diagnose_refrigeration / diagnose_chiller tool on an attached unit, or
+-- an import). The DDL lives in READINGS_TABLE_SQL so db/index.ts can rebuild a pre-"chiller" table.
+${READINGS_TABLE_SQL("readings")}
 CREATE INDEX IF NOT EXISTS idx_readings_unit_created ON readings(unit_id, created_at DESC);
 
 -- One row per model request in the chat loop (Settings → Usage). conversation_id survives as NULL when the
@@ -146,6 +167,46 @@ CREATE TABLE IF NOT EXISTS corrections (
 );
 CREATE INDEX IF NOT EXISTS idx_corrections_unit ON corrections(unit_id);
 CREATE INDEX IF NOT EXISTS idx_corrections_status ON corrections(status, created_at);
+
+-- Refrigerant log per unit (adds, recoveries, leak checks, verification tests, repairs, retrofit plans) with
+-- the EPA annualized leak rate computed on every add (src/knowledge/refrigerantCompliance.ts).
+CREATE TABLE IF NOT EXISTS refrigerant_events (
+  id TEXT PRIMARY KEY,
+  unit_id TEXT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('add','recover','leak_check','verification_initial','verification_followup','repair','retrofit_plan')),
+  refrigerant TEXT,
+  amount_lbs REAL,
+  circuit INTEGER,
+  cylinder_id TEXT,
+  tech_name TEXT,
+  tech_cert TEXT,
+  leak_found INTEGER CHECK (leak_found IN (0,1)),
+  passed INTEGER CHECK (passed IN (0,1)),
+  note TEXT,
+  leak_rate_pct REAL,
+  threshold_pct REAL,
+  exceeded INTEGER CHECK (exceeded IN (0,1)),
+  finding_id TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_refrigerant_events_unit ON refrigerant_events(unit_id, created_at DESC);
+
+-- PM checklist visits per unit (template from knowledge/pm/checklists.json; results and the evaluated summary as JSON).
+CREATE TABLE IF NOT EXISTS pm_visits (
+  id TEXT PRIMARY KEY,
+  unit_id TEXT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  template_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress','complete')),
+  tech_name TEXT,
+  results_json TEXT NOT NULL DEFAULT '{}',
+  summary_json TEXT NOT NULL DEFAULT '{}',
+  note TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_pm_visits_unit ON pm_visits(unit_id, created_at DESC);
 
 -- Full-text search (external content tables kept in sync by triggers)
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(

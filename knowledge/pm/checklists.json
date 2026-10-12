@@ -1,0 +1,459 @@
+{
+  "version": "1.0",
+  "sources": [
+    "ASHRAE/ACCA/ANSI Standard 180-2018, Standard Practice for Inspection and Maintenance of Commercial Building HVAC Systems (baseline tasks and frequencies): https://www.acca.org/standards/technical/standard-180",
+    "EPA Section 608 refrigerant management and leak repair (40 CFR 82.157) / AIM Act ER&R rule (40 CFR 84.106): https://www.epa.gov/section608 and https://health.hawaii.gov/cab/files/2026/03/AIM-Act-Compliance-Guide-for-Small-Businesses.pdf",
+    "RTU inspection checklist items (filters, belts, economizer, coils, electrical, HX): https://safetyculture.com/library/property-and-facilities-management/rtu-inspection-8geq2vxcjnz9xmwj",
+    "Chiller log practice (CHW supply/return, approaches, oil, amps, purge): https://hvac-talk.com/vbb/threads/309742-Chiller-log",
+    "Capacitor replacement tolerance ±6 % of rating and equal-or-higher voltage (Regal Rexnord / Genteq application notes); NEMA MG-1 motor nameplate voltage ±10 %",
+    "ANSI Z21.47 / CSA 2.3 (400 ppm air-free CO ceiling for furnaces) and NCI combustion performance guidance (100 ppm air-free action level)",
+    "Manitowoc and Hoshizaki ice machine cleaning and sanitizing instructions (every 6 months minimum; more often with poor water quality)",
+    "EPA 608 recordkeeping impacts on technicians: https://www.achrnews.com/articles/135445-epa-608-recordkeeping-impacts-technicians",
+    "Research notes: scratchpad research/workflow-needs.md (commercial tech workflow needs, PM items per equipment type)"
+  ],
+  "templates": [
+    {
+      "id": "rtu_gas",
+      "name": "Packaged rooftop — gas heat / electric cooling",
+      "appliesTo": "Packaged RTUs with a gas-fired heat section (Carrier 48TC, Trane Precedent/Voyager YSC, Lennox LGH, York ZF, AAON RN with gas heat and similar).",
+      "sections": [
+        {
+          "title": "Airside",
+          "items": [
+            { "id": "filters", "label": "Filters replaced (size and quantity noted)", "kind": "text", "hint": "Record size × count so the next visit brings the right ones; note loaded filters as a static-pressure cause." },
+            { "id": "belt_condition", "label": "Belts: condition, tension and sheave alignment checked", "kind": "check", "hint": "Deflection ≈ 1/64 in. per inch of span; glazed, cracked or dusty belts are replaced; check sheave wear with a gauge." },
+            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true, "hint": "Clamp one leg with the filters in; amps well under FLA with low airflow points to a slipping belt or wrong sheave." },
+            { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true, "hint": "Supply + return magnitude; compare with the nameplate/design static (PSC blowers ≈ 0.5 in. wc max, ECM ≈ 0.8–1.0)." },
+            { "id": "evap_coil", "label": "Evaporator coil clean, no ice or oil stains", "kind": "check" },
+            { "id": "condensate", "label": "Condensate drain and pan clear, trap primed, overflow switch tested", "kind": "check", "safety": true },
+            { "id": "delta_t", "label": "Cooling delta-T (return − supply)", "kind": "number", "unit": "°F", "hint": "Typically 16–22 °F at design airflow; low with wet coil = low capacity or high airflow, high = low airflow." }
+          ]
+        },
+        {
+          "title": "Economizer",
+          "items": [
+            { "id": "econ_actuator", "label": "Economizer actuator strokes fully open and closed on command", "kind": "check", "hint": "Command 2 V / 10 V (or use the controller test mode); the damper must move freely without binding." },
+            { "id": "econ_dampers", "label": "Damper blades and linkage free, seals intact, minimum position set", "kind": "check" },
+            { "id": "econ_sensors", "label": "OAT / MAT / RAT or enthalpy sensors read plausibly (within 2 °F of a reference)", "kind": "check" },
+            { "id": "econ_low_limit", "label": "Mixed-air low limit (freeze protection) set and functional", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Electrical",
+          "items": [
+            { "id": "supply_volts", "label": "Supply voltage L-L (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts", "hint": "Within ±10 % of the nameplate rating; imbalance above 2 % between legs needs investigation." },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA (per circuit)", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "contactors", "label": "Contactors: no pitting, no chatter, drop across closed poles < 0.5 V under load", "kind": "check" },
+            { "id": "run_capacitor", "label": "Run capacitor µF under load (enter rated µF)", "kind": "number", "unit": "µF", "nameplateCompare": "capacitor_uf", "hint": "µF = 2652 × A ÷ V on the capacitor lead; replace outside ±6 % of the printed rating or if bulged/leaking." },
+            { "id": "wiring", "label": "Wiring, lugs and terminals tight, no discoloration; disconnect and fuses correct", "kind": "check", "safety": true },
+            { "id": "safeties", "label": "Safeties verified (HPS, LPS, freeze stat, limit, rollout) — none bypassed", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Refrigeration",
+          "items": [
+            { "id": "cond_coil", "label": "Condenser coil cleaned (both faces on multi-row), fins straight", "kind": "check" },
+            { "id": "cond_fans", "label": "Condenser fan motors and blades: bearings quiet, correct rotation, amps normal", "kind": "check" },
+            { "id": "superheat", "label": "Superheat (per circuit, with validity: ≥ 65 °F outdoor, 10+ min runtime)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling", "label": "Subcooling (per circuit)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "leak_check", "label": "Visual/electronic leak check of joints, drier, valves (log any add in the refrigerant log)", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Gas heat",
+          "items": [
+            { "id": "hx_inspection", "label": "Heat exchanger inspected (cells, crossover, rust/cracks) — combustion analyzer check", "kind": "check", "safety": true, "hint": "Visual plus CO in the supply air with burners on; any crack or CO rise in the supply = out of service." },
+            { "id": "co_air_free", "label": "Flue CO air-free at steady state", "kind": "number", "unit": "ppm", "hint": "CO air-free = CO × 20.9 ÷ (20.9 − O2). Action above 100 ppm; 400 ppm is the ANSI Z21.47 ceiling." },
+            { "id": "flame_sense", "label": "Flame sense signal (µA DC) and igniter condition", "kind": "number", "unit": "µA", "hint": "Typical 2–10 µA; most boards drop out near 0.5 µA. Clean the rod with fine abrasive, never sandpaper residue." },
+            { "id": "gas_pressure", "label": "Manifold gas pressure at high fire (and inlet pressure)", "kind": "number", "unit": "in. wc", "hint": "Natural gas manifold typically 3.5 in. wc; LP 10 in. wc; set per the rating plate." },
+            { "id": "temp_rise", "label": "Temperature rise within the nameplate range", "kind": "number", "unit": "°F" },
+            { "id": "burners_venting", "label": "Burners, venting and combustion air clear; inducer and pressure switch hoses sound", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Controls and close-out",
+          "items": [
+            { "id": "thermostat_bas", "label": "Thermostat / BAS: calls verified at the board (Y1/Y2/W1/G), schedule and setpoints sane", "kind": "check" },
+            { "id": "fault_codes", "label": "Board fault history read and cleared (record codes)", "kind": "text" },
+            { "id": "cabinet", "label": "Cabinet panels, gaskets, hail guards and curb seal intact; no water intrusion", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rtu_electric_or_cooling_only",
+      "name": "Packaged rooftop — electric heat or cooling only",
+      "appliesTo": "Packaged RTUs and packaged air handlers without a gas section (cooling only, electric strip heat, hydronic heat).",
+      "sections": [
+        {
+          "title": "Airside",
+          "items": [
+            { "id": "filters", "label": "Filters replaced (size and quantity noted)", "kind": "text" },
+            { "id": "belt_condition", "label": "Belts: condition, tension and sheave alignment checked", "kind": "check", "hint": "Deflection ≈ 1/64 in. per inch of span." },
+            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
+            { "id": "evap_coil", "label": "Evaporator coil clean, no ice or oil stains", "kind": "check" },
+            { "id": "condensate", "label": "Condensate drain and pan clear, trap primed, overflow switch tested", "kind": "check", "safety": true },
+            { "id": "delta_t", "label": "Cooling delta-T (return − supply)", "kind": "number", "unit": "°F" }
+          ]
+        },
+        {
+          "title": "Economizer",
+          "items": [
+            { "id": "econ_actuator", "label": "Economizer actuator strokes fully open and closed on command", "kind": "check" },
+            { "id": "econ_dampers", "label": "Damper blades and linkage free, seals intact, minimum position set", "kind": "check" },
+            { "id": "econ_sensors", "label": "OAT / MAT / RAT or enthalpy sensors read plausibly", "kind": "check" },
+            { "id": "econ_low_limit", "label": "Mixed-air low limit (freeze protection) set and functional", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Electrical",
+          "items": [
+            { "id": "supply_volts", "label": "Supply voltage L-L (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA (per circuit)", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "contactors", "label": "Contactors: no pitting, no chatter, drop across closed poles < 0.5 V under load", "kind": "check" },
+            { "id": "run_capacitor", "label": "Run capacitor µF under load (enter rated µF)", "kind": "number", "unit": "µF", "nameplateCompare": "capacitor_uf" },
+            { "id": "wiring", "label": "Wiring, lugs and terminals tight, no discoloration; disconnect and fuses correct", "kind": "check", "safety": true },
+            { "id": "safeties", "label": "Safeties verified (HPS, LPS, freeze stat, heater limits) — none bypassed", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Electric heat",
+          "items": [
+            { "id": "heater_kw", "label": "Electric heat kW measured (V × A × √3 ÷ 1000 on 3-phase) vs nameplate ±10 %", "kind": "number", "unit": "kW", "hint": "All stages energized with airflow proven; low kW = open element, fusible link or stage not called." },
+            { "id": "heater_stages", "label": "All heat stages sequence on command; fusible links and limits intact", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Refrigeration",
+          "items": [
+            { "id": "cond_coil", "label": "Condenser coil cleaned, fins straight", "kind": "check" },
+            { "id": "cond_fans", "label": "Condenser fan motors and blades: bearings quiet, correct rotation, amps normal", "kind": "check" },
+            { "id": "superheat", "label": "Superheat (per circuit, valid conditions only)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling", "label": "Subcooling (per circuit)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "leak_check", "label": "Leak check of joints, drier, valves (log any add in the refrigerant log)", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Controls and close-out",
+          "items": [
+            { "id": "thermostat_bas", "label": "Thermostat / BAS: calls verified at the board, schedule and setpoints sane", "kind": "check" },
+            { "id": "fault_codes", "label": "Board fault history read and cleared (record codes)", "kind": "text" },
+            { "id": "cabinet", "label": "Cabinet panels, gaskets and curb seal intact; no water intrusion", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "split_ac",
+      "name": "Split system — condensing unit + air handler / furnace coil",
+      "appliesTo": "Split cooling systems (condensing unit outdoors, coil on a furnace or air handler indoors).",
+      "sections": [
+        {
+          "title": "Indoor",
+          "items": [
+            { "id": "filters", "label": "Filters replaced (size noted)", "kind": "text" },
+            { "id": "evap_coil", "label": "Evaporator coil clean; blower wheel clean", "kind": "check" },
+            { "id": "condensate", "label": "Condensate drain clear, trap primed, float switch tested", "kind": "check", "safety": true },
+            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
+            { "id": "delta_t", "label": "Cooling delta-T (return − supply)", "kind": "number", "unit": "°F" }
+          ]
+        },
+        {
+          "title": "Outdoor",
+          "items": [
+            { "id": "cond_coil", "label": "Condenser coil cleaned, clearance maintained", "kind": "check" },
+            { "id": "cond_fan", "label": "Condenser fan motor and blade: bearings, rotation, amps", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage at the disconnect (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "run_capacitor", "label": "Run capacitor µF under load (enter rated µF)", "kind": "number", "unit": "µF", "nameplateCompare": "capacitor_uf" },
+            { "id": "contactor", "label": "Contactor contacts and coil; wiring and disconnect sound", "kind": "check", "safety": true },
+            { "id": "superheat", "label": "Superheat (fixed orifice: total SH vs chart; TXV: evaporator SH 8–12 °F)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling", "label": "Subcooling vs nameplate target (TXV)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "leak_check", "label": "Leak check: service valves, caps, drier, coil U-bends; line insulation intact", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heat_pump",
+      "name": "Heat pump (air-source split or packaged)",
+      "appliesTo": "Air-source heat pumps including packaged heat-pump RTUs and water-source heat pumps (skip the outdoor coil items on water-source units).",
+      "sections": [
+        {
+          "title": "Airside",
+          "items": [
+            { "id": "filters", "label": "Filters replaced (size noted)", "kind": "text" },
+            { "id": "indoor_coil", "label": "Indoor coil and blower wheel clean", "kind": "check" },
+            { "id": "condensate", "label": "Condensate drain clear, overflow switch tested", "kind": "check", "safety": true },
+            { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
+            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" }
+          ]
+        },
+        {
+          "title": "Refrigeration and heat pump functions",
+          "items": [
+            { "id": "outdoor_coil", "label": "Outdoor coil cleaned; defrost drain path clear, unit level on its pad/stand", "kind": "check" },
+            { "id": "reversing_valve", "label": "Reversing valve shifts on O/B command (no leak-by: < 3–4 °F across the suction-side tubes)", "kind": "check" },
+            { "id": "defrost", "label": "Defrost cycle forced and observed (sensor/board, termination, outdoor fan off, strip heat on)", "kind": "check" },
+            { "id": "aux_heat", "label": "Auxiliary / emergency heat stages energize and kW measured vs nameplate", "kind": "number", "unit": "kW" },
+            { "id": "superheat", "label": "Superheat (cooling mode, valid conditions) or heating check chart reading", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling", "label": "Subcooling (cooling mode)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "leak_check", "label": "Leak check of valves, accumulator, drier and coil joints (log any add in the refrigerant log)", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Electrical",
+          "items": [
+            { "id": "supply_volts", "label": "Supply voltage (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "run_capacitor", "label": "Run capacitor µF under load (enter rated µF)", "kind": "number", "unit": "µF", "nameplateCompare": "capacitor_uf" },
+            { "id": "contactor_wiring", "label": "Contactor, crankcase heater, wiring and disconnect sound; safeties not bypassed", "kind": "check", "safety": true },
+            { "id": "thermostat", "label": "Thermostat configured for heat pump (O/B polarity, aux lockout, balance point)", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chiller_air_cooled",
+      "name": "Air-cooled chiller",
+      "appliesTo": "Air-cooled scroll and screw chillers (Trane CGAM, Carrier 30RAP/30RB, York YLAA/YVAA, Daikin AGZ and similar).",
+      "sections": [
+        {
+          "title": "Operating log",
+          "items": [
+            { "id": "chw_supply", "label": "Chilled water supply (leaving) temperature", "kind": "number", "unit": "°F", "hint": "Compare with setpoint; freeze protection typically trips near 36 °F." },
+            { "id": "chw_return", "label": "Chilled water return (entering) temperature", "kind": "number", "unit": "°F", "hint": "Design ΔT is usually 10 °F; a small ΔT at high load means high flow or low capacity." },
+            { "id": "evap_approach", "label": "Evaporator approach (CHW supply − evaporator saturated temp)", "kind": "number", "unit": "°F", "hint": "Healthy ≤ 5 °F; rising approach = fouled tubes, low charge or low flow." },
+            { "id": "cond_approach", "label": "Condenser approach (condensing saturated temp − entering air)", "kind": "number", "unit": "°F", "hint": "Air-cooled: ≤ 25 °F typical; higher = dirty coil, fan out, recirculation." },
+            { "id": "comp_amps", "label": "Compressor amps vs RLA (per compressor)", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "oil_level", "label": "Oil level in the sight glass with the compressor running", "kind": "check" },
+            { "id": "oil_pressure_temp", "label": "Oil pressure / temperature within the manufacturer band", "kind": "number", "unit": "psig" }
+          ]
+        },
+        {
+          "title": "Mechanical and electrical",
+          "items": [
+            { "id": "cond_coils", "label": "Condenser coils cleaned (microchannel: low-pressure rinse only), fins straight", "kind": "check" },
+            { "id": "cond_fans", "label": "Condenser fans: rotation, bearings, VFD/fan staging and amps", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage L-L", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "electrical", "label": "Starter/VFD, contactors, lugs torqued, phase monitor set; wiring free of heat damage", "kind": "check", "safety": true },
+            { "id": "safeties", "label": "Safeties verified: HPS, LPS, flow switch, freeze stat, oil pressure/temperature — none bypassed", "kind": "check", "safety": true },
+            { "id": "leak_check", "label": "Refrigerant leak check (electronic) on joints, valves, sensors; log any add in the refrigerant log", "kind": "check" },
+            { "id": "chw_flow", "label": "Chilled water flow / pressure drop across the evaporator vs design; strainer cleaned", "kind": "number", "unit": "gpm" },
+            { "id": "glycol", "label": "Glycol concentration / freeze point checked (if applicable)", "kind": "text" },
+            { "id": "alarms", "label": "Controller alarm history reviewed and recorded", "kind": "text" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chiller_water_cooled",
+      "name": "Water-cooled chiller",
+      "appliesTo": "Water-cooled centrifugal, screw and scroll chillers with a cooling tower or fluid cooler (Trane CVHE/RTHD, Carrier 19XR/23XRV/30XW, York YK/YVWA, Daikin WME and similar).",
+      "sections": [
+        {
+          "title": "Operating log",
+          "items": [
+            { "id": "chw_supply", "label": "Chilled water supply (leaving) temperature", "kind": "number", "unit": "°F" },
+            { "id": "chw_return", "label": "Chilled water return (entering) temperature", "kind": "number", "unit": "°F" },
+            { "id": "cw_in", "label": "Condenser water entering temperature", "kind": "number", "unit": "°F" },
+            { "id": "cw_out", "label": "Condenser water leaving temperature", "kind": "number", "unit": "°F" },
+            { "id": "evap_approach", "label": "Evaporator approach (CHW supply − evaporator saturated temp)", "kind": "number", "unit": "°F", "hint": "Healthy ≤ 5 °F (new machines 1–3); trend it — a 3 °F rise over the baseline is the tube-cleaning trigger." },
+            { "id": "cond_approach", "label": "Condenser approach (condensing saturated temp − leaving condenser water)", "kind": "number", "unit": "°F", "hint": "Healthy ≤ 5 °F; a rise of ~3 °F over the commissioning baseline means fouled tubes — brush/clean." },
+            { "id": "comp_amps", "label": "Compressor amps vs RLA (and % RLA from the controller)", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "oil_level", "label": "Oil level in the sight glass with the compressor running", "kind": "check" },
+            { "id": "oil_pressure", "label": "Oil pressure (net / differential) within the manufacturer band", "kind": "number", "unit": "psig" },
+            { "id": "oil_temp", "label": "Oil temperature within the manufacturer band", "kind": "number", "unit": "°F" }
+          ]
+        },
+        {
+          "title": "Mechanical and electrical",
+          "items": [
+            { "id": "purge", "label": "Purge unit run time / pump-outs logged (low-pressure machines); excessive purge = air leak", "kind": "text" },
+            { "id": "tube_cleaning", "label": "Condenser tubes brushed / eddy-current test due? (based on approach trend and schedule)", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage L-L", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "starter", "label": "Starter / VFD inspected: contacts, lugs torqued, cooling fans, fault log", "kind": "check", "safety": true },
+            { "id": "safeties", "label": "Safeties verified: HPS, LPS, flow switches (CHW and CW), freeze stat, oil safeties — none bypassed", "kind": "check", "safety": true },
+            { "id": "leak_check", "label": "Refrigerant leak check (electronic / standing pressure); log any add in the refrigerant log", "kind": "check" },
+            { "id": "water_treatment", "label": "Condenser water treatment / tower condition noted; strainers cleaned", "kind": "text" },
+            { "id": "alarms", "label": "Controller alarm history reviewed and recorded", "kind": "text" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "walk_in_cooler",
+      "name": "Walk-in cooler (medium temperature)",
+      "appliesTo": "Walk-in coolers with a remote or self-contained condensing unit and a unit cooler (evaporator) in the box; box 33–41 °F.",
+      "sections": [
+        {
+          "title": "Box and evaporator",
+          "items": [
+            { "id": "box_temp", "label": "Box temperature (and thermostat setpoint)", "kind": "number", "unit": "°F", "asFoundAsLeft": true, "hint": "Product safety zone 33–41 °F; log as found and as left." },
+            { "id": "door_gaskets", "label": "Door gaskets, closers, sweeps and strip curtains seal; no ice at the frame", "kind": "check", "hint": "Dollar-bill test around the gasket; a warm, wet box and a frosted coil start here." },
+            { "id": "frost_pattern", "label": "Evaporator frost pattern even; coil clean; fans run and blow through", "kind": "check", "hint": "Frost only at the inlet = low charge/starved TXV; whole coil iced = defrost or airflow problem." },
+            { "id": "defrost", "label": "Defrost initiates and terminates (timer/clock settings or electric heaters checked)", "kind": "check" },
+            { "id": "drain_line", "label": "Drain pan and drain line clear, heat tape working, trap outside the box", "kind": "check" },
+            { "id": "evap_fan_amps", "label": "Evaporator fan motor amps and bearings", "kind": "number", "unit": "A" },
+            { "id": "lights_heaters", "label": "Door heaters, lights and alarm/thermometer functional", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Condensing unit",
+          "items": [
+            { "id": "condenser", "label": "Condenser coil cleaned; fan motor and blade sound; clearance maintained", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "superheat", "label": "Evaporator superheat (6–10 °F) and total superheat at the compressor (20–30 °F)", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling_sightglass", "label": "Subcooling / sight glass clear, moisture indicator dry", "kind": "number", "unit": "°F" },
+            { "id": "head_pressure_control", "label": "Low-ambient head pressure control (fan cycling / headmaster) functional", "kind": "check" },
+            { "id": "electrical", "label": "Contactor, capacitors, start relay, defrost timer and wiring sound; safeties not bypassed", "kind": "check", "safety": true },
+            { "id": "leak_check", "label": "Leak check; log any add in the refrigerant log", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "walk_in_freezer",
+      "name": "Walk-in freezer (low temperature)",
+      "appliesTo": "Walk-in freezers with electric or hot-gas defrost; box −10 to 0 °F.",
+      "sections": [
+        {
+          "title": "Box and evaporator",
+          "items": [
+            { "id": "box_temp", "label": "Box temperature (and thermostat setpoint)", "kind": "number", "unit": "°F", "asFoundAsLeft": true, "hint": "Typically −10 to 0 °F; log as found and as left." },
+            { "id": "door_gaskets", "label": "Door gaskets, heater, closers and sweeps seal; no ice build-up at the frame or floor", "kind": "check" },
+            { "id": "frost_pattern", "label": "Evaporator frost pattern even; no ice bridging between fins after defrost", "kind": "check" },
+            { "id": "defrost_heaters", "label": "Defrost heaters draw amps (electric) or hot-gas valve shifts; termination and fan-delay switches work", "kind": "check", "safety": true },
+            { "id": "defrost_schedule", "label": "Defrost frequency and duration appropriate (typically 4×/day, 30–45 min max, terminate on temperature)", "kind": "text" },
+            { "id": "drain_line", "label": "Drain pan heater and heated drain line clear and working; trap outside the box", "kind": "check" },
+            { "id": "evap_fan_amps", "label": "Evaporator fan motor amps and bearings", "kind": "number", "unit": "A" },
+            { "id": "pressure_relief", "label": "Door pressure-relief port / vent heater clear (door opens freely after closing)", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Condensing unit",
+          "items": [
+            { "id": "condenser", "label": "Condenser coil cleaned; fan motor and blade sound", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage (unit running)", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "superheat", "label": "Evaporator superheat (6–10 °F) and total superheat at the compressor; discharge temp < 225 °F", "kind": "number", "unit": "°F", "asFoundAsLeft": true },
+            { "id": "subcooling_sightglass", "label": "Subcooling / sight glass clear, moisture indicator dry", "kind": "number", "unit": "°F" },
+            { "id": "head_pressure_control", "label": "Low-ambient head pressure control functional; crankcase heater energized when off", "kind": "check" },
+            { "id": "electrical", "label": "Contactor, capacitors, start components, defrost timer/board and wiring sound; safeties not bypassed", "kind": "check", "safety": true },
+            { "id": "leak_check", "label": "Leak check; log any add in the refrigerant log", "kind": "check" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ice_machine",
+      "name": "Ice machine (cuber / flaker)",
+      "appliesTo": "Commercial ice machines (Manitowoc, Hoshizaki, Scotsman, Ice-O-Matic) with self-contained or remote condensers; 6-month clean and sanitize minimum.",
+      "sections": [
+        {
+          "title": "Cleaning and sanitizing",
+          "items": [
+            { "id": "clean_sanitize", "label": "Clean and sanitize cycle performed per the manufacturer (descale with the approved cleaner, then sanitizer)", "kind": "check", "hint": "Every 6 months minimum; more often with hard water, yeast or bakery/brewery air. Remove and clean the water trough, distribution tube, float valve and curtain." },
+            { "id": "evaporator_plates", "label": "Evaporator plates / grid free of scale and nickel plating intact", "kind": "check" },
+            { "id": "bin_storage", "label": "Bin, door, gasket, chute and bin thermostat/sensor clean and sanitized", "kind": "check" },
+            { "id": "water_filter", "label": "Water filter replaced (date and model noted); inlet water pressure 20–80 psi", "kind": "text" },
+            { "id": "air_filter", "label": "Air filter / condenser filter cleaned", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Operation",
+          "items": [
+            { "id": "condenser", "label": "Condenser coil cleaned (air-cooled) or water-regulating valve / remote condenser checked", "kind": "check" },
+            { "id": "harvest_cycle", "label": "Freeze and harvest cycle times observed and within the manufacturer chart", "kind": "text", "hint": "Long freeze = dirty condenser, low charge or warm water; long harvest = scale on the plates or harvest valve problem." },
+            { "id": "ice_quality", "label": "Ice cube size/bridge thickness set; cubes clear and full", "kind": "check" },
+            { "id": "water_system", "label": "Water inlet valve, float/level sensor, pump and drain (and dump valve) work; no leaks", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "comp_amps", "label": "Compressor running amps vs RLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "discharge_pressure", "label": "Discharge pressure near the end of freeze vs the manufacturer chart", "kind": "number", "unit": "psig" },
+            { "id": "controller_log", "label": "Controller diagnostics / fault history read and recorded", "kind": "text" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mau_exhaust",
+      "name": "Make-up air unit and kitchen exhaust fans",
+      "appliesTo": "Kitchen hood exhaust fans (upblast), make-up air units (direct/indirect gas-fired or tempered) and general exhaust fans.",
+      "sections": [
+        {
+          "title": "Safety",
+          "items": [
+            { "id": "loto", "label": "Lockout/tagout applied at the disconnect before opening the fan; fan verified stopped", "kind": "check", "safety": true },
+            { "id": "roof_access", "label": "Hinged curb / access safe; grease containment present and emptied", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Exhaust fans",
+          "items": [
+            { "id": "belts", "label": "Belts condition and tension; sheaves aligned and not worn", "kind": "check", "hint": "Grease-laden belts slip and glaze; replace in matched sets." },
+            { "id": "bearings", "label": "Bearings greased / inspected; shaft and wheel free, no wobble", "kind": "check" },
+            { "id": "grease_wheel", "label": "Fan wheel, housing and filters degreased (grease on hood filters and fan = fire load)", "kind": "check", "safety": true },
+            { "id": "fan_motor_amps", "label": "Exhaust fan motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "fans_run", "label": "Fans run on command from the hood controls / fire system interlock and stop correctly", "kind": "check" },
+            { "id": "hood_filters", "label": "Hood filters in place, undamaged and clean; grease cup emptied", "kind": "check" }
+          ]
+        },
+        {
+          "title": "Make-up air unit",
+          "items": [
+            { "id": "mau_filters", "label": "MAU filters replaced (size noted)", "kind": "text" },
+            { "id": "mau_burner", "label": "Direct-fired burner: profile plates, flame, gas pressure and modulation checked; CO in the discharge measured", "kind": "number", "unit": "ppm", "hint": "Direct-fired MAU discharge CO should be low single digits; airflow proving switch must be verified." },
+            { "id": "mau_dampers", "label": "Intake damper / actuator opens fully; airflow proving switch verified", "kind": "check", "safety": true },
+            { "id": "mau_interlock", "label": "MAU interlocked with exhaust; building pressure reasonable with hoods on", "kind": "check" },
+            { "id": "supply_volts", "label": "Supply voltage", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "boiler",
+      "name": "Boiler (hydronic or steam, gas-fired)",
+      "appliesTo": "Commercial gas-fired hot-water and low-pressure steam boilers (condensing and non-condensing).",
+      "sections": [
+        {
+          "title": "Combustion",
+          "items": [
+            { "id": "combustion_o2", "label": "Flue O2 at high fire", "kind": "number", "unit": "%", "hint": "Typical 3–6 % O2 (excess air 15–35 %); set per the manufacturer's combustion table at high and low fire." },
+            { "id": "combustion_co", "label": "Flue CO air-free at high fire", "kind": "number", "unit": "ppm", "hint": "CO air-free = CO × 20.9 ÷ (20.9 − O2); action above 100 ppm, 400 ppm maximum." },
+            { "id": "stack_temp", "label": "Net stack temperature", "kind": "number", "unit": "°F", "hint": "Rising stack temperature at the same firing rate = fouled heat-exchange surfaces." },
+            { "id": "gas_pressure", "label": "Manifold and inlet gas pressure at high fire", "kind": "number", "unit": "in. wc" },
+            { "id": "burner_ignition", "label": "Burner, igniter, flame rod/scanner and flame signal checked; flame safeguard timings verified", "kind": "check", "safety": true },
+            { "id": "venting", "label": "Venting, draft and combustion-air openings inspected; condensate neutralizer serviced (condensing)", "kind": "check", "safety": true }
+          ]
+        },
+        {
+          "title": "Safeties and controls",
+          "items": [
+            { "id": "relief_valve", "label": "Pressure relief valve tested (lift lever) and discharge piping clear; rating matches the boiler", "kind": "check", "safety": true },
+            { "id": "lwco", "label": "Low-water cutoff tested (blow down float type; test probe type with the test button / lowering the level)", "kind": "check", "safety": true },
+            { "id": "high_limit", "label": "High-limit (and manual-reset high limit) tested; operating control setpoint recorded", "kind": "number", "unit": "°F", "safety": true },
+            { "id": "pressure_temp", "label": "Operating pressure and supply/return temperatures logged", "kind": "text" },
+            { "id": "expansion_feed", "label": "Expansion tank charge, fill valve / feedwater and backflow preventer checked", "kind": "check" },
+            { "id": "pumps", "label": "Circulating pumps: amps, seals, couplings, isolation valves", "kind": "number", "unit": "A" },
+            { "id": "water_quality", "label": "Water treatment / blowdown done (steam); glycol or inhibitor level checked (hydronic)", "kind": "text" },
+            { "id": "supply_volts", "label": "Supply voltage", "kind": "number", "unit": "V", "nameplateCompare": "volts" },
+            { "id": "notes", "label": "Deficiencies / recommendations for the customer", "kind": "text" }
+          ]
+        }
+      ]
+    }
+  ]
+}

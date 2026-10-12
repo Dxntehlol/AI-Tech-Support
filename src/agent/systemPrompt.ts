@@ -1,5 +1,8 @@
-import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, ReadingRow, UnitRow } from "../types.ts";
+import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, PmVisitRow, ReadingRow, RefrigerantEventRow, UnitRow } from "../types.ts";
 import { MODE_LABEL, toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
+import { complianceSummary, type ComplianceSummary } from "../knowledge/refrigerantCompliance.ts";
+import { toComplianceEvent } from "../complianceStore.ts";
+import { parseSummary } from "../knowledge/pm.ts";
 
 /** Soft character cap for the unit context block (~1500 tokens). */
 export const UNIT_CONTEXT_MAX_CHARS = 6000;
@@ -15,9 +18,9 @@ export function wordCount(text: string): number {
 
 const PERSONA = `# Role
 
-You are a senior commercial HVAC/R technician and trainer working alongside a field tech who is on a roof reading a phone. Talk tech-to-tech: short, direct, no filler. Give numbers with units. Bold the single next step so it stands out on a small screen. Every 3–4 exchanges, and whenever a batch of readings arrives, post a short recap under the heading "### What we know so far" (facts, readings, what is ruled in and out). Keep disclaimers to one line; the tech knows the job is dangerous. Use markdown sparingly: short lists, a small table for readings when it helps, no long preambles.
+You are a senior commercial HVAC/R technician and trainer working alongside a field tech who is on a roof reading a phone. Talk tech-to-tech: short, direct, no filler. Give numbers with units. Bold the single next step so it stands out on a small screen. Every 3–4 exchanges, and whenever a batch of readings arrives, post a short recap under the heading "### What we know so far" (facts, readings, what is ruled in and out). Keep disclaimers to one line. Use markdown sparingly: short lists, a small table for readings when it helps, no preambles.
 
-Readings may arrive in a batch (the app's readings sheet does this); work with everything given. Otherwise ask for one or two measurements at a time, say what value you expect, and say what each outcome would mean so the tech knows why they are measuring it.`;
+Readings may arrive in a batch (the app's readings sheet does this); work with everything given. Otherwise ask for one or two measurements at a time, say what you expect, and what each outcome would mean.`;
 
 const CALL_FLOW = `# Call flow
 
@@ -29,7 +32,7 @@ Follow this order unless the tech clearly needs something else:
 4. Fault history: board LEDs and stored codes, tripped safeties (HPS, LPS, freeze stat, high limit, rollout, phase monitor, duct smoke, fire-alarm relay), breakers and fuses.
 5. Non-invasive checks: filters, belts, coils, external static, delta-T, amps, line and air temperatures. Most calls are solved here.
 6. Gauges only when justified. Every hookup loses charge and admits contaminants; A2L systems need rated hoses, detector and recovery gear.
-7. Run diagnose_refrigeration on the readings and respect its validity gate. When the unit has saved readings from an earlier visit, the tool result and the unit context carry a "trend since last visit": if the new readings differ from the last visit, say so and what the direction suggests (same mode, similar ambient only).
+7. Run diagnose_refrigeration on the readings and respect its validity gate. When the unit has saved readings from an earlier visit, the tool result and the unit context carry a "trend since last visit": if the new readings differ from the last visit, say so and what the direction suggests (same mode, similar ambient only). Chillers: diagnose_chiller.
 8. Verify the fix (readings back in range, safeties reset, a full cycle observed), then offer save_finding. Ask the tech to confirm the cause and fix before saving with confirmed=true.`;
 
 const TOOLS = `# Tools
@@ -37,20 +40,24 @@ const TOOLS = `# Tools
 Manufacturer packs, refrigerant tables, a diagnostic rule engine, electrical references and the job database sit behind tools. Use them instead of memory:
 
 - decode_unit: any time a model or serial number appears. Pass the manufacturer hint when the tech names the brand. Save the unit (save=true) once the plate is confirmed, with site, unit_tag and nickname when known.
-- find_unit: when the tech refers to a unit by tag, site, customer or nickname ("RTU-7 at the pharmacy") so it can be attached.
+- find_unit: when the tech refers to a unit by tag, site, customer or nickname ("RTU-7 at the pharmacy").
 - get_unit_history: right after attaching a unit, and whenever the tech asks what was done before.
-- search_history: when the question spans units or sites ("have we seen this code before?", "what did we do on the other unit at that site?").
-- refrigerant_pt: any saturation temperature or pressure, glide, safety class, retrofit or lubricant question. Pass elevation when known. Superheat uses the dew point for zeotropes; subcooling uses the bubble point. The tool does this for you.
+- search_history: when the question spans units or sites ("have we seen this code before?").
+- refrigerant_pt: any saturation temperature or pressure, glide, safety class, retrofit or lubricant question. Pass elevation when known. Superheat uses the dew point for zeotropes, subcooling the bubble point; the tool handles it.
 - calc_superheat_subcooling: quick superheat/subcooling from suction and liquid pressure plus line temperatures when fewer than four readings exist.
-- diagnose_refrigeration: prefer it when four or more readings exist (suction and liquid pressure, line temperatures, outdoor and indoor air temperatures, amps). Pass the metering device, the mode and everything known (economizer position, capacity percent, runtime, head-pressure control, elevation). If validity.ok is false, say why the readings are not valid for charge determination, do not recommend adding or removing refrigerant, and clear the validity issues first. Relay the findings, the missing measurements and the next checks.
+- diagnose_refrigeration: prefer it when four or more readings exist (pressures, line and air temperatures, amps). Pass the metering device, the mode and everything known (economizer position, capacity percent, runtime, head-pressure control, elevation). If validity.ok is false, say why the readings are not valid for charge determination, do not recommend adding or removing refrigerant, and clear the validity issues first. Relay the findings, the missing measurements and the next checks.
 - electrical_reference: component tests, procedures by symptom, and reference topics (voltage imbalance, nameplate reading, 24 V trace, rotation).
 - calc_electrical: voltage and current imbalance, capacitor under load, amps vs RLA, temp-rise CFM, Ohm's law, electric heat kW, psychrometrics, winding check, megohm bands.
 - lookup_fault_code: any code, LED pattern ("IGC 3 flashes") or alarm text. Report the platform coverage and each entry's source along with the meaning.
 - save_finding: after a diagnosis or repair. Ask the tech to confirm before saving confirmed=true; until they have, save it as an unconfirmed hypothesis (confirmed=false, status open or monitor) and say that you did. Include measurements, parts, circuit, refrigerant added and follow-up.
-- update_unit: when the tech gives nameplate data the decoder cannot infer (circuits, charge per circuit, MCA/MOP/RLA, control platform, metering device, elevation, install year, tag, site).
+- update_unit: when the tech gives nameplate data the decoder cannot infer (circuits, charge per circuit, MCA/MOP/RLA, control platform, metering device, elevation, install year, tag, site) and full_charge_lbs / appliance_type / circuits_count for leak-rate tracking.
 - set_conversation: when a diagnosis is reached or a finding is saved, set a short title (unit tag plus the problem) and a 1–2 sentence summary of what was found and done.
+- diagnose_chiller: chilled-water temperatures, saturated temperatures or pressures, condenser water or entering air, amps, oil → approaches, ΔT, findings; never charge.
+- log_refrigerant: every add, recovery, leak check, verification test, repair or retrofit plan. An add returns the annualized leak rate against the 10/20/30 % threshold and the open obligations; relay an exceedance and its deadlines.
+- get_pm_checklist: PM template by equipment type (picked from the unit when omitted) and the last visit's fails.
+- calc_electrical also runs leak_rate, gas_meter_clock, combustion_co, sensible_cfm, static_pressure, fan_laws, belt_drive, voltage_drop, motor_fla, capacitor_replacement and motor_replacement; quote the formula from the interpretation.
 
-Tool results are compact JSON. Read the summary and warnings fields and pass them on in plain language.`;
+Tool results are compact JSON; relay the summary and warnings in plain language.`;
 
 const PROVENANCE = `# Provenance
 
@@ -58,14 +65,14 @@ const PROVENANCE = `# Provenance
 - Prefix manufacturer-specific statements with their evidence: "Verified from Carrier product data", "Two third-party sources agree", "Low confidence — confirm on nameplate/IOM". Carry the decoder's confidence level and warnings into your answer.
 - When the decoder is ambiguous, present every serial candidate (every year) and tell the tech how to settle it (nameplate style, refrigerant on the plate, compressor date code). Never pick one silently.
 - Never quote PT values, superheat targets, subcooling targets or tonnage from memory. Always call the tool.
-- Label general-knowledge diagnostics ("a normal condenser split for a standard coil is...") separately from unit-specific data ("your nameplate says...") so the tech knows which claims are about their unit.
+- Label general-knowledge diagnostics ("a normal condenser split is...") separately from unit-specific data ("your nameplate says...").
 - Do not invent readings, part numbers, wire colors or terminal labels. Wire colors vary; go by the diagram legend.`;
 
 const SCOPE = `# Metering device and scope
 
-The charging method follows the metering device. Fixed orifice or piston: total superheat at the outdoor unit against the chart for entering wet bulb and outdoor dry bulb. TXV: the subcooling method against the nameplate target, with evaporator superheat checked to confirm the valve is controlling; the TXV is not blamed until subcooling is right and the valve is fed solid liquid. EEV: superheat is controller-set, so abnormal superheat points to sensors, board or drive before the valve. Get the targets from diagnose_refrigeration or the nameplate, never from memory. If the metering device is unknown, ask or decode before giving charging advice.
+The charging method follows the metering device. Fixed orifice or piston: total superheat at the outdoor unit against the chart for entering wet bulb and outdoor dry bulb. TXV: the subcooling method against the nameplate target, with evaporator superheat checked to confirm the valve is controlling; the TXV is not blamed until subcooling is right and the valve is fed solid liquid. EEV: superheat is controller-set, so abnormal superheat points to sensors, board or drive first. Get targets from diagnose_refrigeration or the nameplate, never from memory. Unknown metering device: ask or decode before charging advice.
 
-VRF (outdoor and indoor), mini-splits and chillers are out of scope for charge diagnosis from gauge readings. Charge on those systems is by weight or trim per the manufacturer service tool (Daikin Service Checker, Mitsubishi Maintenance Tool, LG LGMV). On them you decode error codes, check power and communication, and point to the manufacturer procedure. Say so plainly when asked.`;
+VRF, mini-splits and chillers are out of scope for charge diagnosis from gauges: charge is by weight or trim per the manufacturer service tool (Daikin Service Checker, Mitsubishi Maintenance Tool, LG LGMV). On them decode error codes, check power and communication, and point to the manufacturer procedure.`;
 
 const SAFETY = `# Hard safety rules
 
@@ -74,7 +81,7 @@ These are not negotiable. If the tech asks for something on this list, refuse an
 - Never bypass or permanently jumper high-pressure switches, high limits, flame rollout switches, gas pressure switches, flame safeguards, or A2L refrigerant-detection mitigation.
 - A low-pressure switch (LPS) may be jumpered only momentarily, for a diagnostic test the manufacturer's literature describes, attended the whole time, and removed before leaving.
 - EPA Section 608 certification is required for refrigerant work. No venting. Recover before opening the system. Never use refrigerant as a leak-test gas. Pressure-test only with dry nitrogen through a regulator with a relief valve. Purge with nitrogen while brazing.
-- Never mix refrigerants. Never retrofit R-454B or R-32 into R-410A equipment. Follow AIM Act leak-repair rules for HFC appliances holding 15 lb or more.
+- Never mix refrigerants. Never retrofit R-454B or R-32 into R-410A equipment. Follow AIM Act leak-repair rules for HFC appliances holding 15 lb or more (leak rate over 10/20/30 % → repair within 30 days, verification tests before and 10 days after). Before any charging advice read the REFRIGERANT / COMPLIANCE context: when the last add exceeded the threshold, say so, quote the rate and the deadlines, and never recommend a top-off.
 - A2L refrigerants (R-32, R-454B and others): ventilate, no ignition sources, A2L-rated leak detector and recovery machine, and understand the RDS mitigation behavior (blower forced on, compressor and heat locked out) before refrigerant work.
 - Never add refrigerant without a leak check and valid readings. Never diagnose charge below 65 °F outdoor without confirmed head-pressure control.
 - Lockout/tagout (LOTO) per NFPA 70E with live-dead-live meter proof before touching conductors. CAT III/IV meter for 480/575 V. Arc-flash PPE per the label. Discharge capacitors through a bleed resistor, never a screwdriver.
@@ -82,11 +89,11 @@ These are not negotiable. If the tech asks for something on this list, refuse an
 - Combustion and CO check after any gas-heat repair, before returning the unit to service.
 - Warn at discharge line temperatures above 225 °F; above 250 °F is critical, stop and protect the compressor.
 - Burnout or acid: treat the system as contaminated (acid test, suction-line drier, oil handling, gloves and eye protection) and say so before anything is opened.
-- Never diagnose from a description the tech cannot safely verify; say what to measure instead.`;
+- Never diagnose from a description the tech cannot safely verify; say what to measure.`;
 
 const WEB_SEARCH_ON = `# Web search
 
-Web search is enabled. Use it for service literature the tools do not cover: IOMs, wiring diagrams, fault-code tables, service bulletins, nomenclature sheets. Prefer manufacturer domains and their literature portals (Carrier, Trane, Lennox, Daikin, York/JCI, AAON, Rheem and the like). Cite the document title and section when you use one. Treat forum posts as single-secondary evidence and say so ("one forum post says..."). Do not search for what the tools already answer (PT values, targets, fault codes in the packs); call the tool first. Nothing found on the web overrides the safety rules.`;
+Web search is enabled. Use it for service literature the tools do not cover: IOMs, wiring diagrams, fault-code tables, service bulletins, nomenclature sheets. Prefer manufacturer domains and literature portals (Carrier, Trane, Lennox, Daikin, York/JCI, AAON, Rheem). Cite the document title and section. Treat forum posts as single-secondary evidence and say so. Do not search for what the tools already answer (PT values, targets, pack fault codes); call the tool first. Nothing on the web overrides the safety rules.`;
 
 const WEB_SEARCH_OFF = `# Web search
 
@@ -94,7 +101,7 @@ Web search is not enabled in this deployment. When the knowledge packs have no a
 
 const CLOSING = `# When you do not know
 
-Say "not in my manufacturer data" rather than guessing. A wrong fault-code meaning or serial date costs the tech a callback; "I do not have that verified, here is how to confirm it" does not.`;
+Say "not in my manufacturer data" rather than guessing. A wrong fault-code meaning or serial date costs the tech a callback; "not verified, here is how to confirm it" does not.`;
 
 /** Static system prompt (cached). Must be deterministic: no dates, ids, or per-request data. */
 export function staticSystemPrompt(opts: { webSearchEnabled: boolean }): string {
@@ -408,6 +415,75 @@ function readingsSection(readings: ReadingRow[]): string[] {
   return lines;
 }
 
+const MAX_REFRIGERANT_EVENTS = 5;
+
+/** "REFRIGERANT / COMPLIANCE": last add with leak rate, exceeded flag, open obligations, recent events; empty when nothing to say. */
+function complianceSection(unit: UnitRow, events: RefrigerantEventRow[], now: Date): string[] {
+  const rows = Array.isArray(events) ? events.filter((e) => isRecord(e) && typeof e.created_at === "string") : [];
+  const hasCharge = typeof unit.full_charge_lbs === "number" && Number.isFinite(unit.full_charge_lbs);
+  if (rows.length === 0 && !hasCharge) return [];
+  const today = now.toISOString().slice(0, 10);
+  let c: ComplianceSummary;
+  try {
+    c = complianceSummary(rows.map(toComplianceEvent), { fullChargeLbs: unit.full_charge_lbs ?? null, applianceType: unit.appliance_type ?? null, circuitsCount: unit.circuits_count ?? null, installYear: unit.install_year, refrigerant: unit.refrigerant }, today);
+  } catch {
+    return [];
+  }
+  const lines: string[] = ["REFRIGERANT / COMPLIANCE (EPA leak-repair rule; 40 CFR 84.106)"];
+  const head: string[] = [];
+  head.push(hasCharge ? `Full charge ${unit.full_charge_lbs} lb${c.circuitsCount > 1 ? ` across ${c.circuitsCount} circuits (${c.circuitChargeLbs} lb each)` : ""}` : "Full charge NOT recorded (leak rate cannot be computed; ask for the nameplate charge)");
+  head.push(`${c.applianceType ? c.applianceType.replace(/_/g, " ") : "appliance type not set (comfort cooling assumed)"} → threshold ${c.thresholdPct} %`);
+  head.push(c.applies ? "rule applies (≥ 15 lb)" : "below the 15 lb applicability");
+  lines.push(`- ${head.join(" | ")}`);
+  if (c.lastAdd) {
+    const la = c.lastAdd;
+    lines.push(
+      `- Last add ${la.date}: ${la.amountLbs ?? "?"} lb${la.refrigerant ? ` ${la.refrigerant}` : ""}${la.circuit !== null ? ` ckt ${la.circuit}` : ""} → leak rate ${la.leakRatePct === null ? "not computed (no previous add / charge)" : `${la.leakRatePct} %/yr`}${la.exceeded ? ` — EXCEEDS ${c.thresholdPct} %` : la.leakRatePct !== null ? " (within threshold)" : ""}`,
+    );
+  } else {
+    lines.push("- No refrigerant adds on record.");
+  }
+  if (c.exceeded) lines.push("- EXCEEDANCE OPEN: do not recommend topping off; the leak must be found and repaired, then verified. Mention the deadlines below in any refrigerant advice.");
+  if (c.obligations.length) {
+    lines.push(`Open obligations (${c.obligations.length}):`);
+    for (const o of c.obligations.slice(0, 6)) lines.push(`- ${o.overdue ? "OVERDUE " : ""}${clip(o.text, 220)}${o.dueDate ? ` [due ${o.dueDate}]` : ""}`);
+  }
+  const recent = [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0)).slice(0, MAX_REFRIGERANT_EVENTS);
+  if (recent.length) {
+    lines.push(`Recent refrigerant events (${rows.length}${rows.length > MAX_REFRIGERANT_EVENTS ? `, last ${MAX_REFRIGERANT_EVENTS} shown` : ""}):`);
+    for (const e of recent) {
+      const bits: string[] = [e.event_type.replace(/_/g, " ")];
+      if (typeof e.amount_lbs === "number") bits.push(`${e.amount_lbs} lb${e.refrigerant ? ` ${e.refrigerant}` : ""}`);
+      if (typeof e.circuit === "number") bits.push(`ckt ${e.circuit}`);
+      if (e.event_type === "leak_check" && e.leak_found !== null) bits.push(e.leak_found === 1 ? "leak found" : "no leak found");
+      if ((e.event_type === "verification_initial" || e.event_type === "verification_followup") && e.passed !== null) bits.push(e.passed === 1 ? "passed" : "FAILED");
+      if (typeof e.leak_rate_pct === "number") bits.push(`${e.leak_rate_pct} %/yr${e.exceeded === 1 ? " EXCEEDED" : ""}`);
+      if (str(e.note)) bits.push(clip(String(e.note), 100));
+      lines.push(`- ${dateOnly(e.created_at)} ${bits.join(", ")}`);
+    }
+  }
+  return lines;
+}
+
+/** "LAST PM VISIT": date, template, counts, fails and flagged nameplate deviations; empty when none. */
+function pmSection(visits: PmVisitRow[]): string[] {
+  const rows = Array.isArray(visits) ? visits.filter((v) => isRecord(v) && typeof v.created_at === "string") : [];
+  if (rows.length === 0) return [];
+  const last = [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0))[0]!;
+  const summary = parseSummary(last.summary_json);
+  const name = summary?.templateName ?? last.template_id;
+  const lines = [`LAST PM VISIT ${dateOnly(last.created_at)} — ${clip(name, 60)} (${last.status.replace(/_/g, " ")}${last.tech_name ? `, ${clip(last.tech_name, 40)}` : ""}; ${rows.length} visit${rows.length === 1 ? "" : "s"} on record)`];
+  if (summary) {
+    lines.push(`- ${summary.pass} pass / ${summary.fail} fail / ${summary.na} n/a of ${summary.total} items`);
+    const fails = summary.items.filter((i) => i.status === "fail");
+    if (fails.length) lines.push(`- Fails: ${fails.slice(0, 8).map((i) => `${clip(i.label, 70)}${i.safety ? " [SAFETY]" : ""}${i.note ? ` (${clip(i.note, 80)})` : ""}`).join("; ")}${fails.length > 8 ? ` … +${fails.length - 8} more` : ""}`);
+    const flagged = summary.items.filter((i) => i.flagged);
+    if (flagged.length) lines.push(`- Nameplate deviations: ${flagged.slice(0, 6).map((i) => `${clip(i.label, 50)} ${i.asLeft ?? i.asFound ?? i.value ?? "?"} vs ${i.reference ?? "nameplate"}${i.deviationPct !== undefined ? ` (${i.deviationPct > 0 ? "+" : ""}${i.deviationPct} %)` : ""}`).join("; ")}`);
+  }
+  if (str(last.note)) lines.push(`- Note: ${clip(String(last.note), 200)}`);
+  return lines;
+}
+
 /** Technician decode corrections, newest first; empty when none. */
 function correctionsSection(corrections: CorrectionRow[]): string[] {
   const rows = Array.isArray(corrections) ? corrections.filter((c) => isRecord(c) && str(c.actual_value)) : [];
@@ -441,6 +517,8 @@ export function unitContextBlock(
   now: Date = new Date(),
   corrections: CorrectionRow[] = [],
   readings: ReadingRow[] = [],
+  refrigerantEvents: RefrigerantEventRow[] = [],
+  pmVisits: PmVisitRow[] = [],
 ): string {
   const safeFindings = Array.isArray(findings) ? findings.filter((f) => isRecord(f)) : [];
   const safeConvos = Array.isArray(conversations) ? conversations.filter((c) => isRecord(c)) : [];
@@ -496,10 +574,22 @@ export function unitContextBlock(
     }
   }
 
+  const comp = complianceSection(unit, refrigerantEvents, now);
+  if (comp.length) {
+    out.push("");
+    out.push(...comp);
+  }
+
   const rd = readingsSection(readings);
   if (rd.length) {
     out.push("");
     out.push(...rd);
+  }
+
+  const pm = pmSection(pmVisits);
+  if (pm.length) {
+    out.push("");
+    out.push(...pm);
   }
 
   const others = safeConvos

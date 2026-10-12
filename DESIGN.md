@@ -59,13 +59,14 @@ tests; no new npm dependencies.
     diagnostics/charging-targets.json   # ChargingTargets
     electrical/components.json          # { version, components: ElectricalComponent[], reference: [...] }
     electrical/procedures.json          # { version, procedures: ElectricalProcedure[] }
+    pm/checklists.json                  # PmChecklists: PM templates per equipment type (sources[], templates[])
     manufacturers/<mfr>.json            # one ManufacturerPack per manufacturer family
   src/
     types.ts            # shared contracts (FROZEN — optional additions only)
     config.ts           # env/config loading (loadDotEnv, loadConfig, PROJECT_ROOT)
     server.ts           # entry: builds deps, starts listening, graceful shutdown
     app.ts              # createApp(deps) — express app factory
-    routes/*.ts         # conversations, units, fleetImport, corrections, reference, search, auth, settings, usage, readings, followups
+    routes/*.ts         # conversations, units, fleetImport, corrections, reference, search, auth, settings, usage, readings, followups, refrigerant, pm
     importParse.ts      # pure CSV/TSV/plain-line fleet parser (bulk import)
     settingsStore.ts  aiSettings.ts  runtime.ts   # settings.env + hot-swappable client (Settings → AI connection)
     db/schema.ts        # SCHEMA_SQL constant (idempotent)
@@ -78,7 +79,12 @@ tests; no new npm dependencies.
     knowledge/decoder.ts        # model/serial decoder engine
     knowledge/faults.ts         # fault-code lookup across packs
     knowledge/trend.ts          # readings trend: compareReadings(prev, cur) → notable deltas with plain-English lines
-    readingsStore.ts            # storeReading / readingView / unitReadingsSummary (shared by routes and the diagnose tool)
+    knowledge/refrigerantCompliance.ts  # EPA leak rate (40 CFR 84.106): thresholds, annualizedLeakRate, obligations, complianceSummary (pure)
+    knowledge/pm.ts             # PM checklists: evaluate(template, results, nameplate), nameplateOf, suggestPmTemplate (pure)
+    knowledge/chiller.ts        # chiller readings mode: evaluateChiller (approaches, ΔT/tons, amps, oil) (pure)
+    readingsStore.ts            # storeReading / storeChillerReading / readingView / unitReadingsSummary (shared by routes and tools)
+    complianceStore.ts          # unitCompliance, refrigerantEventView, refrigerantLogCsv (shared by routes, tools, reports)
+    pmStore.ts                  # pmVisitView, evaluateForUnit, mergeResults, unitLastPm
     agent/client.ts             # MessagesStreamer / StreamLike interfaces + real client (DONE)
     agent/fakeClient.ts         # scripted fake client for tests and demo mode
     agent/systemPrompt.ts       # static system prompt + unit-context builder
@@ -99,11 +105,18 @@ the contract; extend types with optional fields only.
   heat_type, metering_device, install_year, elevation_ft), `decoded_json` (DecodeResult),
   nameplate data the decoder cannot infer (`circuits`, `charge_json`, `nameplate_json`),
   notes, last_service_at, `archived_at` (soft delete: `DELETE /api/units/:id` archives; lists
-  exclude archived unless `include_archived=1`). `model` may be NULL when the plate is
+  exclude archived unless `include_archived=1`), and the EPA compliance columns `full_charge_lbs` REAL
+  (total nameplate charge), `appliance_type` (comfort_cooling | commercial_refrigeration | industrial_process |
+  other) and `circuits_count` INTEGER (independent circuits sharing the charge equally; null = 1), added to old
+  databases by `UNITS_COLUMN_MIGRATIONS` and accepted by `POST/PATCH /api/units` and `update_unit` (the decoder
+  never fills them). `model` may be NULL when the plate is
   unreadable (record keyed by site + unit_tag; decoder skipped); at least one of model,
   unit_tag, nickname is required.
 - `conversations`: title, unit_id (SET NULL on unit delete), summary (set by the
-  `set_conversation` tool), timestamps.
+  `set_conversation` tool), timestamps, plus the job clock / signature columns (`CONVERSATIONS_COLUMN_MIGRATIONS`):
+  `job_started_at`, `job_ended_at` (ISO; `minutes_on_site` is derived in the API payload), `signature_png` (PNG data
+  URL ≤ 200 KB, PNG magic bytes checked; never on the row object — `repos.conversations.signaturePng(id)`),
+  `signed_by`, `signed_at`, `signature_note` ("declined recommendation").
 - `messages`: `rid INTEGER PRIMARY KEY` (internal, FTS rowid), `id` (public 16-hex), seq,
   role, `kind` (`chat` | `tool_result`), `content_json` (Anthropic content blocks verbatim),
   `text` (searchable: user text / assistant text blocks; `""` for tool_result rows).
@@ -116,7 +129,9 @@ the contract; extend types with optional fields only.
   `ALTER TABLE` in `openDatabase` (`FINDINGS_COLUMN_MIGRATIONS`, checked against `PRAGMA table_info`),
   followed by `idx_findings_follow_up (follow_up_done, follow_up_due)`.
 - `readings` (readings history per unit): id, `unit_id` (CASCADE on unit hard delete),
-  `conversation_id` (SET NULL), created_at, `mode`, `refrigerant`, `metering_device`,
+  `conversation_id` (SET NULL), created_at, `mode` (the four DX modes or `chiller`; the DDL lives in
+  `READINGS_TABLE_SQL` and `migrateReadingsModeCheck` rebuilds a pre-chiller table in place since SQLite cannot
+  alter a CHECK), `refrigerant`, `metering_device`,
   `measurements_json` (DxMeasurements as entered), `derived_json` (DxDerived), `validity_json`
   (`{ok, issues}`), `findings_json` (`[{ruleId, severity}]` only), `note`, `source`
   (`sheet` = Readings sheet "Save to unit" / `POST /api/calc/diagnose` with `unit_id`; `chat` = the
@@ -127,6 +142,25 @@ the contract; extend types with optional fields only.
   liquid ≥ max(15 psi, 5 %)) each with a direction hint and one line ("Subcooling fell from 12 to 4 °F
   since 2026-08-02 (same mode) - charge loss or restriction trend"); `trendFromReadings(rows)` pairs
   the newest row with the most recent earlier comparable row (window: last 20 rows).
+- `refrigerant_events` (refrigerant log per unit): id, `unit_id` (CASCADE), `conversation_id` (SET NULL), created_at
+  (an event may be back-dated with `date` YYYY-MM-DD → `T12:00:00Z`), `event_type` (add | recover | leak_check |
+  verification_initial | verification_followup | repair | retrofit_plan), refrigerant (defaults to the unit's),
+  `amount_lbs` (> 0, required for add/recover), `circuit` (1..64), cylinder_id, tech_name, tech_cert (EPA 608 #),
+  `leak_found` (0/1, leak_check), `passed` (0/1, verification tests), note, and on an add the computed
+  `leak_rate_pct`, `threshold_pct`, `exceeded` (0/1; NULL when no rate could be computed) and `finding_id` — the
+  open follow-up finding ("EPA leak rate X % exceeds T % - repair within 30 days and verify", `follow_up_due` =
+  date + 30, origin tech, tags refrigerant,leak,epa) created once per exceeded add inside the same transaction.
+  `repos.refrigerantEvents.create` reads the unit: appliance charge = `full_charge_lbs` (÷ `circuits_count` when
+  the add names a circuit; EPA treats each independent circuit as its own appliance), previous add = the newest
+  earlier add on that circuit (any circuit when none), days floored at 1; first add falls back to mid-`install_year`
+  (flagged approximate) else no rate. `latestAdd(unitId, circuit?)`, `list` (newest first), `listAll` (joined with
+  unit site/tag/model/serial/nickname, oldest first; CSV export + backup), `remove`. Indexed `(unit_id, created_at DESC)`.
+- `pm_visits` (PM checklist visits per unit): id, `unit_id` (CASCADE), `conversation_id` (SET NULL), created_at,
+  updated_at, `template_id` (knowledge/pm template), `status` (in_progress | complete), tech_name, `results_json`
+  (`PmResults`: per item `{ value | checked | asFound, asLeft, pass: true|false|null, note, rated }`), `summary_json`
+  (`PmSummary` from `evaluate`: `{ templateId, templateName, total, pass, fail, na, flagged[], fails[], safetyFails[],
+  items[] }`), note. The repo stores the JSON as given; `src/pmStore.ts` evaluates (`evaluateForUnit`) with the unit's
+  nameplate (`nameplateOf`: voltage range from `units.voltage`, RLA from `nameplate_json` rla/rla_1/…).
 - `usage_events`: one row per model request (conversation_id SET NULL on delete, created_at, model
   served, input/output/cache-read/cache-write tokens, web_searches, stop_reason); pruned after 400 days.
 - `corrections` (technician "it got this wrong" list): unit_id (SET NULL on hard delete), created_at,
@@ -139,7 +173,9 @@ the contract; extend types with optional fields only.
   triggers on `rid`.
 - IDs: 16 lowercase hex (`crypto.randomBytes(8)`), validated by `isId()`; all `:id` params
   and `unit_id`/`conversation_id` body fields → 400 otherwise. Timestamps ISO-8601 UTC.
-- New tables use `CREATE TABLE/INDEX IF NOT EXISTS` only, so an existing database gains them at startup.
+- New tables use `CREATE TABLE/INDEX IF NOT EXISTS` only, so an existing database gains them at startup; new columns
+  on existing tables go through `COLUMN_MIGRATIONS` (findings, units, conversations) — guarded `ALTER TABLE`s checked
+  against `PRAGMA table_info`.
   `repos.transaction(fn)` wraps `BEGIN IMMEDIATE … COMMIT` (not reentrant) for multi-row writes.
 - `messages.append` allocates `seq` atomically (single `INSERT … SELECT COALESCE(MAX(seq),0)+1`
   or inside `BEGIN IMMEDIATE`) and touches `conversations.updated_at` in the same transaction.
@@ -353,6 +389,65 @@ temperature-drop table by entering DB/WB (Carrier/Proctor CheckMe points: 75/63 
 `heatPumpHeating.notes`, refrigeration targets in `notes`. Nameplate/manufacturer charts take
 precedence; the engine says so.
 
+### PM checklists (`knowledge/pm/checklists.json`, `PmChecklists`)
+
+`{ version, sources[] (URLs/standards the items come from), templates[] }` keyed by equipment type: `rtu_gas`,
+`rtu_electric_or_cooling_only`, `split_ac`, `heat_pump`, `chiller_air_cooled`, `chiller_water_cooled`,
+`walk_in_cooler`, `walk_in_freezer`, `ice_machine`, `mau_exhaust`, `boiler`. Template: `id` (snake_case, unique),
+`name`, `appliesTo`, `sections[{ title, items[{ id (unique per template), label, kind: check | number | text, unit?,
+nameplateCompare?: volts | amps | capacitor_uf, asFoundAsLeft?, safety?, hint? }] }]`, ≥ 10 items each (loader
+minimum `MIN_PM_ITEMS_PER_TEMPLATE`). Content follows the research: RTU filters, belts/sheaves, economizer
+actuator/dampers/sensors/low limit, V/A vs nameplate ±10 %, HX inspection + CO air-free, condensate, coils, static,
+contactors, capacitors ±6 %, SH/SC/ΔT, gas pressure/flame sense/temperature rise; chiller CHW supply/return,
+approaches (tube-cleaning trigger ≈ 3 °F rise), oil level/pressure/temperature, V/A, purge; walk-in box temp,
+gaskets, frost pattern, defrost, drain, condenser; ice machine 6-month clean/sanitize, condenser, water filter;
+MAU/exhaust LOTO, belts, grease, fans run; boiler combustion O2/CO/stack, relief valve, LWCO, high limit, venting.
+Loader validation (`validatePmChecklists`): shape, kinds/compare enums, `nameplateCompare`/`asFoundAsLeft` only on
+number items, unique template and item ids, non-empty `sources`; `check-knowledge` prints template/item counts.
+
+Evaluation (`src/knowledge/pm.ts`, pure): `evaluate(template, results, nameplate)` → per item pass/fail/na: an
+explicit `pass` wins; a check item passes when checked (unchecked safety item or unchecked with a note = fail, else
+n/a); a number item uses as-left ?? as-found ?? value and, with a `nameplateCompare`, is compared with the reference
+(volts within [min×0.9, max×1.1] of the nameplate range; amps ≤ 110 % of RLA/FLA (`rated` on the result overrides);
+capacitor within ±6 % of `rated`) and `flagged` on deviation (`deviationPct`, `reference` text); text items pass when
+recorded. `suggestPmTemplate(unit, decoded?)` maps productType/heat type → template (packaged_rtu + gas → rtu_gas,
+heat-pump heat → heat_pump, chiller by family wording, refrigeration_condensing_unit → walk_in_cooler/freezer,
+furnace → rtu_gas, ice-machine makers → ice_machine).
+
+### Refrigerant compliance (`src/knowledge/refrigerantCompliance.ts`, pure)
+
+`thresholdFor(applianceType)` → 10 / 20 / 30 % (other/unknown → 10) per 40 CFR 84.106 (EPA fact sheet, Jan 2026);
+`applies(fullChargeLbs)` → ≥ 15 lb (HFC regime; `appliesOds` ≥ 50 lb for R-22 under 40 CFR 82.157);
+`annualizedLeakRate({ addedLbs, fullChargeLbs, daysSinceLastAdd })` → `(added ÷ full charge) × (365 ÷ days) × 100`,
+days < 1 → 1, null rate with a reason when the charge or days are unknown (EPA worked example: 25 lb into a 400 lb
+rack 60 days after the prior add = 38.02 %); `evaluateAdd` (per-circuit charge, previous-add / install-year basis);
+`nextObligations(events, unit, today)` → when the latest add exceeded: "Repair within 30 days of <date>" (120 with
+a shutdown), "Initial verification test before adding refrigerant" (until a passed one after the exceedance),
+"Follow-up verification test within 10 days of the initial test" (after a passed initial, until a passed follow-up),
+"Retrofit or retirement plan" when the exceedance is older than 30 days with no passed verification and no
+retrofit_plan logged; after any exceedance on record the inspection cadence (quarterly ≥ 500 lb, annual 15–499 lb)
+from the last leak_check (dueDate null when none; the four-clean-quarters reset is out of scope). Each obligation
+`{ kind, dueDate, text, overdue }`; everything is YYYY-MM-DD with a `today` parameter. `complianceSummary` →
+`{ applies, fullChargeLbs, applianceType, thresholdPct, circuitsCount, circuitChargeLbs, lastAdd, lastLeakRatePct,
+exceeded, obligations[], formula, source, notes[] }` (the `compliance` object on the unit card, the log route, the
+tool and the reports).
+
+### Chiller readings mode (`src/knowledge/chiller.ts`, pure)
+
+`evaluateChiller(kb, ChillerMeasurements)` for readings mode `chiller` (the DX engine is untouched): inputs
+chwSupplyF, chwReturnF, chwFlowGpm?, evapSatF or evapPressurePsig (+ refrigerant), condSatF or condPressurePsig,
+condWaterInF/OutF (water-cooled) or outdoorDbF (air-cooled; `condenserType` inferred from which was given),
+oilPressurePsig?, oilTempF?, compressorAmps?, rla?, percentLoad?, elevationFt. Derived: chwDeltaTF, tons
+(500 × gpm × ΔT ÷ 12000), evapApproachF (chwSupply − evapSat), condApproachF (condSat − condWaterOut, or − outdoorDb),
+condWaterDeltaTF, ampsPercentRla. Findings (DxFinding shape, ranked): evap approach > 5 °F warning / > 10 critical
+(fouled tubes, low charge, low flow, oil); cond approach > 5 °F water-cooled (fouled tubes, ~3 °F rise over baseline
+= tube-cleaning trigger; purge) or > 25 °F air-cooled (dirty coil / fan / recirculation); low CHW ΔT (< 6 °F) at
+≥ 70 % load (flow too high / low capacity), ΔT > 14 (low flow), leaving water < 38 °F (freeze risk), amps > 110 %
+RLA, amps < 40 % RLA with > 80 % commanded load, oil pressure outside 15–100 psig / oil temperature outside 90–170 °F
+(generic bands, manufacturer band wins), a `chiller_scope` info (charge by weight / procedure). Pressures without a
+resolvable refrigerant → validity issue + `chiller_refrigerant_required` advisory; `missing[]` names what would
+sharpen the result; `summary` one line.
+
 ### Electrical (`components.json`, `procedures.json`, `ElectricalKnowledge`)
 
 Components (≥ 22): run capacitor (±6 % of rating or the printed tolerance; µF under load =
@@ -404,7 +499,23 @@ if-measured-on-common note), amps_vs_rla, temp_rise_cfm (CFM = output BTUh / (1.
 heat: BTUh = kW × 3412 at 100 %), ohms_law, electric_heat_kw (kW = V·A·(√3 for 3-ph)/1000 vs
 nameplate ±10 %), psychrometrics (RH, dew point, enthalpy, grains from DB/WB/elevation),
 winding_check (1-ph C-S + C-R ≈ S-R within ~10 %; 3-ph legs within ±5 %; open/short flags),
-megohm (bands above). Inputs validated; warnings instead of throws.
+megohm (bands above). Wave 2 (`CALC_KINDS` is the single list the route enum and tool schema read; the
+`interpretation` lines spell out every formula so `web/calc.js` can mirror them offline): leak_rate (added_lbs,
+full_charge_lbs, days_since_last_add, appliance_type → EPA annualized rate vs 10/20/30 %, applies ≥ 15 lb);
+gas_meter_clock (dial_cuft, seconds_per_rev, revolutions=1, heating_value_btu_per_cuft=1000 → CFH = 3600 × dial × rev ÷ s,
+BTU/h = CFH × HV, vs nameplate_input_btuh ±5 % under/over-fired); combustion_co (co_ppm, o2_pct → CO air-free =
+CO × 20.9 ÷ (20.9 − O2); flag 1 at ≥ 100 ppm (NCI action), 2 at ≥ 400 (ANSI Z21.47 ceiling); ambient_co_ppm > 20 →
+stop-work, > 9 investigate); sensible_cfm (btuh, delta_t_f → CFM = BTU/h ÷ (1.08 × ΔT); tons → CFM/ton vs 350–450);
+static_pressure (|supply| + |return| = TESP vs rated_max_in_wc, default 0.5 PSC / 0.8 ECM by blower_type, over-max
+flag, % of rated); fan_laws (rpm ratio → CFM ∝ ratio, SP ∝ ratio², BHP ∝ ratio³); belt_drive (fan rpm = motor rpm ×
+motor sheave ÷ fan sheave; L = 2C + 1.57(D + d) + (D − d)² ÷ 4C; deflection = span ÷ 64); voltage_drop (VD = 2·K·I·L ÷ CM
+single-phase, 1.732·K·I·L ÷ CM three-phase; K 12.9 Cu / 21.2 Al; AWG 14…4/0 and 250…500 kcmil → cmil per NEC Ch. 9
+Table 8 (`AWG_CMIL`, `normalizeAwg` accepts #10, 1/0, 00, 250 kcmil…) or circular_mils; flags > 3 % / > 5 %);
+motor_fla (NEC Table 430.248 1-ph 115/230 V and 430.250 3-ph 208/230/460/575 V, 1/2–200 HP in `NEC_FLA_1PH` /
+`NEC_FLA_3PH`, nearest voltage column, next HP up when not listed, 125 % conductor ampacity); capacitor_replacement
+(ok when |ΔµF| ≤ 6 % and replacement V ≥ rated); motor_replacement (checklist lines: rpm, volts/phase, rotation from
+the shaft end, frame/shaft must match; hp equal or next size up only when amps/breaker/contactor allow; enclosure,
+capacitor, lead configuration). Inputs validated; warnings instead of throws.
 
 ## Assistant (agent layer)
 
@@ -441,8 +552,16 @@ cause?, resolution?, measurements?, parts?, tags?, circuit?, status?, refrigeran
 refrigerant_added_lbs?, follow_up?, follow_up_due? (YYYY-MM-DD, stored only with a follow_up),
 confirmed?) — `origin: "assistant"`, `confirmed` only when the tech explicitly confirmed; `update_unit` (nickname, unit_tag, site, customer,
 location_note, refrigerant, tonnage, voltage, phase, circuits, charge, nameplate, control_platform,
-heat_type, metering_device, install_year, elevation_ft, notes); `set_conversation` (title?,
-summary?).
+heat_type, metering_device, install_year, elevation_ft, notes, full_charge_lbs, appliance_type, circuits_count); `set_conversation` (title?,
+summary?); `diagnose_chiller` (ChillerMeasurements in snake_case + condenser_type; refrigerant defaults to the
+attached unit's; stores a `chiller` readings row with source `chat` when a unit is attached; returns condenserType,
+derived, validity, findings (top 6), missing, summary, readingId); `log_refrigerant` (event_type, refrigerant?,
+amount_lbs?, circuit?, cylinder_id?, tech_name?, tech_cert?, leak_found?, passed?, note?, date?; requires an attached
+unit; returns the event view, the auto-created finding, the compliance object and `notes` that spell out an
+exceedance and the 30-day clock); `get_pm_checklist` (equipment_type? — one of the template ids; omitted →
+`suggestPmTemplate` from the attached unit; returns the template sections/items, `suggestedFrom`, the available ids
+and `lastPm` {date, status, counts, fails, flagged}); `calc_electrical` gains the wave-2 kinds with `CALC_REQUIRED`
+per kind and enum-coded appliance_type / blower_type / material / rotation_from_shaft_end.
 
 Turn loop (`runTurn`), write order and stop reasons:
 
@@ -492,11 +611,20 @@ drops it; omitted when none), then "Open follow-ups: …" (follow-ups not done, 
 / `due` / `no due date`, ≤ 8; also before the findings), open/monitor findings first, then the last 5
 confirmed findings (date, circuit, symptom → cause → resolution, measurements condensed; a follow-up
 shows `due <date>` or `(done)`), assistant hypotheses (unconfirmed) listed separately, refrigerant added in
-the last 12 months, then "SAVED READINGS" (last 3, one compact line each: date, mode, source, OD,
+the last 12 months, then "REFRIGERANT / COMPLIANCE (EPA leak-repair rule; 40 CFR 84.106)" (when the unit has a full
+charge or any refrigerant event: full charge / circuits, appliance type → threshold, applicability; "Last add <date>:
+<lb> <refrigerant> → leak rate X %/yr — EXCEEDS T %" or "(within threshold)"; "EXCEEDANCE OPEN: do not recommend
+topping off" when the last add exceeded; "Open obligations (n)" with `OVERDUE` and `[due <date>]`; the last 5
+events one line each), then "SAVED READINGS" (last 3, one compact line each: date, mode, source, OD,
 suction/liquid, SH/SC/ΔT/% RLA, `[not valid for charge]`, note) with "TREND SINCE LAST VISIT (date)" lines
-from `trendFromReadings` (or a "no notable change" sentence when ≥ 2 rows), last 5 conversation titles +
+from `trendFromReadings` (or a "no notable change" sentence when ≥ 2 rows), "LAST PM VISIT <date> — <template>
+(<status>, <tech>; n visits on record)" with pass/fail/n/a counts, "Fails: …" (`[SAFETY]` marked, notes) and
+"Nameplate deviations: <label> <value> vs <reference> (±x %)", last 5 conversation titles +
 summaries + dates excluding the current one; no "now" timestamps. `runTurn` passes
-`repos.readings.list({unitId, limit: 20})`.
+`repos.readings.list({unitId, limit: 20})`, `repos.refrigerantEvents.list({unitId, limit: 50})` and
+`repos.pmVisits.list({unitId, limit: 5})`. The system prompt tells the assistant to log every add with
+`log_refrigerant` and, before any charging advice, to read this section and state an exceedance, its rate and the
+30-day repair / verification deadlines instead of recommending a top-off.
 
 System prompt (deterministic; cached) — required content:
 
@@ -547,14 +675,34 @@ unknown id, 409 busy, 413 too large, 500 other (no stack traces).
 GET  /api/health                                   {ok, model, effort, webSearch, fallbacks, packs, refrigerants, rules, demo}
 GET  /api/conversations?q=&unit_id=&limit=         newest updated first
 POST /api/conversations {unit_id?, title?}
-GET  /api/conversations/:id                        {conversation, unit, messages: DisplayMessage[], busy}
+GET  /api/conversations/:id[?include=signature]    {conversation (+ job_started_at, job_ended_at, minutes_on_site, signed, signed_by, signed_at, signature_note;
+                                                   never signature_png), unit, messages: DisplayMessage[], busy, signature? {png, signed_by, signed_at, note} | null}
+POST /api/conversations/:id/job {action: start|stop|clear}   {conversation}  (start resets the end; stop needs a start → 400)
+POST /api/conversations/:id/signature {png (data:image/png;base64,… ≤ 200 KB, PNG magic checked), signed_by?, note?}  201 {conversation}
+DELETE /api/conversations/:id/signature            {conversation}
 PATCH /api/conversations/:id {title?, unit_id?|null}
 DELETE /api/conversations/:id
 POST /api/conversations/:id/messages {text, images?} -> SSE (409 if busy)
 POST /api/conversations/:id/stop                   {stopped: boolean}
 GET  /api/units?q=&site=&limit=&include_archived=   POST /api/units {model?, serial?, manufacturer?, unit_tag?, ...} (decodes when model given; 200 if exists)
-GET  /api/units/:id                 {unit, decoded, findings, conversations, corrections, lastReading, trend}   PATCH / DELETE (archives)
-                                                  lastReading = newest readings row (JSON columns parsed) or null; trend = {prevId, since, mode, deltas[], lines[]} or null
+GET  /api/units/:id                 {unit, decoded, findings, conversations, corrections, lastReading, trend, compliance, lastPm}   PATCH / DELETE (archives)
+                                                  lastReading = newest readings row (JSON columns parsed) or null; trend = {prevId, since, mode, deltas[], lines[]} or null;
+                                                  compliance = ComplianceSummary (chip on the unit card); lastPm = newest pm_visits view or null;
+                                                  POST/PATCH also accept full_charge_lbs, appliance_type, circuits_count
+GET  /api/units/:id/refrigerant?limit=   {events (newest first, booleans for leak_found/passed/exceeded, date), compliance}
+POST /api/units/:id/refrigerant {event_type, refrigerant?, amount_lbs?, circuit?, cylinder_id?, tech_name?, tech_cert?, leak_found?, passed?, note?,
+                                 conversation_id?, date?}   201 {event, finding (auto follow-up or null), compliance}
+DELETE /api/units/:id/refrigerant/:eid   {deleted, id}   (404 unless the event belongs to that unit)
+GET  /api/refrigerant/export.csv         text/csv attachment hvac-refrigerant-log-YYYY-MM-DD.csv; RFC 4180 (quotes doubled, CRLF);
+                                         columns date, site, unit_tag, nickname, model, serial, event_type, refrigerant, amount_lbs, circuit, cylinder_id,
+                                         tech_name, tech_cert, leak_found, passed, leak_rate_pct, threshold_pct, exceeded, note, unit_id, event_id
+GET  /api/pm/templates                   {templates: [{id, name, appliesTo, itemCount, sections[{title, itemCount}]}], sources, version}
+GET  /api/pm/templates/:id               {template}
+GET  /api/units/:id/pm?limit=            {visits (newest first; results/summary parsed, template_name, date)}
+POST /api/units/:id/pm {template_id, results?, status?, tech_name?, note?, conversation_id?}   201 {visit}  (results validated against the
+                                         template: unknown item ids / keys → 400; evaluated with the unit nameplate into summary)
+PATCH /api/units/:id/pm/:vid {results? (merged per item; null removes an item; re-evaluated), status?, tech_name?, note?}   {visit}
+DELETE /api/units/:id/pm/:vid            {deleted, id}
 GET  /api/units/:id/readings?limit=   {readings (newest first; default 20, max 200), trend}
 DELETE /api/units/:id/readings/:rid   {deleted, id}   (404 unless the row belongs to that unit)
 GET  /api/followups?status=open|done|all&limit=   {followups: finding ⋈ unit(site, tag, model, nickname) ⋈ conversation(title),
@@ -572,14 +720,16 @@ GET  /api/findings?unit_id=&conversation_id=       POST /api/findings   PATCH /a
                                                   POST/PATCH also accept follow_up_due (YYYY-MM-DD | null) and follow_up_done (bool)
 GET  /api/conversations/:id/report?format=md|html|json   service report (default md); html = self-contained printable page; Content-Disposition inline
 GET  /api/units/:id/report?format=md|html|json           unit report: nameplate, findings by date, corrections, last 5 conversations
-GET  /api/export                                   JSON of units, conversations, messages (no image data), findings, corrections;
+GET  /api/export                                   JSON of units, conversations, messages (no image data), findings, corrections, refrigerantEvents, pmVisits;
                                                   `complete`/`truncated[]`/`limit` say whether any collection hit the per-list cap
 GET  /api/reference/refrigerants
 GET  /api/reference/pt?refrigerant=&psig=|temp_f=&elevation_ft=   (bubble, dew, midpoint, glide, safety class, notes)
 POST /api/calc/superheat-subcooling  {DxMeasurements-like; snake_case or camelCase}
 POST /api/calc/diagnose              {DxMeasurements-like, unit_id?, conversation_id?, note?}   DxResult; with unit_id the diagnosis is
                                                   stored as a readings row (source "sheet") and the response gains {readingId}
-POST /api/calc/electrical            {ElectricalCalcRequest}
+POST /api/calc/electrical            {ElectricalCalcRequest}  (all CALC_KINDS; snake_case or camelCase keys)
+POST /api/calc/chiller               {ChillerMeasurements-like (snake_case or camelCase), unit_id?, conversation_id?, note?}   ChillerResult; with unit_id
+                                                  stored as a readings row (mode "chiller", source "sheet", refrigerant defaults to the unit's) and the response gains {readingId}
 GET  /api/reference/electrical?component=|symptom=|q=
 GET  /api/reference/fault?code=&manufacturer=&platform=
 GET  /api/settings/ai                {demo, model, effort, webSearch, keySource, keyHint, settingsPath, fakeForced, models}
@@ -721,11 +871,21 @@ technician line), "Complaint" (first user chat text, whitespace-collapsed, ≤ 4
 measurements from the input, derived values / validity / top findings / summary from the result; interrupted calls
 say so — plus readings-sheet messages `Readings (…): …`), "Findings" (rows with `conversation_id` = this
 conversation: symptom → cause → resolution, parts, refrigerant added, confirmed / hypothesis / status),
-"Open items / follow-up" (open and monitor findings, any `follow_up`), "Assistant summary" (last assistant text:
+"Open items / follow-up" (open and monitor findings, any `follow_up`), "Owner documentation (refrigerant / EPA
+leak-repair record)" (`ownerDocumentation`: full charge / circuits, appliance type and threshold, last leak rate +
+exceeded chip, the formula and its source, the refrigerant events logged in this conversation — date, type, lb,
+circuit, leak rate vs threshold with EXCEEDED, cylinder, tech + cert, note — and the unit's open obligations with
+overdue flags; "No refrigerant events or full charge recorded." otherwise), "Preventive maintenance" (`pm`: the
+newest PM visit from this conversation — template, status, tech, pass/fail/n/a counts, safety fails, failed items,
+nameplate deviations, note), "Assistant summary" (last assistant text:
 kept as markdown in md; rendered in html with `marked` through a renderer that escapes raw HTML, drops images
-and allows only http(s)/mailto links — nothing from the database or the model reaches the page unescaped).
+and allows only http(s)/mailto links — nothing from the database or the model reaches the page unescaped), and
+"Customer signature" (`signature`: signed_by / signed_at / note; the PNG data URL is embedded as an `<img>` in the
+html signature box and only noted in md). The header carries `job` (`startedAt`, `endedAt`, `minutesOnSite`) as
+"Time on site: 2 h 05 min (start → end)" when the clock was started.
 Unit report: nameplate block (+ decoder warnings), findings grouped by `service_date` newest first,
-corrections, last 5 conversations (title, date, summary). html is a self-contained printable page (inline CSS,
+corrections, owner documentation over every refrigerant event on the unit, the last PM visit, last 5 conversations
+(title, date, summary). html is a self-contained printable page (inline CSS,
 `@media print`, no external assets, "Print / Save as PDF" button → `window.print()`); md is `text/markdown`.
 Filenames: `hvac-report-<tag|model>-<date>.<ext>` / `hvac-unit-<tag|model>-<date>.<ext>`, sent
 `Content-Disposition: inline`. Routes are behind auth; `format` other than md/markdown/html/json → 400.
@@ -926,3 +1086,13 @@ ALLOW_ORIGINS=               comma-separated origins allowed via CORS (native sh
   save_finding / get_unit_history tools, the unit context block), `db/repos.test.ts` (readings repo,
   follow-up columns, `listFollowUps`, migration of a pre-existing database), and `readingSummary` /
   `readingDetailRows` / `formatDelta` / `dueChip` / routes in `web/app.test.ts`. `scripts/smoke.mjs` covers the same routes end to end over HTTP.
+- Wave 2: `knowledge/refrigerantCompliance.test.ts` (thresholds, applicability, the EPA worked example, date helpers,
+  per-circuit charge, obligations and their chain, summary notes), `knowledge/pm.test.ts` (pack shape + minimums,
+  loader validation, nameplate parsing, evaluate pass/fail/na and tolerances, template suggestion),
+  `knowledge/chiller.test.ts` (healthy / fouled / air-cooled vectors, PT conversion, missing refrigerant, oil and amps
+  bands, ranking), `knowledge/electricalWave2.test.ts` (every new calculator with hand-checked numbers),
+  `routes/compliance.test.ts` (repo leak-rate computation and auto follow-up, unit columns, log routes, CSV export,
+  backup, the log_refrigerant tool and the context section), `routes/pm.test.ts` (visits repo, templates and visit
+  routes, results validation and merge, the get_pm_checklist tool and the context section), `routes/chillerJob.test.ts`
+  (calc/chiller route and storage, the diagnose_chiller tool, readings-table rebuild and column migrations, job clock
+  and signature routes, report blocks in json/md/html), `agent/toolsWave2.test.ts` (calculator kinds through the tool).

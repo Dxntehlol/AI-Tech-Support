@@ -45,6 +45,27 @@ Claude-powered chat assistant with a local knowledge base and a job memory:
   (`GET /api/conversations/:id/report`, `GET /api/units/:id/report`, `?format=md|html|json`).
 - **QR labels** — **QR label** on a unit card prints a sticker whose code opens that unit in the app;
   **Units → ⋮ → Print QR labels** prints one label per unit, two per row.
+- **Refrigerant log and EPA compliance** — every add, recovery, leak check, verification test, repair or retrofit plan
+  is logged on the unit (`POST /api/units/:id/refrigerant`, or the assistant's `log_refrigerant`); an add gets the
+  annualized leak rate `(lb added ÷ full charge) × (365 ÷ days since last add) × 100` against the 10 / 20 / 30 %
+  threshold for the appliance type (40 CFR 84.106), an exceedance opens a "repair within 30 days and verify" follow-up
+  and the unit card shows the open obligations (repair, initial and follow-up verification, retrofit plan, inspection
+  cadence); `GET /api/refrigerant/export.csv` exports the whole log and reports carry an owner-documentation block.
+- **PM checklists** — templates per equipment type (gas and electric RTUs, splits, heat pumps, air- and water-cooled
+  chillers, walk-in coolers and freezers, ice machines, MAU/exhaust, boilers) with pass/fail, as-found/as-left numbers
+  and nameplate comparisons (volts ±10 %, amps vs RLA, capacitors ±6 %); visits are stored per unit
+  (`/api/pm/templates`, `/api/units/:id/pm`), the assistant sees the last visit's fails, and reports include the summary.
+- **Chiller readings mode** — chilled-water supply/return, evaporator and condenser saturated temperatures or pressures,
+  condenser water or entering air, amps and oil become ΔT, tons, evaporator/condenser approaches and ranked findings
+  (fouled tubes, dirty coil, low flow, overload) via `POST /api/calc/chiller` or the assistant's `diagnose_chiller`,
+  stored as readings with mode `chiller`.
+- **Job clock and customer signature** — start/stop a job clock on a conversation (`POST /api/conversations/:id/job`)
+  and capture a PNG signature with a name and a note such as "declined recommendation"
+  (`POST /api/conversations/:id/signature`); the service report shows time on site and embeds the signature.
+- **Field calculators** — leak rate, gas meter clocking, CO air-free (100 / 400 ppm flags, ambient stop-work),
+  sensible CFM, total external static (PSC/ECM limits), fan laws, belt drive (sheave ratio, belt length, deflection),
+  voltage drop (Cu/Al, 1- and 3-phase, 3 % / 5 %), NEC 430.248/430.250 motor FLA, capacitor replacement check and a
+  motor replacement checklist, all through `POST /api/calc/electrical` with the formula stated in every result.
 
 Everything runs on one machine with Node.js; the only external call is to the Anthropic API.
 
@@ -57,7 +78,8 @@ Everything runs on one machine with Node.js; the only external call is to the An
 | Fault codes | 1,047 sourced fault/alarm codes and 201 LED flash patterns, plus 76 common-issue entries and 20 per-family electrical profiles |
 | Worked examples | 367 real nameplates that decode as tests on every run |
 | Diagnostics | 90 refrigeration-cycle rules with mode overrides (AC, heat-pump cooling/heating, refrigeration) |
-| Electrical | 29 component test procedures, 22 symptom procedures, 10 calculators |
+| Electrical | 29 component test procedures, 22 symptom procedures, 21 calculators |
+| PM checklists | 11 equipment-type templates, 206 items with nameplate comparisons |
 
 Every manufacturer claim carries a confidence level (`high` / `medium` / `low`), an evidence
 level, and the sources it came from, so the assistant can tell you when to check the nameplate

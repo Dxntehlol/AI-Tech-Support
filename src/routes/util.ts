@@ -4,7 +4,8 @@ import { RepoError } from "../db/repos.ts";
 import { describeToolCall } from "../agent/tools.ts";
 import type { UserTurnInput } from "../agent/chat.ts";
 import { DX_MEASUREMENT_ENUM_CODED_KEYS, DX_MEASUREMENT_NUMERIC_KEYS, METERING_DEVICES, SYSTEM_MODES } from "../knowledge/loader.ts";
-import type { ApiError, DisplayMessage, DxMeasurements, MessageRow } from "../types.ts";
+import { CHILLER_CONDENSER_TYPES, CHILLER_NUMERIC_KEYS } from "../knowledge/chiller.ts";
+import type { ApiError, ChillerMeasurements, DisplayMessage, DxMeasurements, MessageRow } from "../types.ts";
 
 // ---------------------------------------------------------------------------
 // Errors and the JSON envelope
@@ -298,6 +299,32 @@ export function parseImages(raw: unknown): UserTurnInput["images"] {
 }
 
 // ---------------------------------------------------------------------------
+// Customer signature (POST /api/conversations/:id/signature)
+// ---------------------------------------------------------------------------
+
+/** Decoded PNG size cap for a signature (200 KB). */
+export const MAX_SIGNATURE_BYTES = 200 * 1024;
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+/**
+ * Validate a signature data URL: `data:image/png;base64,…` whose base64 decodes to a PNG (magic bytes) of at most
+ * MAX_SIGNATURE_BYTES. Returns the normalized data URL (whitespace stripped). Throws 400 otherwise.
+ */
+export function parseSignaturePng(raw: unknown): string {
+  if (typeof raw !== "string" || raw.trim() === "") throw badRequest("png is required (a data:image/png;base64,… data URL).");
+  const s = raw.trim();
+  const m = /^data:image\/png;base64,([\s\S]+)$/i.exec(s);
+  if (!m) throw badRequest("png must be a data URL of the form data:image/png;base64,….");
+  const b64 = m[1]!.replace(/\s+/g, "");
+  if (b64.length < 16 || !BASE64_RE.test(b64)) throw badRequest("png is not valid base64.");
+  if (b64.length > Math.ceil((MAX_SIGNATURE_BYTES * 4) / 3) + 4) throw badRequest("Signature image is larger than 200 KB; shrink the canvas before sending.");
+  const bytes = Buffer.from(b64, "base64");
+  if (bytes.length > MAX_SIGNATURE_BYTES) throw badRequest("Signature image is larger than 200 KB; shrink the canvas before sending.");
+  if (bytes.length < PNG_MAGIC.length || !bytes.subarray(0, PNG_MAGIC.length).equals(PNG_MAGIC)) throw badRequest("png data is not a PNG image.");
+  return `data:image/png;base64,${b64}`;
+}
+
+// ---------------------------------------------------------------------------
 // DisplayMessage folding (GET /api/conversations/:id) and export stripping
 // ---------------------------------------------------------------------------
 
@@ -450,6 +477,27 @@ function dxRange(key: string): { min: number; max: number } {
   if (key === "compressorCount" || key === "activeCompressors") return { min: 0, max: 12 };
   if (key === "elevationFt") return { min: -1500, max: 30000 };
   return { min: -100000, max: 100000 };
+}
+
+/** Build ChillerMeasurements from a body (snake_case or camelCase keys; numeric strings accepted; enums validated → 400). */
+export function parseChillerMeasurements(src: Body): ChillerMeasurements {
+  const v: Record<string, unknown> = {};
+  for (const [k, val] of Object.entries(src)) v[camelize(k)] = val;
+  const m: Record<string, unknown> = {};
+  const refrigerant = optString(v.refrigerant, "refrigerant", 40)?.trim();
+  if (refrigerant) m.refrigerant = refrigerant;
+  const condenserType = optEnum(v.condenserType, "condenser_type", CHILLER_CONDENSER_TYPES);
+  if (condenserType) m.condenserType = condenserType;
+  for (const key of CHILLER_NUMERIC_KEYS) {
+    const range = /Psig$/.test(key) ? { min: -30, max: 1500 } : /F$/.test(key) ? { min: -100, max: 500 } : key === "chwFlowGpm" ? { min: 0, max: 100000 } : key === "percentLoad" ? { min: 0, max: 100 } : key === "elevationFt" ? { min: -1500, max: 30000 } : { min: 0, max: 100000 };
+    const n = optNumber(v[key], key, range);
+    if (n !== undefined) m[key] = n;
+  }
+  const circuit = optString(v.circuit, "circuit", 20)?.trim();
+  if (circuit) m.circuit = circuit;
+  const notes = optString(v.notes, "notes", 2000)?.trim();
+  if (notes) m.notes = notes;
+  return m as ChillerMeasurements;
 }
 
 /**

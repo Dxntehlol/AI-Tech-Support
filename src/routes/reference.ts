@@ -1,12 +1,14 @@
 import { Router } from "express";
 import type { AppDeps } from "../app.ts";
 import { deriveMetrics, diagnose } from "../knowledge/diagnostics.ts";
-import { calcElectrical, lookupElectrical, type ElectricalLookupKind } from "../knowledge/electrical.ts";
+import { evaluateChiller } from "../knowledge/chiller.ts";
+import { CALC_KINDS, calcElectrical, lookupElectrical, type ElectricalLookupKind } from "../knowledge/electrical.ts";
+import { APPLIANCE_TYPES } from "../knowledge/refrigerantCompliance.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
 import { getTable, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import type { ElectricalCalcRequest, RefrigerantMeta, RefrigerantTable } from "../types.ts";
-import { badRequest, body, camelize, notFound, optEnum, optNumber, optString, optionalId, parseMeasurements, queryNumber, queryString, requireNumber, type Body } from "./util.ts";
-import { storeReading } from "../readingsStore.ts";
+import { badRequest, body, camelize, notFound, optEnum, optNumber, optString, optionalId, parseChillerMeasurements, parseMeasurements, queryNumber, queryString, requireNumber, type Body } from "./util.ts";
+import { storeChillerReading, storeReading } from "../readingsStore.ts";
 
 // ---------------------------------------------------------------------------
 // Refrigerants
@@ -132,8 +134,6 @@ export function referenceRouter(deps: AppDeps): Router {
 // Calculators
 // ---------------------------------------------------------------------------
 
-const CALC_KINDS = ["voltage_imbalance", "current_imbalance", "capacitor_under_load", "amps_vs_rla", "temp_rise_cfm", "ohms_law", "electric_heat_kw", "psychrometrics", "winding_check", "megohm"] as const;
-
 function phaseOf(v: unknown): 1 | 3 {
   const n = optNumber(v, "phase");
   if (n === undefined) throw badRequest("phase is required (1 or 3).");
@@ -197,6 +197,87 @@ export function parseElectricalCalc(b: Body): ElectricalCalcRequest {
       if (testVolts !== undefined) out.testVolts = testVolts;
       return out;
     }
+    case "leak_rate": {
+      const out: ElectricalCalcRequest = { kind, addedLbs: req("addedLbs"), fullChargeLbs: req("fullChargeLbs"), daysSinceLastAdd: req("daysSinceLastAdd") };
+      const applianceType = optEnum(v.applianceType, "appliance_type", APPLIANCE_TYPES);
+      if (applianceType) out.applianceType = applianceType;
+      return out;
+    }
+    case "gas_meter_clock": {
+      const out: ElectricalCalcRequest = { kind, dialCuft: req("dialCuft"), secondsPerRev: req("secondsPerRev") };
+      const hv = opt("heatingValueBtuPerCuft");
+      if (hv !== undefined) out.heatingValueBtuPerCuft = hv;
+      const revs = opt("revolutions");
+      if (revs !== undefined) out.revolutions = revs;
+      const np = opt("nameplateInputBtuh");
+      if (np !== undefined) out.nameplateInputBtuh = np;
+      return out;
+    }
+    case "combustion_co": {
+      const out: ElectricalCalcRequest = { kind, coPpm: req("coPpm"), o2Pct: req("o2Pct") };
+      const amb = opt("ambientCoPpm");
+      if (amb !== undefined) out.ambientCoPpm = amb;
+      return out;
+    }
+    case "sensible_cfm": {
+      const out: ElectricalCalcRequest = { kind, btuh: req("btuh"), deltaTF: req("deltaTF") };
+      const tons = opt("tons");
+      if (tons !== undefined) out.tons = tons;
+      return out;
+    }
+    case "static_pressure": {
+      const out: ElectricalCalcRequest = { kind, supplyInWc: req("supplyInWc"), returnInWc: req("returnInWc") };
+      const rated = opt("ratedMaxInWc");
+      if (rated !== undefined) out.ratedMaxInWc = rated;
+      const blowerType = optEnum(v.blowerType, "blower_type", ["psc", "ecm"] as const);
+      if (blowerType) out.blowerType = blowerType;
+      return out;
+    }
+    case "fan_laws": {
+      const out: ElectricalCalcRequest = { kind, rpm1: req("rpm1"), rpm2: req("rpm2") };
+      for (const f of ["cfm1", "sp1", "bhp1"] as const) {
+        const x = opt(f);
+        if (x !== undefined) out[f] = x;
+      }
+      return out;
+    }
+    case "belt_drive": {
+      const out: ElectricalCalcRequest = { kind, motorRpm: req("motorRpm"), motorSheaveIn: req("motorSheaveIn"), fanSheaveIn: req("fanSheaveIn") };
+      const c = opt("centerDistanceIn");
+      if (c !== undefined) out.centerDistanceIn = c;
+      return out;
+    }
+    case "voltage_drop": {
+      const out: ElectricalCalcRequest = { kind, volts: req("volts"), amps: req("amps"), oneWayFt: req("oneWayFt") };
+      const awg = optString(v.awg, "awg", 20)?.trim();
+      if (awg) out.awg = awg;
+      const cm = opt("circularMils");
+      if (cm !== undefined) out.circularMils = cm;
+      const material = optEnum(typeof v.material === "string" ? v.material.toLowerCase() : v.material, "material", ["cu", "al"] as const);
+      if (material) out.material = material;
+      if (v.phase !== undefined && v.phase !== null && v.phase !== "") out.phase = phaseOf(v.phase);
+      if (!out.awg && out.circularMils === undefined) throw badRequest("voltage_drop needs awg (14…4/0, 250…500 kcmil) or circular_mils.");
+      return out;
+    }
+    case "motor_fla":
+      return { kind, hp: req("hp"), volts: req("volts"), phase: phaseOf(v.phase) };
+    case "capacitor_replacement":
+      return { kind, ratedUf: req("ratedUf"), ratedV: req("ratedV"), replacementUf: req("replacementUf"), replacementV: req("replacementV") };
+    case "motor_replacement": {
+      const out: ElectricalCalcRequest = { kind };
+      for (const f of ["hp", "rpm", "volts", "shaftDiaIn"] as const) {
+        const x = opt(f);
+        if (x !== undefined) out[f] = x;
+      }
+      if (v.phase !== undefined && v.phase !== null && v.phase !== "") out.phase = phaseOf(v.phase);
+      const frame = optString(v.frame, "frame", 40)?.trim();
+      if (frame) out.frame = frame;
+      const enclosure = optString(v.enclosure, "enclosure", 40)?.trim();
+      if (enclosure) out.enclosure = enclosure;
+      const rot = optEnum(typeof v.rotationFromShaftEnd === "string" ? v.rotationFromShaftEnd.toLowerCase() : v.rotationFromShaftEnd, "rotation_from_shaft_end", ["cw", "ccw"] as const);
+      if (rot) out.rotationFromShaftEnd = rot;
+      return out;
+    }
     default:
       throw badRequest("Unknown calculator kind.");
   }
@@ -250,6 +331,30 @@ export function calcRouter(deps: AppDeps): Router {
   // POST /api/calc/electrical {ElectricalCalcRequest}
   r.post("/electrical", (req, res) => {
     res.json(calcElectrical(parseElectricalCalc(body(req))));
+  });
+
+  // POST /api/calc/chiller {ChillerMeasurements-like, unit_id?, conversation_id?, note?}  ChillerResult (+ readingId with unit_id)
+  r.post("/chiller", (req, res) => {
+    const b = body(req);
+    const unitId = optionalId(b.unit_id, "unit_id");
+    const conversationId = optionalId(b.conversation_id, "conversation_id");
+    const note = optString(b.note, "note", 2000)?.trim() || null;
+    const { unit_id: _u, conversation_id: _c, note: _n, ...rest } = b;
+    const m = parseChillerMeasurements(rest);
+    const hasAny = Object.keys(m).some((k) => k !== "refrigerant" && k !== "condenserType" && k !== "circuit" && k !== "notes");
+    if (!hasAny) throw badRequest("Enter at least one chiller reading (chw_supply_f, chw_return_f, evap_sat_f / evap_pressure_psig, cond_sat_f / cond_pressure_psig, …).");
+    if (m.refrigerant && !resolveRefrigerant(kb, m.refrigerant) && !getTable(kb, m.refrigerant)) throw badRequest(`Unknown refrigerant "${m.refrigerant}".`);
+    const unit = unitId ? deps.repos.units.get(unitId) : undefined;
+    if (unitId && !unit) throw notFound("Unit not found.");
+    if (conversationId && !deps.repos.conversations.get(conversationId)) throw notFound("Conversation not found.");
+    if (unit && !m.refrigerant && unit.refrigerant) m.refrigerant = unit.refrigerant;
+    const result = evaluateChiller(kb, m);
+    if (!unitId) {
+      res.json(result);
+      return;
+    }
+    const row = storeChillerReading(deps.repos, { unitId, conversationId, result, note, source: "sheet" });
+    res.json({ ...result, readingId: row.id });
   });
 
   return r;

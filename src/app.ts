@@ -15,6 +15,9 @@ import { reportsRouter } from "./routes/reports.ts";
 // readings history + follow-ups (DESIGN.md "Readings history", "Follow-ups")
 import { readingsRouter } from "./routes/readings.ts";
 import { followupsRouter } from "./routes/followups.ts";
+// refrigerant log + compliance, PM checklists (DESIGN.md "Refrigerant log + compliance", "PM checklists")
+import { refrigerantExportRouter, refrigerantRouter } from "./routes/refrigerant.ts";
+import { pmTemplatesRouter, pmVisitsRouter } from "./routes/pm.ts";
 import { apiNotFound, errorHandler } from "./routes/util.ts";
 import { createRuntime, type Runtime } from "./runtime.ts";
 import type { AiSettings } from "./aiSettings.ts";
@@ -132,7 +135,11 @@ export function createApp(appDeps: AppDeps): Express {
   api.use(reportsRouter(deps)); // GET /conversations/:id/report, GET /units/:id/report
   api.use("/conversations", conversationsRouter(deps));
   api.use("/units", readingsRouter(deps)); // GET/DELETE /units/:id/readings[/:rid] — before unitsRouter so /:id does not swallow them
+  api.use("/units", refrigerantRouter(deps)); // /units/:id/refrigerant[/:eid]
+  api.use("/units", pmVisitsRouter(deps)); // /units/:id/pm[/:vid]
   api.use("/units", unitsRouter(deps));
+  api.use("/refrigerant", refrigerantExportRouter(deps)); // GET /refrigerant/export.csv
+  api.use("/pm", pmTemplatesRouter(deps)); // GET /pm/templates[/:id]
   api.use("/decode", decodeRouter(deps));
   api.use("/findings", findingsRouter(deps));
   api.use("/search", searchRouter(deps));
