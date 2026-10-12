@@ -44,7 +44,7 @@ export interface ToolOutcome {
 export const TOOL_RESULT_MAX_CHARS = 8192;
 
 // ---------------------------------------------------------------------------
-// Schema DSL (hand-written validator + strict JSON schema generator)
+// Schema DSL (hand-written validator + JSON schema generator)
 // ---------------------------------------------------------------------------
 
 type PropType = "string" | "number" | "integer" | "boolean" | "string_array" | "json";
@@ -89,35 +89,35 @@ function rangeSentence(prop: Prop): string | undefined {
 /** JSON-schema keywords the API rejects in strict schemas; never emitted (see rangeSentence). */
 export const STRICT_UNSUPPORTED_KEYWORDS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format"] as const;
 
+/**
+ * The API caps union-typed parameters (type arrays, anyOf) at 16 across every tool in a request; a strict
+ * schema has to list every property as required, so each optional field becomes a union and the 13 tools
+ * together blow past the cap (400 "Schemas contains too many parameters with union types"). Optional fields
+ * are therefore plain single-typed properties left out of `required`, and only a tool whose every input is
+ * required keeps `strict: true`. validateInput still drops nulls and enforces enums and ranges client-side.
+ */
+export const UNION_PARAMETER_LIMIT = 16;
+
 function jsonSchemaFor(prop: Prop): Record<string, unknown> {
-  const nullable = !prop.required;
-  const withNull = (t: string): string | string[] => (nullable ? [t, "null"] : t);
   const out: Record<string, unknown> = { description: prop.description };
   switch (prop.type) {
     case "string":
     case "json":
-      if (prop.enum && nullable) {
-        // The strict validator rejects `enum` next to a type array (`["string","null"]`): an optional enum is
-        // expressed as anyOf(string enum | null), which is the form the SDK's own schema transform emits.
-        delete out.type;
-        out.anyOf = [{ type: "string", enum: [...prop.enum] }, { type: "null" }];
-      } else {
-        out.type = withNull("string");
-        if (prop.enum) out.enum = [...prop.enum];
-      }
+      out.type = "string";
+      if (prop.enum) out.enum = [...prop.enum];
       break;
     case "number":
     case "integer": {
-      out.type = withNull(prop.type);
+      out.type = prop.type;
       const range = rangeSentence(prop);
       if (range) out.description = `${prop.description.trimEnd()} ${range}`;
       break;
     }
     case "boolean":
-      out.type = withNull("boolean");
+      out.type = "boolean";
       break;
     case "string_array":
-      out.type = withNull("array");
+      out.type = "array";
       out.items = { type: "string" };
       break;
   }
@@ -127,14 +127,17 @@ function jsonSchemaFor(prop: Prop): Record<string, unknown> {
 function toBetaTool(spec: ToolSpec): Anthropic.Beta.BetaTool {
   const properties: Record<string, unknown> = {};
   for (const [key, prop] of Object.entries(spec.props)) properties[key] = jsonSchemaFor(prop);
+  const required = Object.entries(spec.props)
+    .filter(([, prop]) => prop.required)
+    .map(([key]) => key);
   return {
     name: spec.name,
     description: spec.description,
-    strict: true,
+    strict: required.length === Object.keys(spec.props).length,
     input_schema: {
       type: "object",
       properties,
-      required: Object.keys(spec.props),
+      required,
       additionalProperties: false,
     },
   };
