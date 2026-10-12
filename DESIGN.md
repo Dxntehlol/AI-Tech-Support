@@ -753,7 +753,7 @@ shown (best effort).
   (`.tab-count`) with the number of overdue follow-ups; it is refreshed at boot, on the History screen
   and after any finding patch.
 - Chat: markdown via marked + DOMPurify (links target=_blank rel=noopener), user images as
-  thumbnails, tool chips inline in order (spinner → ✓/✗ + summary; click to expand input/
+  thumbnails, tool chips inline in order (hidden unless Settings → Appearance → "Show tool activity" is on, stored as `hvac.showTools`; spinner → ✓/✗ + summary; click to expand input/
   result), streaming deltas, auto-scroll unless scrolled up, notices muted, errors as a banner
   with the code; Stop button (POST /stop); composer (Enter sends on desktop, newline on touch;
   Send button), photo attach (`capture="environment"`, client-side resize ≤ 1568 px JPEG 0.85,

@@ -3863,11 +3863,25 @@ function boot() {
     }
   }
 
+  /* Tool chips (the lookups the assistant runs) are hidden unless "Show tool activity" is on. */
+  function applyToolVisibility(on) {
+    html.classList.toggle("hide-tools", !on);
+    const box = $("show-tools");
+    if (box) box.checked = !!on;
+  }
+  applyToolVisibility(store.get("hvac.showTools") === "1");
+  $("show-tools").addEventListener("change", (e) => {
+    const on = !!(e.target && e.target.checked);
+    store.set("hvac.showTools", on ? "1" : null);
+    applyToolVisibility(on);
+  });
+
   /* ---------- settings ---------- */
   function fillSettings() {
     $("s-apibase").value = store.get("hvac.apiBase") || "";
     $("s-token").value = store.get("hvac.token") || "";
     applyTheme(store.get("hvac.theme"));
+    applyToolVisibility(store.get("hvac.showTools") === "1");
     renderInstallState();
     renderOfflineInfo();
     if (noServerConfigured()) {

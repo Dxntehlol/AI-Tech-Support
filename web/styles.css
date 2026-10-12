@@ -598,6 +598,9 @@ html.kb-open .tabbar { display: none; }
 
 /* Tool pills */
 .tool-chip { display: block; max-width: 100%; }
+/* "Show tool activity" off (the default): chips stay in the DOM for the fingerprint/tests but are not drawn, and the streaming cursor shows through. */
+html.hide-tools .tool-chip { display: none; }
+html.hide-tools .msg.streaming .tool-chip + .cursor { display: inline-block; }
 .tool-chip summary { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; max-width: 100%; min-height: 44px; padding: 6px 12px 6px 8px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); font-size: var(--fs-1); cursor: pointer; }
 .tool-chip summary::-webkit-details-marker { display: none; }
 @media (hover: hover) { .tool-chip summary:hover { background: var(--surface-3); } }
