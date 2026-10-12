@@ -148,6 +148,32 @@ CREATE TABLE IF NOT EXISTS usage_events (
 CREATE INDEX IF NOT EXISTS idx_usage_events_created ON usage_events(created_at);
 CREATE INDEX IF NOT EXISTS idx_usage_events_conversation ON usage_events(conversation_id);
 
+-- Tester logins (Settings → Testers). Each tester signs in with their own generated password (stored as a
+-- SHA-256 digest; the plaintext is shown once at creation) so usage is attributed and anyone can be cut off.
+-- daily_cap_usd NULL = the server default (TESTER_DAILY_CAP_USD).
+CREATE TABLE IF NOT EXISTS testers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  password_sha256 TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  disabled INTEGER NOT NULL DEFAULT 0,
+  daily_cap_usd REAL,
+  last_seen_at TEXT,
+  notes TEXT
+);
+
+-- Per-tester activity log: chat turns, errors and cap refusals, so the owner can see what testers hit.
+CREATE TABLE IF NOT EXISTS tester_events (
+  id INTEGER PRIMARY KEY,
+  tester_id TEXT NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('turn','error','cap')),
+  conversation_id TEXT,
+  code TEXT,
+  detail TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_tester_events_tester ON tester_events(tester_id, created_at DESC);
+
 -- Technician decode corrections ("it got this wrong"), exported as JSON to improve the knowledge packs.
 CREATE TABLE IF NOT EXISTS corrections (
   id TEXT PRIMARY KEY,

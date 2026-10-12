@@ -1198,6 +1198,9 @@ function boot() {
     pollTimer: null,
     units: [],
     unitsById: new Map(),
+    me: null, // /api/me: {role: "owner"|"tester", name?, budget?, authRequired}
+    testers: [],
+    testersDefaultCap: undefined,
     unitsQuery: "",
     conversations: [],
     convFilterUnitId: null,
@@ -2361,7 +2364,7 @@ function boot() {
       compact ? null : h("div", { class: "row-lead" }, icon("chat")),
       h("div", { class: "row-body" },
         h("div", { class: "row-title", text: c.title || "New conversation" }),
-        h("div", { class: "row-sub" }, convUnitBadge(c), h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") })),
+        h("div", { class: "row-sub" }, convUnitBadge(c), c.tester_name ? h("span", { class: "badge badge-tester", text: c.tester_name }) : null, h("span", { text: [relTime(c.updated_at || c.created_at), c.summary].filter(Boolean).join(" · ") })),
       ),
     );
     const del = h("button", { class: "icon-btn", type: "button", "aria-label": `Delete conversation ${c.title || ""}`, onclick: () => deleteConversation(c) }, icon("trash", "icon icon-sm"));
@@ -3888,9 +3891,12 @@ function boot() {
       renderNoServer();
       return;
     }
-    loadAiSettings();
-    loadUsage();
-    loadCorrectionsCount();
+    loadMe();
+    if (!isTester()) {
+      loadAiSettings();
+      loadUsage();
+      loadCorrectionsCount();
+    }
   }
   els.settingsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -3939,6 +3945,7 @@ function boot() {
       state.healthFailed = false;
       // Back from an outage with Settings open: the usage and corrections cards still show "Couldn't load…".
       if (wasDown && state.route && state.route.screen === "settings") {
+        loadMe();
         loadUsage();
         loadCorrectionsCount();
       }
@@ -4227,6 +4234,225 @@ function boot() {
   ai.key.addEventListener("input", () => {
     if (!ai.keyError.hidden) showAiKeyError("");
   });
+
+  /* ---------- who am I + testers (Settings → Testers; DESIGN.md "Testers") ---------- */
+  const testerUi = {
+    card: $("tester-card"), chip: $("tester-chip"), body: $("tester-body"),
+    adminCard: $("testers-card"), list: $("testers-list"), reveal: $("tester-reveal"), addForm: $("tester-add-form"),
+    name: $("tester-name"), cap: $("tester-cap"), addError: $("tester-add-error"), btnAdd: $("btn-tester-add"), capHint: $("testers-cap-hint"),
+    btnRefresh: $("btn-testers-refresh"),
+  };
+  /** Cards only the owner should see (a tester's /api calls to them answer 403 anyway). */
+  const ownerOnlyCards = () => ["ai-card", "usage-card", "corrections-card"].map((id) => $(id)).filter(Boolean);
+
+  function isTester() {
+    return !!(state.me && state.me.role === "tester");
+  }
+  function applyRole() {
+    const tester = isTester();
+    for (const c of ownerOnlyCards()) c.hidden = tester;
+    if (els.btnExport) els.btnExport.hidden = tester;
+    testerUi.card.hidden = !tester;
+    testerUi.adminCard.hidden = tester || !(state.me && state.me.authRequired);
+    if (tester) renderTesterBudget();
+  }
+  let meSeq = 0;
+  async function loadMe() {
+    const seq = ++meSeq;
+    try {
+      const me = await apiJson("/api/me");
+      if (seq !== meSeq) return;
+      state.me = me;
+      applyRole();
+      if (me.role === "owner" && me.authRequired) loadTesters();
+    } catch (e) {
+      if (seq !== meSeq) return;
+      // Older server without /api/me, or not signed in yet: behave as before (owner view).
+      if (e.code !== "auth") {
+        state.me = null;
+        applyRole();
+      }
+    }
+  }
+  function renderTesterBudget() {
+    const me = state.me || {};
+    const b = me.budget;
+    testerUi.body.textContent = "";
+    testerUi.chip.textContent = me.name ? `Signed in as ${me.name}` : "Tester";
+    if (!b) {
+      testerUi.body.append(h("p", { class: "hint", text: "Your chats are kept separate from the owner's. Thanks for testing!" }));
+      return;
+    }
+    const unlimited = !(b.capUsd > 0);
+    const pct = unlimited ? 0 : Math.min(100, Math.round((b.spentTodayUsd / b.capUsd) * 100));
+    testerUi.body.append(
+      h("div", { class: "stats" },
+        h("div", { class: `stat${b.exhausted ? " hi" : ""}` }, h("div", { class: "stat-label", text: "Spent today" }), h("div", { class: "stat-value", text: formatUsd(b.spentTodayUsd) })),
+        h("div", { class: "stat" }, h("div", { class: "stat-label", text: "Daily budget" }), h("div", { class: "stat-value", text: unlimited ? "No cap" : formatUsd(b.capUsd) })),
+        h("div", { class: "stat" }, h("div", { class: "stat-label", text: "Requests today" }), h("div", { class: "stat-value", text: String(b.requestsToday || 0) })),
+      ),
+      unlimited ? null : h("div", { class: "meter", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct), "aria-label": "Share of today's budget used" }, h("div", { class: `meter-fill${b.exhausted ? " meter-full" : ""}`, style: `width:${pct}%` })),
+      h("p", { class: "hint", text: b.exhausted ? "You've used today's test budget. It resets after midnight on the server; ask the owner if you need more today." : "Costs are estimated at list price. The budget resets each day on the server's clock. Your chats are kept separate from the owner's." }),
+    );
+  }
+
+  /* --- owner: testers list --- */
+  let testersSeq = 0;
+  async function loadTesters() {
+    if (testerUi.adminCard.hidden) return;
+    const seq = ++testersSeq;
+    if (!testerUi.list.firstChild) testerUi.list.append(h("div", { class: "skeleton" }));
+    testerUi.list.setAttribute("aria-busy", "true");
+    try {
+      const r = await apiJson("/api/testers");
+      if (seq !== testersSeq) return;
+      state.testers = r.testers || [];
+      state.testersDefaultCap = r.defaultCapUsd;
+      renderTesters();
+    } catch (e) {
+      if (seq !== testersSeq) return;
+      testerUi.list.textContent = "";
+      testerUi.list.append(h("div", { class: "list-empty", text: e.code === "auth" ? "Enter the access password to manage testers." : `Couldn't load testers: ${e.message}` }));
+    } finally {
+      if (seq === testersSeq) testerUi.list.removeAttribute("aria-busy");
+    }
+  }
+  function testerStatusChip(t) {
+    if (t.disabled) return h("span", { class: "chip chip-outline", text: "Off" });
+    if (t.today && t.today.exhausted) return h("span", { class: "chip chip-warn", text: "Over budget" });
+    return h("span", { class: "chip chip-ok", text: "Active" });
+  }
+  function renderTesters() {
+    testerUi.list.textContent = "";
+    const def = state.testersDefaultCap;
+    testerUi.capHint.textContent = `Leave the cap empty for the server default${Number.isFinite(def) ? ` (${def > 0 ? formatUsd(def) : "no cap"} per day)` : ""}; 0 means no cap for that person. Estimated at list price.`;
+    if (!state.testers.length) {
+      testerUi.list.append(h("div", { class: "list-empty", text: "No testers yet. Add a friend below; you'll get a password to send them." }));
+      return;
+    }
+    for (const t of state.testers) {
+      const today = t.today || {};
+      const month = t.last30Days || {};
+      const capText = t.effectiveCapUsd > 0 ? `${formatUsd(today.spentUsd)} of ${formatUsd(t.effectiveCapUsd)} today` : `${formatUsd(today.spentUsd)} today · no cap`;
+      const seen = t.lastSeenAt ? `seen ${relTime(t.lastSeenAt)} ago` : "never signed in";
+      const errs = month.errors ? ` · ${month.errors} error${month.errors === 1 ? "" : "s"}` : "";
+      const caps = month.capHits ? ` · hit the cap ${month.capHits}×` : "";
+      const actions = h("div", { class: "btn-row tester-actions" },
+        h("button", { class: "btn btn-sm", type: "button", onclick: () => toggleTester(t) , text: t.disabled ? "Turn on" : "Turn off" }),
+        h("button", { class: "btn btn-sm", type: "button", onclick: () => editTesterCap(t), text: "Cap" }),
+        h("button", { class: "btn btn-sm", type: "button", onclick: () => resetTesterPassword(t), text: "New password" }),
+        h("button", { class: "btn btn-sm btn-danger", type: "button", onclick: () => removeTester(t) }, icon("trash", "icon icon-sm"), "Remove"),
+      );
+      testerUi.list.append(
+        h("div", { class: `tester-row${t.disabled ? " is-off" : ""}`, role: "listitem" },
+          h("div", { class: "tester-head" }, h("div", { class: "row-title", text: t.name }), testerStatusChip(t)),
+          h("div", { class: "row-sub tester-sub" }, h("span", { text: capText })),
+          h("div", { class: "row-sub tester-sub" }, h("span", { text: `Last 30 days: ${formatUsd(month.spentUsd)} · ${month.turns || 0} chat${month.turns === 1 ? "" : "s"}${errs}${caps} · ${seen}` })),
+          actions,
+        ),
+      );
+    }
+  }
+  function showTesterPassword(t, password, { fresh }) {
+    const url = (apiBase() || location.origin).replace(/\/$/, "");
+    const text = `${fresh ? "You're in" : "New password"} for the HVAC Field Assistant.\nOpen: ${url}\nUsername: ${t.name}\nPassword: ${password}\n\nPhone: add it to your home screen (iPhone: Share → Add to Home Screen; Android: menu → Install app), then Settings → Access password → paste the password.`;
+    testerUi.reveal.hidden = false;
+    testerUi.reveal.textContent = "";
+    testerUi.reveal.append(
+      h("div", { class: "tester-reveal-title", text: `${fresh ? "Password for" : "New password for"} ${t.name}` }),
+      h("div", { class: "tester-reveal-pw", text: password }),
+      h("p", { class: "hint", text: "Shown once. Copy the message below and send it to them; you can make a new password any time." }),
+      h("div", { class: "btn-row" },
+        h("button", { class: "btn btn-primary", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(text); toast("Copied the invite"); } catch { toast("Copy not available — long-press the password instead"); } } }, icon("copy", "icon icon-sm"), "Copy invite"),
+        h("button", { class: "btn", type: "button", onclick: () => { testerUi.reveal.hidden = true; testerUi.reveal.textContent = ""; }, text: "Done" }),
+      ),
+    );
+    testerUi.reveal.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  async function toggleTester(t) {
+    if (!t.disabled && !confirm(`Turn off ${t.name}'s login? They're signed out immediately; you can turn it on again here.`)) return;
+    try {
+      await apiJson(`/api/testers/${encodeURIComponent(t.id)}`, { method: "PATCH", json: { disabled: !t.disabled } });
+      toast(t.disabled ? `${t.name} can sign in again` : `${t.name} turned off`);
+      loadTesters();
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+  async function editTesterCap(t) {
+    const current = t.dailyCapUsd === null || t.dailyCapUsd === undefined ? "" : String(t.dailyCapUsd);
+    const raw = prompt(`Daily cap for ${t.name} in dollars (empty = server default, 0 = no cap):`, current);
+    if (raw === null) return;
+    const v = raw.trim();
+    const cap = v === "" ? null : Number(v);
+    if (cap !== null && (!Number.isFinite(cap) || cap < 0)) {
+      toast("Enter a dollar amount like 2 or 0.50");
+      return;
+    }
+    try {
+      await apiJson(`/api/testers/${encodeURIComponent(t.id)}`, { method: "PATCH", json: { dailyCapUsd: cap } });
+      toast(cap === null ? `${t.name}: default cap` : cap === 0 ? `${t.name}: no cap` : `${t.name}: ${formatUsd(cap)} per day`);
+      loadTesters();
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+  async function resetTesterPassword(t) {
+    if (!confirm(`Make a new password for ${t.name}? The old one stops working right away.`)) return;
+    try {
+      const r = await apiJson(`/api/testers/${encodeURIComponent(t.id)}/password`, { method: "POST", json: {} });
+      showTesterPassword(r.tester || t, r.password, { fresh: false });
+      loadTesters();
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+  async function removeTester(t) {
+    if (!confirm(`Remove ${t.name}? Their login is deleted. Their chats and usage history stay on the server.`)) return;
+    try {
+      await apiJson(`/api/testers/${encodeURIComponent(t.id)}`, { method: "DELETE" });
+      toast(`${t.name} removed`);
+      loadTesters();
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+  testerUi.addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = testerUi.name.value.trim();
+    const capRaw = testerUi.cap.value.trim();
+    testerUi.addError.hidden = true;
+    if (!name) {
+      testerUi.addError.hidden = false;
+      testerUi.addError.textContent = "Give the tester a name.";
+      testerUi.name.focus();
+      return;
+    }
+    const json = { name };
+    if (capRaw !== "") {
+      const cap = Number(capRaw);
+      if (!Number.isFinite(cap) || cap < 0) {
+        testerUi.addError.hidden = false;
+        testerUi.addError.textContent = "The cap must be a dollar amount, like 2 or 0.50.";
+        return;
+      }
+      json.dailyCapUsd = cap;
+    }
+    testerUi.btnAdd.disabled = true;
+    try {
+      const r = await apiJson("/api/testers", { method: "POST", json });
+      testerUi.name.value = "";
+      testerUi.cap.value = "";
+      showTesterPassword(r.tester, r.password, { fresh: true });
+      loadTesters();
+    } catch (err) {
+      testerUi.addError.hidden = false;
+      testerUi.addError.textContent = err.code === "no_password" ? "Set an access password on the server first (APP_PASSWORD in .env); tester logins only work when the app asks for a password." : err.message;
+    } finally {
+      testerUi.btnAdd.disabled = false;
+    }
+  });
+  testerUi.btnRefresh.addEventListener("click", () => loadTesters());
 
   /* ---------- usage (Settings) ---------- */
   const usage = { seg: $("usage-seg"), body: $("usage-body") };
