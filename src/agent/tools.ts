@@ -624,7 +624,7 @@ const SPECS: ToolSpec[] = [
       refrigerant: opt("string", "Refrigerant involved, e.g. R-410A.", { maxLength: 40 }),
       refrigerant_added_lbs: opt("number", "Refrigerant added, pounds (decimal).", { min: 0, max: 100000 }),
       refrigerant_recovered_lbs: opt("number", "Refrigerant recovered, pounds (decimal).", { min: 0, max: 100000 }),
-      follow_up: opt("string", "What to do on the next visit.", { maxLength: 400 }),
+      follow_up: opt("string", "The one action for the next visit, as a short checklist line (under 120 characters, e.g. \"Re-check fan amps and subcooling after cap swap\"). Details and target numbers go in resolution/notes, not here.", { maxLength: 400 }),
       follow_up_due: opt("string", "When the follow-up is due, YYYY-MM-DD (only with follow_up).", { maxLength: 10 }),
       service_date: opt("string", "Service date YYYY-MM-DD; defaults to today.", { maxLength: 30 }),
       confirmed: opt("boolean", "true only when the tech explicitly confirmed the cause and fix."),

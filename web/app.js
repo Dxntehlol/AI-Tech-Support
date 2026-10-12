@@ -5328,6 +5328,8 @@ function boot() {
     if (!items.length) box.append(h("div", { class: "list-empty", text: status === "open" ? "Nothing open." : "No completed follow-ups yet." }));
     else box.append(h("div", { class: "list fu-list", role: "list" }, ...items.map(followUpRow)));
   }
+  /** Follow-up text longer than this gets the two-line clamp and a More button. */
+  const FU_CLAMP_CHARS = 90;
   function followUpRow(f) {
     const chip = dueChip(f.follow_up_due, f.follow_up_done, state.followups.today);
     const done = Number(f.follow_up_done) === 1;
@@ -5337,12 +5339,27 @@ function boot() {
       if (f.unit_id) navigate(`#unit/${f.unit_id}`);
       else if (f.conversation_id) navigate(`#chat/${f.conversation_id}`);
     };
+    // Long follow-ups (the assistant sometimes writes a paragraph) are clamped to two lines; "More" expands in place.
+    const text = h("div", { class: "fu-text fu-clamp", text: f.follow_up });
+    const long = (f.follow_up || "").length > FU_CLAMP_CHARS;
+    const more = long
+      ? h("button", { class: "text-btn fu-more", type: "button", "aria-expanded": "false", text: "More", onclick: (e) => {
+          e.stopPropagation();
+          const expanded = text.classList.toggle("fu-clamp");
+          more.textContent = expanded ? "More" : "Less";
+          more.setAttribute("aria-expanded", expanded ? "false" : "true");
+        } })
+      : null;
+    const sub = [];
+    if (chip.kind !== "none") sub.push(h("span", { class: `chip due-chip ${chip.kind}`, text: chip.label }));
+    const context = f.conversation_title || f.symptom || "";
+    if (context) sub.push(h("span", { class: "fu-context", text: context }));
     const body = h("button", { class: "fu-body", type: "button", onclick: open },
       h("div", { class: "row-title", text: unitTitle }),
-      h("div", { class: "fu-text", text: f.follow_up }),
-      h("div", { class: "row-sub" }, h("span", { class: `chip due-chip ${chip.kind}`, text: chip.label }), h("span", { text: f.conversation_title || f.symptom || "" })),
+      text,
+      sub.length ? h("div", { class: "row-sub" }, ...sub) : null,
     );
-    return h("div", { class: `fu-row${done ? " done" : ""}`, role: "listitem" }, check, body);
+    return h("div", { class: `fu-row${done ? " done" : ""}`, role: "listitem" }, check, h("div", { class: "fu-main" }, body, more));
   }
   async function toggleFollowUp(f) {
     const next = Number(f.follow_up_done) === 1 ? 0 : 1;

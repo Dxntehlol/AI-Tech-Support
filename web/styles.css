@@ -1028,7 +1028,11 @@ details.calc .form { padding: 0 var(--sp-4) var(--sp-4); }
 .fu-body .row-title { color: var(--text-secondary); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: 0.04em; }
 .fu-text { font-size: var(--fs-3); font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; white-space: normal; }
 .fu-row.done .fu-text { color: var(--text-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
-.fu-body .row-sub { margin-top: 3px; }
+.fu-body .row-sub { margin-top: 3px; white-space: normal; }
+.fu-main { display: flex; flex-direction: column; min-width: 0; }
+.fu-text.fu-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fu-more { align-self: flex-start; min-height: 32px; padding: 0 var(--sp-1); margin: -6px 0 6px 0; font-size: var(--fs-1); color: var(--accent-text); }
+.fu-context { color: var(--text-muted); font-size: var(--fs-1); overflow: hidden; text-overflow: ellipsis; }
 .tl-follow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 
 /* Due chips: overdue red, due soon amber, later outline, none muted, done green — never color alone (text says which) */
