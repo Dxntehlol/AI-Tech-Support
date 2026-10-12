@@ -420,8 +420,10 @@ set a process-wide `fallbacksSupported = false`, and emit a notice. Any other 40
 request (skipped in demo; a failed write is logged, never fatal). `runTurn` snapshots client/config/demo
 at turn start, so a key or model saved in Settings mid-turn applies from the next turn.
 
-Custom tools (strict JSON schemas, `additionalProperties: false`; optional fields expressed as
-nullable so `required` lists every property; results are compact JSON ≤ 8 kB):
+Custom tools (JSON schemas with `additionalProperties: false`; optional fields are plain single-typed
+properties left out of `required`, never nullable unions, because the API caps union-typed parameters at
+16 across the whole request; `strict: true` only on a tool whose every input is required; results are
+compact JSON ≤ 8 kB):
 `decode_unit` (model, serial?, manufacturer?, save?, site?, unit_tag?, nickname?) — upserts a
 unit when `save` or a matching unit exists and returns `attachUnitId`; `find_unit` (query over
 site/customer/tag/nickname/model/serial → top matches with last finding date; may attach);
