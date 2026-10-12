@@ -115,8 +115,25 @@ function bilinear(rows: number[], cols: number[], grid: (number | null)[][], r: 
   const c0 = cell(i1, j0);
   const d = cell(i1, j1);
   if (a === null || b === null || c0 === null || d === null) {
+    // A null cell means "no target at this condition". If the nearest corner is null the point belongs to
+    // that region; otherwise blend the populated corners with their bilinear weights renormalised, which
+    // stays continuous across cell edges instead of jumping to one corner's value.
     const nearest = cell(fr < 0.5 ? i0 : i1, fc < 0.5 ? j0 : j1);
-    return nearest === null ? undefined : nearest;
+    if (nearest === null) return undefined;
+    const corners: [number | null, number][] = [
+      [a, (1 - fr) * (1 - fc)],
+      [b, (1 - fr) * fc],
+      [c0, fr * (1 - fc)],
+      [d, fr * fc],
+    ];
+    let sum = 0;
+    let weight = 0;
+    for (const [v, w] of corners) {
+      if (v === null) continue;
+      sum += v * w;
+      weight += w;
+    }
+    return weight > 0 ? sum / weight : nearest;
   }
   const top = a + (b - a) * fc;
   const bottom = c0 + (d - c0) * fc;

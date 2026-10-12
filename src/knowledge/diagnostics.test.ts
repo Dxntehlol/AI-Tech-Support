@@ -98,12 +98,16 @@ test("fixed-orifice chart: grid points, midpoints, clamping and nulls", () => {
   assert.equal(targetSuperheatFixedOrifice(kb, Number.NaN, 85), undefined);
 });
 
-test("fixed-orifice chart: a null neighbour falls back to the nearest cell instead of blanking the whole box", () => {
+test("fixed-orifice chart: a null neighbour blends the populated corners and stays continuous", () => {
   // WB 58 / DB 90 is null; WB 60 / DB 90 = 5, WB 58 / DB 85 = 5, WB 60 / DB 85 = 8
-  assert.equal(targetSuperheatFixedOrifice(kb, 59, 88), 5); // nearest cell (60, 90)
-  assert.equal(targetSuperheatFixedOrifice(kb, 58.5, 86), 5); // nearest cell (58, 85)
-  assert.equal(targetSuperheatFixedOrifice(kb, 59.5, 88), 5); // nearest cell (60, 90)
-  assert.equal(targetSuperheatFixedOrifice(kb, 58, 89), undefined); // nearest cell (58, 90) is itself null
+  const near = (v: number | undefined, x: number): void => assert.ok(v !== undefined && Math.abs(v - x) < 0.11, `${v} vs ${x}`);
+  // (59, 88): weights a=(58,85) 0.2, b=(58,90) null, c=(60,85) 0.2, d=(60,90) 0.3 -> (5*0.2 + 8*0.2 + 5*0.3)/0.7
+  near(targetSuperheatFixedOrifice(kb, 59, 88), (5 * 0.2 + 8 * 0.2 + 5 * 0.3) / 0.7);
+  near(targetSuperheatFixedOrifice(kb, 58.5, 86), (5 * 0.6 + 8 * 0.2 + 5 * 0.05) / 0.85);
+  assert.equal(targetSuperheatFixedOrifice(kb, 58, 89), undefined); // nearest cell (58, 90) is itself null: no target there
+  // Continuity: approaching the populated edge (DB 85) from inside the box matches the edge value
+  near(targetSuperheatFixedOrifice(kb, 59, 85.01), (5 + 8) / 2);
+  near(targetSuperheatFixedOrifice(kb, 60, 87.5), (8 + 5) / 2); // edge between two populated corners is plain linear
   assert.equal(targetSuperheatFixedOrifice(kb, 63, 92), 9.3); // fully populated box still interpolates
 });
 
