@@ -6,3 +6,8 @@ data/
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+# generated for the Capacitor bundle by scripts/cap-prepare.mjs (the Node server serves /config.js itself)
+web/config.js
+# Capacitor native projects (created by npx cap add ios/android)
+ios/
+android/

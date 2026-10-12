@@ -939,3 +939,107 @@ details.calc .form { padding: 0 var(--sp-4) var(--sp-4); }
 .ctx-col { display: none; }
 @media (min-width: 1200px) { .ctx-col { display: flex; } }
 @media (hover: hover) { .rail .tab:hover { background: var(--surface-2); color: var(--text-primary); } }
+
+/* ============================================================================================
+ * Service reports, QR labels, print labels (sheets) — see DESIGN.md "Web UI"
+ * ========================================================================================== */
+.sheet-sub { margin: 0 var(--gutter) var(--sp-2); }
+.sheet-fallback { padding: var(--sp-2) var(--gutter) var(--sp-3); }
+.sheet-actions .row[disabled] { opacity: 0.7; }
+/* Unit card: Readings · Edit · QR label · More on one row, then Unit report + Report a wrong detail as halves. */
+.np-actions { grid-template-columns: repeat(4, 1fr); }
+.np-actions .np-report, .np-actions .np-unit-report { grid-column: span 2; flex-direction: row; min-height: 44px; font-size: var(--fs-2); white-space: normal; line-height: 1.2; text-align: center; padding: 6px 8px; min-width: 0; }
+/* The label itself is always black on white (it is photographed, printed and scanned). */
+.qr-label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-3); align-items: center; background: #fff; color: #111; border: 1px solid #111; border-radius: var(--r-1); padding: var(--sp-3); }
+.qr-svg { display: flex; line-height: 0; }
+.qr-svg svg { width: 100%; height: auto; max-width: 180px; }
+.qr-text { min-width: 0; }
+.qr-tag { font-size: var(--fs-4); font-weight: 800; letter-spacing: 0.02em; overflow-wrap: anywhere; color: #111; }
+.qr-line { font-size: var(--fs-1); color: #333; overflow-wrap: anywhere; margin-top: 2px; }
+.qr-url { font-family: var(--mono); font-size: 11px; color: #555; overflow-wrap: anywhere; margin-top: 6px; }
+@media (max-width: 379px) { .qr-label { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.labels-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); margin-top: var(--sp-3); }
+.qr-mini { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-2); align-items: center; background: #fff; color: #111; border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px; min-height: 72px; }
+.qr-mini .qr-svg svg { width: 56px; height: 56px; }
+.qr-mini-text { min-width: 0; }
+.qr-mini-title { font-weight: 700; font-size: var(--fs-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qr-mini-sub { font-size: 11px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qr-mini-more { grid-template-columns: 1fr; justify-items: center; color: var(--text-secondary); background: var(--surface-2); border-style: dashed; font-weight: 600; font-size: var(--fs-1); }
+@media (min-width: 720px) {
+  .np-actions { grid-template-columns: repeat(5, 1fr); }
+  .np-actions .np-unit-report { grid-column: span 2; }
+  .np-actions .np-report { grid-column: span 3; }
+}
+@media (min-width: 1200px) {
+  .ctx-col .np-actions { grid-template-columns: repeat(4, 1fr); }
+  .ctx-col .np-actions .np-unit-report, .ctx-col .np-actions .np-report { grid-column: span 2; }
+}
+
+/* ============================================================================================
+ * 10. Readings history + follow-ups (unit card readings rows, trend callout, History follow-ups, tab count)
+ * ========================================================================================== */
+/* Tab badge with a count (overdue follow-ups on History) */
+.tab-count { position: absolute; top: 4px; left: calc(50% + 2px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger-solid); color: #fff; font-size: 11px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface-1); box-sizing: content-box; }
+.rail .tab-count { left: auto; right: 8px; top: 6px; }
+
+/* Trend since last visit */
+.trend-callout { background: var(--accent-soft); border: 1px solid transparent; border-left: 4px solid var(--accent); border-radius: var(--r-1); padding: 10px 12px; margin-bottom: var(--sp-3); display: flex; flex-direction: column; gap: 8px; }
+.trend-title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-2); font-weight: 700; color: var(--text-primary); }
+.trend-title .icon { color: var(--accent-text); }
+.trend-chip { font-variant-numeric: tabular-nums; background: var(--surface-1); border-color: var(--border); }
+.trend-chip.down { color: var(--info-text); }
+.trend-chip.up { color: var(--warning-text); }
+.trend-more summary { display: flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; list-style: none; font-size: var(--fs-1); font-weight: 700; color: var(--accent-text); -webkit-user-select: none; user-select: none; }
+.trend-more summary::-webkit-details-marker { display: none; }
+.trend-more summary .icon { transition: transform var(--dur-1) var(--ease); }
+.trend-more[open] summary .icon { transform: rotate(90deg); }
+.trend-lines { margin: 0; padding-left: 18px; font-size: var(--fs-1); color: var(--text-secondary); line-height: 1.4; }
+.trend-lines li + li { margin-top: 3px; }
+
+/* Saved readings rows (unit card) */
+.rd-list { margin: 0 calc(-1 * var(--sp-2)); }
+.rd-item { border-bottom: 1px solid var(--border); }
+.rd-item:last-child { border-bottom: 0; }
+.rd-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); min-height: 56px; padding: 8px var(--sp-2); }
+.rd-vals { font-variant-numeric: tabular-nums; color: var(--text-secondary); font-weight: 600; white-space: normal; }
+.rd-vals > span { white-space: normal; overflow: visible; }
+.rd-actions { display: flex; align-items: center; gap: 2px; flex: none; }
+.rd-expand { width: 44px; height: 44px; min-width: 44px; }
+.rd-expand .icon { transition: transform var(--dur-1) var(--ease); }
+.rd-expand.open .icon { transform: rotate(90deg); }
+.rd-detail { padding: 0 var(--sp-2) var(--sp-3) calc(var(--sp-2) + 40px + var(--sp-3)); display: flex; flex-direction: column; gap: var(--sp-2); }
+.rd-kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--sp-4); }
+.rd-kv .kv { padding: 5px 0; font-size: var(--fs-1); }
+@media (max-width: 479px) { .rd-detail { padding-left: var(--sp-2); } .rd-kv { grid-template-columns: minmax(0, 1fr); } }
+
+/* Follow-ups (History) */
+.followups { margin-bottom: var(--sp-4); }
+.fu-counts { margin: calc(-1 * var(--sp-1)) 0 var(--sp-3); }
+.fu-list { margin: 0 calc(-1 * var(--sp-2)); }
+.fu-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--sp-2); border-bottom: 1px solid var(--border); }
+.fu-row:last-child { border-bottom: 0; }
+.fu-check { width: 44px; height: 44px; min-width: 44px; margin: 6px 0 6px var(--sp-1); border-radius: 12px; border: 2px solid var(--border-strong); background: var(--surface-0); color: transparent; display: flex; align-items: center; justify-content: center; flex: none; transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.fu-check .icon { width: 22px; height: 22px; stroke-width: 2.6; }
+.fu-check.done, .fu-check:active { background: var(--success); border-color: var(--success); color: var(--accent-contrast); }
+.fu-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; width: 100%; padding: 10px var(--sp-2) 10px 0; background: none; border: 0; text-align: left; color: inherit; font: inherit; min-height: 56px; }
+.fu-body .row-title { color: var(--text-secondary); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: 0.04em; }
+.fu-text { font-size: var(--fs-3); font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; white-space: normal; }
+.fu-row.done .fu-text { color: var(--text-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.fu-body .row-sub { margin-top: 3px; }
+.tl-follow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+
+/* Due chips: overdue red, due soon amber, later outline, none muted, done green — never color alone (text says which) */
+.due-chip { font-variant-numeric: tabular-nums; }
+.due-chip.overdue { background: var(--danger-soft); color: var(--danger-text); border-color: transparent; }
+.due-chip.soon { background: var(--warning-soft); color: var(--warning-text); border-color: transparent; }
+.due-chip.later { background: transparent; border-color: var(--border-strong); color: var(--text-secondary); }
+.due-chip.none { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.due-chip.done { background: var(--success-soft); color: var(--success-text); border-color: transparent; }
+
+/* Date input looks like the other fields on iOS/Android */
+.field input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 46px; }
+.field input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+#sheet-pick .group-head { background: var(--surface-2); }
+/* Readings action bar holds three buttons on a phone: tighter padding, labels may wrap, nothing clips. */
+#readings-actions .btn { padding: 4px 8px; white-space: normal; line-height: 1.15; text-align: center; gap: 6px; }
+#readings-actions .btn-primary { flex: 1.2 1 0; }

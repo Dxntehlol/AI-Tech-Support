@@ -93,6 +93,10 @@ machine a private HTTPS address that only your own devices can reach, with no po
 Check: create a unit from the Units tab. Then turn on airplane mode and open Readings; the
 calculators must still work.
 
+QR stickers (**QR label** on a unit card, or **Units → ⋮ → Print QR labels** for the whole list) encode
+the unit's address; scanning one with the phone camera opens it in the browser (Safari/Chrome), not in the
+installed home-screen app, and the page routes straight to that unit.
+
 ## 4. Seed it with your own fleet (an afternoon, then ongoing)
 
 1. Import the fleet in one go: **Units → Import units** (the upload icon in the Units top bar).
@@ -115,6 +119,9 @@ calculators must still work.
    manual.
 5. After the next few calls, let the assistant save the finding when the cause is confirmed (or add
    it on the unit card). History and the assistant's memory become useful once real findings exist.
+   The share button in the chat header turns the conversation into a service report (share as text,
+   open a printable page for Print / Save as PDF, or copy Markdown); **Unit report** on the unit card
+   does the same for the unit's whole history.
 6. Every so often, **Settings → Decode corrections → Export** downloads
    `hvac-corrections-YYYY-MM-DD.json` (on iPhone it opens the share sheet) with every correction,
    the model and serial it was about and the decoder format that produced it, and marks them

@@ -82,7 +82,7 @@
       <a class="tab" href="#chat" data-tab="chat"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chat"/></svg><span>Chat</span></a>
       <a class="tab" href="#units" data-tab="units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-units"/></svg><span>Units</span></a>
       <a class="tab" href="#readings" data-tab="readings"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-gauge"/></svg><span>Readings</span></a>
-      <a class="tab" href="#history" data-tab="history"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-history"/></svg><span>History</span></a>
+      <a class="tab tab-badge" href="#history" data-tab="history"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-history"/></svg><span>History</span><span class="tab-count history-count" hidden aria-label="overdue follow-ups"></span></a>
       <a class="tab tab-badge" href="#settings" data-tab="settings"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-settings"/></svg><span>Settings</span><span class="dot settings-dot" hidden></span></a>
       <div class="rail-spacer"></div>
       <button class="icon-btn btn-theme" type="button" aria-label="Toggle light or dark theme"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-theme"/></svg></button>
@@ -129,6 +129,7 @@
               <span id="demo-badge" class="chip chip-warn phone-hide" hidden>Demo</span>
               <button id="btn-chat-list" class="icon-btn tablet-only" type="button" aria-label="All conversations"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-history"/></svg></button>
               <button id="btn-chat-unit" class="icon-btn" type="button" aria-label="Unit for this conversation"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-units"/></svg></button>
+              <button id="btn-chat-share" class="icon-btn" type="button" aria-label="Share report" title="Share report" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-share"/></svg></button>
               <button id="btn-chat-new" class="icon-btn btn-new-conv" type="button" aria-label="New conversation"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button>
               <button id="btn-conv-delete" class="icon-btn phone-hide" type="button" aria-label="Delete this conversation" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg></button>
             </div>
@@ -183,6 +184,7 @@
             <div class="topbar-actions">
               <button id="btn-units-refresh" class="icon-btn" type="button" aria-label="Refresh units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></button>
               <button id="btn-unit-import" class="icon-btn" type="button" aria-label="Import units" title="Import units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-upload"/></svg></button>
+              <button id="btn-units-more" class="icon-btn" type="button" aria-label="More unit actions" title="More"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-more"/></svg></button>
               <button id="btn-unit-add" class="icon-btn icon-btn-accent" type="button" aria-label="Add or decode a unit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button>
             </div>
           </div>
@@ -398,6 +400,7 @@
           </div>
           <div id="readings-actions" class="action-bar">
             <button id="btn-diagnose" class="btn btn-primary" type="submit" form="readings-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-gauge"/></svg>Diagnose</button>
+            <button id="btn-readings-save" class="btn" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-units"/></svg>Save to unit</button>
             <button id="btn-readings-send" class="btn" type="button">Send to chat</button>
           </div>
         </div>
@@ -422,6 +425,7 @@
             <div class="content-wrap">
               <div id="search-results" hidden></div>
               <div id="history-browse">
+                <section id="followups" class="card followups" aria-labelledby="followups-title" hidden></section>
                 <div id="conv-filter" class="group-head" hidden></div>
                 <div id="conv-list" class="list list-card" role="list"></div>
               </div>
@@ -541,7 +545,7 @@
       <a class="tab" href="#chat" data-tab="chat"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chat"/></svg><span>Chat</span></a>
       <a class="tab" href="#units" data-tab="units"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-units"/></svg><span>Units</span></a>
       <a class="tab" href="#readings" data-tab="readings"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-gauge"/></svg><span>Readings</span></a>
-      <a class="tab" href="#history" data-tab="history"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-history"/></svg><span>History</span></a>
+      <a class="tab tab-badge" href="#history" data-tab="history"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-history"/></svg><span>History</span><span class="tab-count history-count" hidden aria-label="overdue follow-ups"></span></a>
       <a class="tab tab-badge" href="#settings" data-tab="settings"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-settings"/></svg><span>Settings</span><span class="dot settings-dot" hidden></span></a>
     </nav>
   </div>
@@ -641,10 +645,122 @@
     </div>
   </section>
 
+  <!-- Unit picker (attach a unit to the chat, or choose the unit a reading is saved to) -->
+  <section id="sheet-pick" class="sheet" role="dialog" aria-modal="true" aria-labelledby="pick-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="pick-title" tabindex="-1">Pick a unit</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <p id="pick-sub" class="hint" style="margin-top:0"></p>
+      <label class="search-field" style="margin-bottom:12px">
+        <span class="sr-only">Search units</span>
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>
+        <input id="pick-search" type="search" placeholder="Search site, tag, model…" autocomplete="off" enterkeyhint="search">
+      </label>
+      <div id="pick-list" class="list list-card" role="list"></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-pick-decode" class="btn" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-scan"/></svg>Decode a new unit</button>
+    </div>
+  </section>
+
+  <!-- Finding editor (add a finding, or edit follow-up / status on an existing one) -->
+  <section id="sheet-finding" class="sheet" role="dialog" aria-modal="true" aria-labelledby="finding-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="finding-title" tabindex="-1">Add a finding</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <form id="finding-form" class="form" autocomplete="off" novalidate>
+        <p id="finding-sub" class="hint" style="margin-top:0"></p>
+        <label class="field"><span class="field-label">Symptom <span class="req" aria-hidden="true">*</span></span><input id="fi-symptom" name="symptom" type="text" required aria-required="true" placeholder="What the unit was doing"></label>
+        <label class="field"><span class="field-label">Cause</span><input id="fi-cause" name="cause" type="text" placeholder="Root cause found"></label>
+        <label class="field"><span class="field-label">Fix</span><textarea id="fi-resolution" name="resolution" rows="2" placeholder="What was done (or the plan)"></textarea></label>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">Status</span><select id="fi-status" name="status"><option value="open">Open</option><option value="monitor">Monitor</option><option value="resolved">Resolved</option></select></label>
+          <label class="field"><span class="field-label">Circuit</span><input id="fi-circuit" name="circuit" type="text" placeholder="1" inputmode="text"></label>
+        </div>
+        <h2 class="form-subhead">Follow-up</h2>
+        <label class="field"><span class="field-label">What to do next visit</span><textarea id="fi-follow-up" name="follow_up" rows="2" placeholder="Recheck subcooling, leak search ckt 2…"></textarea></label>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">Due date</span><input id="fi-due" name="follow_up_due" type="date"></label>
+          <label class="checkbox" id="fi-done-row" hidden><input id="fi-done" name="follow_up_done" type="checkbox"><span>Follow-up done</span></label>
+        </div>
+        <div id="finding-error" class="field-error" role="alert" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-finding-save" class="btn btn-primary" type="submit" form="finding-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Save finding</button>
+    </div>
+  </section>
+
+  <!-- Share report / unit report sheet -->
+  <section id="sheet-share" class="sheet" role="dialog" aria-modal="true" aria-labelledby="share-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="share-title" tabindex="-1">Share report</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <p id="share-sub" class="hint sheet-sub"></p>
+    <div class="sheet-actions" id="share-list"></div>
+    <div id="share-fallback" class="sheet-fallback" hidden></div>
+  </section>
+
+  <!-- QR label sheet -->
+  <section id="sheet-qr" class="sheet" role="dialog" aria-modal="true" aria-labelledby="qr-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="qr-title" tabindex="-1">QR label</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div id="qr-label"></div>
+      <div id="qr-fallback" class="sheet-fallback" hidden></div>
+    </div>
+    <div class="sheet-foot">
+      <button id="btn-qr-print" class="btn btn-primary" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-file"/></svg>Print label</button>
+      <button id="btn-qr-copy" class="btn" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy link</button>
+      <button id="btn-qr-share" class="btn" type="button" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-share"/></svg>Share link</button>
+    </div>
+  </section>
+
+  <!-- Print labels (all units on the current filter) sheet -->
+  <section id="sheet-labels" class="sheet" role="dialog" aria-modal="true" aria-labelledby="labels-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="labels-title" tabindex="-1">Print QR labels</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div id="labels-body"></div>
+      <div id="labels-fallback" class="sheet-fallback" hidden></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-labels-print" class="btn btn-primary" type="button">Print labels</button>
+    </div>
+  </section>
+
+  <!-- Units overflow sheet -->
+  <section id="sheet-units-actions" class="sheet" role="dialog" aria-modal="true" aria-labelledby="units-actions-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="units-actions-title" tabindex="-1">Units</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-actions" id="units-actions-list"></div>
+  </section>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="vendor/marked.umd.js"></script>
   <script src="vendor/purify.min.js"></script>
+  <script src="vendor/qrcode.js"></script>
   <script src="calc.js"></script>
   <script src="config.js" onerror="this.remove()"></script>
   <script src="app.js"></script>

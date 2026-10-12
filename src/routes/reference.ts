@@ -5,7 +5,8 @@ import { calcElectrical, lookupElectrical, type ElectricalLookupKind } from "../
 import { lookupFaultCode } from "../knowledge/faults.ts";
 import { getTable, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import type { ElectricalCalcRequest, RefrigerantMeta, RefrigerantTable } from "../types.ts";
-import { badRequest, body, camelize, notFound, optEnum, optNumber, parseMeasurements, queryNumber, queryString, requireNumber, type Body } from "./util.ts";
+import { badRequest, body, camelize, notFound, optEnum, optNumber, optString, optionalId, parseMeasurements, queryNumber, queryString, requireNumber, type Body } from "./util.ts";
+import { storeReading } from "../readingsStore.ts";
 
 // ---------------------------------------------------------------------------
 // Refrigerants
@@ -225,11 +226,25 @@ export function calcRouter(deps: AppDeps): Router {
     });
   });
 
-  // POST /api/calc/diagnose {DxMeasurements-like}
+  // POST /api/calc/diagnose {DxMeasurements-like, unit_id?, conversation_id?, note?}
+  // With unit_id the diagnosis is also stored as a readings row on that unit (response gains readingId).
   r.post("/diagnose", (req, res) => {
-    const m = parseMeasurements(body(req));
+    const b = body(req);
+    const unitId = optionalId(b.unit_id, "unit_id");
+    const conversationId = optionalId(b.conversation_id, "conversation_id");
+    const note = optString(b.note, "note", 2000)?.trim() || null;
+    const { unit_id: _u, conversation_id: _c, note: _n, ...rest } = b;
+    const m = parseMeasurements(rest);
     if (!resolveRefrigerant(kb, m.refrigerant) && !getTable(kb, m.refrigerant)) throw badRequest(`Unknown refrigerant "${m.refrigerant}".`);
-    res.json(diagnose(kb, m));
+    if (unitId && !deps.repos.units.get(unitId)) throw notFound("Unit not found.");
+    if (conversationId && !deps.repos.conversations.get(conversationId)) throw notFound("Conversation not found.");
+    const result = diagnose(kb, m);
+    if (!unitId) {
+      res.json(result);
+      return;
+    }
+    const row = storeReading(deps.repos, { unitId, conversationId, result, note, source: "sheet" });
+    res.json({ ...result, readingId: row.id });
   });
 
   // POST /api/calc/electrical {ElectricalCalcRequest}

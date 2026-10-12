@@ -682,9 +682,40 @@ export interface FindingRow {
   refrigerant_added_lbs: number | null;
   refrigerant_recovered_lbs: number | null;
   follow_up: string | null;
+  follow_up_due?: string | null; // ISO date YYYY-MM-DD (optional addition: follow-ups)
+  follow_up_done?: 0 | 1; // 1 once the follow-up visit is done (optional addition: follow-ups)
   origin: "tech" | "assistant";
   confirmed: 0 | 1; // 1 only after the tech explicitly confirmed the cause/fix
   created_at: string;
+}
+
+/** A finding with a non-empty follow_up, joined with its unit and conversation (GET /api/followups). */
+export interface FollowUpRow extends FindingRow {
+  unit_site: string | null;
+  unit_tag: string | null;
+  unit_model: string | null;
+  unit_nickname: string | null;
+  conversation_title: string | null;
+}
+
+/** Where a readings row came from: the Readings sheet, the assistant's diagnose tool, or an import. */
+export type ReadingSource = "sheet" | "chat" | "import";
+
+/** One saved set of refrigeration-cycle readings on a unit (readings history / trend). */
+export interface ReadingRow {
+  id: string;
+  unit_id: string;
+  conversation_id: string | null;
+  created_at: string;
+  mode: SystemMode;
+  refrigerant: string;
+  metering_device: MeteringDevice;
+  measurements_json: string; // DxMeasurements as entered
+  derived_json: string; // DxDerived
+  validity_json: string; // DxResult.validity
+  findings_json: string; // [{ruleId, severity}] only
+  note: string | null;
+  source: ReadingSource;
 }
 
 export interface SearchHit {

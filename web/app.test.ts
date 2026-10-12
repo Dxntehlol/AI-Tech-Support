@@ -482,3 +482,358 @@ describe("fleet import + decode corrections helpers", () => {
     assert.equal(UI.parseHash("#unit/nope/correct").sheet, null);
   });
 });
+
+describe("service reports — client helpers", () => {
+  test("truncateText + filenameFromDisposition + reportFilename", () => {
+    assert.equal(UI.truncateText("  a   b\nc ", 50), "a b c");
+    assert.ok(UI.truncateText("word ".repeat(50), 30).endsWith("…"));
+    assert.ok(UI.truncateText("word ".repeat(50), 30).length <= 30);
+    assert.equal(UI.filenameFromDisposition('inline; filename="hvac-report-rtu-7-2026-10-12.html"'), "hvac-report-rtu-7-2026-10-12.html");
+    assert.equal(UI.filenameFromDisposition('inline; filename="../x.html"'), null);
+    assert.equal(UI.filenameFromDisposition(null), null);
+    const now = new Date("2026-10-12T15:30:00Z");
+    assert.equal(UI.reportFilename("conversation", "RTU-7 / Kitchen", "md", now), "hvac-report-rtu-7-kitchen-2026-10-12.md");
+    assert.equal(UI.reportFilename("unit", "", "html", now), "hvac-unit-untitled-2026-10-12.html");
+    assert.equal(UI.reportFilename("unit", "Ünïcode", "json", now), "hvac-unit-unicode-2026-10-12.json");
+  });
+  test("reportSharePayload: compact plain text from the JSON report, no markdown, no HTML", () => {
+    const report = {
+      kind: "conversation",
+      conversation: { title: "RTU-7 no cooling", createdAt: "2026-10-12T10:00:00Z" },
+      unit: { tag: "RTU-7", nickname: null, manufacturer: "Carrier", model: "48TCDA04", site: "Main St" },
+      complaint: "Not cooling since this morning. ".repeat(20),
+      readings: [{ ok: true, derived: [{ key: "superheatF", label: "Superheat (°F)", value: "11.9" }, { key: "subcoolingF", label: "Subcooling (°F)", value: "9.4" }, { key: "evapSatF", label: "Evap", value: "40" }], validity: { ok: false, issues: ["low ambient"] } }],
+      findings: [{ symptom: "Low suction", cause: "Plugged drier", resolution: "Replaced", confirmed: true }, { symptom: "Fan noise", cause: null, resolution: null, confirmed: false }],
+      openItems: ["Open: Fan noise — order bearing"],
+      assistantSummary: "## heading **bold**",
+    };
+    const p = UI.reportSharePayload(report);
+    assert.equal(p.title, "Service report — RTU-7 no cooling");
+    assert.equal(p.url, undefined);
+    const lines = p.text.split("\n");
+    assert.equal(lines[0], "Service report: RTU-7 no cooling (2026-10-12)");
+    assert.equal(lines[1], "Unit: RTU-7 — Carrier 48TCDA04 — Main St");
+    assert.match(p.text, /Complaint: Not cooling since this morning\./);
+    assert.ok(p.text.split("\n").find((l: string) => l.startsWith("Complaint:"))!.length <= 260);
+    assert.match(p.text, /Readings: Superheat 11\.9, Subcooling 9\.4 \(not valid for charge\)/);
+    assert.match(p.text, /- Low suction → Plugged drier → Replaced\n- Fan noise \(unconfirmed\)/);
+    assert.match(p.text, /Open items:\n- Open: Fan noise — order bearing/);
+    assert.doesNotMatch(p.text, /heading|\*\*|<|>/);
+    const withUrl = UI.reportSharePayload(report, "https://x/#chat/1");
+    assert.equal(withUrl.url, "https://x/#chat/1");
+    const unitReport = { kind: "unit", unit: { tag: null, nickname: null, model: "YSC060", serial: "S1", tonnage: 5, refrigerant: "R-410A", manufactureDate: "2019-03" }, findingsByDate: [{ date: "2026-10-12", findings: [{ date: "2026-10-12", symptom: "A", cause: "B", resolution: "C", status: "resolved" }] }, { date: "2025-01-01", findings: [{ date: "2025-01-01", symptom: "D", status: "open" }] }] };
+    const u = UI.reportSharePayload(unitReport);
+    assert.equal(u.title, "Unit report — YSC060");
+    assert.match(u.text, /^Unit report: YSC060 — YSC060\nS\/N S1 · 5 ton · R-410A · mfd 2019-03\n\nFindings \(2\):\n- 2026-10-12 A → B → C\n- 2025-01-01 D \[open\]$/);
+    assert.equal(UI.reportShareText(null), "");
+  });
+});
+
+describe("QR labels — client helpers", () => {
+  test("appBaseUrl + unitUrl: absolute #unit link for this install", () => {
+    const id = "0123456789abcdef";
+    assert.equal(UI.unitUrl(UI.appBaseUrl({ origin: "https://shop-pc.tail1234.ts.net", pathname: "/" }), id), `https://shop-pc.tail1234.ts.net/#unit/${id}`);
+    assert.equal(UI.unitUrl(UI.appBaseUrl({ origin: "http://127.0.0.1:8787", pathname: "/index.html" }), id), `http://127.0.0.1:8787/#unit/${id}`);
+    assert.equal(UI.unitUrl(UI.appBaseUrl({ origin: "https://h.example.com", pathname: "/app/" }), id), `https://h.example.com/app/#unit/${id}`);
+    assert.equal(UI.unitUrl("https://x.y/", id), `https://x.y/#unit/${id}`);
+  });
+  test("labelText: tag/nickname title, site · customer, manufacturer model, S/N (max 3 lines)", () => {
+    assert.deepEqual(UI.labelText({ unit_tag: "RTU-7", nickname: "Kitchen", site: "Main St", customer: "Acme", manufacturer: "Carrier", model: "48TCDA04", serial: "1523G12345" }), { title: "RTU-7 · Kitchen", lines: ["Main St · Acme", "Carrier 48TCDA04", "S/N 1523G12345"] });
+    assert.deepEqual(UI.labelText({ model: "YSC060" }), { title: "YSC060", lines: [] });
+    assert.deepEqual(UI.labelText({ model: "YSC060", brand: "York" }), { title: "YSC060", lines: ["York YSC060"] });
+    assert.deepEqual(UI.labelText(null), { title: "Unit", lines: [] });
+  });
+  test("qrPathFromMatrix merges horizontal runs into unit-square rectangles", () => {
+    assert.equal(UI.qrPathFromMatrix(["1101", "0000", "1111"]), "M0 0h2v1h-2zM3 0h1v1h-1zM0 2h4v1h-4z");
+    assert.equal(UI.qrPathFromMatrix([[true, false], [false, true]]), "M0 0h1v1h-1zM1 1h1v1h-1z");
+    assert.equal(UI.qrPathFromMatrix([]), "");
+  });
+  test("qrSvgMarkup: crisp black-on-white SVG with a quiet zone", () => {
+    const svg = UI.qrSvgMarkup(["10", "01"], { margin: 2, size: 100, title: 'A "quoted" <title>' });
+    assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 6 6" shape-rendering="crispEdges"/);
+    assert.match(svg, /width="100" height="100"/);
+    assert.match(svg, /<rect width="6" height="6" fill="#fff"\/>/);
+    assert.match(svg, /<path transform="translate\(2 2\)" d="M0 0h1v1h-1zM1 1h1v1h-1z" fill="#000"\/>/);
+    assert.match(svg, /aria-label="A &quot;quoted&quot; &lt;title&gt;"/);
+  });
+  test("labelsDocumentHtml: self-contained, two columns in print, every string escaped", () => {
+    const html = UI.labelsDocumentHtml([{ title: "RTU-7 <b>", lines: ["Main & St"], url: "https://x/#unit/1", matrix: ["1"] }], { heading: "Labels <x>", generatedAt: new Date("2026-10-12T00:00:00Z") });
+    assert.match(html, /^<!doctype html>/);
+    assert.match(html, /<title>Labels &lt;x&gt;<\/title>/);
+    assert.match(html, /@media print \{ \.bar \{ display: none; \} \.labels \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(html, /class="title">RTU-7 &lt;b&gt;</);
+    assert.match(html, /class="line">Main &amp; St</);
+    assert.match(html, /class="url">https:\/\/x\/#unit\/1</);
+    assert.doesNotMatch(html, /<b>/);
+    assert.doesNotMatch(html, /src=["']?https?:/);
+    assert.match(html, /1 label · 2026-10-12/);
+    assert.match(html, /window\.print\(\)/);
+  });
+
+  /**
+   * Known encodings produced by an independent implementation (python-qrcode 8.2, byte mode, EC level M,
+   * forced mask pattern as noted): the vendored encoder must reproduce them module for module. The two encoders
+   * pick masks by slightly different penalty heuristics, so the fixtures pin the mask the vendored library chooses.
+   */
+  const QR_FIXTURES = [
+  { text: "RTU-7", mask: 2, rows: [
+    "111111100000101111111",
+    "100000100111001000001",
+    "101110101100101011101",
+    "101110101111101011101",
+    "101110101100101011101",
+    "100000101101001000001",
+    "111111101010101111111",
+    "000000001110000000000",
+    "101111100111001111100",
+    "110101011111111001110",
+    "100001111010101100110",
+    "100110010011111001101",
+    "010000100110100101100",
+    "000000001000100101110",
+    "111111100111010011110",
+    "100000101000000110110",
+    "101110101011010010010",
+    "101110101101111101000",
+    "101110101110101101100",
+    "100000100001111010100",
+    "111111101000100001010",
+  ] },
+  { text: "https://hvac.example.com/#unit/0123456789abcdef", mask: 2, rows: [
+    "111111100010101010111101001111111",
+    "100000100011100110100110101000001",
+    "101110101101101100011101001011101",
+    "101110101010000000110011101011101",
+    "101110101111101110001101001011101",
+    "100000101001101001110110001000001",
+    "111111101010101010101010101111111",
+    "000000001101100010011111100000000",
+    "101111100011010001010010101111100",
+    "101001010011010011110111101101111",
+    "000100100001011101001110010010100",
+    "100110011110110011101111111011110",
+    "101100111110001010001010100011000",
+    "110111011000000101100001011100111",
+    "010110101000111111001100111110010",
+    "001111000101010100000101111000100",
+    "110100100010111101000010110111001",
+    "100100010010101010111101001101111",
+    "101100101110000110100010001110100",
+    "101010001010111110001100100111100",
+    "011110100000111100110100100011000",
+    "101001001010101111001101011100101",
+    "100011111011010000010100001001010",
+    "101010001001000010011110100000111",
+    "101101111101000011110010111111011",
+    "000000001001011011111000100010111",
+    "111111100010101111000011101010100",
+    "100000101111101001100001100011111",
+    "101110101010101110001110111111011",
+    "101110101101100101100000010011101",
+    "101110101001010111001111111100100",
+    "100000100111100100000110001010100",
+    "111111101100001101101011110101010",
+  ] },
+  { text: "Hello, World!", mask: 4, rows: [
+    "111111101101001111111",
+    "100000100101101000001",
+    "101110100000001011101",
+    "101110101110101011101",
+    "101110101110101011101",
+    "100000101111001000001",
+    "111111101010101111111",
+    "000000001011100000000",
+    "100010111111011111001",
+    "010111000000101101110",
+    "111100101001011010010",
+    "111101011010010110000",
+    "110001111110110000010",
+    "000000001010000011011",
+    "111111101011011111010",
+    "100000100101010110010",
+    "101110101111100110000",
+    "101110100010011011011",
+    "101110100010001111000",
+    "100000100101010000000",
+    "111111101001010110001",
+  ] },
+  ];
+  test("vendored qrcode.js (web/vendor/qrcode.js, MIT) reproduces known encodings module for module", () => {
+    const src = readFileSync(join(here, "vendor", "qrcode.js"), "utf8");
+    assert.match(src, /Licensed under the MIT license/);
+    assert.ok(readFileSync(join(here, "vendor", "qrcode.LICENSE"), "utf8").includes("MIT"));
+    // The file is a classic script (UMD tail); evaluate it with no module system so `var qrcode` is the export.
+    const lib = new Function("module", "exports", "define", `${src};return qrcode;`)(undefined, undefined, undefined);
+    assert.equal(typeof lib, "function");
+    for (const fx of QR_FIXTURES) {
+      const m = UI.qrMatrix(fx.text, lib);
+      assert.ok(m, fx.text);
+      assert.equal(m.length, fx.rows.length, `${fx.text}: size`);
+      const rows = m.map((r: boolean[]) => r.map((c) => (c ? "1" : "0")).join(""));
+      assert.deepEqual(rows, fx.rows, `${fx.text}: modules differ from the reference (mask ${fx.mask})`);
+      // finder pattern top-left, as a sanity check independent of the fixture
+      assert.equal(rows[0]!.slice(0, 7), "1111111");
+      assert.equal(rows[6]!.slice(0, 7), "1111111");
+    }
+    assert.equal(UI.qrMatrix("x", null), null, "no library → null");
+  });
+  test("parseHash routes the share, report, QR and labels sheets", () => {
+    const id = "0123456789abcdef";
+    assert.deepEqual([UI.parseHash(`#chat/${id}/share`).sheet, UI.parseHash(`#chat/${id}/share`).conv], ["share", id]);
+    assert.equal(UI.parseHash(`#unit/${id}/qr`).sheet, "qr");
+    assert.equal(UI.parseHash(`#unit/${id}/report`).sheet, "report");
+    assert.equal(UI.parseHash("#units/labels").sheet, "labels");
+    assert.equal(UI.parseHash("#units/actions").sheet, "unitsActions");
+    assert.equal(UI.parseHash("#unit/nope/qr").sheet, null);
+    assert.equal(UI.parseHash("#chat/nope/share").sheet, null);
+  });
+});
+
+describe("native shell — server URL prompt", () => {
+  test("serverUrlPrompt: bundled or native origin without a saved base needs the prompt; web installs never do", () => {
+    assert.equal(UI.serverUrlPrompt({ configBase: "", savedBase: "", bundled: true, protocol: "https:" }).needed, true);
+    assert.equal(UI.serverUrlPrompt({ configBase: "", savedBase: null, bundled: false, protocol: "capacitor:" }).needed, true);
+    assert.equal(UI.serverUrlPrompt({ configBase: "", savedBase: "", bundled: false, protocol: "file:" }).needed, true);
+    assert.equal(UI.serverUrlPrompt({ configBase: "", savedBase: "https://hvac.example.com", bundled: true, protocol: "capacitor:" }).needed, false);
+    assert.equal(UI.serverUrlPrompt({ configBase: "https://hvac.example.com", savedBase: "", bundled: true, protocol: "capacitor:" }).needed, false);
+    assert.equal(UI.serverUrlPrompt({ configBase: "", savedBase: "", bundled: false, protocol: "https:" }).needed, false);
+    assert.equal(UI.serverUrlPrompt({}).needed, false);
+    const p = UI.serverUrlPrompt({ bundled: true });
+    assert.match(p.message, /Set your server URL/);
+    assert.match(p.message, /Save connection/);
+    assert.equal(UI.serverUrlPrompt({}).message, "");
+  });
+  test("styles.css: unit-card actions keep 44 px targets and the QR label stays black on white", () => {
+    const css = readFileSync(join(here, "styles.css"), "utf8");
+    assert.match(css, /\.np-actions \.np-report, \.np-actions \.np-unit-report \{[^}]*min-height: 44px/);
+    assert.match(css, /\.qr-label \{[^}]*background: #fff;[^}]*color: #111/);
+    assert.ok(css.indexOf(".np-actions { grid-template-columns: repeat(4, 1fr); }") > css.indexOf(".np-actions { display: grid;"), "the 4-column override comes after the base rule");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Readings history + follow-ups (DESIGN.md "Readings history", "Follow-ups")
+// ---------------------------------------------------------------------------
+
+describe("readings history helpers", () => {
+  const NOW = Date.parse("2026-10-12T12:00:00Z");
+  const reading = {
+    id: "0123456789abcdef",
+    created_at: "2026-10-05T15:20:00Z",
+    mode: "ac_cooling",
+    refrigerant: "R-410A",
+    metering_device: "txv",
+    source: "sheet",
+    note: "",
+    measurements: { outdoorDbF: 88, suctionPsig: 118, liquidPsig: 340, compressorAmps: 20.4, compressorRla: 25, economizerPosition: "closed" },
+    derived: { superheatF: 12.3, subcoolingF: 4, deltaTF: 18, ampsPercentRla: 81.6, compressionRatio: 2.667, targetDeltaTF: { min: 15, max: 21 } },
+    validity: { ok: true, issues: [] },
+  };
+  test("readingSummary: date · mode title and SH/SC/ΔT/amps values", () => {
+    const s = UI.readingSummary(reading, NOW);
+    assert.equal(s.title, "Oct 5 · AC cooling");
+    assert.equal(s.values, "SH 12 · SC 4 · ΔT 18 · 20.4 A (82%)");
+    assert.equal(s.valid, true);
+    assert.equal(s.source, "sheet");
+  });
+  test("readingSummary: missing numbers show as dashes; % RLA alone; invalid readings flagged; other years dated", () => {
+    const s = UI.readingSummary({ created_at: "2025-02-01T10:00:00Z", mode: "heat_pump_heating", measurements: {}, derived: { ampsPercentRla: 70 }, validity: { ok: false, issues: ["x"] }, source: "chat" }, NOW);
+    assert.equal(s.title, "Feb 1, 2025 · HP heating");
+    assert.equal(s.values, "SH — · SC — · ΔT — · 70% RLA");
+    assert.equal(s.valid, false);
+    assert.equal(UI.readingSummary({ mode: "refrigeration" }, NOW).values, "SH — · SC — · ΔT — · amps —");
+    assert.equal(UI.readingSummary({ mode: "refrigeration" }, NOW).title, "Refrigeration");
+  });
+  test("readingDetailRows lists entered measurements then derived metrics with units", () => {
+    const rows = UI.readingDetailRows(reading);
+    const by = Object.fromEntries(rows.map((r: { label: string; value: string }) => [r.label, r.value]));
+    assert.equal(by.Refrigerant, "R-410A");
+    assert.equal(by.Metering, "TXV");
+    assert.equal(by["Outdoor DB"], "88 °F");
+    assert.equal(by.Suction, "118 psig");
+    assert.equal(by["Amps L1"], "20.4 A");
+    assert.equal(by.Economizer, "closed");
+    assert.equal(by.Superheat, "12.3 °F");
+    assert.equal(by["Comp. ratio"], "2.67");
+    assert.equal(by["Target ΔT"], "15–21 °F");
+    assert.equal("Amps L2" in by, false, "absent fields are skipped");
+    // measurements come before derived
+    const labels = rows.map((r: { label: string }) => r.label);
+    assert.ok(labels.indexOf("Suction") < labels.indexOf("Superheat"));
+    assert.deepEqual(UI.readingDetailRows(null), []);
+  });
+  test("formatDelta: arrow, short metric name, prev → cur with unit", () => {
+    assert.equal(UI.formatDelta({ metric: "subcoolingF", label: "Subcooling", unit: "°F", prev: 12, cur: 4, delta: -8, direction: "down" }), "↓ SC 12 → 4 °F");
+    assert.equal(UI.formatDelta({ metric: "ampsPercentRla", unit: "% RLA", prev: 80, cur: 94.5, direction: "up" }), "↑ Amps 80 → 94.5 % RLA");
+    assert.equal(UI.formatDelta({ metric: "other", label: "Other", prev: 1, cur: 2, direction: "up" }), "↑ Other 1 → 2");
+    assert.equal(UI.formatDelta(null), "");
+  });
+});
+
+describe("follow-up helpers", () => {
+  const TODAY = "2026-09-26";
+  test("dueChip: overdue / due today / due soon (7 days) / later / none / done", () => {
+    assert.deepEqual(UI.dueChip("2026-09-01", 0, TODAY), { kind: "overdue", label: "Overdue · Sep 1" });
+    assert.deepEqual(UI.dueChip("2026-09-26", 0, TODAY), { kind: "soon", label: "Due today" });
+    assert.deepEqual(UI.dueChip("2026-10-03", 0, TODAY), { kind: "soon", label: "Due Oct 3" });
+    assert.deepEqual(UI.dueChip("2026-10-04", 0, TODAY), { kind: "later", label: "Due Oct 4" });
+    assert.deepEqual(UI.dueChip("2027-01-15", 0, TODAY), { kind: "later", label: "Due Jan 15, 2027" });
+    assert.deepEqual(UI.dueChip(null, 0, TODAY), { kind: "none", label: "No date" });
+    assert.deepEqual(UI.dueChip("2026-09-01", 1, TODAY), { kind: "done", label: "Done" });
+    assert.deepEqual(UI.dueChip("2026-09-01", true, TODAY), { kind: "done", label: "Done" });
+  });
+  test("date helpers are calendar-safe (no timezone shift) and tolerate junk", () => {
+    assert.equal(UI.addDaysYmd("2026-12-30", 7), "2027-01-06");
+    assert.equal(UI.addDaysYmd("junk", 7), "junk");
+    assert.equal(UI.ymdLabel("2026-03-01", "2026-09-26"), "Mar 1");
+    assert.equal(UI.ymdLabel("2025-03-01", "2026-09-26"), "Mar 1, 2025");
+    assert.equal(UI.ymdLabel("tomorrow", "2026-09-26"), "tomorrow");
+    assert.match(UI.localYmd(new Date(2026, 0, 5)), /^2026-01-05$/);
+    assert.equal(UI.readingDateLabel("not a date"), "");
+  });
+  test("parseHash routes the picker and finding sheets", () => {
+    const id = "0123456789abcdef";
+    const fid = "fedcba9876543210";
+    assert.equal(UI.parseHash("#readings/pick").sheet, "pick");
+    assert.equal(UI.parseHash("#readings/pick").screen, "readings");
+    assert.equal(UI.parseHash("#chat/pick").sheet, "pick");
+    const cp = UI.parseHash(`#chat/${id}/pick`);
+    assert.equal(cp.sheet, "pick");
+    assert.equal(cp.conv, id);
+    const add = UI.parseHash(`#unit/${id}/finding`);
+    assert.equal(add.sheet, "finding");
+    assert.equal(add.unit, id);
+    assert.equal(add.finding, null);
+    const edit = UI.parseHash(`#unit/${id}/finding/${fid}`);
+    assert.equal(edit.sheet, "finding");
+    assert.equal(edit.finding, fid);
+    assert.equal(UI.parseHash(`#unit/${id}/finding/nope`).finding, null);
+    assert.equal(UI.parseHash("#unit/nope/finding").sheet, null);
+    assert.equal(UI.parseHash("#chat").sheet, null);
+  });
+});
+
+describe("styles.css — readings / follow-ups tap targets", () => {
+  const css = readFileSync(join(here, "styles.css"), "utf8");
+  const block = (selector: string) => {
+    const i = css.indexOf(selector + " {");
+    assert.ok(i >= 0, `selector not found: ${selector}`);
+    return css.slice(i, css.indexOf("}", i));
+  };
+  const px = (decl: string, prop: string) => {
+    const m = new RegExp(`(?:^|[;{\\s])${prop}:\\s*(\\d+)px`).exec(decl);
+    return m ? Number(m[1]) : NaN;
+  };
+  test("follow-up Done checkbox and reading expand button are at least 44 px", () => {
+    for (const sel of [".fu-check", ".rd-expand"]) {
+      const b = block(sel);
+      assert.ok(px(b, "width") >= 44 && px(b, "height") >= 44, b);
+    }
+    assert.ok(px(block(".fu-body"), "min-height") >= 44);
+    assert.ok(px(block(".rd-row"), "min-height") >= 44);
+  });
+  test("due chips carry text, not only color (each kind styles a labelled chip)", () => {
+    for (const kind of ["overdue", "soon", "later", "none", "done"]) assert.ok(css.includes(`.due-chip.${kind} {`), kind);
+    assert.ok(css.includes(".tab-count {"));
+  });
+});

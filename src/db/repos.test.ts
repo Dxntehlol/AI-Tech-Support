@@ -569,3 +569,169 @@ test("search: findings tag column is searchable and units column LIKE wildcards 
     close();
   }
 });
+
+// ---------------------------------------------------------------------------
+// readings history + follow-up columns (DESIGN.md "Readings history", "Follow-ups")
+// ---------------------------------------------------------------------------
+
+test("readings.create validates unit/conversation/mode/metering/source and stores JSON columns", () => {
+  const { repos, close } = setup();
+  try {
+    const unit = repos.units.create({ model: "48TC", unit_tag: "RTU-1" });
+    const conv = repos.conversations.create({ unit_id: unit.id });
+    const base = { unit_id: unit.id, mode: "ac_cooling", refrigerant: "R-410A", metering_device: "txv", measurements_json: { suctionPsig: 118 }, derived_json: { superheatF: 12 }, validity_json: { ok: true, issues: [] }, findings_json: [{ ruleId: "r1", severity: "warning" }] };
+    const row = repos.readings.create({ ...base, conversation_id: conv.id, note: "n", source: "chat" });
+    assert.ok(isId(row.id));
+    assert.equal(row.unit_id, unit.id);
+    assert.equal(row.conversation_id, conv.id);
+    assert.equal(row.source, "chat");
+    assert.equal(row.note, "n");
+    assert.equal(row.measurements_json, '{"suctionPsig":118}');
+    assert.equal(row.derived_json, '{"superheatF":12}');
+    assert.equal(row.validity_json, '{"ok":true,"issues":[]}');
+    assert.equal(row.findings_json, '[{"ruleId":"r1","severity":"warning"}]');
+    assert.deepEqual(repos.readings.get(row.id), row);
+    const dflt = repos.readings.create({ ...base, measurements_json: null, derived_json: undefined, validity_json: "", findings_json: null });
+    assert.equal(dflt.source, "sheet");
+    assert.equal(dflt.conversation_id, null);
+    assert.equal(dflt.measurements_json, "{}");
+    assert.equal(dflt.findings_json, "[]");
+    assert.equal(dflt.validity_json, '{"ok":true,"issues":[]}');
+    assert.throws(() => repos.readings.create({ ...base, unit_id: "0123456789abcdef" }), (e: unknown) => e instanceof RepoError && e.code === "not_found");
+    assert.throws(() => repos.readings.create({ ...base, conversation_id: "0123456789abcdef" }), (e: unknown) => e instanceof RepoError && e.code === "not_found");
+    assert.throws(() => repos.readings.create({ ...base, mode: "defrost" }), /mode must be/);
+    assert.throws(() => repos.readings.create({ ...base, metering_device: "piston" }), /metering_device must be/);
+    assert.throws(() => repos.readings.create({ ...base, source: "api" as never }), /source must be/);
+    assert.throws(() => repos.readings.create({ ...base, refrigerant: " " }), /refrigerant required/);
+    assert.throws(() => repos.readings.create({ ...base, unit_id: "" }), /unit_id required/);
+  } finally {
+    close();
+  }
+});
+
+test("readings.list is newest first with a clamped limit; latest; remove; cascade on unit hard delete", () => {
+  const { repos, close } = setup();
+  try {
+    const unit = repos.units.create({ model: "48TC", unit_tag: "RTU-1" });
+    const other = repos.units.create({ model: "48TC", unit_tag: "RTU-2" });
+    const base = { unit_id: unit.id, mode: "ac_cooling", refrigerant: "R-410A", metering_device: "txv", measurements_json: {}, derived_json: {}, validity_json: {}, findings_json: [] };
+    const ids = [];
+    for (let i = 0; i < 5; i++) ids.push(repos.readings.create(base).id); // clock advances 1 s per call
+    repos.readings.create({ ...base, unit_id: other.id });
+    const list = repos.readings.list({ unitId: unit.id });
+    assert.deepEqual(list.map((r) => r.id), [...ids].reverse());
+    assert.equal(repos.readings.list({ unitId: unit.id, limit: 2 }).length, 2);
+    assert.equal(repos.readings.list({ unitId: unit.id, limit: 9999 }).length, 5);
+    assert.equal(repos.readings.latest(unit.id)?.id, ids[4]);
+    assert.equal(repos.readings.latest("0123456789abcdef"), undefined);
+    assert.deepEqual(repos.readings.list({ unitId: "" }), []);
+    // explicit created_at (imports) sorts by that timestamp
+    const old = repos.readings.create({ ...base, created_at: "2020-01-01T00:00:00.000Z", source: "import" });
+    assert.equal(repos.readings.list({ unitId: unit.id }).at(-1)?.id, old.id);
+    assert.equal(repos.readings.remove(old.id), true);
+    assert.equal(repos.readings.remove(old.id), false);
+    assert.equal(repos.readings.get(old.id), undefined);
+    repos.units.remove(unit.id);
+    assert.deepEqual(repos.readings.list({ unitId: unit.id }), []);
+    assert.equal(repos.readings.list({ unitId: other.id }).length, 1);
+  } finally {
+    close();
+  }
+});
+
+test("findings follow_up_due / follow_up_done: defaults, validation (real calendar date), update", () => {
+  const { repos, close } = setup();
+  try {
+    const f = repos.findings.create({ symptom: "x", follow_up: "recheck" });
+    assert.equal(f.follow_up_due, null);
+    assert.equal(f.follow_up_done, 0);
+    const g = repos.findings.create({ symptom: "x", follow_up: "recheck", follow_up_due: "2026-10-10", follow_up_done: 1 });
+    assert.equal(g.follow_up_due, "2026-10-10");
+    assert.equal(g.follow_up_done, 1);
+    assert.throws(() => repos.findings.create({ symptom: "x", follow_up_due: "2026-02-30" }), /YYYY-MM-DD/);
+    assert.throws(() => repos.findings.create({ symptom: "x", follow_up_due: "10/10/2026" }), /YYYY-MM-DD/);
+    assert.throws(() => repos.findings.create({ symptom: "x", follow_up_done: "later" as never }), /follow_up_done must be 0 or 1/);
+    const u = repos.findings.update!(f.id, { follow_up_due: "2026-11-01", follow_up_done: 1 });
+    assert.equal(u?.follow_up_due, "2026-11-01");
+    assert.equal(u?.follow_up_done, 1);
+    const cleared = repos.findings.update!(f.id, { follow_up_due: null, follow_up_done: 0 });
+    assert.equal(cleared?.follow_up_due, null);
+    assert.equal(cleared?.follow_up_done, 0);
+  } finally {
+    close();
+  }
+});
+
+test("findings.listFollowUps: non-empty follow_up only, joined unit/conversation, due first with nulls last, status filter", () => {
+  const { repos, close } = setup();
+  try {
+    const unit = repos.units.create({ model: "48TC", unit_tag: "RTU-7", site: "Main St", nickname: "Kitchen" });
+    const conv = repos.conversations.create({ unit_id: unit.id, title: "RTU-7 leak" });
+    const mk = (over: Record<string, unknown>) => repos.findings.create({ symptom: "s", unit_id: unit.id, conversation_id: conv.id, ...over });
+    const undatedOld = mk({ follow_up: "undated old" });
+    const dec = mk({ follow_up: "december", follow_up_due: "2026-12-01" });
+    const sep = mk({ follow_up: "september", follow_up_due: "2026-09-01" });
+    const undatedNew = mk({ follow_up: "undated new" });
+    const done = mk({ follow_up: "done", follow_up_due: "2026-01-01", follow_up_done: 1 });
+    mk({ follow_up: "  " });
+    mk({ cause: "none" });
+    const noUnit = repos.findings.create({ symptom: "orphan", follow_up: "orphan fu" });
+    const open = repos.findings.listFollowUps();
+    // due ascending, then undated newest first (noUnit was created last)
+    assert.deepEqual(open.map((f) => f.id), [sep.id, dec.id, noUnit.id, undatedNew.id, undatedOld.id]);
+    assert.equal(open[0]!.unit_site, "Main St");
+    assert.equal(open[0]!.unit_tag, "RTU-7");
+    assert.equal(open[0]!.unit_model, "48TC");
+    assert.equal(open[0]!.unit_nickname, "Kitchen");
+    assert.equal(open[0]!.conversation_title, "RTU-7 leak");
+    assert.equal(open[2]!.unit_site, null);
+    assert.equal(open[2]!.conversation_title, null);
+    assert.deepEqual(repos.findings.listFollowUps({ status: "done" }).map((f) => f.id), [done.id]);
+    assert.equal(repos.findings.listFollowUps({ status: "all" }).length, 6);
+    assert.equal(repos.findings.listFollowUps({ status: "all", limit: 2 }).length, 2);
+    assert.deepEqual(repos.findings.listFollowUps({ unitId: unit.id }).map((f) => f.id), [sep.id, dec.id, undatedNew.id, undatedOld.id]);
+    assert.throws(() => repos.findings.listFollowUps({ status: "soon" as never }), /status must be/);
+  } finally {
+    close();
+  }
+});
+
+test("openDatabase adds follow_up_due / follow_up_done (and the readings table) to a pre-existing database", async () => {
+  const { mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { DatabaseSync } = await import("node:sqlite");
+  const { FINDINGS_COLUMN_MIGRATIONS, tableColumns } = await import("./index.ts");
+  const dir = mkdtempSync(join(tmpdir(), "hvac-mig-"));
+  const path = join(dir, "old.sqlite");
+  try {
+    // An "old" database: the real schema before the follow-up columns and the readings table existed.
+    const { SCHEMA_SQL } = await import("./schema.ts");
+    const legacy = SCHEMA_SQL.replace("  follow_up_due TEXT,\n  follow_up_done INTEGER NOT NULL DEFAULT 0,\n", "").replace(/CREATE TABLE IF NOT EXISTS readings \([^;]*;\s*CREATE INDEX IF NOT EXISTS idx_readings_unit_created[^;]*;/, "");
+    assert.ok(!legacy.includes("follow_up_due TEXT") && !legacy.includes("readings ("), "legacy schema stripped");
+    const old = new DatabaseSync(path);
+    old.exec(legacy);
+    old.exec("INSERT INTO findings (id, symptom, follow_up, created_at) VALUES ('0123456789abcdef', 'old row', 'recheck', '2025-01-01T00:00:00Z');");
+    assert.equal(tableColumns(old, "readings").size, 0, "no readings table yet");
+    assert.equal(tableColumns(old, "findings").has("follow_up_due"), false);
+    old.close();
+    const db = openDatabase(path);
+    try {
+      for (const m of FINDINGS_COLUMN_MIGRATIONS) assert.ok(tableColumns(db.raw, m.table).has(m.column), m.column);
+      assert.ok(tableColumns(db.raw, "readings").has("measurements_json"));
+      const repos = createRepos(db);
+      const row = repos.findings.get("0123456789abcdef");
+      assert.equal(row?.follow_up, "recheck");
+      assert.equal(row?.follow_up_done, 0);
+      assert.equal(row?.follow_up_due, null);
+      assert.equal(repos.findings.listFollowUps().length, 1);
+    } finally {
+      db.close();
+    }
+    // Re-opening is idempotent.
+    const again = openDatabase(path);
+    again.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

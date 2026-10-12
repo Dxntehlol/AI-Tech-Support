@@ -28,11 +28,23 @@ Claude-powered chat assistant with a local knowledge base and a job memory:
 - **Decode corrections** — "Report a wrong detail" on a unit records what the app said and what the
   nameplate says (optionally fixing the unit too); the assistant trusts it over the decoder, and
   **Settings → Decode corrections → Export** downloads them as JSON for fixing the manufacturer packs.
+- **Readings history and trend** — "Save to unit" on the Readings tab (and every diagnosis the assistant runs on an
+  attached unit) keeps the readings on the unit; the unit card and the assistant compare a new visit with the last
+  one in the same mode and similar weather ("Subcooling fell from 12 to 4 °F since 2026-08-02 - charge loss or
+  restriction trend").
+- **Follow-ups** — a finding's follow-up gets a due date; the History tab lists open follow-ups (overdue / due
+  this week, tap Done), the tab badge counts the overdue ones, and the assistant raises them at the start of a visit.
 - **In-app AI connection** — paste the API key on the phone (**Settings → AI connection**), test it
   (key, model and billing are checked separately), pick model, effort and web search; changes apply
   without a restart.
 - **Usage and cost** — **Settings → Usage** shows requests, tokens, web searches and cost estimated
   at list price over 7/30/90 days, by day and by model.
+- **Service reports** — the share button in a chat (and **Unit report** on a unit card) shares a plain-text
+  summary, opens a printable page (Print / Save as PDF) or copies Markdown: unit header, complaint, every
+  readings/diagnosis in the conversation, findings, open items and the assistant's summary
+  (`GET /api/conversations/:id/report`, `GET /api/units/:id/report`, `?format=md|html|json`).
+- **QR labels** — **QR label** on a unit card prints a sticker whose code opens that unit in the app;
+  **Units → ⋮ → Print QR labels** prints one label per unit, two per row.
 
 Everything runs on one machine with Node.js; the only external call is to the Anthropic API.
 
@@ -129,23 +141,30 @@ server. A service worker caches the shell and refreshes it on the next launch af
 
 The client is a static bundle (`web/`) that talks to the API over HTTP with no same-origin
 assumptions, so it can be wrapped as a native app with [Capacitor](https://capacitorjs.com)
-without code changes. The sketch:
+without code changes. The scaffold is in the repository: `capacitor.config.json` (app id
+`com.hvacfieldassistant.app`, web dir `web`, Android scheme `https`) and two scripts:
 
 ```bash
-npm install @capacitor/core @capacitor/cli
-npx cap init "HVAC Field Assistant" com.example.hvacassistant --web-dir web
+npm run cap:init      # prints the setup commands below; runs nothing
+npm i @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
 npx cap add ios && npx cap add android
-npx cap sync && npx cap open ios
+npm run cap:prepare   # writes web/config.js for the bundle (apiBase "", version from package.json)
+npx cap sync && npx cap open ios   # or: npx cap open android
 ```
 
 Then:
 
-- **Point the app at your server.** Either set `window.APP_CONFIG = { apiBase: "https://hvac.example.com" }`
-  in a `web/config.js` shipped with the bundle, or enter the URL in **Settings → Server URL**.
-  The token entered in Settings is sent as `Authorization: Bearer <APP_PASSWORD>`.
-- **Allow the native origin on the server.** Set `ALLOW_ORIGINS=capacitor://localhost,http://localhost`
+- **Point the app at your server.** The Node server generates `/config.js` on the fly; a bundle has no
+  server, so `cap:prepare` copies `web/config.capacitor.js` to `web/config.js` (git-ignored) with
+  `apiBase: ""` and `bundled: true`. On first launch the app opens **Settings** with a "Set your server
+  URL" prompt; enter the server address and the access password there (sent as
+  `Authorization: Bearer <APP_PASSWORD>`). To hard-wire a server instead, put its origin in `apiBase`
+  before running `cap sync`.
+- **Allow the native origin on the server.** Set `ALLOW_ORIGINS=capacitor://localhost,https://localhost,http://localhost`
   (add `ionic://localhost` for older shells). Only listed origins get CORS headers; the default
   is same-origin only.
+- **QR labels open in the browser.** A phone camera hands the scanned `https://…/#unit/<id>` link to the
+  browser, not to the installed app; the web client routes it to the unit.
 - **Store listing.** The app uses the camera only for nameplate photos, keeps the access
   password on the device, and does no tracking; say so in the privacy notes. Icons at
   192/512 px (plus a maskable variant and a 180 px Apple touch icon) are in `web/icons/`,

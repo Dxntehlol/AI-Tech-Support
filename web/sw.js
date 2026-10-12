@@ -6,7 +6,7 @@
  */
 "use strict";
 
-const VERSION = "0.1.0-2026.10.05.4";
+const VERSION = "0.1.0-2026.10.12.1";
 const SHELL_CACHE = `hvac-shell-${VERSION}`;
 const API_CACHE = `hvac-api-${VERSION}`;
 const SHELL = [
@@ -18,6 +18,7 @@ const SHELL = [
   "./manifest.webmanifest",
   "./vendor/marked.umd.js",
   "./vendor/purify.min.js",
+  "./vendor/qrcode.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",

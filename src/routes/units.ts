@@ -5,6 +5,7 @@ import { decodeUnit } from "../knowledge/decoder.ts";
 import type { DecodeResult, FindingRow, UnitRow } from "../types.ts";
 import { runFleetImport } from "./fleetImport.ts";
 import { createCorrection } from "./corrections.ts";
+import { unitReadingsSummary } from "../readingsStore.ts";
 import { HttpError, badRequest, body, notFound, optBoolean, optEnum, optNumber, optString, optionalId, queryBool, queryInt, queryString, requireId, requireString, safeParseJson, type Body } from "./util.ts";
 
 // ---------------------------------------------------------------------------
@@ -184,6 +185,17 @@ function parseFindingFields(b: Body, out: Record<string, unknown>): void {
     const c = optBoolean(b.confirmed, "confirmed");
     if (c !== undefined) out.confirmed = c ? 1 : 0;
   }
+  // Follow-ups: due date YYYY-MM-DD (the repo validates the calendar date) and the done flag.
+  if ("follow_up_due" in b) {
+    const s = optString(b.follow_up_due, "follow_up_due", 10);
+    const v = s === undefined ? null : s.trim() || null;
+    if (v !== null && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw badRequest("follow_up_due must be a date in YYYY-MM-DD form.");
+    out.follow_up_due = v;
+  }
+  if ("follow_up_done" in b) {
+    const d = optBoolean(b.follow_up_done, "follow_up_done");
+    if (d !== undefined) out.follow_up_done = d ? 1 : 0;
+  }
   for (const f of ["refrigerant_added_lbs", "refrigerant_recovered_lbs"] as const) {
     if (!(f in b)) continue;
     const n = optNumber(b[f], f, { min: 0, max: 100000 });
@@ -212,7 +224,7 @@ export function parseFindingPatch(b: Body): FindingPatch {
     if (status === undefined) throw badRequest(`status must be one of: ${FINDING_STATUSES.join(", ")}.`);
     out.status = status;
   }
-  if (Object.keys(out).length === 0) throw badRequest("Nothing to update: send confirmed, status, cause, resolution, follow_up or another finding field.");
+  if (Object.keys(out).length === 0) throw badRequest("Nothing to update: send confirmed, status, cause, resolution, follow_up, follow_up_due, follow_up_done or another finding field.");
   return out as FindingPatch;
 }
 
@@ -254,17 +266,20 @@ export function unitsRouter(deps: AppDeps): Router {
     res.json(runFleetImport(deps, body(req)));
   });
 
-  // GET /api/units/:id → {unit, decoded, findings, conversations}
+  // GET /api/units/:id → {unit, decoded, findings, conversations, corrections, lastReading, trend}
   r.get("/:id", (req, res) => {
     const id = requireId(req.params.id);
     const unit = repos.units.get(id);
     if (!unit) throw notFound("Unit not found.");
+    const { lastReading, trend } = unitReadingsSummary(repos, id);
     res.json({
       unit,
       decoded: decodedOf(unit),
       findings: repos.findings.list({ unitId: id, limit: 500 }),
       conversations: repos.conversations.list({ unitId: id, limit: 200 }),
       corrections: repos.corrections.list({ unitId: id, limit: 500 }),
+      lastReading,
+      trend,
     });
   });
 

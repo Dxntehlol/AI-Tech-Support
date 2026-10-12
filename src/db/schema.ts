@@ -80,12 +80,35 @@ CREATE TABLE IF NOT EXISTS findings (
   refrigerant_added_lbs REAL,
   refrigerant_recovered_lbs REAL,
   follow_up TEXT,
+  follow_up_due TEXT,
+  follow_up_done INTEGER NOT NULL DEFAULT 0,
   origin TEXT NOT NULL DEFAULT 'tech' CHECK (origin IN ('tech','assistant')),
   confirmed INTEGER NOT NULL DEFAULT 1 CHECK (confirmed IN (0,1)),
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_findings_unit ON findings(unit_id);
 CREATE INDEX IF NOT EXISTS idx_findings_conversation ON findings(conversation_id);
+-- follow_up_due / follow_up_done are also added to pre-existing databases by a guarded ALTER TABLE in
+-- db/index.ts (FINDINGS_COLUMN_MIGRATIONS); the follow-up index is created there, after the migration.
+
+-- Readings history: one row per saved set of refrigeration-cycle readings on a unit (Readings sheet
+-- "Save to unit", the assistant's diagnose_refrigeration tool on an attached unit, or an import).
+CREATE TABLE IF NOT EXISTS readings (
+  id TEXT PRIMARY KEY,
+  unit_id TEXT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  mode TEXT NOT NULL CHECK (mode IN ('ac_cooling','heat_pump_cooling','heat_pump_heating','refrigeration')),
+  refrigerant TEXT NOT NULL,
+  metering_device TEXT NOT NULL CHECK (metering_device IN ('txv','fixed','eev','unknown')),
+  measurements_json TEXT NOT NULL,
+  derived_json TEXT NOT NULL,
+  validity_json TEXT NOT NULL,
+  findings_json TEXT NOT NULL,
+  note TEXT,
+  source TEXT NOT NULL DEFAULT 'sheet' CHECK (source IN ('sheet','chat','import'))
+);
+CREATE INDEX IF NOT EXISTS idx_readings_unit_created ON readings(unit_id, created_at DESC);
 
 -- One row per model request in the chat loop (Settings → Usage). conversation_id survives as NULL when the
 -- conversation is deleted so the cost history stays whole. Rows older than 400 days are pruned at startup.

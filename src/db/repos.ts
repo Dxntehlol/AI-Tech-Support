@@ -2,7 +2,19 @@ import type { StatementSync } from "node:sqlite";
 import type { UsageEventInput, UsageEventRow } from "../agent/usage.ts";
 import type { Db } from "./index.ts";
 import { newId, nowIso } from "./index.ts";
-import type { ConversationRow, CorrectionField, CorrectionRow, CorrectionStatus, FindingRow, MessageRow, SearchHit, UnitRow } from "../types.ts";
+import type {
+  ConversationRow,
+  CorrectionField,
+  CorrectionRow,
+  CorrectionStatus,
+  FindingRow,
+  FollowUpRow,
+  MessageRow,
+  ReadingRow,
+  ReadingSource,
+  SearchHit,
+  UnitRow,
+} from "../types.ts";
 
 /** At least one of model / unit_tag / nickname must be non-empty. */
 export type UnitInput = Partial<Omit<UnitRow, "id" | "created_at" | "updated_at">>;
@@ -25,9 +37,32 @@ export type FindingPatch = Partial<
     | "refrigerant_added_lbs"
     | "refrigerant_recovered_lbs"
     | "follow_up"
+    | "follow_up_due"
+    | "follow_up_done"
     | "confirmed"
   >
 >;
+
+/** Input for readings.create: JSON columns accept objects (stringified) or JSON strings. */
+export interface ReadingInput {
+  unit_id: string;
+  conversation_id?: string | null;
+  mode: string;
+  refrigerant: string;
+  metering_device: string;
+  measurements_json: unknown;
+  derived_json: unknown;
+  validity_json: unknown;
+  findings_json: unknown;
+  note?: string | null;
+  source?: ReadingSource;
+  /** Override created_at (imports); defaults to the repo clock. */
+  created_at?: string;
+}
+
+export type FollowUpStatus = "open" | "done" | "all";
+export const FOLLOW_UP_STATUSES: readonly FollowUpStatus[] = ["open", "done", "all"];
+export const READING_SOURCES: readonly ReadingSource[] = ["sheet", "chat", "import"];
 
 export const CORRECTION_FIELDS: readonly CorrectionField[] = [
   "manufacturer",
@@ -113,6 +148,22 @@ export interface Repos {
     remove(id: string): boolean;
     /** Optional extension: patch status/confirmed/cause/resolution/follow_up (and other FindingPatch columns). */
     update?(id: string, patch: FindingPatch): FindingRow | undefined;
+    /**
+     * Findings with a non-empty follow_up joined with their unit (site, tag, model, nickname) and conversation
+     * title; status open (follow_up_done = 0, default), done, or all. Sorted by due date (nulls last), then
+     * created_at (newest first).
+     */
+    listFollowUps(opts?: { status?: FollowUpStatus; unitId?: string; limit?: number }): FollowUpRow[];
+  };
+  /** Readings history per unit (DESIGN.md "Readings history"). */
+  readings: {
+    create(input: ReadingInput): ReadingRow;
+    get(id: string): ReadingRow | undefined;
+    /** Newest first. */
+    list(opts: { unitId: string; limit?: number }): ReadingRow[];
+    /** The newest row for a unit, or undefined. */
+    latest(unitId: string): ReadingRow | undefined;
+    remove(id: string): boolean;
   };
   /** FTS over messages (chat rows only) + findings, plus LIKE over units (model/serial/tag/site/customer). */
   search(query: string, opts?: { unitId?: string; site?: string; since?: string; limit?: number }): SearchHit[];
@@ -337,7 +388,25 @@ function hasIdentity(row: Record<string, unknown>): boolean {
 const MESSAGE_COLS = "id, conversation_id, seq, role, kind, content_json, text, created_at";
 const FINDING_COLS =
   "id, unit_id, conversation_id, symptom, cause, resolution, measurements_json, parts_json, tags, circuit, status, " +
-  "service_date, refrigerant, refrigerant_added_lbs, refrigerant_recovered_lbs, follow_up, origin, confirmed, created_at";
+  "service_date, refrigerant, refrigerant_added_lbs, refrigerant_recovered_lbs, follow_up, follow_up_due, follow_up_done, origin, confirmed, created_at";
+const READING_COLS =
+  "id, unit_id, conversation_id, created_at, mode, refrigerant, metering_device, measurements_json, derived_json, validity_json, findings_json, note, source";
+const READING_MODES = new Set(["ac_cooling", "heat_pump_cooling", "heat_pump_heating", "refrigeration"]);
+const READING_METERING = new Set(["txv", "fixed", "eev", "unknown"]);
+const READING_SOURCE_SET = new Set<string>(READING_SOURCES);
+
+/** Calendar date YYYY-MM-DD that exists (no 2026-02-30); empty → null; anything else → validation error. */
+export function isoDateOrNull(value: unknown, col: string): string | null {
+  const s = textOrNull(value, col);
+  if (s === null) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (m) {
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const dt = new Date(Date.UTC(y, mo - 1, d));
+    if (dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d) return s;
+  }
+  throw validation(`${col} must be a date in YYYY-MM-DD form`);
+}
 
 // ---------------------------------------------------------------------------
 // Repos
@@ -650,6 +719,10 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       case "refrigerant":
       case "follow_up":
         return textOrNull(value, col);
+      case "follow_up_due":
+        return isoDateOrNull(value, col);
+      case "follow_up_done":
+        return boolToInt(value, col) ?? 0;
       case "measurements_json":
       case "parts_json":
         return jsonOrNull(value, col);
@@ -689,6 +762,8 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     "refrigerant_added_lbs",
     "refrigerant_recovered_lbs",
     "follow_up",
+    "follow_up_due",
+    "follow_up_done",
     "confirmed",
   ];
 
@@ -717,6 +792,8 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
         "refrigerant_added_lbs",
         "refrigerant_recovered_lbs",
         "follow_up",
+        "follow_up_due",
+        "follow_up_done",
         "origin",
         "confirmed",
       ];
@@ -776,6 +853,103 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       if (typeof id !== "string") return false;
       const res = prep("DELETE FROM findings WHERE id = ?").run(id);
       return Number(res.changes) > 0;
+    },
+
+    listFollowUps(opts = {}) {
+      const status = opts.status ?? "open";
+      if (!FOLLOW_UP_STATUSES.includes(status)) throw validation("status must be open, done or all");
+      const where: string[] = ["f.follow_up IS NOT NULL", "trim(f.follow_up) <> ''"];
+      const params: SqlValue[] = [];
+      if (status === "open") where.push("f.follow_up_done = 0");
+      else if (status === "done") where.push("f.follow_up_done = 1");
+      if (typeof opts.unitId === "string" && opts.unitId) {
+        where.push("f.unit_id = ?");
+        params.push(opts.unitId);
+      }
+      params.push(clampLimit(opts.limit, 100, 500));
+      const cols = FINDING_COLS.split(", ")
+        .map((c) => `f.${c}`)
+        .join(", ");
+      return prep(
+        `SELECT ${cols}, u.site AS unit_site, u.unit_tag AS unit_tag, u.model AS unit_model, u.nickname AS unit_nickname, c.title AS conversation_title ` +
+          "FROM findings f LEFT JOIN units u ON u.id = f.unit_id LEFT JOIN conversations c ON c.id = f.conversation_id " +
+          `WHERE ${where.join(" AND ")} ` +
+          "ORDER BY (f.follow_up_due IS NULL), f.follow_up_due ASC, f.created_at DESC, f.rid DESC LIMIT ?",
+      )
+        .all(...params)
+        .map((r) => plain<FollowUpRow>(r));
+    },
+  };
+
+  // ----- readings (history per unit) --------------------------------------------
+
+  const getReading = (id: string): ReadingRow | undefined => {
+    const row = prep(`SELECT ${READING_COLS} FROM readings WHERE id = ?`).get(id);
+    return row ? plain<ReadingRow>(row) : undefined;
+  };
+
+  const readings: Repos["readings"] = {
+    create(input) {
+      if (!input || typeof input !== "object") throw validation("reading input required");
+      if (typeof input.unit_id !== "string" || input.unit_id === "") throw validation("unit_id required");
+      if (!unitExists(input.unit_id)) throw new RepoError("not_found", "unit not found");
+      let conversationId: string | null = null;
+      if (input.conversation_id !== null && input.conversation_id !== undefined && input.conversation_id !== "") {
+        if (typeof input.conversation_id !== "string") throw validation("conversation_id must be a string");
+        if (!conversationExists(input.conversation_id)) throw new RepoError("not_found", "conversation not found");
+        conversationId = input.conversation_id;
+      }
+      const mode = textOrNull(input.mode, "mode") ?? "";
+      if (!READING_MODES.has(mode)) throw validation("mode must be ac_cooling, heat_pump_cooling, heat_pump_heating or refrigeration");
+      const refrigerant = textOrNull(input.refrigerant, "refrigerant");
+      if (!refrigerant) throw validation("refrigerant required");
+      const metering = textOrNull(input.metering_device, "metering_device") ?? "unknown";
+      if (!READING_METERING.has(metering)) throw validation("metering_device must be txv, fixed, eev or unknown");
+      const source = input.source ?? "sheet";
+      if (!READING_SOURCE_SET.has(source)) throw validation("source must be sheet, chat or import");
+      const json = (v: unknown, col: string, fallback: string): string => jsonOrNull(v, col) ?? fallback;
+      const id = newId();
+      const ts = textOrNull(input.created_at, "created_at") ?? now();
+      prep(
+        `INSERT INTO readings (${READING_COLS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        id,
+        input.unit_id,
+        conversationId,
+        ts,
+        mode,
+        refrigerant,
+        metering,
+        json(input.measurements_json, "measurements_json", "{}"),
+        json(input.derived_json, "derived_json", "{}"),
+        json(input.validity_json, "validity_json", '{"ok":true,"issues":[]}'),
+        json(input.findings_json, "findings_json", "[]"),
+        textOrNull(input.note, "note"),
+        source,
+      );
+      return getReading(id)!;
+    },
+
+    get(id) {
+      return typeof id === "string" ? getReading(id) : undefined;
+    },
+
+    list(opts) {
+      if (!opts || typeof opts.unitId !== "string" || opts.unitId === "") return [];
+      return prep(`SELECT ${READING_COLS} FROM readings WHERE unit_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?`)
+        .all(opts.unitId, clampLimit(opts.limit, 20, 200))
+        .map((r) => plain<ReadingRow>(r));
+    },
+
+    latest(unitId) {
+      if (typeof unitId !== "string" || unitId === "") return undefined;
+      const row = prep(`SELECT ${READING_COLS} FROM readings WHERE unit_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1`).get(unitId);
+      return row ? plain<ReadingRow>(row) : undefined;
+    },
+
+    remove(id) {
+      if (typeof id !== "string") return false;
+      return Number(prep("DELETE FROM readings WHERE id = ?").run(id).changes) > 0;
     },
   };
 
@@ -1045,7 +1219,7 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     },
   };
 
-  return { units, conversations, messages, findings, search, usage, corrections, transaction };
+  return { units, conversations, messages, findings, readings, search, usage, corrections, transaction };
 }
 
 /** Bracket the first case-insensitive occurrence of each token (mirrors the FTS snippet markers). */

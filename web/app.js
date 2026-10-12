@@ -364,18 +364,24 @@ function parseHash(raw) {
     }
   }).filter(Boolean);
   const isId = (x) => typeof x === "string" && /^[0-9a-f]{16}$/.test(x);
-  const r = { screen: "chat", conv: null, unit: null, sheet: null, pane: "dx", isNew: false };
+  const r = { screen: "chat", conv: null, unit: null, sheet: null, pane: "dx", isNew: false, finding: null };
   switch (parts[0]) {
     case undefined:
     case "chat":
       r.screen = "chat";
       if (parts[1] === "new") r.isNew = true;
-      else if (isId(parts[1])) r.conv = parts[1];
+      else if (isId(parts[1])) {
+        r.conv = parts[1];
+        if (parts[2] === "share") r.sheet = "share";
+        else if (parts[2] === "pick") r.sheet = "pick"; // unit picker (attach to this chat)
+      } else if (parts[1] === "pick") r.sheet = "pick";
       break;
     case "units":
       r.screen = "units";
       if (parts[1] === "decode") r.sheet = "decode";
       else if (parts[1] === "import") r.sheet = "import";
+      else if (parts[1] === "labels") r.sheet = "labels";
+      else if (parts[1] === "actions") r.sheet = "unitsActions";
       break;
     case "unit":
       r.screen = "units";
@@ -383,10 +389,17 @@ function parseHash(raw) {
       if (parts[2] === "actions") r.sheet = "actions";
       else if (parts[2] === "edit") r.sheet = "decode";
       else if (parts[2] === "correct" && r.unit) r.sheet = "correct";
+      else if (parts[2] === "qr" && r.unit) r.sheet = "qr";
+      else if (parts[2] === "report" && r.unit) r.sheet = "report";
+      else if (parts[2] === "finding" && r.unit) {
+        r.sheet = "finding"; // add a finding, or edit one (#unit/<id>/finding/<findingId>)
+        r.finding = isId(parts[3]) ? parts[3] : null;
+      }
       break;
     case "readings":
       r.screen = "readings";
       if (parts[1] === "calcs") r.pane = "calcs";
+      else if (parts[1] === "pick") r.sheet = "pick"; // unit picker (save readings to a unit)
       break;
     case "history":
       r.screen = "history";
@@ -712,6 +725,334 @@ function correctionsExportFilename(disposition, now = new Date()) {
   return `hvac-corrections-${now.toISOString().slice(0, 10)}.json`;
 }
 
+/* ------------------------------------------------------------------------------------------
+ * Service reports, QR labels and the native shell (pure helpers; the UI parts live in boot())
+ * ---------------------------------------------------------------------------------------- */
+
+/** Whitespace-collapsed text cut at `max` characters with an ellipsis. */
+function truncateText(text, max) {
+  const s = String(text ?? "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  const cut = s.slice(0, Math.max(0, max - 1)).replace(/\s+\S*$/, "");
+  return `${cut || s.slice(0, max - 1)}…`;
+}
+
+/** Filename from a Content-Disposition header when it is a plain safe name, else null. */
+function filenameFromDisposition(disposition) {
+  const m = /filename="([^"]+)"/.exec(String(disposition || ""));
+  const name = m ? m[1] : "";
+  return /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/.test(name) && !name.includes("..") ? name : null;
+}
+
+const REPORT_EXT = { md: "md", html: "html", json: "json" };
+/** `hvac-report-<label>-<date>.<ext>` (conversation) / `hvac-unit-<label>-<date>.<ext>` (unit); mirrors the server's naming. */
+function reportFilename(kind, label, format, now = new Date()) {
+  const stem = String(label || "")
+    .normalize("NFKD")
+    .replace(/[^\x20-\x7e]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
+  const ext = REPORT_EXT[format] || "md";
+  const date = Number.isFinite(now.getTime()) ? now.toISOString().slice(0, 10) : "report";
+  return `hvac-${kind === "unit" ? "unit" : "report"}-${stem || "untitled"}-${date}.${ext}`;
+}
+
+/** Unit heading for share text: tag · nickname, else model, else "Unit". */
+function reportUnitHeading(u) {
+  if (!u) return "";
+  return [u.tag, u.nickname].filter(Boolean).join(" · ") || u.model || "Unit";
+}
+
+/** Plain-text share body built from a JSON report (conversation or unit); short enough for SMS/WhatsApp. */
+function reportShareText(report) {
+  if (!report || typeof report !== "object") return "";
+  const u = report.unit || null;
+  const lines = [];
+  const unitLine = u ? [reportUnitHeading(u), [u.manufacturer, u.model].filter(Boolean).join(" "), u.site].filter(Boolean).join(" — ") : "";
+  if (report.kind === "unit") {
+    lines.push(`Unit report: ${unitLine || "unit"}`);
+    const extras = [u && u.serial ? `S/N ${u.serial}` : "", u && u.tonnage ? `${u.tonnage} ton` : "", u && u.refrigerant, u && u.manufactureDate ? `mfd ${u.manufactureDate}` : ""].filter(Boolean);
+    if (extras.length) lines.push(extras.join(" · "));
+    const groups = Array.isArray(report.findingsByDate) ? report.findingsByDate : [];
+    const findings = groups.flatMap((g) => (Array.isArray(g.findings) ? g.findings : []));
+    if (findings.length) {
+      lines.push("", `Findings (${findings.length}):`);
+      for (const f of findings.slice(0, 6)) lines.push(`- ${f.date ? `${f.date} ` : ""}${[f.symptom, f.cause, f.resolution].filter(Boolean).join(" → ")}${f.status !== "resolved" ? ` [${f.status}]` : ""}`);
+      if (findings.length > 6) lines.push(`…and ${findings.length - 6} more`);
+    } else lines.push("", "No findings on record.");
+    return lines.join("\n");
+  }
+  const c = report.conversation || {};
+  lines.push(`Service report: ${c.title || "conversation"}${c.createdAt ? ` (${String(c.createdAt).slice(0, 10)})` : ""}`);
+  if (unitLine) lines.push(`Unit: ${unitLine}`);
+  if (report.complaint) lines.push("", `Complaint: ${truncateText(report.complaint, 240)}`);
+  const readings = Array.isArray(report.readings) ? report.readings.filter((r) => r && r.ok && r.derived && r.derived.length) : [];
+  if (readings.length) {
+    const last = readings[readings.length - 1];
+    const brief = last.derived.filter((d) => ["superheatF", "subcoolingF", "deltaTF", "compressionRatio"].includes(d.key)).map((d) => `${d.label.replace(/ \(.*\)$/, "")} ${d.value}`);
+    if (brief.length) lines.push("", `Readings: ${brief.join(", ")}${last.validity && !last.validity.ok ? " (not valid for charge)" : ""}`);
+  }
+  const findings = Array.isArray(report.findings) ? report.findings : [];
+  if (findings.length) {
+    lines.push("", "Findings:");
+    for (const f of findings.slice(0, 5)) lines.push(`- ${[f.symptom, f.cause, f.resolution].filter(Boolean).join(" → ")}${f.confirmed ? "" : " (unconfirmed)"}`);
+  }
+  const open = Array.isArray(report.openItems) ? report.openItems : [];
+  if (open.length) {
+    lines.push("", "Open items:");
+    for (const o of open.slice(0, 5)) lines.push(`- ${o}`);
+  }
+  return lines.join("\n");
+}
+
+/** navigator.share payload for a report; `url` is added only when given (a printable link needs auth, so usually not). */
+function reportSharePayload(report, url) {
+  const title = report && report.kind === "unit" ? `Unit report — ${reportUnitHeading(report.unit)}` : `Service report — ${(report && report.conversation && report.conversation.title) || "conversation"}`;
+  const payload = { title, text: reportShareText(report) };
+  if (url) payload.url = url;
+  return payload;
+}
+
+/** Base of the app URL (origin + path without index.html / trailing slash) so a scanned link lands on this install. */
+function appBaseUrl(loc) {
+  const origin = (loc && loc.origin) || "";
+  let path = (loc && loc.pathname) || "/";
+  path = path.replace(/index\.html?$/i, "").replace(/\/+$/, "");
+  return origin + path;
+}
+
+/** Absolute URL that opens a unit: `<base>/#unit/<id>`. */
+function unitUrl(base, id) {
+  return `${String(base || "").replace(/\/+$/, "")}/#unit/${id}`;
+}
+
+/** Text printed under a unit's QR: title (tag / nickname / model) and up to three detail lines. */
+function labelText(u) {
+  if (!u) return { title: "Unit", lines: [] };
+  const title = [u.unit_tag, u.nickname].filter(Boolean).join(" · ") || u.model || "Unit";
+  const lines = [];
+  if (u.site) lines.push([u.site, u.customer].filter(Boolean).join(" · "));
+  const model = [u.manufacturer || u.brand, u.model].filter(Boolean).join(" ");
+  if (model && model !== title) lines.push(model);
+  if (u.serial) lines.push(`S/N ${u.serial}`);
+  return { title, lines: lines.slice(0, 3) };
+}
+
+/**
+ * QR module matrix (array of rows of booleans) for `text` at error-correction level M, smallest version that fits
+ * (byte mode, UTF-8), using the vendored qrcode-generator (`lib` = window.qrcode). Returns null without the library.
+ */
+function qrMatrix(text, lib) {
+  const make = lib || (typeof qrcode === "function" ? qrcode : null);
+  if (typeof make !== "function") return null;
+  const qr = make(0, "M");
+  qr.addData(String(text), "Byte");
+  qr.make();
+  const n = qr.getModuleCount();
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    const row = [];
+    for (let c = 0; c < n; c++) row.push(!!qr.isDark(r, c));
+    rows.push(row);
+  }
+  return rows;
+}
+
+/** SVG path (one unit square per dark module, rows merged into runs) for a matrix of booleans or "1"/"0" strings. */
+function qrPathFromMatrix(matrix) {
+  const parts = [];
+  (matrix || []).forEach((row, y) => {
+    const cells = typeof row === "string" ? row.split("") : row;
+    let x = 0;
+    while (x < cells.length) {
+      const dark = cells[x] === true || cells[x] === 1 || cells[x] === "1";
+      if (!dark) {
+        x += 1;
+        continue;
+      }
+      let w = 1;
+      while (x + w < cells.length && (cells[x + w] === true || cells[x + w] === 1 || cells[x + w] === "1")) w += 1;
+      parts.push(`M${x} ${y}h${w}v1h-${w}z`);
+      x += w;
+    }
+  });
+  return parts.join("");
+}
+
+/** Crisp black-on-white SVG markup for a QR matrix (quiet zone `margin` modules); `size` is the CSS size in px when given. */
+function qrSvgMarkup(matrix, { margin = 4, size, title } = {}) {
+  const n = (matrix && matrix.length) || 0;
+  const total = n + margin * 2;
+  const path = qrPathFromMatrix(matrix);
+  const attrs = [`xmlns="http://www.w3.org/2000/svg"`, `viewBox="0 0 ${total} ${total}"`, `shape-rendering="crispEdges"`, `role="img"`, `aria-label="${escapeHtml(title || "QR code")}"`];
+  if (size) attrs.push(`width="${size}"`, `height="${size}"`);
+  return `<svg ${attrs.join(" ")}><rect width="${total}" height="${total}" fill="#fff"/><path transform="translate(${margin} ${margin})" d="${path}" fill="#000"/></svg>`;
+}
+
+/**
+ * A self-contained printable page of QR labels (two columns on paper, one label per unit). Every string is escaped;
+ * `labels` = [{ title, lines, url, matrix }].
+ */
+function labelsDocumentHtml(labels, { heading = "Unit QR labels", generatedAt = new Date() } = {}) {
+  const items = (labels || []).map((l) => {
+    const lines = (l.lines || []).map((x) => `<div class="line">${escapeHtml(x)}</div>`).join("");
+    return `<div class="label">${qrSvgMarkup(l.matrix, { margin: 2, title: `QR code for ${l.title}` })}<div class="text"><div class="title">${escapeHtml(l.title)}</div>${lines}<div class="url">${escapeHtml(l.url)}</div></div></div>`;
+  });
+  const stamp = Number.isFinite(generatedAt.getTime()) ? generatedAt.toISOString().slice(0, 10) : "";
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>${escapeHtml(heading)}</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.35 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #111; background: #fff; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #d5dae0; }
+.bar h1 { font-size: 17px; margin: 0; } .bar .meta { color: #5a6470; font-size: 12px; }
+.btn { font: inherit; font-weight: 600; padding: 10px 14px; border-radius: 10px; border: 1px solid #b86200; background: #b86200; color: #fff; cursor: pointer; }
+.labels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+.label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; border: 1px solid #111; border-radius: 8px; padding: 10px; break-inside: avoid; page-break-inside: avoid; min-height: 118px; }
+.label svg { width: 96px; height: 96px; flex: none; }
+.text { min-width: 0; }
+.title { font-size: 18px; font-weight: 800; letter-spacing: 0.02em; overflow-wrap: anywhere; }
+.line { font-size: 12px; color: #333; overflow-wrap: anywhere; }
+.url { font: 9.5px/1.3 ui-monospace, Menlo, Consolas, monospace; color: #5a6470; margin-top: 4px; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .labels { grid-template-columns: 1fr; } }
+@media print { .bar { display: none; } .labels { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; gap: 8mm 6mm; } .label { border-color: #000; } }
+@page { margin: 12mm; }
+</style></head><body>
+<div class="bar"><div><h1>${escapeHtml(heading)}</h1><div class="meta">${items.length} label${items.length === 1 ? "" : "s"}${stamp ? ` · ${stamp}` : ""} · scan with the phone camera to open the unit</div></div><button class="btn" type="button" id="print">Print</button></div>
+<div class="labels">${items.join("")}</div>
+<script>document.getElementById("print").addEventListener("click", function () { window.print(); });</script>
+</body></html>`;
+}
+
+/**
+ * Whether the client has no API to talk to yet: a bundled (Capacitor) build or a non-http origin with no server URL
+ * saved in Settings. Same-origin web installs never need one.
+ */
+function serverUrlPrompt({ configBase, savedBase, bundled, protocol } = {}) {
+  const base = String(configBase || "").trim() || String(savedBase || "").trim();
+  const nativeOrigin = ["capacitor:", "ionic:", "file:"].includes(String(protocol || "").toLowerCase());
+  const needed = !base && (bundled === true || nativeOrigin);
+  return {
+    needed,
+    message: needed ? "Set your server URL: enter the address of your HVAC server (for example https://shop-pc.tail1234.ts.net) and the access password, then tap Save connection." : "",
+  };
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Readings history + follow-ups: pure helpers (tested in web/app.test.ts)
+ * ---------------------------------------------------------------------------------------- */
+const MODE_SHORT = { ac_cooling: "AC cooling", heat_pump_cooling: "HP cooling", heat_pump_heating: "HP heating", refrigeration: "Refrigeration" };
+/** [key, label, unit] for the expanded reading view: measurements as entered, then derived metrics. */
+const READING_MEASUREMENT_FIELDS = [
+  ["circuit", "Circuit", ""], ["outdoorDbF", "Outdoor DB", "°F"], ["indoorDbF", "Entering DB", "°F"], ["indoorWbF", "Entering WB", "°F"], ["supplyDbF", "Supply DB", "°F"],
+  ["suctionPsig", "Suction", "psig"], ["suctionLineTempF", "Suction line", "°F"], ["liquidPsig", "Liquid", "psig"], ["liquidLineTempF", "Liquid line", "°F"],
+  ["dischargePsig", "Discharge", "psig"], ["dischargeLineTempF", "Discharge line", "°F"], ["compressorAmps", "Amps L1", "A"], ["compressorAmpsL2", "Amps L2", "A"], ["compressorAmpsL3", "Amps L3", "A"],
+  ["compressorRla", "RLA", "A"], ["externalStaticInWc", "External static", "in. wc"], ["capacityPercent", "Capacity", "%"], ["economizerPosition", "Economizer", ""], ["elevationFt", "Elevation", "ft"],
+];
+const READING_DERIVED_FIELDS = [
+  ["superheatF", "Superheat", "°F"], ["targetSuperheatF", "Target SH", "°F"], ["subcoolingF", "Subcooling", "°F"], ["targetSubcoolingF", "Target SC", "°F"],
+  ["evapSatF", "Evap sat", "°F"], ["condSatF", "Cond sat", "°F"], ["deltaTF", "Delta-T", "°F"], ["targetDeltaTF", "Target ΔT", "°F"], ["condenserSplitF", "Cond split", "°F"],
+  ["evapTdF", "Evap TD", "°F"], ["indoorCoilTdF", "Indoor coil TD", "°F"], ["compressionRatio", "Comp. ratio", ""], ["dischargeSuperheatF", "Discharge SH", "°F"],
+  ["ampsPercentRla", "Amps % RLA", "%"], ["currentImbalancePercent", "Amp imbalance", "%"], ["drierTempDropF", "Drier drop", "°F"], ["standingExcessPsi", "Standing excess", "psi"],
+];
+const TREND_METRIC_SHORT = { superheatF: "SH", subcoolingF: "SC", condSatF: "Cond sat", evapSatF: "Evap sat", deltaTF: "ΔT", ampsPercentRla: "Amps", suctionPsig: "Suction", liquidPsig: "Liquid" };
+
+/** Local calendar date as YYYY-MM-DD (follow-up due dates are calendar dates, compared as strings). */
+function localYmd(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+/** "Sep 1" for a YYYY-MM-DD (year appended when it differs from `today`'s). Not timezone-shifted. */
+function ymdLabel(ymd, today = localYmd()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || ""));
+  if (!m) return String(ymd || "");
+  const opts = { month: "short", day: "numeric", timeZone: "UTC" };
+  if (m[1] !== today.slice(0, 4)) opts.year = "numeric";
+  return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))).toLocaleDateString(undefined, opts);
+}
+function addDaysYmd(ymd, days) {
+  const t = Date.parse(`${ymd}T00:00:00Z`);
+  return Number.isFinite(t) ? new Date(t + days * 86400000).toISOString().slice(0, 10) : ymd;
+}
+/** Date part of a reading's timestamp, like relTime's long form ("Oct 5", "Oct 5, 2025"). */
+function readingDateLabel(iso, now = Date.now()) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  const dt = new Date(t);
+  const opts = { month: "short", day: "numeric" };
+  if (dt.getFullYear() !== new Date(now).getFullYear()) opts.year = "numeric";
+  return dt.toLocaleDateString(undefined, opts);
+}
+
+/** Compact row text for a saved reading: "Oct 5 · AC cooling" + "SH 12 · SC 4 · ΔT 18 · 20 A (80%)". */
+function readingSummary(r, now = Date.now()) {
+  const d = (r && r.derived) || {};
+  const m = (r && r.measurements) || {};
+  const n = (v, digits = 0) => (typeof v === "number" && Number.isFinite(v) ? fmtNum(v, digits) : null);
+  const sh = n(d.superheatF);
+  const sc = n(d.subcoolingF);
+  const dt = n(d.deltaTF);
+  const amps = n(m.compressorAmps, 1);
+  const pct = n(d.ampsPercentRla);
+  const parts = [`SH ${sh === null ? "—" : sh}`, `SC ${sc === null ? "—" : sc}`, `ΔT ${dt === null ? "—" : dt}`];
+  if (amps !== null) parts.push(`${amps} A${pct !== null ? ` (${pct}%)` : ""}`);
+  else if (pct !== null) parts.push(`${pct}% RLA`);
+  else parts.push("amps —");
+  const mode = MODE_SHORT[r && r.mode] || (r && r.mode) || "";
+  return {
+    title: [readingDateLabel(r && r.created_at, now), mode].filter(Boolean).join(" · "),
+    values: parts.join(" · "),
+    source: (r && r.source) || "sheet",
+    note: (r && r.note) || "",
+    valid: !(r && r.validity && r.validity.ok === false),
+  };
+}
+
+/** Every entered measurement and derived metric of a reading as {label, value} rows (for the expanded view). */
+function readingDetailRows(r) {
+  const out = [];
+  const m = (r && r.measurements) || {};
+  const d = (r && r.derived) || {};
+  const push = (label, v, unit) => {
+    if (v === null || v === undefined || v === "") return;
+    if (typeof v === "object") {
+      if (typeof v.min === "number" && typeof v.max === "number") out.push({ label, value: `${fmtNum(v.min)}–${fmtNum(v.max)}${unit ? ` ${unit}` : ""}` });
+      return;
+    }
+    const text = typeof v === "number" ? fmtNum(v, label === "Comp. ratio" ? 2 : 1) : String(v);
+    out.push({ label, value: unit ? `${text} ${unit}` : text });
+  };
+  push("Refrigerant", r && r.refrigerant, "");
+  push("Metering", r && r.metering_device ? (METERING_LABEL[r.metering_device] || r.metering_device) : null, "");
+  for (const [k, label, unit] of READING_MEASUREMENT_FIELDS) push(label, m[k], unit);
+  for (const [k, label, unit] of READING_DERIVED_FIELDS) push(label, d[k], unit);
+  return out;
+}
+
+/** "↓ SC 12 → 4 °F" for a trend delta from compareReadings. */
+function formatDelta(d) {
+  if (!d) return "";
+  const arrow = d.direction === "up" ? "↑" : "↓";
+  const label = TREND_METRIC_SHORT[d.metric] || d.label || d.metric || "";
+  const unit = d.unit ? ` ${d.unit}` : "";
+  return `${arrow} ${label} ${fmtNum(d.prev)} → ${fmtNum(d.cur)}${unit}`;
+}
+
+/** Due chip for a follow-up: overdue (red) / soon (amber, within 7 days) / later / none / done. */
+function dueChip(due, done, today = localYmd()) {
+  if (Number(done) === 1 || done === true) return { kind: "done", label: "Done" };
+  if (!due) return { kind: "none", label: "No date" };
+  if (due < today) return { kind: "overdue", label: `Overdue · ${ymdLabel(due, today)}` };
+  if (due === today) return { kind: "soon", label: "Due today" };
+  if (due <= addDaysYmd(today, 7)) return { kind: "soon", label: `Due ${ymdLabel(due, today)}` };
+  return { kind: "later", label: `Due ${ymdLabel(due, today)}` };
+}
+
 function boot() {
   const doc = document;
   const $ = (id) => doc.getElementById(id);
@@ -795,6 +1136,7 @@ function boot() {
     }
     const token = store.get("hvac.token");
     if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (noServerConfigured()) throw new ApiFailure("no_server", "No server URL set — enter it in Settings.", 0);
     const init = { method: opts.method || "GET", headers, body, signal: opts.signal, cache: "no-store" };
     let res;
     try {
@@ -895,7 +1237,12 @@ function boot() {
     sheetUnitActions: $("sheet-unit-actions"), unitActionsList: $("unit-actions-list"), unitActionsTitle: $("unit-actions-title"),
     sheetImport: $("sheet-import"), importForm: $("import-form"), importText: $("import-text"), importFile: $("import-file"), importFileName: $("import-file-name"),
     importError: $("import-error"), importPreview: $("import-preview"), btnImportPreview: $("btn-import-preview"), btnImportRun: $("btn-import-run"),
+    sheetPick: $("sheet-pick"), sheetFinding: $("sheet-finding"), // readings history + follow-ups sheets
     sheetCorrect: $("sheet-correct"), correctForm: $("correct-form"), correctError: $("correct-error"), correctSub: $("correct-sub"), cField: $("c-field"), cApp: $("c-app"),
+    sheetShare: $("sheet-share"), shareTitle: $("share-title"), shareSub: $("share-sub"), shareList: $("share-list"), shareFallback: $("share-fallback"), btnChatShare: $("btn-chat-share"),
+    sheetQr: $("sheet-qr"), qrTitle: $("qr-title"), qrLabel: $("qr-label"), qrFallback: $("qr-fallback"), btnQrPrint: $("btn-qr-print"), btnQrCopy: $("btn-qr-copy"), btnQrShare: $("btn-qr-share"),
+    sheetLabels: $("sheet-labels"), labelsBody: $("labels-body"), labelsFallback: $("labels-fallback"), btnLabelsPrint: $("btn-labels-print"),
+    sheetUnitsActions: $("sheet-units-actions"), unitsActionsList: $("units-actions-list"), btnUnitsMore: $("btn-units-more"),
     cActual: $("c-actual"), cNote: $("c-note"), cApply: $("c-apply"), cApplyHint: $("c-apply-hint"), btnCorrectSave: $("btn-correct-save"),
     correctionsCount: $("corrections-count"), btnCorrectionsExport: $("btn-corrections-export"),
     readingsForm: $("readings-form"), readingsResult: $("readings-result"), readingsError: $("readings-error"), readingsUnitChip: $("readings-unit-chip"), readingsSub: $("readings-sub"),
@@ -1037,6 +1384,13 @@ function boot() {
     else if (r.sheet === "actions" && r.unit) showUnitActions(r.unit);
     else if (r.sheet === "import") showImportSheet(prev.sheet === "import");
     else if (r.sheet === "correct" && r.unit) showCorrectSheet(r.unit);
+    else if (r.sheet === "pick") showPickSheet(r);
+    else if (r.sheet === "finding" && r.unit) showFindingSheet(r.unit, r.finding);
+    else if (r.sheet === "share" && r.conv) showShareSheet("conversation", r.conv);
+    else if (r.sheet === "report" && r.unit) showShareSheet("unit", r.unit);
+    else if (r.sheet === "qr" && r.unit) showQrSheet(r.unit);
+    else if (r.sheet === "labels") showLabelsSheet();
+    else if (r.sheet === "unitsActions") showUnitsActions();
 
     // screens
     if (r.screen === "chat") {
@@ -1058,9 +1412,11 @@ function boot() {
       els.screenReadings.dataset.pane = r.pane;
       const radio = doc.querySelector(`input[name="readings-pane"][value="${r.pane}"]`);
       if (radio) radio.checked = true;
-      if (state.unit) prefillReadingsFromUnit(state.unit);
+      if (readingsTargetUnit()) prefillReadingsFromUnit(readingsTargetUnit());
       renderReadingsUnitChip();
       requestWake();
+    } else if (r.screen === "history") {
+      loadFollowUps({ quiet: true });
     } else if (r.screen === "settings") {
       fillSettings();
     }
@@ -1074,7 +1430,7 @@ function boot() {
   /* ---------- sheets ---------- */
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]):not(.sr-only), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   let sheetOpener = null;
-  const allSheets = () => [els.sheetDecode, els.sheetUnitActions, els.sheetImport, els.sheetCorrect];
+  const allSheets = () => [els.sheetDecode, els.sheetUnitActions, els.sheetImport, els.sheetCorrect, els.sheetShare, els.sheetQr, els.sheetLabels, els.sheetUnitsActions, els.sheetPick, els.sheetFinding];
   const noSheetOpen = () => allSheets().every((sh) => sh.hidden);
   function setInert(on) {
     // The page behind a sheet is inert for keyboard and AT; aria-hidden is the fallback for browsers without `inert`.
@@ -1443,15 +1799,13 @@ function boot() {
       els.btnChatUnit.classList.remove("has-unit");
     }
     els.btnConvDelete.hidden = !state.conversation;
+    els.btnChatShare.hidden = !state.conversation;
     doc.title = state.conversation && state.conversation.title ? `${state.conversation.title} · HVAC Field Assistant` : "HVAC Field Assistant";
     renderCtxPanel();
   }
   els.btnChatUnit.addEventListener("click", () => {
     if (state.unit) navigate(`#unit/${state.unit.id}`);
-    else {
-      navigate("#units");
-      toast("Pick a unit, then tap Attach to conversation");
-    }
+    else navigate(state.conversationId ? `#chat/${state.conversationId}/pick` : "#chat/pick");
   });
 
   /* ---------- load conversation ---------- */
@@ -2155,7 +2509,10 @@ function boot() {
       els.unitContent.append(h("div", { class: "skeleton", style: "min-height:180px" }), h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
     }
     try {
-      const data = await apiJson(`/api/units/${encodeURIComponent(unitId)}`);
+      const [data, readingsData] = await Promise.all([
+        apiJson(`/api/units/${encodeURIComponent(unitId)}`),
+        apiJson(`/api/units/${encodeURIComponent(unitId)}/readings?limit=20`).catch(() => null),
+      ]);
       const unit = data.unit || data;
       let decoded = data.decoded || null;
       if (!decoded && unit.decoded_json) {
@@ -2165,7 +2522,10 @@ function boot() {
           decoded = null;
         }
       }
-      state.panelUnit = { unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations"), corrections: pickList(data.corrections || [], "corrections") };
+      state.panelUnit = {
+        unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations"), corrections: pickList(data.corrections || [], "corrections"),
+        readings: readingsData ? pickList(readingsData.readings || [], "readings") : [], readingsFailed: !readingsData, trend: data.trend || (readingsData && readingsData.trend) || null,
+      };
       state.unitsById.set(unit.id, unit);
       renderUnitDetail();
       markActiveRows();
@@ -2250,14 +2610,17 @@ function boot() {
         h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
+        h("button", { class: "btn np-qr", type: "button", onclick: () => navigate(`#unit/${u.id}/qr`) }, icon("scan"), "QR label"),
+        h("button", { class: "btn np-unit-report", type: "button", onclick: () => navigate(`#unit/${u.id}/report`) }, icon("file"), "Unit report"),
         h("button", { class: "btn btn-ghost np-report", type: "button", onclick: () => navigate(`#unit/${u.id}/correct`) }, icon("flag"), "Report a wrong detail"),
       ) : null,
     );
   }
 
-  function buildFindingsCard(findingsRaw, { onChanged } = {}) {
+  function buildFindingsCard(findingsRaw, { onChanged, unitId } = {}) {
     const findings = sortFindings(findingsRaw || []);
-    const fcard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Findings (${findings.length})` })));
+    const fcard = h("div", { class: "card" }, h("div", { class: "card-title" }, h("span", { text: `Findings (${findings.length})` }),
+      unitId ? h("button", { class: "text-btn", type: "button", text: "Add", onclick: () => navigate(`#unit/${unitId}/finding`) }) : null));
     if (!findings.length) fcard.append(h("div", { class: "list-empty", text: "No findings on this unit yet. The assistant offers to save one after a fix is verified." }));
     else fcard.append(h("div", { class: "timeline", role: "list" }, ...findings.map((f) => findingItem(f, onChanged))));
     return fcard;
@@ -2291,8 +2654,10 @@ function boot() {
       els.unitContent.append(card);
     }
 
-    // Findings timeline
-    els.unitContent.append(buildFindingsCard(pu.findings));
+    // Findings timeline (with Add / Edit → finding sheet)
+    els.unitContent.append(buildFindingsCard(pu.findings, { unitId: u.id }));
+    // Readings history + trend since last visit
+    els.unitContent.append(buildReadingsCard(pu, u));
 
     // Conversations on this unit
     const convs = pu.conversations || [];
@@ -2331,12 +2696,16 @@ function boot() {
     if (f.cause) item.append(h("div", { class: "tl-line" }, h("b", { text: "Cause: " }), f.cause));
     if (f.resolution) item.append(h("div", { class: "tl-line" }, h("b", { text: "Fix: " }), f.resolution));
     if (f.refrigerant_added_lbs) item.append(h("div", { class: "tl-line" }, h("b", { text: "Refrigerant added: " }), `${f.refrigerant_added_lbs} lb ${f.refrigerant || ""}`));
-    if (f.follow_up) item.append(h("div", { class: "tl-line" }, h("b", { text: "Follow-up: " }), f.follow_up));
+    if (f.follow_up) {
+      const chip = dueChip(f.follow_up_due, f.follow_up_done);
+      item.append(h("div", { class: "tl-line tl-follow" }, h("b", { text: "Follow-up: " }), f.follow_up, " ", h("span", { class: `chip due-chip ${chip.kind}`, text: chip.label })));
+    }
     const actions = h("div", { class: "tl-actions" });
     if (!Number(f.confirmed)) actions.append(h("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => patch({ confirmed: 1 }, "Finding confirmed") }, icon("check", "icon icon-sm"), "Confirm"));
     if (f.status !== "resolved") actions.append(h("button", { class: "btn btn-sm", type: "button", text: "Mark resolved", onclick: () => patch({ status: "resolved" }, "Marked resolved") }));
     if (f.status === "open") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Monitor", onclick: () => patch({ status: "monitor" }, "Set to monitor") }));
     if (f.status === "resolved") actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", text: "Reopen", onclick: () => patch({ status: "open" }, "Reopened") }));
+    if (f.unit_id) actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", onclick: () => navigate(`#unit/${f.unit_id}/finding/${f.id}`) }, icon("edit", "icon icon-sm"), "Edit"));
     actions.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", onclick: () => shareFinding(f) }, icon("share", "icon icon-sm"), navigator.share ? "Share" : "Copy"));
     item.append(actions);
     return item;
@@ -2346,6 +2715,7 @@ function boot() {
     try {
       await apiJson(`/api/findings/${encodeURIComponent(f.id)}`, { method: "PATCH", json: patch });
       toast(msg);
+      loadFollowUps({ quiet: true });
       if (state.panelUnit) loadUnitPanel(state.panelUnit.unit.id, { quiet: true });
       if (state.ctx && f.unit_id === state.ctx.unit.id) state.ctx = null;
       if (typeof onChanged === "function") onChanged();
@@ -2456,6 +2826,8 @@ function boot() {
       action("history", "Show its conversations", "Filter History to this unit", () => { if (u) setConvFilter(u); navigate("#history"); }),
       action("edit", "Edit or re-decode", "Change model, serial, tag, site…", () => navigate(`#unit/${unitId}/edit`)),
       action("flag", "Report a wrong detail", "Correct what the decoder got wrong", () => navigate(`#unit/${unitId}/correct`)),
+      action("file", "Unit report", "Share, print or copy the unit history", () => navigate(`#unit/${unitId}/report`)),
+      action("scan", "QR label", "Sticker that opens this unit when scanned", () => navigate(`#unit/${unitId}/qr`)),
       action("share", navigator.share ? "Share unit" : "Copy unit details", null, async () => {
         if (!u) return;
         const text = unitText(u);
@@ -3077,11 +3449,12 @@ function boot() {
 
   /* ---------- readings ---------- */
   function renderReadingsUnitChip() {
-    const u = state.unit;
+    const u = readingsTargetUnit();
     els.readingsUnitChip.hidden = !u;
     els.readingsUnitChip.textContent = u ? unitLabel(u) : "";
     els.readingsSub.textContent = "";
     if (u) els.readingsSub.append(h("span", { text: `${[u.manufacturer, u.model].filter(Boolean).join(" ")} · ${u.refrigerant || "refrigerant?"}` }));
+    renderReadingsSaveButton();
   }
   function prefillReadingsFromUnit(u, { force = false } = {}) {
     const f = els.readingsForm.elements;
@@ -3206,7 +3579,7 @@ function boot() {
     const box = els.readingsResult;
     box.hidden = false;
     box.textContent = "";
-    box.append(h("div", { class: "card-title" }, h("span", { text: "Diagnosis" }), r.source && r.source !== "server" ? sourceTag(r.source) : null));
+    box.append(h("div", { class: "card-title" }, h("span", { text: "Diagnosis" }), r.readingId ? h("span", { class: "chip chip-ok" }, icon("check", "icon"), "Saved to unit") : r.source && r.source !== "server" ? sourceTag(r.source) : null));
     const ok = !r.validity || r.validity.ok;
     const val = h("div", { class: `validity ${ok ? "ok" : "bad"}` }, icon(ok ? "ok" : "alert"), h("div", null, h("div", { text: ok ? "Readings valid for charge determination" : "Readings not valid for charge determination" })));
     if (!ok && r.validity.issues && r.validity.issues.length) val.lastChild.append(h("ul", null, ...r.validity.issues.map((i) => h("li", { text: i }))));
@@ -3229,7 +3602,10 @@ function boot() {
     if (r.missing && r.missing.length) {
       box.append(h("div", { class: "section-title", text: "Would sharpen the diagnosis" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
     }
-    box.append(h("div", { class: "btn-row", style: "margin-top:8px" }, h("button", { class: "btn btn-primary grow", type: "button", onclick: () => sendReadingsToChat(true) }, icon("send"), "Send to chat")));
+    box.append(h("div", { class: "btn-row", style: "margin-top:8px" },
+      h("button", { class: "btn btn-primary grow", type: "button", onclick: () => sendReadingsToChat(true) }, icon("send"), "Send to chat"),
+      r.readingId ? null : h("button", { class: "btn grow", type: "button", onclick: () => saveReadingToUnit() }, icon("units"), readingsTargetUnit() ? `Save to ${unitLabel(readingsTargetUnit())}` : "Save to unit"),
+    ));
     if (!isTwoColDx()) box.scrollIntoView({ block: "start", behavior: scrollBehavior() });
   }
 
@@ -3452,7 +3828,7 @@ function boot() {
       const c = state.ctx;
       els.ctxBody.textContent = "";
       els.ctxBody.append(buildPlate(c.unit, c.decoded, { attached: true, actions: false }));
-      els.ctxBody.append(buildFindingsCard(c.findings, { onChanged: () => { state.ctx = null; renderCtxPanel(); } }));
+      els.ctxBody.append(buildFindingsCard(c.findings, { onChanged: () => { state.ctx = null; renderCtxPanel(); }, unitId: c.unit.id }));
       els.ctxBody.append(h("div", { class: "btn-row", style: "margin-top:16px" },
         h("button", { class: "btn grow", type: "button", onclick: () => { prefillReadingsFromUnit(c.unit, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
         h("button", { class: "btn grow", type: "button", onclick: () => navigate(`#unit/${c.unit.id}`) }, icon("units"), "Unit page"),
@@ -3494,6 +3870,10 @@ function boot() {
     applyTheme(store.get("hvac.theme"));
     renderInstallState();
     renderOfflineInfo();
+    if (noServerConfigured()) {
+      renderNoServer();
+      return;
+    }
     loadAiSettings();
     loadUsage();
     loadCorrectionsCount();
@@ -3526,6 +3906,10 @@ function boot() {
     return h("div", { class: "kv" }, h("span", { class: "kv-key", text: key }), value instanceof Node ? value : h("span", { class: "kv-value", text: String(value) }));
   }
   async function loadHealth() {
+    if (noServerConfigured()) {
+      renderNoServer();
+      return;
+    }
     setStatus(null, "Checking…");
     // api() clears serverDown on the first reachable response, so remember the outage before the request.
     const wasDown = !!state.serverDown || !!state.healthFailed;
@@ -4046,13 +4430,708 @@ function boot() {
     });
   }
 
+  /* ---------- service reports (share sheet), QR labels, print labels ---------- */
+  const rep = { mode: null, id: null, busy: false };
+
+  /** Copy text that is still being fetched: Safari keeps the clipboard permission only for a ClipboardItem built in the tap. */
+  async function copyTextAsync(textPromise) {
+    if (!navigator.clipboard) throw new Error("Clipboard not available");
+    if (typeof ClipboardItem === "function" && navigator.clipboard.write) {
+      try {
+        const blobPromise = textPromise.then((t) => new Blob([t], { type: "text/plain" }));
+        await navigator.clipboard.write([new ClipboardItem({ "text/plain": blobPromise })]);
+        return;
+      } catch {
+        /* fall through: older Chrome rejects promise-valued items */
+      }
+    }
+    await navigator.clipboard.writeText(await textPromise);
+  }
+
+  function reportPath(mode, id, format) {
+    return `/api/${mode === "unit" ? "units" : "conversations"}/${encodeURIComponent(id)}/report?format=${format}`;
+  }
+  async function fetchReport(mode, id, format) {
+    const res = await api(reportPath(mode, id, format));
+    if (!res.ok) throw await readError(res);
+    return { text: await res.text(), filename: filenameFromDisposition(res.headers.get("content-disposition")) };
+  }
+  function shareLabel(mode, id) {
+    if (mode === "unit") {
+      const u = (state.panelUnit && state.panelUnit.unit.id === id && state.panelUnit.unit) || state.unitsById.get(id) || null;
+      return u ? unitLabel(u) : "Unit";
+    }
+    return state.conversation && state.conversationId === id ? state.conversation.title || "Conversation" : "Conversation";
+  }
+  function showShareFallback(href, name, text) {
+    els.shareFallback.textContent = "";
+    els.shareFallback.hidden = false;
+    els.shareFallback.append(
+      h("p", { class: "hint", style: "margin:0 0 8px", text: "The browser blocked the new tab. Open it from here:" }),
+      h("a", { class: "btn btn-primary btn-block", href, target: "_blank", rel: "noopener", download: name || null }, icon("file"), text),
+    );
+  }
+  /** Open the printable HTML report: a window is opened synchronously in the tap (iOS blocks one opened after a fetch), then filled. */
+  function openPrintable(mode, id) {
+    let win = null;
+    try {
+      win = window.open("", "_blank");
+    } catch {
+      win = null;
+    }
+    if (win) {
+      try {
+        win.document.write("<!doctype html><title>Report</title><p style=\"font:16px system-ui;padding:24px\">Preparing the report…</p>");
+      } catch {
+        /* cross-origin about:blank on some shells */
+      }
+    }
+    setRowBusy("printable", true);
+    fetchReport(mode, id, "html").then(({ text, filename }) => {
+      if (win && !win.closed) {
+        win.document.open();
+        win.document.write(text);
+        win.document.close();
+        toast("Report opened in a new tab");
+        closeSheets();
+        return;
+      }
+      const url = URL.createObjectURL(new Blob([text], { type: "text/html" }));
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+      showShareFallback(url, filename || reportFilename(mode, shareLabel(mode, id), "html"), "Open printable report");
+    }).catch((e) => {
+      if (win && !win.closed) win.close();
+      toast(`Report failed: ${e.message}`);
+    }).finally(() => setRowBusy("printable", false));
+  }
+  function setRowBusy(key, busy) {
+    rep.busy = busy;
+    for (const row of els.shareList.querySelectorAll("button.row")) {
+      row.disabled = busy;
+      const lead = row.querySelector(".row-lead");
+      if (row.dataset.key === key && lead) {
+        lead.textContent = "";
+        lead.append(busy ? h("span", { class: "spinner" }) : icon(row.dataset.icon));
+      }
+    }
+  }
+  function shareRow(key, ic, title, sub, fn) {
+    return h("button", { class: "row", type: "button", dataset: { key, icon: ic }, onclick: () => { if (!rep.busy) fn(); } },
+      h("div", { class: "row-lead" }, icon(ic)), h("div", { class: "row-body" }, h("div", { class: "row-title", text: title }), sub ? h("div", { class: "row-sub" }, h("span", { text: sub })) : null), icon("chevron", "icon icon-sm row-chevron"));
+  }
+  function showShareSheet(mode, id) {
+    rep.mode = mode;
+    rep.id = id;
+    rep.busy = false;
+    els.shareTitle.textContent = mode === "unit" ? "Unit report" : "Share report";
+    els.shareSub.textContent = mode === "unit" ? `${shareLabel(mode, id)} — nameplate, findings by date, corrections, recent conversations` : `${shareLabel(mode, id)} — complaint, readings, findings, open items, summary`;
+    els.shareFallback.hidden = true;
+    els.shareFallback.textContent = "";
+    els.shareList.textContent = "";
+    els.shareList.append(
+      shareRow("text", "share", navigator.share ? "Share text" : "Copy text", navigator.share ? "Messages, email, WhatsApp…" : "Plain-text summary to the clipboard", async () => {
+        setRowBusy("text", true);
+        try {
+          if (navigator.share) {
+            const { text } = await fetchReport(mode, id, "json");
+            const payload = reportSharePayload(JSON.parse(text));
+            try {
+              await navigator.share(payload);
+              closeSheets();
+            } catch (err) {
+              if (!err || err.name !== "AbortError") {
+                await navigator.clipboard.writeText(`${payload.title}\n\n${payload.text}`);
+                toast("Sharing not available — copied instead");
+              }
+            }
+          } else {
+            await copyTextAsync(fetchReport(mode, id, "json").then(({ text }) => { const p = reportSharePayload(JSON.parse(text)); return `${p.title}\n\n${p.text}`; }));
+            toast("Report text copied");
+            closeSheets();
+          }
+        } catch (e) {
+          toast(`Share failed: ${e.message}`);
+        } finally {
+          setRowBusy("text", false);
+        }
+      }),
+      shareRow("printable", "file", "Open printable", "HTML page with a Print / Save as PDF button", () => openPrintable(mode, id)),
+      shareRow("markdown", "copy", "Copy Markdown", "Paste into notes, email or a work order", async () => {
+        setRowBusy("markdown", true);
+        try {
+          await copyTextAsync(fetchReport(mode, id, "md").then(({ text }) => text));
+          toast("Markdown copied");
+          closeSheets();
+        } catch (e) {
+          toast(`Copy failed: ${e.message}`);
+        } finally {
+          setRowBusy("markdown", false);
+        }
+      }),
+    );
+    showSheet(els.sheetShare);
+  }
+  els.btnChatShare.addEventListener("click", () => {
+    if (state.conversationId) navigate(`#chat/${state.conversationId}/share`);
+  });
+
+  /* QR label sheet */
+  const qrState = { unitId: null };
+  function qrSvgEl(matrix, size) {
+    const wrap = h("div", { class: "qr-svg", html: qrSvgMarkup(matrix, { margin: 2, size, title: "Unit QR code" }) });
+    return wrap;
+  }
+  function buildLabel(u) {
+    const url = unitUrl(appBaseUrl(location), u.id);
+    const t = labelText(u);
+    return { title: t.title, lines: t.lines, url, matrix: qrMatrix(url) };
+  }
+  function renderQrLabel(u) {
+    els.qrLabel.textContent = "";
+    if (!u) {
+      els.qrLabel.append(h("div", { class: "skeleton", style: "min-height:220px" }));
+      return;
+    }
+    const label = buildLabel(u);
+    els.qrTitle.textContent = `QR label — ${label.title}`;
+    if (!label.matrix) {
+      els.qrLabel.append(h("div", { class: "field-error", role: "alert", text: "QR encoder not loaded — reload the app once online." }));
+      return;
+    }
+    els.qrLabel.append(
+      h("div", { class: "qr-label" },
+        qrSvgEl(label.matrix, 180),
+        h("div", { class: "qr-text" },
+          h("div", { class: "qr-tag", text: label.title }),
+          ...label.lines.map((l) => h("div", { class: "qr-line", text: l })),
+          h("div", { class: "qr-url", text: label.url }),
+        ),
+      ),
+      h("p", { class: "hint", text: "Stick it on the unit. Scanning with the phone camera opens this unit in the app (in the browser when the app is installed)." }),
+    );
+  }
+  function showQrSheet(unitId) {
+    qrState.unitId = unitId;
+    const u = (state.panelUnit && state.panelUnit.unit.id === unitId && state.panelUnit.unit) || state.unitsById.get(unitId) || null;
+    els.qrTitle.textContent = "QR label";
+    renderQrLabel(u);
+    if (!u) {
+      apiJson(`/api/units/${encodeURIComponent(unitId)}`).then((data) => {
+        const unit = data.unit || data;
+        state.unitsById.set(unit.id, unit);
+        if (qrState.unitId === unitId && !els.sheetQr.hidden) renderQrLabel(unit);
+      }).catch((e) => {
+        if (qrState.unitId !== unitId) return;
+        els.qrLabel.textContent = "";
+        els.qrLabel.append(h("div", { class: "field-error", role: "alert", text: `${e.code}: ${e.message}` }));
+      });
+    }
+    els.btnQrShare.hidden = !navigator.share;
+    showSheet(els.sheetQr);
+  }
+  function currentQrUnit() {
+    const id = qrState.unitId;
+    return id ? ((state.panelUnit && state.panelUnit.unit.id === id && state.panelUnit.unit) || state.unitsById.get(id) || null) : null;
+  }
+  /** Write a generated document into a window opened synchronously in the same tap; false when blocked. */
+  function openDocument(html, name) {
+    let win = null;
+    try {
+      win = window.open("", "_blank");
+    } catch {
+      win = null;
+    }
+    if (win) {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      return true;
+    }
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    return { url, name };
+  }
+  function showDocFallback(container, result, text) {
+    container.textContent = "";
+    container.hidden = false;
+    container.append(
+      h("p", { class: "hint", style: "margin:0 0 8px", text: "The browser blocked the new tab. Open it from here:" }),
+      h("a", { class: "btn btn-primary btn-block", href: result.url, target: "_blank", rel: "noopener" }, icon("file"), text),
+    );
+  }
+  els.btnQrPrint.addEventListener("click", () => {
+    const u = currentQrUnit();
+    if (!u) return;
+    const label = buildLabel(u);
+    const r = openDocument(labelsDocumentHtml([label], { heading: `QR label — ${label.title}` }), `hvac-label-${label.title}.html`);
+    if (r === true) toast("Label opened — use Print there");
+    else showDocFallback(els.qrFallback, r, "Open printable label");
+  });
+  els.btnQrCopy.addEventListener("click", async () => {
+    const u = currentQrUnit();
+    if (!u) return;
+    try {
+      await navigator.clipboard.writeText(unitUrl(appBaseUrl(location), u.id));
+      toast("Link copied");
+    } catch {
+      toast("Copy not available in this browser");
+    }
+  });
+  els.btnQrShare.addEventListener("click", () => {
+    const u = currentQrUnit();
+    if (!u || !navigator.share) return;
+    navigator.share({ title: labelText(u).title, text: `${labelText(u).title} — HVAC Field Assistant`, url: unitUrl(appBaseUrl(location), u.id) }).catch(() => {});
+  });
+
+  /* Units overflow + print labels sheet */
+  els.btnUnitsMore.addEventListener("click", () => navigate("#units/actions"));
+  function showUnitsActions() {
+    const list = els.unitsActionsList;
+    list.textContent = "";
+    const n = filterUnits(state.units, state.unitsQuery).length;
+    const action = (ic, title, sub, fn) => h("button", { class: "row", type: "button", onclick: () => { closeSheets(); setTimeout(fn, 0); } },
+      h("div", { class: "row-lead" }, icon(ic)), h("div", { class: "row-body" }, h("div", { class: "row-title", text: title }), sub ? h("div", { class: "row-sub" }, h("span", { text: sub })) : null), icon("chevron", "icon icon-sm row-chevron"));
+    list.append(
+      action("scan", "Print QR labels", n ? `${n} unit${n === 1 ? "" : "s"} on the current filter, two per row on paper` : "Add units first", () => navigate("#units/labels")),
+      action("upload", "Import units", "Paste rows or pick a CSV", () => navigate("#units/import")),
+      action("refresh", "Refresh units", null, () => loadUnits().then(() => toast("Units refreshed"))),
+    );
+    showSheet(els.sheetUnitsActions);
+  }
+  function showLabelsSheet() {
+    const units = filterUnits(state.units, state.unitsQuery);
+    els.labelsFallback.hidden = true;
+    els.labelsFallback.textContent = "";
+    els.labelsBody.textContent = "";
+    const q = (state.unitsQuery || "").trim();
+    els.labelsBody.append(
+      h("p", { style: "margin:0 0 8px", text: units.length ? `${units.length} label${units.length === 1 ? "" : "s"}${q ? ` for units matching “${q}”` : " — every unit in the list"}.` : "No units match the current filter." }),
+      h("p", { class: "hint", style: "margin:0", text: "Each label has the unit's QR code (opens the unit in this app), tag, site and model. Prints two per row; use the Print button on the page that opens." }),
+    );
+    if (units.length) {
+      const preview = h("div", { class: "labels-preview" });
+      for (const u of units.slice(0, 4)) {
+        const label = buildLabel(u);
+        preview.append(h("div", { class: "qr-mini" }, label.matrix ? qrSvgEl(label.matrix, 56) : null, h("div", { class: "qr-mini-text" }, h("div", { class: "qr-mini-title", text: label.title }), h("div", { class: "qr-mini-sub", text: label.lines[0] || "" }))));
+      }
+      if (units.length > 4) preview.append(h("div", { class: "qr-mini qr-mini-more", text: `+${units.length - 4} more` }));
+      els.labelsBody.append(preview);
+    }
+    els.btnLabelsPrint.disabled = !units.length;
+    els.btnLabelsPrint.textContent = units.length ? `Print ${units.length} label${units.length === 1 ? "" : "s"}` : "Print labels";
+    showSheet(els.sheetLabels);
+  }
+  els.btnLabelsPrint.addEventListener("click", () => {
+    const units = filterUnits(state.units, state.unitsQuery);
+    if (!units.length) return;
+    const labels = units.map(buildLabel);
+    const r = openDocument(labelsDocumentHtml(labels, { heading: `Unit QR labels${state.unitsQuery ? ` — ${state.unitsQuery.trim()}` : ""}` }), "hvac-unit-labels.html");
+    if (r === true) {
+      toast(`${labels.length} label${labels.length === 1 ? "" : "s"} opened — use Print there`);
+      closeSheets();
+    } else showDocFallback(els.labelsFallback, r, "Open printable labels");
+  });
+
+  /* ---------- native shell: no server configured yet ---------- */
+  function serverPrompt() {
+    return serverUrlPrompt({
+      configBase: window.APP_CONFIG && typeof window.APP_CONFIG === "object" ? window.APP_CONFIG.apiBase : "",
+      savedBase: store.get("hvac.apiBase"),
+      bundled: !!(window.APP_CONFIG && window.APP_CONFIG.bundled),
+      protocol: location.protocol,
+    });
+  }
+  function noServerConfigured() {
+    return serverPrompt().needed;
+  }
+  /** Settings screen state when the bundle has no server yet: a clear prompt instead of "unreachable" errors. */
+  function renderNoServer() {
+    const p = serverPrompt();
+    showSettingsNotice(p.message);
+    setStatus(false, "No server URL set");
+    els.healthInfo.textContent = "";
+    els.healthInfo.append(h("div", { class: "list-empty", text: "Enter the server URL above to connect." }));
+    els.demoBadge.hidden = true;
+    els.demoBadgeSettings.hidden = true;
+    // The AI, usage and corrections cards need the server too: say so instead of leaving them at "Checking…".
+    state.ai = null;
+    renderAi();
+    ai.detail.textContent = "Connect to your server first (Server card below); the AI connection is configured there.";
+    usage.body.textContent = "";
+    usage.body.append(h("div", { class: "list-empty", text: "Connect to a server to see usage." }));
+    els.correctionsCount.textContent = "Connect to a server to see corrections.";
+    els.btnCorrectionsExport.disabled = true;
+    for (const d of doc.querySelectorAll(".settings-dot")) d.hidden = false;
+    const field = $("s-apibase");
+    if (field && !isTouch) field.focus({ preventScroll: true });
+  }
+
+  /* ======================================================================================
+   * Readings history + follow-ups (DESIGN.md "Readings history", "Follow-ups")
+   * ==================================================================================== */
+  state.readingsUnit = null; // unit picked for "Save to unit" when no unit is attached to the chat
+  state.followups = null; // {status, items, counts, today}
+  state.pickPurpose = null; // "attach" | "readings"
+  const fx = {
+    btnReadingsSave: $("btn-readings-save"),
+    followups: $("followups"), historyCounts: [...doc.querySelectorAll(".history-count")],
+    pickTitle: $("pick-title"), pickSub: $("pick-sub"), pickSearch: $("pick-search"), pickList: $("pick-list"), btnPickDecode: $("btn-pick-decode"),
+    findingForm: $("finding-form"), findingTitle: $("finding-title"), findingSub: $("finding-sub"), findingError: $("finding-error"),
+    fiSymptom: $("fi-symptom"), fiCause: $("fi-cause"), fiResolution: $("fi-resolution"), fiStatus: $("fi-status"), fiCircuit: $("fi-circuit"),
+    fiFollowUp: $("fi-follow-up"), fiDue: $("fi-due"), fiDone: $("fi-done"), fiDoneRow: $("fi-done-row"), btnFindingSave: $("btn-finding-save"),
+  };
+
+  /* ---- readings: save to unit ---- */
+  function readingsTargetUnit() {
+    return state.unit || state.readingsUnit || null;
+  }
+  function renderReadingsSaveButton() {
+    const u = readingsTargetUnit();
+    // Short label in the action bar (three buttons share a phone width); the result card carries the long one.
+    fx.btnReadingsSave.textContent = "";
+    fx.btnReadingsSave.append(icon("units"), "Save");
+    fx.btnReadingsSave.setAttribute("aria-label", u ? `Save readings to ${unitLabel(u)}` : "Save readings to a unit");
+    fx.btnReadingsSave.title = u ? `Save to ${unitLabel(u)}` : "Save to unit";
+  }
+  /** Same gate as Diagnose: a refrigerant and at least one reading. Returns the error text or null. */
+  function readingsFormProblem(m) {
+    if (!m.refrigerant) return "Pick a refrigerant.";
+    if (m.suctionPsig === undefined && m.liquidPsig === undefined && m.outdoorDbF === undefined && m.compressorAmps === undefined && m.supplyDbF === undefined) {
+      return "Enter at least one reading — suction/liquid pressure with line temps gives the most.";
+    }
+    return null;
+  }
+  async function saveReadingToUnit() {
+    const target = readingsTargetUnit();
+    if (!target) return navigate("#readings/pick");
+    const m = buildMeasurements(readingsValues());
+    const problem = readingsFormProblem(m);
+    els.readingsError.hidden = !problem;
+    if (problem) {
+      els.readingsError.textContent = problem;
+      return;
+    }
+    fx.btnReadingsSave.disabled = true;
+    try {
+      const body = { ...m, unit_id: target.id };
+      if (state.conversationId && state.unit && state.unit.id === target.id) body.conversation_id = state.conversationId;
+      const result = await apiJson("/api/calc/diagnose", { method: "POST", json: body });
+      state.lastDx = result;
+      renderDxResult(result);
+      toast(`Saved to ${unitLabel(target)}`);
+      if (state.panelUnit && state.panelUnit.unit.id === target.id) loadUnitPanel(target.id, { quiet: true });
+      if (state.ctx && state.ctx.unit.id === target.id) state.ctx = null;
+    } catch (err) {
+      els.readingsError.hidden = false;
+      els.readingsError.textContent = isNetworkError(err) ? "Saving needs a connection." : `${err.code}: ${err.message}`;
+    } finally {
+      fx.btnReadingsSave.disabled = false;
+    }
+  }
+  fx.btnReadingsSave.addEventListener("click", () => saveReadingToUnit());
+  renderReadingsSaveButton();
+
+  /* ---- unit picker sheet (attach to chat / save readings to) ---- */
+  function showPickSheet(r) {
+    state.pickPurpose = r.screen === "chat" ? "attach" : "readings";
+    const attach = state.pickPurpose === "attach";
+    fx.pickTitle.textContent = attach ? "Attach a unit" : "Save readings to…";
+    fx.pickSub.textContent = attach ? "Job memory follows the unit: its findings, saved readings and prior jobs stay in view while you chat." : "The diagnosis is stored in this unit's readings history for the next visit.";
+    fx.pickSearch.value = "";
+    renderPickList();
+    showSheet(els.sheetPick);
+    if (!state.units.length) loadUnits().then(renderPickList);
+  }
+  function renderPickList() {
+    const list = fx.pickList;
+    list.textContent = "";
+    const units = filterUnits(state.units, fx.pickSearch.value);
+    if (!units.length) {
+      list.append(h("div", { class: "list-empty", text: state.units.length ? "No units match." : "No units yet — decode a nameplate first." }));
+      return;
+    }
+    for (const [site, group] of groupUnitsBySite(units)) {
+      list.append(h("div", { class: "group-head" }, h("span", null, icon("site", "icon icon-sm"), " ", site)));
+      for (const u of group) {
+        list.append(listRow(h("button", { class: "row", type: "button", onclick: () => pickUnit(u) },
+          h("div", { class: "row-lead" }, icon("units")),
+          h("div", { class: "row-body" }, h("div", { class: "row-title", text: unitLabel(u) }), h("div", { class: "row-sub" }, h("span", { text: unitSubtitle(u) || "No details yet" }))),
+          icon("chevron", "icon icon-sm row-chevron"),
+        ), { dataset: { pickUnitId: u.id } }));
+      }
+    }
+  }
+  fx.pickSearch.addEventListener("input", renderPickList);
+  fx.btnPickDecode.addEventListener("click", () => navigate("#units/decode"));
+  async function pickUnit(u) {
+    const purpose = state.pickPurpose;
+    closeSheets();
+    if (purpose === "attach") {
+      await attachUnitToChat(u);
+      return;
+    }
+    state.readingsUnit = u;
+    prefillReadingsFromUnit(u, { force: true });
+    renderReadingsUnitChip();
+    setTimeout(() => saveReadingToUnit(), 0);
+  }
+  async function attachUnitToChat(u) {
+    try {
+      if (!state.conversationId) {
+        await ensureConversation(u.id);
+      } else {
+        const r = await apiJson(`/api/conversations/${encodeURIComponent(state.conversationId)}`, { method: "PATCH", json: { unit_id: u.id } });
+        state.conversation = (r && r.conversation) || r || state.conversation;
+      }
+      state.unit = u;
+      renderHeader();
+      renderReadingsUnitChip();
+      loadConversations();
+      toast(`Attached ${unitLabel(u)}`);
+      if (state.route.screen !== "chat") navigate(`#chat/${state.conversationId}`);
+    } catch (e) {
+      showError(e.code, e.message);
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+
+  /* ---- unit card: readings history + trend ---- */
+  function buildReadingsCard(pu, u) {
+    const readings = pu.readings || [];
+    const card = h("div", { class: "card readings-card" },
+      h("div", { class: "card-title" }, h("span", { text: `Readings (${readings.length})` }),
+        h("button", { class: "text-btn", type: "button", text: "Add", onclick: () => { state.readingsUnit = u; prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } })));
+    if (pu.trend && Array.isArray(pu.trend.deltas) && pu.trend.deltas.length) card.append(buildTrendCallout(pu.trend));
+    if (pu.readingsFailed) card.append(h("div", { class: "list-empty", text: "Could not load the readings history." }));
+    else if (!readings.length) card.append(h("div", { class: "list-empty", text: "No saved readings yet. Diagnose on the Readings tab and tap Save to unit; the next visit then shows the trend." }));
+    else card.append(h("div", { class: "list rd-list", role: "list" }, ...readings.map((r) => readingRow(r, u))));
+    return card;
+  }
+  function buildTrendCallout(trend) {
+    return h("div", { class: "trend-callout", role: "note" },
+      h("div", { class: "trend-title" }, icon("wave", "icon icon-sm"), h("span", { text: `Trend since last visit · ${ymdLabel(trend.since)}` })),
+      h("div", { class: "chip-row" }, ...trend.deltas.map((d) => h("span", { class: `chip trend-chip ${d.direction}`, text: formatDelta(d) }))),
+      h("details", { class: "trend-more" },
+        h("summary", null, icon("chevron", "icon icon-sm"), h("span", { text: `What this suggests (${trend.deltas.length})` })),
+        h("ul", { class: "trend-lines" }, ...trend.deltas.map((d) => h("li", { text: d.line }))),
+      ),
+    );
+  }
+  function readingRow(r, u) {
+    const sm = readingSummary(r);
+    const detail = h("div", { class: "rd-detail", hidden: true });
+    const expand = h("button", { class: "icon-btn rd-expand", type: "button", "aria-expanded": "false", "aria-label": `Show every value from ${sm.title}` }, icon("chevron", "icon icon-sm"));
+    expand.addEventListener("click", () => {
+      const open = detail.hidden;
+      if (open && !detail.childElementCount) {
+        detail.append(h("div", { class: "rd-kv" }, ...readingDetailRows(r).map((row) => h("div", { class: "kv" }, h("span", { class: "kv-key", text: row.label }), h("span", { class: "kv-value", text: row.value })))));
+        if (!sm.valid && r.validity && r.validity.issues && r.validity.issues.length) detail.append(h("div", { class: "dc-warn", text: `Not valid for charge determination: ${r.validity.issues.join("; ")}` }));
+        if (sm.note) detail.append(h("p", { class: "dc-summary", text: sm.note }));
+        detail.append(h("div", { class: "btn-row" },
+          h("button", { class: "btn btn-sm", type: "button", onclick: () => insertIntoComposer(composeReadingsMessage(r.measurements || {}, r.derived || null)) }, icon("send", "icon icon-sm"), "Send to chat"),
+        ));
+      }
+      detail.hidden = !open;
+      expand.setAttribute("aria-expanded", String(open));
+      expand.classList.toggle("open", open);
+    });
+    const row = h("div", { class: "rd-row" },
+      h("div", { class: `row-lead ${sm.valid ? "ok" : "warn"}` }, icon("gauge")),
+      h("div", { class: "row-body" },
+        h("div", { class: "row-title", text: sm.title }),
+        h("div", { class: "row-sub rd-vals" }, h("span", { text: sm.values })),
+        h("div", { class: "row-sub" }, h("span", { class: "muted", text: `${sm.source === "chat" ? "From chat" : sm.source === "import" ? "Imported" : "Readings sheet"}${sm.valid ? "" : " · not valid for charge"}${sm.note ? ` · ${sm.note}` : ""}` })),
+      ),
+      h("div", { class: "rd-actions" }, expand, h("button", { class: "icon-btn", type: "button", "aria-label": `Delete reading from ${sm.title}`, onclick: () => deleteReading(r, u) }, icon("trash", "icon icon-sm"))),
+    );
+    return h("div", { class: "rd-item", role: "listitem" }, row, detail);
+  }
+  async function deleteReading(r, u) {
+    if (!confirm("Delete this saved reading? The trend will use the remaining readings.")) return;
+    try {
+      await apiJson(`/api/units/${encodeURIComponent(u.id)}/readings/${encodeURIComponent(r.id)}`, { method: "DELETE" });
+      toast("Reading deleted");
+      loadUnitPanel(u.id, { quiet: true });
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+
+  /* ---- finding sheet (add / edit, with follow-up due date) ---- */
+  let findingEdit = null; // {unitId, finding|null}
+  async function showFindingSheet(unitId, findingId) {
+    const pu = state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit : null;
+    const u = (pu && pu.unit) || state.unitsById.get(unitId) || (state.ctx && state.ctx.unit.id === unitId ? state.ctx.unit : null);
+    let finding = null;
+    if (findingId) {
+      finding = (pu && pu.findings.find((f) => f.id === findingId)) || (state.ctx && state.ctx.findings.find((f) => f.id === findingId)) || null;
+      if (!finding) {
+        try {
+          const j = await apiJson(`/api/findings/${encodeURIComponent(findingId)}`);
+          finding = (j && j.finding) || null;
+        } catch (e) {
+          toast(`${e.code}: ${e.message}`);
+        }
+        if (state.route.sheet !== "finding" || state.route.finding !== findingId) return; // navigated away meanwhile
+        if (!finding) return closeSheets();
+      }
+    }
+    findingEdit = { unitId, finding };
+    fx.findingTitle.textContent = finding ? "Edit finding" : "Add a finding";
+    fx.findingSub.textContent = u ? [unitLabel(u), u.site].filter(Boolean).join(" · ") : "";
+    fx.fiSymptom.value = finding ? finding.symptom || "" : "";
+    fx.fiCause.value = finding ? finding.cause || "" : "";
+    fx.fiResolution.value = finding ? finding.resolution || "" : "";
+    fx.fiStatus.value = finding ? finding.status || "open" : "open";
+    fx.fiCircuit.value = finding ? finding.circuit || "" : "";
+    fx.fiFollowUp.value = finding ? finding.follow_up || "" : "";
+    fx.fiDue.value = finding && finding.follow_up_due ? finding.follow_up_due : "";
+    fx.fiDone.checked = !!(finding && Number(finding.follow_up_done) === 1);
+    fx.fiDoneRow.hidden = !finding;
+    fx.findingError.hidden = true;
+    showSheet(els.sheetFinding);
+  }
+  fx.findingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!findingEdit) return;
+    const symptom = fx.fiSymptom.value.trim();
+    if (!symptom) {
+      fx.findingError.hidden = false;
+      fx.findingError.textContent = "Symptom is required.";
+      fx.fiSymptom.focus();
+      return;
+    }
+    const followUp = fx.fiFollowUp.value.trim() || null;
+    const body = {
+      symptom,
+      cause: fx.fiCause.value.trim() || null,
+      resolution: fx.fiResolution.value.trim() || null,
+      status: fx.fiStatus.value,
+      circuit: fx.fiCircuit.value.trim() || null,
+      follow_up: followUp,
+      follow_up_due: followUp ? fx.fiDue.value || null : null,
+    };
+    const { unitId, finding } = findingEdit;
+    if (finding) body.follow_up_done = fx.fiDone.checked ? 1 : 0;
+    else {
+      body.unit_id = unitId;
+      if (state.conversationId && state.unit && state.unit.id === unitId) body.conversation_id = state.conversationId;
+    }
+    fx.btnFindingSave.disabled = true;
+    try {
+      if (finding) await apiJson(`/api/findings/${encodeURIComponent(finding.id)}`, { method: "PATCH", json: body });
+      else await apiJson("/api/findings", { method: "POST", json: body });
+      toast(finding ? "Finding updated" : "Finding saved");
+      closeSheets();
+      if (state.panelUnit && state.panelUnit.unit.id === unitId) loadUnitPanel(unitId, { quiet: true });
+      if (state.ctx && state.ctx.unit.id === unitId) {
+        state.ctx = null;
+        renderCtxPanel();
+      }
+      loadFollowUps({ quiet: true });
+    } catch (err) {
+      fx.findingError.hidden = false;
+      fx.findingError.textContent = `${err.code}: ${err.message}`;
+    } finally {
+      fx.btnFindingSave.disabled = false;
+    }
+  });
+
+  /* ---- History: follow-ups section + tab badge ---- */
+  async function loadFollowUps({ quiet = false } = {}) {
+    const status = state.followups && state.followups.status === "done" ? "done" : "open";
+    try {
+      const json = await apiJson(`/api/followups?status=${status}&limit=100`);
+      state.followups = { status, items: pickList(json, "followups"), counts: (json && json.counts) || {}, today: (json && json.today) || localYmd() };
+      renderFollowUps();
+      renderHistoryBadge();
+    } catch (e) {
+      if (quiet) return;
+      fx.followups.hidden = false;
+      fx.followups.textContent = "";
+      fx.followups.append(h("div", { class: "list-empty", text: `Could not load follow-ups: ${e.message}` }));
+    }
+  }
+  function renderHistoryBadge() {
+    const n = state.followups && state.followups.counts ? Number(state.followups.counts.overdue || 0) : 0;
+    for (const el of fx.historyCounts) {
+      el.hidden = !(n > 0);
+      el.textContent = n > 99 ? "99+" : String(n);
+      el.setAttribute("aria-label", `${n} overdue follow-up${n === 1 ? "" : "s"}`);
+    }
+  }
+  function renderFollowUps() {
+    const fu = state.followups;
+    const box = fx.followups;
+    box.textContent = "";
+    if (!fu) {
+      box.hidden = true;
+      return;
+    }
+    const { items, counts, status } = fu;
+    const openCount = Number(counts.open || 0);
+    if (status === "open" && !items.length && !openCount) {
+      box.hidden = true; // nothing to follow up: keep History clean
+      return;
+    }
+    box.hidden = false;
+    box.append(h("div", { class: "card-title" },
+      h("h2", { id: "followups-title", class: "card-title-text", text: `Follow-ups (${status === "open" ? openCount : items.length})` }),
+      h("button", { class: "text-btn", type: "button", text: status === "open" ? "Show done" : "Show open", onclick: () => { state.followups.status = status === "open" ? "done" : "open"; loadFollowUps(); } }),
+    ));
+    if (status === "open" && (counts.overdue || counts.dueThisWeek)) {
+      box.append(h("div", { class: "chip-row fu-counts" },
+        counts.overdue ? h("span", { class: "chip chip-danger", text: `${counts.overdue} overdue` }) : null,
+        counts.dueThisWeek ? h("span", { class: "chip chip-warn", text: `${counts.dueThisWeek} due this week` }) : null,
+      ));
+    }
+    if (!items.length) box.append(h("div", { class: "list-empty", text: status === "open" ? "Nothing open." : "No completed follow-ups yet." }));
+    else box.append(h("div", { class: "list fu-list", role: "list" }, ...items.map(followUpRow)));
+  }
+  function followUpRow(f) {
+    const chip = dueChip(f.follow_up_due, f.follow_up_done, state.followups.today);
+    const done = Number(f.follow_up_done) === 1;
+    const unitTitle = [f.unit_tag || f.unit_nickname || f.unit_model || "No unit", f.unit_site].filter(Boolean).join(" · ");
+    const check = h("button", { class: `fu-check${done ? " done" : ""}`, type: "button", role: "checkbox", "aria-checked": String(done), "aria-label": `${done ? "Reopen" : "Done"}: ${f.follow_up}`, onclick: () => toggleFollowUp(f) }, icon("check", "icon icon-sm"));
+    const open = () => {
+      if (f.unit_id) navigate(`#unit/${f.unit_id}`);
+      else if (f.conversation_id) navigate(`#chat/${f.conversation_id}`);
+    };
+    const body = h("button", { class: "fu-body", type: "button", onclick: open },
+      h("div", { class: "row-title", text: unitTitle }),
+      h("div", { class: "fu-text", text: f.follow_up }),
+      h("div", { class: "row-sub" }, h("span", { class: `chip due-chip ${chip.kind}`, text: chip.label }), h("span", { text: f.conversation_title || f.symptom || "" })),
+    );
+    return h("div", { class: `fu-row${done ? " done" : ""}`, role: "listitem" }, check, body);
+  }
+  async function toggleFollowUp(f) {
+    const next = Number(f.follow_up_done) === 1 ? 0 : 1;
+    try {
+      await apiJson(`/api/findings/${encodeURIComponent(f.id)}`, { method: "PATCH", json: { follow_up_done: next } });
+      toast(next ? "Follow-up done" : "Follow-up reopened");
+      await loadFollowUps({ quiet: true });
+      if (state.panelUnit && f.unit_id && state.panelUnit.unit.id === f.unit_id) loadUnitPanel(f.unit_id, { quiet: true });
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+
   /* ---------- init ---------- */
   let booted = false;
   async function init() {
+    if (noServerConfigured()) {
+      // Bundled build with no server yet: go straight to Settings with the prompt instead of a wall of errors.
+      booted = true;
+      renderReadingsUnitChip();
+      navigate("#settings", { replace: true });
+      renderNoServer();
+      return;
+    }
     loadHealth();
     loadRefrigerants();
     await loadUnits();
     loadConversations();
+    loadFollowUps({ quiet: true });
     if (!booted) {
       booted = true;
       const r = parseHash(currentHash());
@@ -4080,6 +5159,8 @@ function boot() {
  * ---------------------------------------------------------------------------------------- */
 
 globalThis.HVAC_UI = {
+  // readings history + follow-ups
+  readingSummary, readingDetailRows, formatDelta, dueChip, localYmd, ymdLabel, addDaysYmd, readingDateLabel, MODE_SHORT, READING_MEASUREMENT_FIELDS, READING_DERIVED_FIELDS,
   parseSseFrames, escapeHtml, relTime, dayLabel, groupUnitsBySite, unitLabel, unitBadgeText, sortFindings, isHypothesis,
   needsNameplateVerify, toNum, buildMeasurements, composeReadingsMessage, composeCalcMessage, pickList, fmtNum,
   parseHash, groupSearchHits, filterUnits, timeOfDay,
@@ -4088,6 +5169,8 @@ globalThis.HVAC_UI = {
   apiKeyFieldCopy, apiKeyProblem, mergeModelLists, testResultCopy, demoBannerMode, correctionsExportToast, EFFORT_LEVELS,
   importTemplateText, importSummaryText, importButtonLabel, importRowText, canApplyCorrection, correctionPrefill,
   correctionsExportFilename, CORRECTION_FIELDS, APPLICABLE_CORRECTION_FIELDS,
+  truncateText, filenameFromDisposition, reportFilename, reportShareText, reportSharePayload, appBaseUrl, unitUrl, labelText,
+  qrMatrix, qrPathFromMatrix, qrSvgMarkup, labelsDocumentHtml, serverUrlPrompt,
   DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION, SSE_IDLE_MS,
 };
 

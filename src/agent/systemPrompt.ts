@@ -1,4 +1,5 @@
-import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, UnitRow } from "../types.ts";
+import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, ReadingRow, UnitRow } from "../types.ts";
+import { MODE_LABEL, toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
 
 /** Soft character cap for the unit context block (~1500 tokens). */
 export const UNIT_CONTEXT_MAX_CHARS = 6000;
@@ -28,7 +29,7 @@ Follow this order unless the tech clearly needs something else:
 4. Fault history: board LEDs and stored codes, tripped safeties (HPS, LPS, freeze stat, high limit, rollout, phase monitor, duct smoke, fire-alarm relay), breakers and fuses.
 5. Non-invasive checks: filters, belts, coils, external static, delta-T, amps, line and air temperatures. Most calls are solved here.
 6. Gauges only when justified. Every hookup loses charge and admits contaminants; A2L systems need rated hoses, detector and recovery gear.
-7. Run diagnose_refrigeration on the readings and respect its validity gate.
+7. Run diagnose_refrigeration on the readings and respect its validity gate. When the unit has saved readings from an earlier visit, the tool result and the unit context carry a "trend since last visit": if the new readings differ from the last visit, say so and what the direction suggests (same mode, similar ambient only).
 8. Verify the fix (readings back in range, safeties reset, a full cycle observed), then offer save_finding. Ask the tech to confirm the cause and fix before saving with confirmed=true.`;
 
 const TOOLS = `# Tools
@@ -206,7 +207,7 @@ function formatFinding(f: FindingRow): string {
   if (typeof f.refrigerant_added_lbs === "number" && f.refrigerant_added_lbs > 0) extras.push(`added ${f.refrigerant_added_lbs} lb`);
   if (typeof f.refrigerant_recovered_lbs === "number" && f.refrigerant_recovered_lbs > 0) extras.push(`recovered ${f.refrigerant_recovered_lbs} lb`);
   if (f.tags) extras.push(`tags: ${clip(f.tags, 80)}`);
-  if (f.follow_up) extras.push(`follow-up: ${clip(f.follow_up, 120)}`);
+  if (f.follow_up) extras.push(`follow-up${f.follow_up_done === 1 ? " (done)" : f.follow_up_due ? ` due ${f.follow_up_due}` : ""}: ${clip(f.follow_up, 120)}`);
   if (f.origin === "assistant" && f.confirmed === 1) extras.push("assistant, confirmed by tech");
   if (extras.length) bits.push(extras.join(" | "));
   return `- ${bits.join(" — ")}`;
@@ -344,6 +345,68 @@ function refrigerantAddedLine(findings: FindingRow[]): string | null {
 }
 
 const MAX_CORRECTIONS = 10;
+const MAX_FOLLOW_UPS = 8;
+const MAX_READINGS = 3;
+
+/** "Open follow-ups: ..." — findings with a follow-up not yet done, due-first; empty when none. */
+function followUpsSection(findings: FindingRow[], now: Date): string[] {
+  const open = findings.filter((f) => str(f.follow_up) && f.follow_up_done !== 1);
+  if (open.length === 0) return [];
+  const today = now.toISOString().slice(0, 10);
+  open.sort((a, b) => {
+    const ad = a.follow_up_due ?? "9999";
+    const bd = b.follow_up_due ?? "9999";
+    return ad < bd ? -1 : ad > bd ? 1 : findingMs(b) - findingMs(a);
+  });
+  const items = open.slice(0, MAX_FOLLOW_UPS).map((f) => {
+    const due = f.follow_up_due ? (f.follow_up_due < today ? `OVERDUE since ${f.follow_up_due}` : `due ${f.follow_up_due}`) : "no due date";
+    return `${clip(f.follow_up ?? "", 140)} (${due}; finding of ${dateOnly(findingDateIso(f)) ?? "undated"})`;
+  });
+  const more = open.length > MAX_FOLLOW_UPS ? ` … +${open.length - MAX_FOLLOW_UPS} more` : "";
+  return [`Open follow-ups: ${items.join("; ")}${more}. Raise these at the start of the visit.`];
+}
+
+function numStr(v: unknown, digits = 1): string | null {
+  if (typeof v !== "number" || !Number.isFinite(v)) return null;
+  return String(Math.round(v * 10 ** digits) / 10 ** digits);
+}
+
+/** Last MAX_READINGS saved readings (one compact line each, newest first) plus the trend lines. */
+function readingsSection(readings: ReadingRow[]): string[] {
+  const rows = Array.isArray(readings) ? readings.filter((r) => isRecord(r) && typeof r.created_at === "string") : [];
+  if (rows.length === 0) return [];
+  const sorted = [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
+  const lines = [`SAVED READINGS (${rows.length}${rows.length > MAX_READINGS ? `, last ${MAX_READINGS} shown` : ""}; newest first)`];
+  for (const row of sorted.slice(0, MAX_READINGS)) {
+    const t = toTrendReading(row);
+    const m = t.measurements ?? {};
+    const d = t.derived ?? {};
+    const bits: string[] = [];
+    const push = (label: string, v: unknown, unit = "") => {
+      const s = numStr(v);
+      if (s !== null) bits.push(`${label} ${s}${unit}`);
+    };
+    push("OD", m.outdoorDbF, "°F");
+    push("suction", m.suctionPsig, " psig");
+    push("liquid", m.liquidPsig, " psig");
+    push("SH", d.superheatF, "°F");
+    push("SC", d.subcoolingF, "°F");
+    push("ΔT", d.deltaTF, "°F");
+    push("amps", d.ampsPercentRla, "% RLA");
+    const validity = safeJson(row.validity_json);
+    const notValid = isRecord(validity) && validity.ok === false ? " [not valid for charge]" : "";
+    const note = str(row.note) ? ` — ${clip(String(row.note), 80)}` : "";
+    lines.push(`- ${dateOnly(row.created_at)} ${MODE_LABEL[row.mode] ?? row.mode} (${row.source}): ${bits.join(", ") || "no numbers"}${notValid}${note}`);
+  }
+  const trend = trendFromReadings(rows);
+  if (trend) {
+    lines.push(`TREND SINCE LAST VISIT (${trend.since}):`);
+    for (const l of trend.lines) lines.push(`- ${l}`);
+  } else if (rows.length >= 2) {
+    lines.push("Trend since last visit: no notable change against the last comparable reading (same mode, similar ambient), or none comparable.");
+  }
+  return lines;
+}
 
 /** Technician decode corrections, newest first; empty when none. */
 function correctionsSection(corrections: CorrectionRow[]): string[] {
@@ -377,6 +440,7 @@ export function unitContextBlock(
   currentConversationId: string,
   now: Date = new Date(),
   corrections: CorrectionRow[] = [],
+  readings: ReadingRow[] = [],
 ): string {
   const safeFindings = Array.isArray(findings) ? findings.filter((f) => isRecord(f)) : [];
   const safeConvos = Array.isArray(conversations) ? conversations.filter((c) => isRecord(c)) : [];
@@ -393,6 +457,12 @@ export function unitContextBlock(
   if (corr.length) {
     out.push("");
     out.push(...corr);
+  }
+  // Open follow-ups come before the findings so truncation never drops them.
+  const fu = followUpsSection(safeFindings, now);
+  if (fu.length) {
+    out.push("");
+    out.push(...fu);
   }
 
   const byNewest = (a: FindingRow, b: FindingRow) => findingMs(b) - findingMs(a);
@@ -424,6 +494,12 @@ export function unitContextBlock(
       out.push("");
       out.push(refr);
     }
+  }
+
+  const rd = readingsSection(readings);
+  if (rd.length) {
+    out.push("");
+    out.push(...rd);
   }
 
   const others = safeConvos

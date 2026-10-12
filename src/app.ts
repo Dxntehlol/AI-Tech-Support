@@ -11,6 +11,10 @@ import { decodeRouter, findingsRouter, unitsRouter } from "./routes/units.ts";
 import { settingsRouter } from "./routes/settings.ts";
 import { usageRouter } from "./routes/usage.ts";
 import { correctionsRouter } from "./routes/corrections.ts";
+import { reportsRouter } from "./routes/reports.ts";
+// readings history + follow-ups (DESIGN.md "Readings history", "Follow-ups")
+import { readingsRouter } from "./routes/readings.ts";
+import { followupsRouter } from "./routes/followups.ts";
 import { apiNotFound, errorHandler } from "./routes/util.ts";
 import { createRuntime, type Runtime } from "./runtime.ts";
 import type { AiSettings } from "./aiSettings.ts";
@@ -125,7 +129,9 @@ export function createApp(appDeps: AppDeps): Express {
     });
   });
 
+  api.use(reportsRouter(deps)); // GET /conversations/:id/report, GET /units/:id/report
   api.use("/conversations", conversationsRouter(deps));
+  api.use("/units", readingsRouter(deps)); // GET/DELETE /units/:id/readings[/:rid] — before unitsRouter so /:id does not swallow them
   api.use("/units", unitsRouter(deps));
   api.use("/decode", decodeRouter(deps));
   api.use("/findings", findingsRouter(deps));
@@ -136,6 +142,7 @@ export function createApp(appDeps: AppDeps): Express {
   api.use("/settings", settingsRouter(deps));
   api.use("/usage", usageRouter(deps));
   api.use("/corrections", correctionsRouter(deps));
+  api.use("/followups", followupsRouter(deps));
   api.use(apiNotFound);
   app.use("/api", api);
 

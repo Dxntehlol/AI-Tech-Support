@@ -396,6 +396,7 @@ async function runTurnInner(
       conversationId,
       now(),
       repos.corrections.list({ unitId: unit.id, limit: 50 }),
+      repos.readings.list({ unitId: unit.id, limit: 20 }),
     );
     return [staticBlock, { type: "text", text: block }];
   };

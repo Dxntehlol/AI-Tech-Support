@@ -65,18 +65,20 @@ tests; no new npm dependencies.
     config.ts           # env/config loading (loadDotEnv, loadConfig, PROJECT_ROOT)
     server.ts           # entry: builds deps, starts listening, graceful shutdown
     app.ts              # createApp(deps) — express app factory
-    routes/*.ts         # conversations, units, fleetImport, corrections, reference, search, auth, settings, usage
+    routes/*.ts         # conversations, units, fleetImport, corrections, reference, search, auth, settings, usage, readings, followups
     importParse.ts      # pure CSV/TSV/plain-line fleet parser (bulk import)
     settingsStore.ts  aiSettings.ts  runtime.ts   # settings.env + hot-swappable client (Settings → AI connection)
     db/schema.ts        # SCHEMA_SQL constant (idempotent)
     db/index.ts         # openDatabase(path), newId(), isId(), nowIso()
-    db/repos.ts         # createRepos(db): units/conversations/messages/findings/usage/corrections + search, transaction
+    db/repos.ts         # createRepos(db): units/conversations/messages/findings/readings/usage/corrections + search, transaction
     knowledge/loader.ts # loads + validates all JSON packs (KnowledgeBase)
     knowledge/refrigerants.ts   # PT lookup, interpolation, SH/SC, elevation correction (DONE)
     knowledge/diagnostics.ts    # DX rule engine
     knowledge/electrical.ts     # electrical calculators + reference lookup
     knowledge/decoder.ts        # model/serial decoder engine
     knowledge/faults.ts         # fault-code lookup across packs
+    knowledge/trend.ts          # readings trend: compareReadings(prev, cur) → notable deltas with plain-English lines
+    readingsStore.ts            # storeReading / readingView / unitReadingsSummary (shared by routes and the diagnose tool)
     agent/client.ts             # MessagesStreamer / StreamLike interfaces + real client (DONE)
     agent/fakeClient.ts         # scripted fake client for tests and demo mode
     agent/systemPrompt.ts       # static system prompt + unit-context builder
@@ -108,7 +110,23 @@ the contract; extend types with optional fields only.
 - `findings`: symptom/cause/resolution, measurements_json, parts_json, tags
   (comma-separated lowercase tokens), circuit, `status` (open|resolved|monitor),
   service_date, refrigerant, refrigerant_added_lbs, refrigerant_recovered_lbs, follow_up,
-  `origin` (tech|assistant), `confirmed` (0|1).
+  `follow_up_due` (TEXT NULL, calendar date `YYYY-MM-DD`, validated as a real date), `follow_up_done`
+  (INTEGER NOT NULL DEFAULT 0), `origin` (tech|assistant), `confirmed` (0|1). A "follow-up" is a
+  finding with a non-empty `follow_up`; the two columns are added to existing databases by a guarded
+  `ALTER TABLE` in `openDatabase` (`FINDINGS_COLUMN_MIGRATIONS`, checked against `PRAGMA table_info`),
+  followed by `idx_findings_follow_up (follow_up_done, follow_up_due)`.
+- `readings` (readings history per unit): id, `unit_id` (CASCADE on unit hard delete),
+  `conversation_id` (SET NULL), created_at, `mode`, `refrigerant`, `metering_device`,
+  `measurements_json` (DxMeasurements as entered), `derived_json` (DxDerived), `validity_json`
+  (`{ok, issues}`), `findings_json` (`[{ruleId, severity}]` only), `note`, `source`
+  (`sheet` = Readings sheet "Save to unit" / `POST /api/calc/diagnose` with `unit_id`; `chat` = the
+  assistant's `diagnose_refrigeration` on an attached unit; `import`). Indexed `(unit_id, created_at DESC)`.
+  Trend (`src/knowledge/trend.ts`, pure): `compareReadings(prev, cur)` compares only rows in the same
+  mode with outdoor DB recorded on both and within 15 °F, and reports deltas past a threshold
+  (SH ≥ 4 °F, SC ≥ 3, condSat ≥ 5, evapSat ≥ 4, ΔT ≥ 3, amps ≥ 10 % RLA, suction ≥ max(5 psi, 8 %),
+  liquid ≥ max(15 psi, 5 %)) each with a direction hint and one line ("Subcooling fell from 12 to 4 °F
+  since 2026-08-02 (same mode) - charge loss or restriction trend"); `trendFromReadings(rows)` pairs
+  the newest row with the most recent earlier comparable row (window: last 20 rows).
 - `usage_events`: one row per model request (conversation_id SET NULL on delete, created_at, model
   served, input/output/cache-read/cache-write tokens, web_searches, stop_reason); pruned after 400 days.
 - `corrections` (technician "it got this wrong" list): unit_id (SET NULL on hard delete), created_at,
@@ -410,15 +428,18 @@ site/customer/tag/nickname/model/serial → top matches with last finding date; 
 `refrigerant_pt` (refrigerant, psig?, temp_f?, elevation_ft?) — bubble/dew/glide/safety class +
 retrofit/lubricant notes; `calc_superheat_subcooling`; `diagnose_refrigeration` (all
 DxMeasurements fields in snake_case) — returns derived, validity, findings (top 6), missing,
-summary; `electrical_reference` (query, kind); `calc_electrical`; `lookup_fault_code` (code,
+summary; with a unit attached it also stores a readings row (source `chat`) and returns `readingId` +
+`trendSinceLastVisit` (lines from `trendFromReadings`), never failing the diagnosis over storage; `electrical_reference` (query, kind); `calc_electrical`; `lookup_fault_code` (code,
 manufacturer?, platform?; accepts LED patterns like "IGC 3 flashes") — result text includes the
 platform's `coverage` and each entry's `source`; `search_history` (query, unit_only?, site?,
-since?) ≤ 10 hits, 300-char snippets; `get_unit_history` (unit_id?) — record, decode, findings,
-conversations, and `technicianCorrections` ("Technician corrections - trust these over the decoder";
-≤ 20: field/appValue/actualValue/note/appliedToUnit); `save_finding` (symptom,
+since?) ≤ 10 hits, 300-char snippets; `get_unit_history` (unit_id?) — record, decode, `openFollowUps` first
+(findingId, due, text, symptom, status; findings with a follow_up not yet done), findings,
+`readings` (last 3, compact: date, mode, source, OD, suction/liquid psig, SH/SC/evapSat/condSat/ΔT/% RLA,
+validForCharge, note) + `trendSinceLastVisit` {since, lines}, conversations, and `technicianCorrections`
+("Technician corrections - trust these over the decoder"; ≤ 20: field/appValue/actualValue/note/appliedToUnit); `save_finding` (symptom,
 cause?, resolution?, measurements?, parts?, tags?, circuit?, status?, refrigerant?,
-refrigerant_added_lbs?, follow_up?, confirmed?) — `origin: "assistant"`, `confirmed` only when
-the tech explicitly confirmed; `update_unit` (nickname, unit_tag, site, customer,
+refrigerant_added_lbs?, follow_up?, follow_up_due? (YYYY-MM-DD, stored only with a follow_up),
+confirmed?) — `origin: "assistant"`, `confirmed` only when the tech explicitly confirmed; `update_unit` (nickname, unit_tag, site, customer,
 location_note, refrigerant, tonnage, voltage, phase, circuits, charge, nameplate, control_platform,
 heat_type, metering_device, install_year, elevation_ft, notes); `set_conversation` (title?,
 summary?).
@@ -467,10 +488,15 @@ Unit context block (second system block, ≤ ~1500 tokens): unit record (tag, mo
 customer, refrigerant, tonnage, voltage/phase, circuits, charge, nameplate data, control
 platform, age), decoded summary + warnings, "TECHNICIAN CORRECTIONS - trust these over the decoder"
 (newest 10: date, field, app said → actual, applied, note; placed before findings so truncation never
-drops it; omitted when none), open/monitor findings first, then the last 5
-confirmed findings (date, circuit, symptom → cause → resolution, measurements condensed),
-assistant hypotheses (unconfirmed) listed separately, refrigerant added in the last 12 months,
-last 5 conversation titles + summaries + dates excluding the current one; no "now" timestamps.
+drops it; omitted when none), then "Open follow-ups: …" (follow-ups not done, due-first, `OVERDUE since`
+/ `due` / `no due date`, ≤ 8; also before the findings), open/monitor findings first, then the last 5
+confirmed findings (date, circuit, symptom → cause → resolution, measurements condensed; a follow-up
+shows `due <date>` or `(done)`), assistant hypotheses (unconfirmed) listed separately, refrigerant added in
+the last 12 months, then "SAVED READINGS" (last 3, one compact line each: date, mode, source, OD,
+suction/liquid, SH/SC/ΔT/% RLA, `[not valid for charge]`, note) with "TREND SINCE LAST VISIT (date)" lines
+from `trendFromReadings` (or a "no notable change" sentence when ≥ 2 rows), last 5 conversation titles +
+summaries + dates excluding the current one; no "now" timestamps. `runTurn` passes
+`repos.readings.list({unitId, limit: 20})`.
 
 System prompt (deterministic; cached) — required content:
 
@@ -483,7 +509,9 @@ System prompt (deterministic; cached) — required content:
   LPS/freeze/limit/rollout/phase monitor/duct smoke/fire-alarm relay, breakers/fuses); (5)
   non-invasive checks (filters, belts, coils, ESP, delta-T, amps, temps); (6) gauges only when
   justified (every hookup loses charge and admits contaminants; A2L needs rated gear); (7)
-  `diagnose_refrigeration` with validity; (8) verify the fix, then offer `save_finding`, asking
+  `diagnose_refrigeration` with validity — when the tool result or unit context carries a "trend
+  since last visit", mention that the new readings differ from the last visit and what the direction
+  suggests (same mode, similar ambient only); (8) verify the fix, then offer `save_finding`, asking
   the tech to confirm before saving `confirmed`. Batch entry of readings is fine; otherwise one
   or two measurements at a time with the expected value and what each outcome means.
 - Provenance: never state a fault-code meaning, serial date, or model attribute that did not
@@ -525,7 +553,13 @@ DELETE /api/conversations/:id
 POST /api/conversations/:id/messages {text, images?} -> SSE (409 if busy)
 POST /api/conversations/:id/stop                   {stopped: boolean}
 GET  /api/units?q=&site=&limit=&include_archived=   POST /api/units {model?, serial?, manufacturer?, unit_tag?, ...} (decodes when model given; 200 if exists)
-GET  /api/units/:id                 {unit, decoded, findings, conversations, corrections}   PATCH / DELETE (archives)
+GET  /api/units/:id                 {unit, decoded, findings, conversations, corrections, lastReading, trend}   PATCH / DELETE (archives)
+                                                  lastReading = newest readings row (JSON columns parsed) or null; trend = {prevId, since, mode, deltas[], lines[]} or null
+GET  /api/units/:id/readings?limit=   {readings (newest first; default 20, max 200), trend}
+DELETE /api/units/:id/readings/:rid   {deleted, id}   (404 unless the row belongs to that unit)
+GET  /api/followups?status=open|done|all&limit=   {followups: finding ⋈ unit(site, tag, model, nickname) ⋈ conversation(title),
+                                                   counts{open, overdue, dueThisWeek} (always over the open set), today}
+                                                  sorted due date ASC (nulls last) then created_at DESC; default open, limit 100 (max 500)
 POST /api/units/import {text?|rows?, dryRun}   {dryRun, source, delimiter?, header?, ignoredColumns, warnings,
                                                   summary{total,new,duplicate,error,created}, createdIds, rows[]}
 POST /api/units/:id/corrections {field, app_value?, actual_value, note?, apply?}   201 {correction, unit, decoded}
@@ -534,13 +568,17 @@ POST /api/corrections/export {}                    attachment hvac-corrections-Y
                                                   {kind, version, appVersion, exportedAt, count, newlyExported, corrections}; marks all exported
 POST /api/decode {model, serial?, manufacturer?}   DecodeResult
 GET  /api/search?q=&unit_id=&site=&since=&limit=   SearchHit[] (messages + findings + units)
-GET  /api/findings?unit_id=&conversation_id=       POST /api/findings   DELETE /api/findings/:id
+GET  /api/findings?unit_id=&conversation_id=       POST /api/findings   PATCH /api/findings/:id   DELETE /api/findings/:id
+                                                  POST/PATCH also accept follow_up_due (YYYY-MM-DD | null) and follow_up_done (bool)
+GET  /api/conversations/:id/report?format=md|html|json   service report (default md); html = self-contained printable page; Content-Disposition inline
+GET  /api/units/:id/report?format=md|html|json           unit report: nameplate, findings by date, corrections, last 5 conversations
 GET  /api/export                                   JSON of units, conversations, messages (no image data), findings, corrections;
                                                   `complete`/`truncated[]`/`limit` say whether any collection hit the per-list cap
 GET  /api/reference/refrigerants
 GET  /api/reference/pt?refrigerant=&psig=|temp_f=&elevation_ft=   (bubble, dew, midpoint, glide, safety class, notes)
 POST /api/calc/superheat-subcooling  {DxMeasurements-like; snake_case or camelCase}
-POST /api/calc/diagnose              {DxMeasurements-like}
+POST /api/calc/diagnose              {DxMeasurements-like, unit_id?, conversation_id?, note?}   DxResult; with unit_id the diagnosis is
+                                                  stored as a readings row (source "sheet") and the response gains {readingId}
 POST /api/calc/electrical            {ElectricalCalcRequest}
 GET  /api/reference/electrical?component=|symptom=|q=
 GET  /api/reference/fault?code=&manufacturer=&platform=
@@ -674,6 +712,24 @@ prefetcher cannot mark corrections exported; a GET of the path is a 404.
 Settings → Decode corrections shows the open count and Export (authenticated POST → Blob
 download; on iOS `navigator.share` with a File, else the JSON opens in a new tab).
 
+### Service reports (`src/reports.ts`, `src/routes/reports.ts`)
+
+Pure builders turn stored rows into one structured object (the `json` format) that `md` and `html` render.
+Conversation report: header (site, tag, model, serial, manufacturer, tonnage, refrigerant, controls, age, dates,
+technician line), "Complaint" (first user chat text, whitespace-collapsed, ≤ 400 chars), "Readings" (every
+`diagnose_refrigeration` / `calc_superheat_subcooling` tool_use block paired with its tool_result by id —
+measurements from the input, derived values / validity / top findings / summary from the result; interrupted calls
+say so — plus readings-sheet messages `Readings (…): …`), "Findings" (rows with `conversation_id` = this
+conversation: symptom → cause → resolution, parts, refrigerant added, confirmed / hypothesis / status),
+"Open items / follow-up" (open and monitor findings, any `follow_up`), "Assistant summary" (last assistant text:
+kept as markdown in md; rendered in html with `marked` through a renderer that escapes raw HTML, drops images
+and allows only http(s)/mailto links — nothing from the database or the model reaches the page unescaped).
+Unit report: nameplate block (+ decoder warnings), findings grouped by `service_date` newest first,
+corrections, last 5 conversations (title, date, summary). html is a self-contained printable page (inline CSS,
+`@media print`, no external assets, "Print / Save as PDF" button → `window.print()`); md is `text/markdown`.
+Filenames: `hvac-report-<tag|model>-<date>.<ext>` / `hvac-unit-<tag|model>-<date>.<ext>`, sent
+`Content-Disposition: inline`. Routes are behind auth; `format` other than md/markdown/html/json → 400.
+
 ## Web UI
 
 Single page, mobile-first (≥ 900 px: sidebar | chat | unit panel; phones: top bar toggling
@@ -687,6 +743,13 @@ shown (best effort).
 - Sidebar: FTS search (debounced), New conversation, Units grouped by site (click → unit panel +
   its conversations), Conversations list (title, relative time, unit tag/model badge), delete
   with confirmation.
+- History: a "Follow-ups" card at the top (`GET /api/followups`; hidden when nothing is open) with
+  "N overdue" / "N due this week" chips, "Show done" toggle, and one row per follow-up: a 44 px Done
+  checkbox (PATCH `follow_up_done`), unit tag · site, the follow-up text, a due chip (`dueChip`:
+  overdue red / due within 7 days amber / later outline / no date / done) and the conversation title;
+  tapping the row opens the unit (else the conversation). The History tab shows a red count badge
+  (`.tab-count`) with the number of overdue follow-ups; it is refreshed at boot, on the History screen
+  and after any finding patch.
 - Chat: markdown via marked + DOMPurify (links target=_blank rel=noopener), user images as
   thumbnails, tool chips inline in order (spinner → ✓/✗ + summary; click to expand input/
   result), streaming deltas, auto-scroll unless scrolled up, notices muted, errors as a banner
@@ -702,15 +765,43 @@ shown (best effort).
   refrigerant (prefilled from unit), metering device, mode, suction psig/line temp, liquid psig/
   temp, discharge temp, outdoor DB, entering DB/WB, supply DB, amps L1/L2/L3 + RLA, ESP,
   capacity %, economizer position, elevation; "Diagnose" posts to `/api/calc/diagnose`, shows
-  the result, and "Send to chat" inserts a compact readings message.
+  the result, and "Send to chat" inserts a compact readings message. "Save" in the action bar and
+  "Save to <unit>" under the result post the same form with `unit_id` (the attached unit, else the unit
+  chosen in the `#readings/pick` unit-picker sheet; `conversation_id` when the chat's unit matches),
+  render the result with a "Saved to unit" chip and toast; the picker sheet (`#sheet-pick`: search +
+  units grouped by site, "Decode a new unit") is also what the chat's unit button opens when no unit
+  is attached (`#chat/<id>/pick` → attach).
 - Unit panel: form (manufacturer hint, model, serial, unit tag, nickname, site, customer,
   elevation) → Decode (POST /api/decode) → card: manufacturer/family/product type, attributes
   table, manufacture date & age, control platforms (codes count), warnings, confidence chips,
   "verify on nameplate" badge whenever any match is not `high`, evidence summary, literature
   link; Save unit; Attach to conversation; findings list (open/monitor first; hypotheses marked)
-  with a "confirm" action; "New conversation on this unit". Calculators accordion: PT lookup,
+  with a "confirm" action; "New conversation on this unit"; "Add" on the findings card and "Edit" on a finding open the finding
+  sheet (`#unit/<id>/finding[/<findingId>]`: symptom, cause, fix, status, circuit, follow-up text,
+  `type=date` due date, "Follow-up done" when editing → POST/PATCH `/api/findings`); a finding's
+  follow-up line carries a due chip. "Readings" card (`GET /api/units/:id/readings?limit=20` beside the
+  unit): "Trend since last visit · <date>" callout (↑/↓ chips per delta from `formatDelta`, the
+  plain-English lines under a disclosure), compact rows (date · mode / SH · SC · ΔT · amps (% RLA) /
+  source, `readingSummary`) with a 44 px chevron expanding every entered and derived value
+  (`readingDetailRows`) plus "Send to chat", and delete (confirm → `DELETE …/readings/:rid`); "Add"
+  prefills the Readings sheet for that unit. Calculators accordion: PT lookup,
   SH/SC, voltage imbalance, capacitor, temp-rise CFM, winding check, psychrometrics — each with
   "Send to chat".
+- Share report: chat header share button → `#chat/<id>/share` bottom sheet; unit card "Unit report" (also in
+  unit actions) → `#unit/<id>/report`, same sheet. Three actions: "Share text" (`navigator.share` with a
+  plain-text summary built from the json report by `reportSharePayload`; fallback copy + toast), "Open
+  printable" (the window is opened synchronously in the tap, then the html report is fetched with the Bearer
+  token and written into it; when the popup is blocked a Blob-URL link appears in the sheet), "Copy Markdown"
+  (ClipboardItem with a promise so Safari keeps the gesture, else `writeText`).
+- QR labels: unit card "QR label" (also in unit actions) → `#unit/<id>/qr` sheet with a black-on-white label
+  (QR of `<app base>/#unit/<id>` at EC level M via the vendored MIT `web/vendor/qrcode.js`, rendered as a crisp
+  SVG path; tag · nickname, site · customer, manufacturer model, S/N, the URL), "Print label", "Copy link",
+  "Share link". Units top-bar overflow (`#units/actions`) → "Print QR labels" (`#units/labels`): one label per
+  unit on the current filter, opened as a self-contained document (two columns on paper, `@page` margins, Print
+  button). Scanning with the phone camera opens the URL in the browser and `#unit/<id>` routes to the unit from
+  a cold load; an installed PWA is not launched by the camera. Pure helpers (`unitUrl`, `appBaseUrl`,
+  `labelText`, `qrMatrix`, `qrPathFromMatrix`, `qrSvgMarkup`, `labelsDocumentHtml`) are tested in
+  `web/app.test.ts`, including the encoder against reference matrices from an independent implementation.
 
 ## Mobile-first, PWA, and App Store portability
 
@@ -741,16 +832,24 @@ hosted backend — without code changes.
   The PT chart, SH/SC and electrical calculators are implemented client-side (`web/calc.js`) so
   they work with no signal; chat requires the backend. Icons are generated by
   `scripts/gen_icons.py` (Pillow) from a vector-style design; committed under `web/icons/`.
-- **Native wrapper path (documented in README, not built):** `npx cap init`, `cap add ios`,
-  `webDir: "web"`, `server.url` unset (bundled client) with `apiBase` configured in Settings;
-  App Store listing needs privacy notes (photos, no tracking). Nothing in the client depends
-  on Node globals or same-origin cookies.
+- **Native wrapper path (scaffolded, not built):** `capacitor.config.json` (appId
+  `com.hvacfieldassistant.app`, appName "HVAC Field Assistant", `webDir: "web"`, `server.androidScheme:
+  "https"`, no `server.url` — the client is bundled). `npm run cap:init` prints the commands (install
+  `@capacitor/core` `@capacitor/cli` `@capacitor/ios` `@capacitor/android`, `npx cap add ios/android`,
+  `npx cap sync`, `npx cap open ios`) without running them. The Node server generates `/config.js`; a bundle
+  has no server, so `npm run cap:prepare` (`scripts/cap-prepare.mjs`) writes git-ignored `web/config.js`
+  from `web/config.capacitor.js` with the version from `package.json` (`apiBase: ""`, `bundled: true`) and
+  reminds to run `cap sync`. With `bundled: true` (or a `capacitor:`/`ionic:`/`file:` origin) and no saved
+  server URL, `serverUrlPrompt` makes the client skip every request, open Settings with a "Set your server URL"
+  notice and a "No server URL set" status (AI / usage / corrections cards say to connect first) instead of
+  failing; saving the URL + password connects and loads the data. App Store listing needs privacy notes
+  (photos, no tracking). Nothing in the client depends on Node globals or same-origin cookies.
 - **Mobile behaviors:** viewport `width=device-width, initial-scale=1, viewport-fit=cover`;
   `100dvh` layouts with safe-area insets; the composer stays above the keyboard
   (`visualViewport` resize handling); pull-to-refresh disabled inside scrollers
   (`overscroll-behavior: contain`); `-webkit-tap-highlight-color` transparent with our own
   pressed states; `touch-action: manipulation`; camera capture via `<input capture="environment">`;
-  share/copy of a finding via `navigator.share` when available; haptic-like feedback via short
+  share/copy of a finding or a service report via `navigator.share` when available; haptic-like feedback via short
   CSS transitions; wake lock during procedures; 60 fps scrolling (no layout thrash on stream:
   batch DOM updates with requestAnimationFrame).
 
@@ -821,4 +920,9 @@ ALLOW_ORIGINS=               comma-separated origins allowed via CORS (native sh
   hot swap, injected fake connection tester, key never returned), `agent/connectionTest.test.ts`
   (error mapping, key scrubbing), `agent/usage.test.ts` (pricing, rollups), `importParse.test.ts` (parser),
   `routes/fleet.test.ts` (import dry run / real / duplicates, corrections create / apply / export); pure
-  client helpers in `web/app.test.ts`. `scripts/smoke.mjs` covers the same routes end to end over HTTP.
+  client helpers in `web/app.test.ts`. Readings history + follow-ups: `knowledge/trend.test.ts`
+  (thresholds, hints, mode/ambient gate, pairing), `routes/readings.test.ts` (diagnose with unit_id,
+  list/delete, trend on GET unit, follow-up fields + `/api/followups` counts, the diagnose /
+  save_finding / get_unit_history tools, the unit context block), `db/repos.test.ts` (readings repo,
+  follow-up columns, `listFollowUps`, migration of a pre-existing database), and `readingSummary` /
+  `readingDetailRows` / `formatDelta` / `dueChip` / routes in `web/app.test.ts`. `scripts/smoke.mjs` covers the same routes end to end over HTTP.
