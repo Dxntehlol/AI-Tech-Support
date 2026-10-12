@@ -149,9 +149,12 @@ describe("chiller readings mode", () => {
     assert.equal(noUnit.isError, undefined);
     assert.equal((JSON.parse(noUnit.content) as { readingId?: string }).readingId, undefined);
     const def = toolDefinitions().find((d) => d.name === "diagnose_chiller")!;
-    const props = (def.input_schema as { properties: Record<string, { anyOf?: unknown[] }>; required: string[] }).properties;
+    const schema = def.input_schema as { properties: Record<string, { type?: unknown; enum?: unknown[] }>; required: string[] };
+    const props = schema.properties;
     assert.ok(props.chw_supply_f && props.cond_pressure_psig && props.oil_temp_f);
-    assert.deepEqual(props.condenser_type!.anyOf, [{ type: "string", enum: ["water_cooled", "air_cooled"] }, { type: "null" }]);
+    // Optional inputs are single-typed and left out of `required` (the API caps union-typed parameters per request).
+    assert.deepEqual(props.condenser_type, { ...props.condenser_type, type: "string", enum: ["water_cooled", "air_cooled"] });
+    assert.ok(!schema.required.includes("condenser_type"));
   });
 
   test("an old readings table (mode CHECK without chiller) is rebuilt in place with its rows kept", () => {
