@@ -8,6 +8,7 @@ import type {
   ElectricalCalcRequest,
   FindingRow,
   KnowledgeBase,
+  ReadingRow,
   UnitRow,
 } from "../types.ts";
 import { decodeUnit } from "../knowledge/decoder.ts";
@@ -16,6 +17,8 @@ import { calcElectrical, lookupElectrical } from "../knowledge/electrical.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
 import { ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import { DX_MEASUREMENT_ENUM_CODED_KEYS, DX_MEASUREMENT_NUMERIC_KEYS } from "../knowledge/loader.ts";
+import { toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
+import { storeReading } from "../readingsStore.ts";
 
 export interface ToolContext {
   kb: KnowledgeBase;
@@ -93,8 +96,15 @@ function jsonSchemaFor(prop: Prop): Record<string, unknown> {
   switch (prop.type) {
     case "string":
     case "json":
-      out.type = withNull("string");
-      if (prop.enum) out.enum = nullable ? [...prop.enum, null] : [...prop.enum];
+      if (prop.enum && nullable) {
+        // The strict validator rejects `enum` next to a type array (`["string","null"]`): an optional enum is
+        // expressed as anyOf(string enum | null), which is the form the SDK's own schema transform emits.
+        delete out.type;
+        out.anyOf = [{ type: "string", enum: [...prop.enum] }, { type: "null" }];
+      } else {
+        out.type = withNull("string");
+        if (prop.enum) out.enum = [...prop.enum];
+      }
       break;
     case "number":
     case "integer": {
@@ -491,7 +501,7 @@ const SPECS: ToolSpec[] = [
   {
     name: "get_unit_history",
     description:
-      "Full job memory for a unit: record, nameplate data, decoded attributes, technician decode corrections (trust these over the decoder), every finding (open/monitor first, hypotheses marked) and past conversations with summaries. Defaults to the unit attached to this conversation; pass unit_id to read another unit (ids come from find_unit / search_history).",
+      "Full job memory for a unit: record, nameplate data, decoded attributes, technician decode corrections (trust these over the decoder), open follow-ups first, every finding (open/monitor first, hypotheses marked), the last 3 saved readings with the trend since the previous comparable visit, and past conversations with summaries. Defaults to the unit attached to this conversation; pass unit_id to read another unit (ids come from find_unit / search_history).",
     props: {
       unit_id: opt("string", "Unit id (16 hex chars). Omit for the attached unit.", { maxLength: 32 }),
     },
@@ -513,6 +523,7 @@ const SPECS: ToolSpec[] = [
       refrigerant_added_lbs: opt("number", "Refrigerant added, pounds (decimal).", { min: 0, max: 100000 }),
       refrigerant_recovered_lbs: opt("number", "Refrigerant recovered, pounds (decimal).", { min: 0, max: 100000 }),
       follow_up: opt("string", "What to do on the next visit.", { maxLength: 400 }),
+      follow_up_due: opt("string", "When the follow-up is due, YYYY-MM-DD (only with follow_up).", { maxLength: 10 }),
       service_date: opt("string", "Service date YYYY-MM-DD; defaults to today.", { maxLength: 30 }),
       confirmed: opt("boolean", "true only when the tech explicitly confirmed the cause and fix."),
     },
@@ -920,9 +931,40 @@ function trimFinding(f: FindingRow): Record<string, unknown> {
     refrigerant_added_lbs: f.refrigerant_added_lbs,
     refrigerant_recovered_lbs: f.refrigerant_recovered_lbs,
     follow_up: f.follow_up,
+    follow_up_due: f.follow_up ? (f.follow_up_due ?? undefined) : undefined,
+    follow_up_done: f.follow_up ? f.follow_up_done === 1 : undefined,
     origin: f.origin,
     confirmed: f.confirmed === 1,
     hypothesis: f.origin === "assistant" && f.confirmed !== 1 ? true : undefined,
+  };
+}
+
+/** Compact readings row for tool results: date, mode, source and the headline numbers only. */
+function trimReading(row: ReadingRow): Record<string, unknown> {
+  const t = toTrendReading(row);
+  const d = t.derived ?? {};
+  const m = t.measurements ?? {};
+  const pick = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v * 10) / 10 : undefined);
+  return {
+    id: row.id,
+    date: row.created_at.slice(0, 10),
+    mode: row.mode,
+    source: row.source,
+    refrigerant: row.refrigerant,
+    outdoorDbF: pick(m.outdoorDbF),
+    suctionPsig: pick(m.suctionPsig),
+    liquidPsig: pick(m.liquidPsig),
+    superheatF: pick(d.superheatF),
+    subcoolingF: pick(d.subcoolingF),
+    evapSatF: pick(d.evapSatF),
+    condSatF: pick(d.condSatF),
+    deltaTF: pick(d.deltaTF),
+    ampsPercentRla: pick(d.ampsPercentRla),
+    validForCharge: (() => {
+      const v = safeParse(row.validity_json);
+      return v && typeof v === "object" ? (v as { ok?: unknown }).ok !== false : undefined;
+    })(),
+    note: row.note ?? undefined,
   };
 }
 
@@ -1121,6 +1163,19 @@ function toolDiagnose(v: Validated, ctx: ToolContext): ToolOutcome {
     return fail(`Unknown refrigerant "${measurements.refrigerant}". Check the nameplate/retrofit sticker or call refrigerant_pt to list known refrigerants.`, "Diagnose: unknown refrigerant");
   }
   const r = diagnose(ctx.kb, measurements);
+  // Readings history: with a unit attached the diagnosis is stored on it (source "chat") and the trend
+  // against the previous comparable visit comes back with the result.
+  let readingId: string | undefined;
+  let trendLines: string[] | undefined;
+  if (ctx.unitId && ctx.repos.units.get(ctx.unitId)) {
+    try {
+      readingId = storeReading(ctx.repos, { unitId: ctx.unitId, conversationId: ctx.conversationId, result: r, source: "chat" }).id;
+      const trend = trendFromReadings(ctx.repos.readings.list({ unitId: ctx.unitId, limit: 20 }));
+      if (trend) trendLines = trend.lines;
+    } catch {
+      readingId = undefined; // never fail the diagnosis over history bookkeeping
+    }
+  }
   const out = {
     refrigerant: r.measurements.refrigerant,
     meteringDevice: r.measurements.meteringDevice,
@@ -1131,6 +1186,8 @@ function toolDiagnose(v: Validated, ctx: ToolContext): ToolOutcome {
     moreFindings: r.findings.length > 6 ? r.findings.length - 6 : undefined,
     missing: r.missing,
     summary: r.summary,
+    readingId,
+    trendSinceLastVisit: trendLines,
   };
   const top = r.findings[0];
   const flags: string[] = [];
@@ -1307,9 +1364,15 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
   const findings = ctx.repos.findings.list({ unitId, limit: 100 });
   const conversations = ctx.repos.conversations.list({ unitId, limit: 20 });
   const corrections = ctx.repos.corrections.list({ unitId, limit: 100 });
+  const readingRows = ctx.repos.readings.list({ unitId, limit: 20 });
+  const trend = trendFromReadings(readingRows);
+  const openFollowUps = findings.filter((f) => f.follow_up && f.follow_up_done !== 1);
   const decoded = safeParse(unit.decoded_json) as Partial<DecodeResult> | undefined;
   const out = {
     unit: unitSummaryRecord(unit),
+    openFollowUps: openFollowUps.length
+      ? openFollowUps.map((f) => ({ findingId: f.id, due: f.follow_up_due ?? undefined, text: clip(f.follow_up ?? "", 240), symptom: clip(f.symptom, 120), status: f.status }))
+      : undefined,
     decoded:
       decoded && typeof decoded === "object"
         ? { summary: decoded.summary, warnings: decoded.warnings, bestModel: decoded.model?.[0]?.attributes, family: decoded.model?.[0]?.family, serial: decoded.serial?.[0] }
@@ -1324,6 +1387,9 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
     findingCount: findings.length,
     findings: findings.slice(0, 20).map(trimFinding),
     moreFindings: findings.length > 20 ? findings.length - 20 : undefined,
+    readingCount: readingRows.length,
+    readings: readingRows.length ? readingRows.slice(0, 3).map(trimReading) : undefined,
+    trendSinceLastVisit: trend ? { since: trend.since, lines: trend.lines } : undefined,
     conversations: conversations.slice(0, 10).map((c) => ({
       id: c.id,
       title: c.title,
@@ -1334,7 +1400,9 @@ function toolGetUnitHistory(v: Validated, ctx: ToolContext): ToolOutcome {
   };
   const open = findings.filter((f) => f.status === "open" || f.status === "monitor").length;
   const corr = corrections.length ? `, ${corrections.length} correction${corrections.length === 1 ? "" : "s"}` : "";
-  return ok(out, `${unitLabel(unit)}: ${findings.length} finding${findings.length === 1 ? "" : "s"} (${open} open/monitor), ${conversations.length} conversation${conversations.length === 1 ? "" : "s"}${corr}`);
+  const fu = openFollowUps.length ? `, ${openFollowUps.length} open follow-up${openFollowUps.length === 1 ? "" : "s"}` : "";
+  const rd = readingRows.length ? `, ${readingRows.length} reading${readingRows.length === 1 ? "" : "s"}${trend ? " (trend)" : ""}` : "";
+  return ok(out, `${unitLabel(unit)}: ${findings.length} finding${findings.length === 1 ? "" : "s"} (${open} open/monitor)${fu}${rd}, ${conversations.length} conversation${conversations.length === 1 ? "" : "s"}${corr}`);
 }
 
 function toolSaveFinding(v: Validated, ctx: ToolContext): ToolOutcome {
@@ -1342,6 +1410,8 @@ function toolSaveFinding(v: Validated, ctx: ToolContext): ToolOutcome {
   const now = ctx.now ?? new Date();
   const serviceDate = str(v.service_date) ?? now.toISOString().slice(0, 10);
   if (!Number.isFinite(Date.parse(serviceDate))) return fail(`service_date must be an ISO date; got "${serviceDate}".`, "Save finding: bad date");
+  const followUpDue = str(v.follow_up_due) ?? null;
+  if (followUpDue !== null && !/^\d{4}-\d{2}-\d{2}$/.test(followUpDue)) return fail(`follow_up_due must be YYYY-MM-DD; got "${followUpDue}".`, "Save finding: bad follow-up date");
   const row = ctx.repos.findings.create({
     unit_id: ctx.unitId,
     conversation_id: ctx.conversationId,
@@ -1358,6 +1428,7 @@ function toolSaveFinding(v: Validated, ctx: ToolContext): ToolOutcome {
     refrigerant_added_lbs: num(v.refrigerant_added_lbs) ?? null,
     refrigerant_recovered_lbs: num(v.refrigerant_recovered_lbs) ?? null,
     follow_up: str(v.follow_up) ?? null,
+    follow_up_due: str(v.follow_up) ? followUpDue : null,
     origin: "assistant",
     confirmed: confirmed ? 1 : 0,
   });

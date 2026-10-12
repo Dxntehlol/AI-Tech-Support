@@ -62,7 +62,7 @@ describe("toolDefinitions", () => {
       const props = Object.keys(schema.properties);
       assert.deepEqual([...schema.required].sort(), [...props].sort(), `${d.name} required must list every property`);
       for (const [key, p] of Object.entries(schema.properties)) {
-        assert.ok(p.type, `${d.name}.${key} has a type`);
+        assert.ok(p.type || Array.isArray((p as { anyOf?: unknown[] }).anyOf), `${d.name}.${key} has a type (or anyOf for an optional enum)`);
         assert.ok((p as { description?: string }).description, `${d.name}.${key} has a description`);
       }
     }
@@ -80,7 +80,32 @@ describe("toolDefinitions", () => {
     assert.deepEqual(dxProps.metering_device!.enum, ["txv", "fixed", "eev", "unknown"]);
     assert.ok(dxProps.suction_psig, "snake_case measurement present");
     assert.ok(dxProps.compressor_amps_l2, "compressorAmpsL2 → compressor_amps_l2");
-    assert.ok(dxProps.economizer_position!.enum!.includes(null), "nullable enum includes null");
+    const econ = dxProps.economizer_position as unknown as { anyOf?: { type: string; enum?: unknown[] }[] };
+    assert.deepEqual(econ.anyOf, [{ type: "string", enum: ["closed", "minimum", "open", "unknown"] }, { type: "null" }], "optional enum is anyOf(string enum | null)");
+  });
+
+  test("optional enums are anyOf(string enum | null): the strict validator rejects enum next to a type array", () => {
+    let nullableEnums = 0;
+    const walk = (node: unknown, path: string): void => {
+      if (!node || typeof node !== "object") return;
+      const o = node as Record<string, unknown>;
+      assert.ok(!(Array.isArray(o.type) && o.enum), `${path} pairs enum with a type array`);
+      if (Array.isArray(o.anyOf)) {
+        const [first, second] = o.anyOf as Record<string, unknown>[];
+        if (first && Array.isArray(first.enum)) {
+          nullableEnums++;
+          assert.equal(first.type, "string");
+          assert.ok(!(first.enum as unknown[]).includes(null), `${path} enum must not list null`);
+          assert.deepEqual(second, { type: "null" });
+        }
+      }
+      for (const [k, v] of Object.entries(o)) walk(v, `${path}.${k}`);
+    };
+    for (const def of toolDefinitions()) walk(def.input_schema, def.name);
+    const dx = toolDefinitions().find((d) => d.name === "diagnose_refrigeration")!;
+    const econ = (dx.input_schema as { properties: Record<string, { anyOf?: unknown[] }> }).properties.economizer_position;
+    assert.ok(econ && Array.isArray(econ.anyOf), "economizer_position is an optional enum encoded with anyOf");
+    assert.ok(nullableEnums >= 3, `expected several optional enums, saw ${nullableEnums}`);
   });
 
   test("strict schemas carry no unsupported keywords; numeric ranges live in the description and are still enforced", async () => {
