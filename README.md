@@ -95,6 +95,7 @@ with canned responses so you can explore the UI and calculators.
 | `APP_PASSWORD` | — | Enables HTTP basic auth (any username). |
 | `DB_PATH` | `./data/hvac.sqlite` | SQLite file (WAL mode). |
 | `CLAUDE_FAKE` | `0` | `1` forces demo mode. |
+| `TESTER_DAILY_CAP_USD` | `2` | Default estimated spend per tester per day (server-local) before chat is refused; `0` = no cap. Per-tester values override it. |
 | `ALLOW_ORIGINS` | — | Comma-separated origins allowed via CORS, for native app shells (e.g. `capacitor://localhost,http://localhost`). Empty = same-origin only. |
 | `MAX_TOOL_ITERATIONS` | `12` | Tool calls the assistant may make in one turn before it must answer. |
 
@@ -132,6 +133,18 @@ tuned for sunlight and night work.
    - Android: browser menu → **Install app** (or tap the *Install app* button in Settings).
 3. Enter the access password in **Settings → Access password**. It is sent as a Bearer token
    on every request and stored only on that device.
+
+### Letting friends test it
+
+**Settings → Testers** (owner only, shown once `APP_PASSWORD` is set) creates a login per tester: the
+app generates a password, shows it once with a ready-to-send invite, and you can turn a tester off,
+reset their password, set their daily budget or remove them at any time. A tester signs in with their
+name and password (browser prompt or Settings → Access password), sees only the conversations they
+started, cannot open the AI connection, usage or export cards, and is refused new chats once their
+estimated spend for the day reaches the cap (`TESTER_DAILY_CAP_USD`, default $2, or a per-tester
+value; 0 = no cap). Each tester's requests are attributed in the usage history and their chat turns,
+errors and cap hits are logged, so the owner's list shows spend, activity and last sign-in per person.
+Send testers [docs/TESTERS.md](docs/TESTERS.md).
 
 Once installed, the app shell, the refrigerant tables, and the calculators (PT chart,
 superheat/subcooling, electrical) work with no signal. Chat, decoding, and history need the

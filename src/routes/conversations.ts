@@ -3,6 +3,8 @@ import type { AppDeps } from "../app.ts";
 import { isTurnRunning, runTurn, stopTurn, type UserTurnInput } from "../agent/chat.ts";
 import type { ChatEvent, ConversationRow, UnitRow } from "../types.ts";
 import { HttpError, badRequest, body, foldMessages, notFound, optString, optionalId, parseImages, queryInt, queryString, requireId, sendError } from "./util.ts";
+import { principalOf, testerIdOf } from "./auth.ts";
+import { capMessage, testerBudget } from "../testers.ts";
 
 export const SSE_HEARTBEAT_MS = 15_000;
 export const MAX_TEXT_CHARS = 100_000;
@@ -40,9 +42,10 @@ function unitBadge(u: UnitRow | undefined): Record<string, unknown> | null {
   return { id: u.id, unit_tag: u.unit_tag, nickname: u.nickname, model: u.model, manufacturer: u.manufacturer, site: u.site, refrigerant: u.refrigerant };
 }
 
-function withUnit(deps: AppDeps, c: ConversationRow): Record<string, unknown> {
+function withUnit(deps: AppDeps, c: ConversationRow, testerNames?: Map<string, string>): Record<string, unknown> {
   const unit = c.unit_id ? deps.repos.units.get(c.unit_id) : undefined;
-  return { ...c, unit: unitBadge(unit), unit_tag: unit?.unit_tag ?? null, unit_model: unit?.model ?? null };
+  const testerName = c.tester_id ? (testerNames?.get(c.tester_id) ?? null) : null;
+  return { ...c, unit: unitBadge(unit), unit_tag: unit?.unit_tag ?? null, unit_model: unit?.model ?? null, tester_name: testerName };
 }
 
 export function conversationsRouter(deps: AppDeps): Router {
@@ -50,13 +53,27 @@ export function conversationsRouter(deps: AppDeps): Router {
   const { repos } = deps;
   const log = deps.log ?? (() => {});
 
+  /**
+   * A tester sees only the conversations they started (a foreign id answers 404, like a missing one); the owner
+   * sees everything. Call before any read or write on /:id.
+   */
+  const ownConversation = (req: Parameters<typeof principalOf>[0], id: string): ConversationRow => {
+    const conversation = repos.conversations.get(id);
+    const testerId = testerIdOf(req);
+    if (!conversation || (testerId !== null && (conversation.tester_id ?? null) !== testerId)) throw notFound("Conversation not found.");
+    return conversation;
+  };
+  const testerNames = (): Map<string, string> => new Map(repos.testers.list().map((t) => [t.id, t.name] as const));
+
   // GET /api/conversations?q=&unit_id=&limit=
   r.get("/", (req, res) => {
     const unitId = optionalId(queryString(req, "unit_id"), "unit_id") ?? undefined;
     const q = queryString(req, "q");
     const limit = queryInt(req, "limit", { min: 1, max: 1000 });
-    const rows = repos.conversations.list({ q, unitId, limit: limit ?? 100 });
-    res.json({ conversations: rows.map((c) => withUnit(deps, c)) });
+    const testerId = testerIdOf(req);
+    const rows = repos.conversations.list({ q, unitId, limit: limit ?? 100, testerId: testerId ?? undefined });
+    const names = testerId === null ? testerNames() : undefined;
+    res.json({ conversations: rows.map((c) => withUnit(deps, c, names)) });
   });
 
   // POST /api/conversations {unit_id?, title?}
@@ -65,15 +82,14 @@ export function conversationsRouter(deps: AppDeps): Router {
     const unitId = optionalId(b.unit_id, "unit_id");
     if (unitId && !repos.units.get(unitId)) throw notFound("Unit not found.");
     const title = optString(b.title, "title", 200)?.trim();
-    const conversation = repos.conversations.create({ title: title || undefined, unit_id: unitId });
+    const conversation = repos.conversations.create({ title: title || undefined, unit_id: unitId, tester_id: testerIdOf(req) });
     res.status(201).json({ conversation: withUnit(deps, conversation) });
   });
 
   // GET /api/conversations/:id → {conversation, unit, messages, busy}
   r.get("/:id", (req, res) => {
     const id = requireId(req.params.id);
-    const conversation = repos.conversations.get(id);
-    if (!conversation) throw notFound("Conversation not found.");
+    const conversation = ownConversation(req, id);
     const unit = conversation.unit_id ? (repos.units.get(conversation.unit_id) ?? null) : null;
     const messages = foldMessages(repos.messages.list(id));
     res.json({ conversation, unit, messages, busy: isTurnRunning(id) });
@@ -82,7 +98,7 @@ export function conversationsRouter(deps: AppDeps): Router {
   // PATCH /api/conversations/:id {title?, unit_id?|null}
   r.patch("/:id", (req, res) => {
     const id = requireId(req.params.id);
-    if (!repos.conversations.get(id)) throw notFound("Conversation not found.");
+    ownConversation(req, id);
     const b = body(req);
     const patch: { title?: string; unit_id?: string | null } = {};
     if ("title" in b) {
@@ -104,6 +120,7 @@ export function conversationsRouter(deps: AppDeps): Router {
   // DELETE /api/conversations/:id
   r.delete("/:id", (req, res) => {
     const id = requireId(req.params.id);
+    ownConversation(req, id);
     if (isTurnRunning(id)) throw new HttpError(409, "busy", "A response is in progress for this conversation — stop it first.");
     if (!repos.conversations.remove(id)) throw notFound("Conversation not found.");
     res.json({ deleted: true, id });
@@ -112,14 +129,14 @@ export function conversationsRouter(deps: AppDeps): Router {
   // POST /api/conversations/:id/stop → {stopped}
   r.post("/:id/stop", (req, res) => {
     const id = requireId(req.params.id);
-    if (!repos.conversations.get(id)) throw notFound("Conversation not found.");
+    ownConversation(req, id);
     res.json({ stopped: stopTurn(id) });
   });
 
   // POST /api/conversations/:id/messages {text, images?} → SSE
   r.post("/:id/messages", (req, res) => {
     const id = requireId(req.params.id);
-    if (!repos.conversations.get(id)) throw notFound("Conversation not found.");
+    ownConversation(req, id);
     const b = body(req);
     const text = optString(b.text, "text", MAX_TEXT_CHARS) ?? "";
     const images = parseImages(b.images);
@@ -129,6 +146,35 @@ export function conversationsRouter(deps: AppDeps): Router {
       return;
     }
     const input: UserTurnInput = images ? { text, images } : { text };
+
+    // --- tester budget (Settings → Testers): refuse the turn once today's estimated spend reaches the cap ---
+    const principal = principalOf(req);
+    const tester = principal.role === "tester" ? repos.testers.get(principal.id) : undefined;
+    if (principal.role === "tester" && tester) {
+      const budget = testerBudget(repos, tester, deps.config, deps.now ? deps.now() : new Date());
+      if (budget.exhausted) {
+        const message = capMessage(budget);
+        try {
+          repos.testers.logEvent({ tester_id: tester.id, kind: "cap", conversation_id: id, code: "cap", detail: message });
+        } catch {
+          /* bookkeeping only */
+        }
+        log(`tester ${tester.name} hit the daily cap ($${budget.spentTodayUsd.toFixed(2)} of $${budget.capUsd.toFixed(2)})`);
+        sendError(res, 429, "cap", message);
+        return;
+      }
+    }
+    const logTesterEvent = (e: ChatEvent): void => {
+      if (!tester) return;
+      if (e.type !== "done" && e.type !== "error") return;
+      try {
+        if (e.type === "done") repos.testers.logEvent({ tester_id: tester.id, kind: "turn", conversation_id: id, code: e.model ?? null, detail: e.usage ? `in=${e.usage.input} out=${e.usage.output}` : null });
+        else if (e.code !== "aborted") repos.testers.logEvent({ tester_id: tester.id, kind: "error", conversation_id: id, code: e.code, detail: e.message });
+      } catch (err) {
+        log(`tester event failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+      if (e.type === "error") log(`tester ${tester.name} turn ${id} error: ${e.code} ${e.message}`);
+    };
 
     // --- open the stream ---
     res.status(200);
@@ -178,10 +224,12 @@ export function conversationsRouter(deps: AppDeps): Router {
     });
 
     const emit = (e: ChatEvent): void => {
+      logTesterEvent(e);
       write(`data: ${JSON.stringify(e)}\n\n`);
     };
     // runTurn takes the busy lock synchronously (before its first await), so the 409 check above is exact.
-    void runTurn(deps, id, input, emit).then(finish, (err) => {
+    const turnDeps: AppDeps = tester ? { ...deps, client: deps.client, config: deps.config, demo: deps.demo, testerId: tester.id } : deps;
+    void runTurn(turnDeps, id, input, emit).then(finish, (err) => {
       log(`runTurn rejected for ${id}: ${err instanceof Error ? err.message : String(err)}`);
       stream.end({ type: "error", code: "internal", message: "The turn failed unexpectedly." });
     });

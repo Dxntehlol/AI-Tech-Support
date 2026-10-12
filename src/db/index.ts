@@ -35,6 +35,9 @@ export function openDatabase(path: string): Db {
 export const FINDINGS_COLUMN_MIGRATIONS: readonly { table: string; column: string; ddl: string }[] = [
   { table: "findings", column: "follow_up_due", ddl: "ALTER TABLE findings ADD COLUMN follow_up_due TEXT" },
   { table: "findings", column: "follow_up_done", ddl: "ALTER TABLE findings ADD COLUMN follow_up_done INTEGER NOT NULL DEFAULT 0" },
+  // Tester attribution (DESIGN.md "Testers"): who started a conversation / paid for a request. NULL = the owner.
+  { table: "conversations", column: "tester_id", ddl: "ALTER TABLE conversations ADD COLUMN tester_id TEXT" },
+  { table: "usage_events", column: "tester_id", ddl: "ALTER TABLE usage_events ADD COLUMN tester_id TEXT" },
 ];
 
 /** Column names of a table (empty when the table does not exist). */
@@ -57,6 +60,8 @@ function applyColumnMigrations(raw: DatabaseSync): void {
   }
   // Index over the follow-up columns; must come after the ALTERs so an old database has the columns.
   raw.exec("CREATE INDEX IF NOT EXISTS idx_findings_follow_up ON findings(follow_up_done, follow_up_due)");
+  raw.exec("CREATE INDEX IF NOT EXISTS idx_usage_events_tester ON usage_events(tester_id, created_at)");
+  raw.exec("CREATE INDEX IF NOT EXISTS idx_conversations_tester ON conversations(tester_id)");
 }
 
 /** 16 lowercase hex chars from 8 random bytes. */

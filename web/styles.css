@@ -1046,3 +1046,27 @@ details.calc .form { padding: 0 var(--sp-4) var(--sp-4); }
 /* Readings action bar holds three buttons on a phone: tighter padding, labels may wrap, nothing clips. */
 #readings-actions .btn { padding: 4px 8px; white-space: normal; line-height: 1.15; text-align: center; gap: 6px; }
 #readings-actions .btn-primary { flex: 1.2 1 0; }
+
+/* Settings → Testers (owner) and Test account (tester) */
+.testers-intro { margin: 0 0 var(--sp-3); }
+.testers-list { margin-bottom: var(--sp-3); }
+.tester-row { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.tester-row:last-child { border-bottom: 0; }
+.tester-row.is-off .row-title { color: var(--text-muted); }
+.tester-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-width: 0; }
+.tester-sub { white-space: normal; }
+.tester-actions { margin-top: 6px; }
+.tester-add-row { display: flex; gap: var(--sp-2); align-items: flex-end; }
+.tester-add-row .grow { flex: 1 1 auto; }
+.tester-cap-field { flex: 0 0 120px; }
+.input-prefix { display: flex; align-items: center; gap: 4px; }
+.input-prefix > span { color: var(--text-muted); font-weight: 600; }
+.input-prefix input { min-width: 0; }
+.tester-reveal { background: var(--accent-soft); border-radius: var(--r-1); padding: var(--sp-3); margin-bottom: var(--sp-3); display: flex; flex-direction: column; gap: 6px; }
+.tester-reveal-title { font-weight: 700; }
+.tester-reveal-pw { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--fs-4); font-weight: 700; letter-spacing: 0.08em; user-select: all; -webkit-user-select: all; overflow-wrap: anywhere; }
+.tester-body .stats { margin-bottom: var(--sp-2); }
+.meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 4px 0; }
+.meter-fill { height: 100%; background: var(--accent); border-radius: inherit; transition: width 0.3s ease; }
+.meter-fill.meter-full { background: var(--warning-text); }
+.badge-tester { background: var(--warning-soft); color: var(--warning-text); }

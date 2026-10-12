@@ -6,6 +6,8 @@ export interface UsageEventRow extends UsageCounts {
   conversation_id: string | null;
   created_at: string;
   stop_reason: string | null;
+  /** Tester who ran the request (Settings → Testers); null = the owner. */
+  tester_id?: string | null;
 }
 
 export type UsageEventInput = Omit<UsageEventRow, "id" | "created_at"> & { created_at?: string };
