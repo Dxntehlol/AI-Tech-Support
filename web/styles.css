@@ -1028,7 +1028,11 @@ details.calc .form { padding: 0 var(--sp-4) var(--sp-4); }
 .fu-body .row-title { color: var(--text-secondary); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: 0.04em; }
 .fu-text { font-size: var(--fs-3); font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; white-space: normal; }
 .fu-row.done .fu-text { color: var(--text-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
-.fu-body .row-sub { margin-top: 3px; }
+.fu-body .row-sub { margin-top: 3px; white-space: normal; }
+.fu-main { display: flex; flex-direction: column; min-width: 0; }
+.fu-text.fu-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fu-more { align-self: flex-start; min-height: 32px; padding: 0 var(--sp-1); margin: -6px 0 6px 0; font-size: var(--fs-1); color: var(--accent-text); }
+.fu-context { color: var(--text-muted); font-size: var(--fs-1); overflow: hidden; text-overflow: ellipsis; }
 .tl-follow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 
 /* Due chips: overdue red, due soon amber, later outline, none muted, done green — never color alone (text says which) */
@@ -1046,3 +1050,27 @@ details.calc .form { padding: 0 var(--sp-4) var(--sp-4); }
 /* Readings action bar holds three buttons on a phone: tighter padding, labels may wrap, nothing clips. */
 #readings-actions .btn { padding: 4px 8px; white-space: normal; line-height: 1.15; text-align: center; gap: 6px; }
 #readings-actions .btn-primary { flex: 1.2 1 0; }
+
+/* Settings → Testers (owner) and Test account (tester) */
+.testers-intro { margin: 0 0 var(--sp-3); }
+.testers-list { margin-bottom: var(--sp-3); }
+.tester-row { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.tester-row:last-child { border-bottom: 0; }
+.tester-row.is-off .row-title { color: var(--text-muted); }
+.tester-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-width: 0; }
+.tester-sub { white-space: normal; }
+.tester-actions { margin-top: 6px; }
+.tester-add-row { display: flex; gap: var(--sp-2); align-items: flex-end; }
+.tester-add-row .grow { flex: 1 1 auto; }
+.tester-cap-field { flex: 0 0 120px; }
+.input-prefix { display: flex; align-items: center; gap: 4px; }
+.input-prefix > span { color: var(--text-muted); font-weight: 600; }
+.input-prefix input { min-width: 0; }
+.tester-reveal { background: var(--accent-soft); border-radius: var(--r-1); padding: var(--sp-3); margin-bottom: var(--sp-3); display: flex; flex-direction: column; gap: 6px; }
+.tester-reveal-title { font-weight: 700; }
+.tester-reveal-pw { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--fs-4); font-weight: 700; letter-spacing: 0.08em; user-select: all; -webkit-user-select: all; overflow-wrap: anywhere; }
+.tester-body .stats { margin-bottom: var(--sp-2); }
+.meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 4px 0; }
+.meter-fill { height: 100%; background: var(--accent); border-radius: inherit; transition: width 0.3s ease; }
+.meter-fill.meter-full { background: var(--warning-text); }
+.badge-tester { background: var(--warning-soft); color: var(--warning-text); }

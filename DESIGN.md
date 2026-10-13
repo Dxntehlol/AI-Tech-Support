@@ -851,6 +851,35 @@ requests with tokens in/out, estimated cost, average per conversation, web searc
 a partial-total note when `costComplete` is false, bars by day and a by-model list; demo mode shows an
 empty state with "Add API key". The server log line per request stays as the fallback.
 
+### Testers (`testers`, `tester_events`, `src/testers.ts`, `src/routes/testers.ts`, `src/routes/auth.ts`)
+
+Per-person logins for friends who stress-test a single-owner install. `authMiddleware` first compares
+the supplied password with `APP_PASSWORD` (owner); otherwise it compares against `testers` (SHA-256 of a
+server-generated 16-char password; the Basic username, when it names a tester, narrows the comparison)
+and stores `res.locals.principal` as `{role:"owner"}` or `{role:"tester", id, name}`. A disabled tester
+gets a 401 with a "turned off" message. Without `APP_PASSWORD` everyone is the owner and testers cannot
+be created (409 `no_password`). `ownerOnly()` guards `/api/settings`, `/api/usage`, `/api/export` and
+`/api/testers` (403 `forbidden`). `/api/me` tells the client its role and, for a tester, today's budget.
+
+Scoping: `conversations.tester_id` is set on create; a tester's list is filtered to their own rows and
+any `/conversations/:id` route answers 404 for a foreign conversation; the owner sees all and the list
+carries `tester_name`. Units, findings, readings and reference data stay shared.
+
+Budget: `usage_events.tester_id` attributes each model request. Before a tester's turn starts,
+`testerBudget()` sums `estimateCost` over today's rows (server-local day, `usageWindowStart(1, now)`);
+when the total reaches the cap (`testers.daily_cap_usd`, else `TESTER_DAILY_CAP_USD`, default 2; 0 =
+unlimited) the route answers 429 `cap` and logs a `cap` event. The owner is never capped. `tester_events`
+records `turn` (done, model + token counts), `error` (non-abort error events, code + message) and `cap`
+rows; the owner's `/api/testers` list reports today's spend/requests and 30-day spend, turns, errors and
+cap hits, plus `last_seen_at` (stamped at most once a minute per tester). Deleting a tester keeps their
+conversations and usage rows (the id dangles) so the cost history stays whole.
+
+Client: Settings → **Testers** card (owner, only when `authRequired`): list with status chip, today's
+spend vs cap, 30-day line, Turn off / Cap / New password / Remove; an add form; the generated password
+shown once with a "Copy invite" message. Settings → **Test account** card (tester): spend, budget,
+requests today and a meter; the AI connection, usage, corrections and export controls are hidden.
+History rows show a tester badge for the owner.
+
 ### Bulk fleet import (`src/importParse.ts`, `src/routes/fleetImport.ts`)
 
 `POST /api/units/import` takes pasted `text` (≤ 1 MB, else 413) or `rows[]` (objects keyed by the same
@@ -1099,6 +1128,7 @@ REPLAY_IMAGE_WINDOW=10       user turns whose photos are kept in model context (
 MAX_TOOL_ITERATIONS=12
 PORT=8787  HOST=127.0.0.1  DB_PATH=./data/hvac.sqlite  APP_PASSWORD=   CLAUDE_FAKE=0
 ALLOW_ORIGINS=               comma-separated origins allowed via CORS (native shells), empty = same-origin only
+TESTER_DAILY_CAP_USD=2       default per-tester daily spend cap (estimated, server-local day); 0 = no cap
 ```
 
 `data/settings.env` (written by Settings → AI connection) overrides `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`,

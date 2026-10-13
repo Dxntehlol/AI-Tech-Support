@@ -10,6 +10,8 @@ import type {
   FindingRow,
   FollowUpRow,
   MessageRow,
+  TesterEventRow,
+  TesterRow,
   PmVisitRow,
   PmVisitStatus,
   ReadingRow,
@@ -172,9 +174,10 @@ export interface Repos {
     findDuplicate(key: { model?: string | null; serial?: string | null; site?: string | null; unit_tag?: string | null }): UnitRow | undefined;
   };
   conversations: {
-    create(input?: { title?: string; unit_id?: string | null }): ConversationRow;
+    create(input?: { title?: string; unit_id?: string | null; tester_id?: string | null }): ConversationRow;
     get(id: string): ConversationRow | undefined;
-    list(opts?: { q?: string; unitId?: string; limit?: number }): ConversationRow[];
+    /** `testerId` restricts the list to one tester's conversations (Settings → Testers scoping). */
+    list(opts?: { q?: string; unitId?: string; limit?: number; testerId?: string }): ConversationRow[];
     update(id: string, patch: Partial<Pick<ConversationRow, "title" | "unit_id" | "summary">>): ConversationRow | undefined;
     touch(id: string): void;
     remove(id: string): boolean;
@@ -264,10 +267,27 @@ export interface Repos {
   usage: {
     /** Store one model request's usage. */
     record(input: UsageEventInput): void;
-    /** Rows created at or after `sinceIso`, oldest first. */
-    listSince(sinceIso: string): UsageEventRow[];
+    /** Rows created at or after `sinceIso`, oldest first; `testerId` narrows to one tester. */
+    listSince(sinceIso: string, testerId?: string): UsageEventRow[];
     /** Delete rows created before `beforeIso`; returns the count removed. */
     prune(beforeIso: string): number;
+  };
+  testers: {
+    create(input: { name: string; password_sha256: string; daily_cap_usd?: number | null; notes?: string | null }): TesterRow;
+    get(id: string): TesterRow | undefined;
+    /** Case-insensitive name lookup. */
+    getByName(name: string): TesterRow | undefined;
+    /** All testers, oldest first (enabled and disabled). */
+    list(): TesterRow[];
+    update(id: string, patch: Partial<Pick<TesterRow, "name" | "password_sha256" | "disabled" | "daily_cap_usd" | "notes">>): TesterRow | undefined;
+    /** Stamp last_seen_at (called on authenticated requests, throttled by the caller). */
+    touch(id: string): void;
+    remove(id: string): boolean;
+    logEvent(input: { tester_id: string; kind: TesterEventRow["kind"]; conversation_id?: string | null; code?: string | null; detail?: string | null }): void;
+    /** Newest first. */
+    listEvents(testerId: string, opts?: { limit?: number; kind?: TesterEventRow["kind"] }): TesterEventRow[];
+    /** Count of events per kind at or after `sinceIso`, for the owner's overview. */
+    countEvents(testerId: string, sinceIso: string): Record<TesterEventRow["kind"], number>;
   };
 }
 
@@ -490,7 +510,7 @@ const FINDING_COLS =
 const READING_COLS =
   "id, unit_id, conversation_id, created_at, mode, refrigerant, metering_device, measurements_json, derived_json, validity_json, findings_json, note, source";
 const READING_MODES = new Set(["ac_cooling", "heat_pump_cooling", "heat_pump_heating", "refrigeration", "chiller"]);
-const CONVERSATION_COLS = "id, title, unit_id, summary, created_at, updated_at, job_started_at, job_ended_at, signed_by, signed_at, signature_note";
+const CONVERSATION_COLS = "id, title, unit_id, summary, created_at, updated_at, job_started_at, job_ended_at, signed_by, signed_at, signature_note, tester_id";
 const REFRIGERANT_EVENT_COLS =
   "id, unit_id, conversation_id, created_at, event_type, refrigerant, amount_lbs, circuit, cylinder_id, tech_name, tech_cert, leak_found, passed, note, " +
   "leak_rate_pct, threshold_pct, exceeded, finding_id";
@@ -692,12 +712,14 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       const unitId = requireUnit(input.unit_id);
       const id = newId();
       const ts = now();
-      prep("INSERT INTO conversations (id, title, unit_id, summary, created_at, updated_at) VALUES (?, ?, ?, NULL, ?, ?)").run(
+      const testerId = typeof input.tester_id === "string" && input.tester_id !== "" ? input.tester_id : null;
+      prep("INSERT INTO conversations (id, title, unit_id, summary, created_at, updated_at, tester_id) VALUES (?, ?, ?, NULL, ?, ?, ?)").run(
         id,
         title,
         unitId,
         ts,
         ts,
+        testerId,
       );
       return getConversation(id)!;
     },
@@ -712,6 +734,10 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       if (typeof opts.unitId === "string" && opts.unitId) {
         where.push("unit_id = ?");
         params.push(opts.unitId);
+      }
+      if (typeof opts.testerId === "string" && opts.testerId) {
+        where.push("tester_id = ?");
+        params.push(opts.testerId);
       }
       const q = typeof opts.q === "string" ? opts.q.trim() : "";
       if (q) {
@@ -1571,8 +1597,8 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     record(input) {
       const n = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.trunc(v) : 0);
       prep(
-        `INSERT INTO usage_events (conversation_id, created_at, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, web_searches, stop_reason)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO usage_events (conversation_id, created_at, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, web_searches, stop_reason, tester_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(
         input.conversation_id ?? null,
         input.created_at ?? now(),
@@ -1583,9 +1609,13 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
         n(input.cache_write_tokens),
         n(input.web_searches),
         input.stop_reason ?? null,
+        typeof input.tester_id === "string" && input.tester_id !== "" ? input.tester_id : null,
       );
     },
-    listSince(sinceIso) {
+    listSince(sinceIso, testerId) {
+      if (typeof testerId === "string" && testerId !== "") {
+        return prep("SELECT * FROM usage_events WHERE created_at >= ? AND tester_id = ? ORDER BY created_at, id").all(sinceIso, testerId) as unknown as UsageEventRow[];
+      }
       return prep("SELECT * FROM usage_events WHERE created_at >= ? ORDER BY created_at, id").all(sinceIso) as unknown as UsageEventRow[];
     },
     prune(beforeIso) {
@@ -1656,7 +1686,116 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     },
   };
 
-  return { units, conversations, messages, findings, readings, refrigerantEvents, pmVisits, search, usage, corrections, transaction };
+  const TESTER_KINDS = new Set<string>(["turn", "error", "cap"]);
+  const getTester = (id: string): TesterRow | undefined => {
+    const row = prep("SELECT * FROM testers WHERE id = ?").get(id);
+    return row ? plain<TesterRow>(row) : undefined;
+  };
+  const capOrNull = (v: unknown): number | null => {
+    if (v === null || v === undefined) return null;
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0) throw validation("daily_cap_usd must be a non-negative number or null");
+    return Math.round(v * 100) / 100;
+  };
+  const testerName = (v: unknown): string => {
+    const name = textOrNull(v, "name");
+    if (!name) throw validation("name must not be empty");
+    if (name.length > 60) throw validation("name must be 60 characters or fewer");
+    return name;
+  };
+  const testers: Repos["testers"] = {
+    create(input) {
+      const name = testerName(input.name);
+      if (typeof input.password_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(input.password_sha256)) throw validation("password_sha256 must be a hex SHA-256 digest");
+      if (testers.getByName(name)) throw validation(`A tester named "${name}" already exists`);
+      const id = newId();
+      prep("INSERT INTO testers (id, name, password_sha256, created_at, disabled, daily_cap_usd, last_seen_at, notes) VALUES (?, ?, ?, ?, 0, ?, NULL, ?)").run(
+        id,
+        name,
+        input.password_sha256,
+        now(),
+        capOrNull(input.daily_cap_usd),
+        textOrNull(input.notes, "notes"),
+      );
+      return getTester(id)!;
+    },
+    get(id) {
+      return typeof id === "string" ? getTester(id) : undefined;
+    },
+    getByName(name) {
+      if (typeof name !== "string" || name.trim() === "") return undefined;
+      const row = prep("SELECT * FROM testers WHERE name = ? COLLATE NOCASE").get(name.trim());
+      return row ? plain<TesterRow>(row) : undefined;
+    },
+    list() {
+      return prep("SELECT * FROM testers ORDER BY created_at, rowid").all().map((r) => plain<TesterRow>(r));
+    },
+    update(id, patch) {
+      if (typeof id !== "string" || !getTester(id)) return undefined;
+      if (!patch || typeof patch !== "object") throw validation("patch required");
+      const cols: string[] = [];
+      const values: SqlValue[] = [];
+      if ("name" in patch) {
+        const name = testerName(patch.name);
+        const clash = testers.getByName(name);
+        if (clash && clash.id !== id) throw validation(`A tester named "${name}" already exists`);
+        cols.push("name");
+        values.push(name);
+      }
+      if ("password_sha256" in patch) {
+        if (typeof patch.password_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(patch.password_sha256)) throw validation("password_sha256 must be a hex SHA-256 digest");
+        cols.push("password_sha256");
+        values.push(patch.password_sha256);
+      }
+      if ("disabled" in patch) {
+        cols.push("disabled");
+        values.push(patch.disabled ? 1 : 0);
+      }
+      if ("daily_cap_usd" in patch) {
+        cols.push("daily_cap_usd");
+        values.push(capOrNull(patch.daily_cap_usd));
+      }
+      if ("notes" in patch) {
+        cols.push("notes");
+        values.push(textOrNull(patch.notes, "notes"));
+      }
+      if (cols.length === 0) return getTester(id);
+      values.push(id);
+      prep(`UPDATE testers SET ${cols.map((c) => `${c} = ?`).join(", ")} WHERE id = ?`).run(...values);
+      return getTester(id);
+    },
+    touch(id) {
+      if (typeof id === "string") prep("UPDATE testers SET last_seen_at = ? WHERE id = ?").run(now(), id);
+    },
+    remove(id) {
+      return typeof id === "string" && Number(prep("DELETE FROM testers WHERE id = ?").run(id).changes) > 0;
+    },
+    logEvent(input) {
+      if (!TESTER_KINDS.has(input.kind)) throw validation("unknown tester event kind");
+      prep("INSERT INTO tester_events (tester_id, created_at, kind, conversation_id, code, detail) VALUES (?, ?, ?, ?, ?, ?)").run(
+        input.tester_id,
+        now(),
+        input.kind,
+        input.conversation_id ?? null,
+        textOrNull(input.code, "code"),
+        textOrNull(typeof input.detail === "string" ? input.detail.slice(0, 500) : input.detail, "detail"),
+      );
+    },
+    listEvents(testerId, opts = {}) {
+      const limit = clampLimit(opts.limit, 50, 500);
+      if (opts.kind && TESTER_KINDS.has(opts.kind)) {
+        return prep("SELECT * FROM tester_events WHERE tester_id = ? AND kind = ? ORDER BY created_at DESC, id DESC LIMIT ?").all(testerId, opts.kind, limit) as unknown as TesterEventRow[];
+      }
+      return prep("SELECT * FROM tester_events WHERE tester_id = ? ORDER BY created_at DESC, id DESC LIMIT ?").all(testerId, limit) as unknown as TesterEventRow[];
+    },
+    countEvents(testerId, sinceIso) {
+      const out: Record<TesterEventRow["kind"], number> = { turn: 0, error: 0, cap: 0 };
+      const rows = prep("SELECT kind, COUNT(*) AS n FROM tester_events WHERE tester_id = ? AND created_at >= ? GROUP BY kind").all(testerId, sinceIso) as { kind: string; n: number }[];
+      for (const r of rows) if (TESTER_KINDS.has(r.kind)) out[r.kind as TesterEventRow["kind"]] = Number(r.n);
+      return out;
+    },
+  };
+
+  return { units, conversations, messages, findings, readings, refrigerantEvents, pmVisits, search, usage, corrections, testers, transaction };
 }
 
 /** Bracket the first case-insensitive occurrence of each token (mirrors the FTS snippet markers). */

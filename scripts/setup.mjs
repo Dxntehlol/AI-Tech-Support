@@ -36,7 +36,7 @@ const IS_ROOT = !IS_WIN && typeof process.getuid === "function" && process.getui
 const SERVICE_NAME = "hvac";
 const DEFAULT_PORT = 8787;
 /** Settings the server must read from .env, never inherit from the shell that ran this script. */
-const SCRUB = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_MODEL", "CLAUDE_EFFORT", "CLAUDE_FALLBACKS", "CLAUDE_FAKE", "ENABLE_WEB_SEARCH", "MAX_TOOL_ITERATIONS", "REPLAY_IMAGE_WINDOW", "PORT", "HOST", "DB_PATH", "APP_PASSWORD", "ALLOW_ORIGINS"];
+const SCRUB = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_MODEL", "CLAUDE_EFFORT", "CLAUDE_FALLBACKS", "CLAUDE_FAKE", "ENABLE_WEB_SEARCH", "MAX_TOOL_ITERATIONS", "REPLAY_IMAGE_WINDOW", "PORT", "HOST", "DB_PATH", "APP_PASSWORD", "ALLOW_ORIGINS", "TESTER_DAILY_CAP_USD"];
 
 const results = [];
 const ok = (step, detail) => results.push({ step, state: "ok", detail });

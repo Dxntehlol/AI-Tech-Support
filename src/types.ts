@@ -691,6 +691,30 @@ export interface ConversationRow {
   signed_by?: string | null;
   signed_at?: string | null;
   signature_note?: string | null;
+  /** Tester who started it (Settings → Testers); null = the owner. Always present on rows read from the database. */
+  tester_id?: string | null;
+}
+
+/** A tester login row (password digest excluded from API responses). */
+export interface TesterRow {
+  id: string;
+  name: string;
+  password_sha256: string;
+  created_at: string;
+  disabled: number;
+  daily_cap_usd: number | null;
+  last_seen_at: string | null;
+  notes: string | null;
+}
+
+export interface TesterEventRow {
+  id: number;
+  tester_id: string;
+  created_at: string;
+  kind: "turn" | "error" | "cap";
+  conversation_id: string | null;
+  code: string | null;
+  detail: string | null;
 }
 
 export interface MessageRow {
@@ -984,4 +1008,6 @@ export interface AppConfig {
   webDir: string;
   /** Origins allowed via CORS (native shells, e.g. capacitor://localhost); empty/absent = same-origin only. */
   allowOrigins?: string[];
+  /** Default estimated spend (USD, server-local day) a tester may run up before chat is refused; 0 = no cap. */
+  testerDailyCapUsd?: number;
 }
