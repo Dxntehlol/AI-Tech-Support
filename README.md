@@ -46,26 +46,41 @@ Claude-powered chat assistant with a local knowledge base and a job memory:
 - **QR labels** — **QR label** on a unit card prints a sticker whose code opens that unit in the app;
   **Units → ⋮ → Print QR labels** prints one label per unit, two per row.
 - **Refrigerant log and EPA compliance** — every add, recovery, leak check, verification test, repair or retrofit plan
-  is logged on the unit (`POST /api/units/:id/refrigerant`, or the assistant's `log_refrigerant`); an add gets the
+  is logged on the unit (the unit card's **Refrigerant** card → **Log refrigerant**, `POST /api/units/:id/refrigerant`,
+  or the assistant's `log_refrigerant`); the card shows a compliance chip (not applicable / OK / exceeded with the
+  30-day repair clock / "Set full charge"), the obligations with due dates and the event list; an add gets the
   annualized leak rate `(lb added ÷ full charge) × (365 ÷ days since last add) × 100` against the 10 / 20 / 30 %
   threshold for the appliance type (40 CFR 84.106), an exceedance opens a "repair within 30 days and verify" follow-up
   and the unit card shows the open obligations (repair, initial and follow-up verification, retrofit plan, inspection
-  cadence); `GET /api/refrigerant/export.csv` exports the whole log and reports carry an owner-documentation block.
+  cadence); **Settings → Refrigerant log** (`GET /api/refrigerant/export.csv`) exports the whole log and reports carry an
+  owner-documentation block.
 - **PM checklists** — templates per equipment type (gas and electric RTUs, splits, heat pumps, air- and water-cooled
   chillers, walk-in coolers and freezers, ice machines, MAU/exhaust, boilers) with pass/fail, as-found/as-left numbers
   and nameplate comparisons (volts ±10 %, amps vs RLA, capacitors ±6 %); visits are stored per unit
   (`/api/pm/templates`, `/api/units/:id/pm`), the assistant sees the last visit's fails, and reports include the summary.
+  On the phone: unit card → **Maintenance → Start PM** → template (suggested first) → a full-screen checklist with
+  pass / fail / n/a, as-found / as-left numbers, inline nameplate verdicts, autosave that survives losing signal, and
+  **Complete visit**.
 - **Chiller readings mode** — chilled-water supply/return, evaporator and condenser saturated temperatures or pressures,
   condenser water or entering air, amps and oil become ΔT, tons, evaporator/condenser approaches and ranked findings
   (fouled tubes, dirty coil, low flow, overload) via `POST /api/calc/chiller` or the assistant's `diagnose_chiller`,
-  stored as readings with mode `chiller`.
+  stored as readings with mode `chiller` (Readings tab → **DX | Chiller** switch; the top finding is shown as the
+  "Most likely cause" with its first check, in DX mode too).
 - **Job clock and customer signature** — start/stop a job clock on a conversation (`POST /api/conversations/:id/job`)
   and capture a PNG signature with a name and a note such as "declined recommendation"
-  (`POST /api/conversations/:id/signature`); the service report shows time on site and embeds the signature.
+  (`POST /api/conversations/:id/signature`); the service report shows time on site and embeds the signature. In a chat
+  with a unit attached, the bar under the header has **Start job** (a running timer that survives a reload) and
+  **Customer sign-off** (signature pad).
 - **Field calculators** — leak rate, gas meter clocking, CO air-free (100 / 400 ppm flags, ambient stop-work),
   sensible CFM, total external static (PSC/ECM limits), fan laws, belt drive (sheave ratio, belt length, deflection),
   voltage drop (Cu/Al, 1- and 3-phase, 3 % / 5 %), NEC 430.248/430.250 motor FLA, capacitor replacement check and a
-  motor replacement checklist, all through `POST /api/calc/electrical` with the formula stated in every result.
+  motor replacement checklist, all through `POST /api/calc/electrical` with the formula stated in every result; the
+  Readings tab's calculators (grouped Refrigerant · Airflow · Combustion · Electrical · Parts) compute the same
+  formulas on the phone when there is no signal.
+- **Field ergonomics** — **Settings → Display**: glove mode (56 px targets, 18 px text) and sun mode (forced
+  maximum-contrast light theme); a microphone in the composer dictates readings ("suction 118 p s i g" → "suction
+  118 psig") where the browser supports speech recognition; the unit card lists the manufacturer's support phone
+  numbers (tap to call) and literature links from the pack.
 
 Everything runs on one machine with Node.js; the only external call is to the Anthropic API.
 

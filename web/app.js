@@ -364,7 +364,7 @@ function parseHash(raw) {
     }
   }).filter(Boolean);
   const isId = (x) => typeof x === "string" && /^[0-9a-f]{16}$/.test(x);
-  const r = { screen: "chat", conv: null, unit: null, sheet: null, pane: "dx", isNew: false, finding: null };
+  const r = { screen: "chat", conv: null, unit: null, sheet: null, pane: "dx", mode: "dx", isNew: false, finding: null, pmVisit: null };
   switch (parts[0]) {
     case undefined:
     case "chat":
@@ -374,6 +374,7 @@ function parseHash(raw) {
         r.conv = parts[1];
         if (parts[2] === "share") r.sheet = "share";
         else if (parts[2] === "pick") r.sheet = "pick"; // unit picker (attach to this chat)
+        else if (parts[2] === "sign") r.sheet = "sign"; // customer signature pad
       } else if (parts[1] === "pick") r.sheet = "pick";
       break;
     case "units":
@@ -394,11 +395,23 @@ function parseHash(raw) {
       else if (parts[2] === "finding" && r.unit) {
         r.sheet = "finding"; // add a finding, or edit one (#unit/<id>/finding/<findingId>)
         r.finding = isId(parts[3]) ? parts[3] : null;
+      } else if (parts[2] === "refrigerant" && r.unit) r.sheet = "refrigerant"; // log a refrigerant event
+      else if (parts[2] === "charge" && r.unit) r.sheet = "charge"; // full charge / appliance type / circuits
+      else if (parts[2] === "pm" && r.unit) {
+        if (isId(parts[3])) {
+          r.screen = "pm"; // full-screen checklist for one visit
+          r.pmVisit = parts[3];
+          if (parts[4] === "report") r.sheet = "report"; // share the unit report from the checklist
+        } else r.sheet = "pmPick"; // template picker
       }
       break;
     case "readings":
       r.screen = "readings";
       if (parts[1] === "calcs") r.pane = "calcs";
+      else if (parts[1] === "chiller") {
+        r.mode = "chiller"; // chiller readings mode
+        if (parts[2] === "pick") r.sheet = "pick"; // unit picker, staying in chiller mode
+      }
       else if (parts[1] === "pick") r.sheet = "pick"; // unit picker (save readings to a unit)
       break;
     case "history":
@@ -805,6 +818,13 @@ function reportShareText(report) {
     lines.push("", "Open items:");
     for (const o of open.slice(0, 5)) lines.push(`- ${o}`);
   }
+  const job = report.job && typeof report.job === "object" ? report.job : null;
+  const sig = report.signature && typeof report.signature === "object" ? report.signature : null;
+  if ((job && job.startedAt) || sig) {
+    lines.push("");
+    if (job && job.startedAt) lines.push(`Time on site: ${typeof job.minutesOnSite === "number" ? formatMinutes(job.minutesOnSite) : "clock running"}`);
+    if (sig) lines.push(`Signed by ${sig.signedBy || "customer"}${sig.signedAt ? ` on ${String(sig.signedAt).slice(0, 10)}` : ""}${sig.note ? ` — ${sig.note}` : ""}`);
+  }
   return lines.join("\n");
 }
 
@@ -946,7 +966,7 @@ function serverUrlPrompt({ configBase, savedBase, bundled, protocol } = {}) {
 /* ------------------------------------------------------------------------------------------
  * Readings history + follow-ups: pure helpers (tested in web/app.test.ts)
  * ---------------------------------------------------------------------------------------- */
-const MODE_SHORT = { ac_cooling: "AC cooling", heat_pump_cooling: "HP cooling", heat_pump_heating: "HP heating", refrigeration: "Refrigeration" };
+const MODE_SHORT = { ac_cooling: "AC cooling", heat_pump_cooling: "HP cooling", heat_pump_heating: "HP heating", refrigeration: "Refrigeration", chiller: "Chiller" };
 /** [key, label, unit] for the expanded reading view: measurements as entered, then derived metrics. */
 const READING_MEASUREMENT_FIELDS = [
   ["circuit", "Circuit", ""], ["outdoorDbF", "Outdoor DB", "°F"], ["indoorDbF", "Entering DB", "°F"], ["indoorWbF", "Entering WB", "°F"], ["supplyDbF", "Supply DB", "°F"],
@@ -994,6 +1014,13 @@ function readingSummary(r, now = Date.now()) {
   const d = (r && r.derived) || {};
   const m = (r && r.measurements) || {};
   const n = (v, digits = 0) => (typeof v === "number" && Number.isFinite(v) ? fmtNum(v, digits) : null);
+  if (r && r.mode === "chiller") {
+    const c = [`ΔT ${n(d.chwDeltaTF) ?? "—"}`, `evap app ${n(d.evapApproachF) ?? "—"}`, `cond app ${n(d.condApproachF) ?? "—"}`];
+    if (n(d.ampsPercentRla) !== null) c.push(`${n(d.ampsPercentRla)}% RLA`);
+    else if (n(m.compressorAmps, 1) !== null) c.push(`${n(m.compressorAmps, 1)} A`);
+    else c.push("amps —");
+    return { title: [readingDateLabel(r.created_at, now), "Chiller"].filter(Boolean).join(" · "), values: c.join(" · "), source: r.source || "sheet", note: r.note || "", valid: !(r.validity && r.validity.ok === false) };
+  }
   const sh = n(d.superheatF);
   const sc = n(d.subcoolingF);
   const dt = n(d.deltaTF);
@@ -1028,6 +1055,11 @@ function readingDetailRows(r) {
     out.push({ label, value: unit ? `${text} ${unit}` : text });
   };
   push("Refrigerant", r && r.refrigerant, "");
+  if (r && r.mode === "chiller") {
+    for (const [k, label, unit] of CHILLER_MEASUREMENT_FIELDS) push(label, k === "condenserType" && m[k] ? (m[k] === "water_cooled" ? "water-cooled" : m[k] === "air_cooled" ? "air-cooled" : m[k]) : m[k], unit);
+    for (const [k, label, unit] of CHILLER_DERIVED_FIELDS) push(label, d[k], unit === "tons" ? "" : unit);
+    return out;
+  }
   push("Metering", r && r.metering_device ? (METERING_LABEL[r.metering_device] || r.metering_device) : null, "");
   for (const [k, label, unit] of READING_MEASUREMENT_FIELDS) push(label, m[k], unit);
   for (const [k, label, unit] of READING_DERIVED_FIELDS) push(label, d[k], unit);
@@ -1051,6 +1083,477 @@ function dueChip(due, done, today = localYmd()) {
   if (due === today) return { kind: "soon", label: "Due today" };
   if (due <= addDaysYmd(today, 7)) return { kind: "soon", label: `Due ${ymdLabel(due, today)}` };
   return { kind: "later", label: `Due ${ymdLabel(due, today)}` };
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Wave 2: refrigerant log, PM checklists, chiller mode, job clock + signature, calculators, voice,
+ * manufacturer support, most-likely-cause — pure helpers (tested in web/app.test.ts)
+ * ---------------------------------------------------------------------------------------- */
+
+/* ---- refrigerant log / EPA compliance ---- */
+const LEAK_RATE_RULE_LINE = "EPA: leak rate = lb added ÷ full charge × 365 ÷ days since last add, up to 365 days";
+const APPLIANCE_TYPE_LABEL = { comfort_cooling: "Comfort cooling", commercial_refrigeration: "Commercial refrigeration", industrial_process: "Industrial process", other: "Other" };
+const REFRIGERANT_EVENT_LABEL = {
+  add: "Added", recover: "Recovered", leak_check: "Leak check", verification_initial: "Verification test (initial)", verification_followup: "Verification test (follow-up)",
+  repair: "Repair", retrofit_plan: "Retrofit plan",
+};
+const OBLIGATION_LABEL = { repair: "Repair", verification_initial: "Initial verification test", verification_followup: "Follow-up verification test", retrofit_plan: "Retrofit or retirement plan", inspection: "Leak inspection" };
+
+/** lb + oz → decimal pounds (3 decimals); blanks count as 0; null when nothing entered or not a number. */
+function lbsFromLbsOz(lbs, oz) {
+  const l = toNum(lbs);
+  const o = toNum(oz);
+  if (l === undefined && o === undefined) return null;
+  const total = (l || 0) + (o || 0) / 16;
+  return Math.round(total * 1000) / 1000;
+}
+/** 12.25 → "12 lb 4 oz"; 0.5 → "8 oz"; 3 → "3 lb". */
+function formatLbs(n) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "";
+  const whole = Math.floor(n);
+  const oz = Math.round((n - whole) * 16);
+  if (oz === 16) return `${whole + 1} lb`;
+  if (whole === 0 && oz > 0) return `${oz} oz`;
+  return oz > 0 ? `${whole} lb ${oz} oz` : `${whole} lb`;
+}
+
+/**
+ * Compliance chip for the unit card from the ComplianceSummary: unknown charge ("Set full charge" prompt), not
+ * applicable (< 15 lb), exceeded (with the 30-day repair clock), or OK (with the last annualized rate).
+ */
+function complianceChip(c, today = localYmd()) {
+  if (!c || typeof c !== "object") return { kind: "unknown", label: "Unknown charge", detail: "Set the full charge to compute leak rates." };
+  if (c.fullChargeLbs === null || c.fullChargeLbs === undefined) return { kind: "unknown", label: "Unknown charge", detail: "Set the full charge to compute leak rates." };
+  if (!c.applies) return { kind: "na", label: `Not applicable · ${fmtNum(c.fullChargeLbs)} lb < 15 lb`, detail: "Below the 15 lb HFC threshold (40 CFR 84.106); rates are still computed for the record." };
+  if (c.exceeded) {
+    const rate = typeof c.lastLeakRatePct === "number" ? `${fmtNum(c.lastLeakRatePct)} %` : "threshold";
+    const repair = Array.isArray(c.obligations) ? c.obligations.find((o) => o && o.kind === "repair") : null;
+    let clock = "";
+    if (repair && repair.dueDate) {
+      const days = Math.round((Date.parse(`${repair.dueDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000);
+      clock = Number.isFinite(days) ? (days < 0 ? ` · repair ${-days} d overdue` : days === 0 ? " · repair due today" : ` · ${days} d to repair`) : "";
+    }
+    return { kind: "exceeded", label: `Exceeded ${rate}${clock}`, detail: `Last add exceeded the ${c.thresholdPct} % threshold: repair within 30 days, verify, then follow-up test within 10 days.` };
+  }
+  const rate = typeof c.lastLeakRatePct === "number" ? ` · ${fmtNum(c.lastLeakRatePct)} %` : "";
+  return { kind: "ok", label: `OK${rate}`, detail: c.lastAdd ? `Last add ${c.lastAdd.date} within the ${c.thresholdPct} % threshold.` : `No add logged yet; threshold ${c.thresholdPct} %.` };
+}
+
+/** One refrigerant event as a list row: "Oct 5 · Added 12 lb 4 oz R-410A" + "3.1 % of 10 % · ckt 1 · cyl 123 · J. Tech". */
+function refrigerantEventText(e, today = localYmd()) {
+  if (!e || typeof e !== "object") return { title: "", meta: "", tone: "" };
+  const label = REFRIGERANT_EVENT_LABEL[e.event_type] || e.event_type || "Event";
+  const amount = typeof e.amount_lbs === "number" && (e.event_type === "add" || e.event_type === "recover") ? ` ${formatLbs(e.amount_lbs)}` : "";
+  const ref = e.refrigerant ? ` ${e.refrigerant}` : "";
+  const title = `${ymdLabel(e.date || String(e.created_at || "").slice(0, 10), today)} · ${label}${amount}${ref}`;
+  const meta = [];
+  if (typeof e.leak_rate_pct === "number") meta.push(`${fmtNum(e.leak_rate_pct)} %${typeof e.threshold_pct === "number" ? ` of ${e.threshold_pct} %` : ""}${e.exceeded ? " — exceeded" : ""}`);
+  if (e.event_type === "leak_check") meta.push(e.leak_found === true ? "leak found" : e.leak_found === false ? "no leak found" : "");
+  if (e.event_type === "verification_initial" || e.event_type === "verification_followup") meta.push(e.passed === true ? "passed" : e.passed === false ? "failed" : "");
+  if (e.circuit) meta.push(`ckt ${e.circuit}`);
+  if (e.cylinder_id) meta.push(`cyl ${e.cylinder_id}`);
+  if (e.tech_name) meta.push(e.tech_name + (e.tech_cert ? ` (${e.tech_cert})` : ""));
+  const tone = e.exceeded ? "danger" : e.leak_found === true || e.passed === false ? "warn" : e.event_type === "add" || e.passed === true ? "ok" : "";
+  return { title, meta: meta.filter(Boolean).join(" · "), tone };
+}
+
+/** Obligation row chip: overdue / due soon / later / no date (text carries the meaning, color only reinforces). */
+function obligationChip(o, today = localYmd()) {
+  if (!o) return { kind: "none", label: "" };
+  if (!o.dueDate) return { kind: "none", label: "Schedule" };
+  const chip = dueChip(o.dueDate, 0, today);
+  return o.overdue && chip.kind !== "overdue" ? { kind: "overdue", label: `Overdue · ${ymdLabel(o.dueDate, today)}` } : chip;
+}
+
+function refrigerantExportFilename(disposition, now = new Date()) {
+  const m = /filename="?([^";]+)"?/i.exec(String(disposition || ""));
+  if (m && /^[\w.-]+\.csv$/i.test(m[1])) return m[1];
+  return `hvac-refrigerant-log-${now.toISOString().slice(0, 10)}.csv`;
+}
+
+/* ---- PM checklists ---- */
+const PM_STATUS_LABEL = { in_progress: "In progress", complete: "Complete" };
+
+/** Items of a template with their section title. */
+function pmTemplateItems(template) {
+  const out = [];
+  for (const s of (template && template.sections) || []) for (const item of s.items || []) out.push({ item, section: s.title });
+  return out;
+}
+/** Recorded state of one item from its result entry: "pass" | "fail" | null (nothing decided). */
+function pmItemState(r) {
+  if (!r || typeof r !== "object") return null;
+  if (r.pass === true) return "pass";
+  if (r.pass === false) return "fail";
+  if (r.checked === true) return "pass";
+  if (r.checked === false) return "fail";
+  return null;
+}
+/** Whether anything was recorded for an item (counts toward "12 / 28"). */
+function pmItemDone(r) {
+  if (!r || typeof r !== "object") return false;
+  if (pmItemState(r) !== null) return true;
+  // An explicit "N/A" on a check item is stored as { checked: null, pass: null }: decided, so it counts.
+  if (Object.prototype.hasOwnProperty.call(r, "checked") && r.checked === null && r.pass === null) return true;
+  const has = (v) => v !== null && v !== undefined && String(v).trim() !== "";
+  return has(r.value) || has(r.asFound) || has(r.asLeft);
+}
+function pmProgress(template, results) {
+  const items = pmTemplateItems(template);
+  const res = results && typeof results === "object" ? results : {};
+  return { done: items.filter(({ item }) => pmItemDone(res[item.id])).length, total: items.length };
+}
+/** Result patch for a check item's segmented control: pass → checked + pass; fail → unchecked + fail; n/a → cleared. */
+function pmCheckPatch(state) {
+  if (state === "pass") return { checked: true, pass: true };
+  if (state === "fail") return { checked: false, pass: false };
+  return { checked: null, pass: null };
+}
+/** Inline feedback for an evaluated item: "Fail · nameplate 208–230 V ±10 % (−14 %)". Empty when nothing to say. */
+function pmFeedback(ev) {
+  if (!ev || typeof ev !== "object") return { text: "", tone: "" };
+  if (ev.status === "fail") {
+    const dev = typeof ev.deviationPct === "number" ? ` (${ev.deviationPct > 0 ? "+" : ev.deviationPct < 0 ? "−" : ""}${fmtNum(Math.abs(ev.deviationPct))} %)` : "";
+    return { text: `Fail${ev.reference ? ` · ${ev.reference}${dev}` : ""}`, tone: "danger" };
+  }
+  if (ev.status === "pass" && ev.reference) {
+    const dev = typeof ev.deviationPct === "number" ? ` (${ev.deviationPct > 0 ? "+" : ev.deviationPct < 0 ? "−" : ""}${fmtNum(Math.abs(ev.deviationPct))} %)` : "";
+    return { text: `Pass · ${ev.reference}${dev}`, tone: "ok" };
+  }
+  return { text: "", tone: "" };
+}
+/** Last-visit summary for the Maintenance card. */
+function pmVisitSummaryText(v, today = localYmd()) {
+  if (!v || typeof v !== "object") return null;
+  const s = v.summary || {};
+  const date = v.date || String(v.created_at || "").slice(0, 10);
+  const byId = new Map((s.items || []).map((i) => [i.id, i]));
+  const label = (id) => (byId.get(id) && byId.get(id).label) || id;
+  return {
+    title: [ymdLabel(date, today), v.template_name || s.templateName || v.template_id].filter(Boolean).join(" · "),
+    counts: typeof s.total === "number" ? `${s.pass || 0} pass · ${s.fail || 0} fail · ${s.na || 0} n/a of ${s.total}` : "No items recorded",
+    status: PM_STATUS_LABEL[v.status] || v.status || "",
+    flagged: (s.flagged || []).map(label),
+    fails: (s.fails || []).map(label),
+    safetyFails: (s.safetyFails || []).map(label),
+    tech: v.tech_name || "",
+  };
+}
+/**
+ * Client mirror of the server's suggestPmTemplate (the API exposes it only through the assistant tool):
+ * decoded product type + heat type → template id, with the reason shown in the picker.
+ */
+function suggestPmTemplate(unit, decoded) {
+  const u = unit || {};
+  let d = decoded || null;
+  if (!d && u.decoded_json) {
+    try { d = JSON.parse(u.decoded_json); } catch { d = null; }
+  }
+  const best = d && Array.isArray(d.model) ? d.model[0] : null;
+  const productType = best && best.productType;
+  const family = `${(best && best.family) || ""} ${u.model || ""}`.toLowerCase();
+  const heat = String(u.heat_type || (best && best.attributes && best.attributes.heat_type) || "").toLowerCase();
+  const gas = /gas|propane|lp\b|natural/.test(heat);
+  const heatPumpHeat = /heat ?pump/.test(heat);
+  switch (productType) {
+    case "packaged_rtu":
+      if (heatPumpHeat) return { templateId: "heat_pump", reason: "packaged rooftop with heat-pump heat" };
+      return gas ? { templateId: "rtu_gas", reason: "packaged rooftop with gas heat" } : { templateId: "rtu_electric_or_cooling_only", reason: `packaged rooftop${heat ? ` with ${heat} heat` : ""}` };
+    case "air_handler":
+      return { templateId: "rtu_electric_or_cooling_only", reason: "air handler (airside items)" };
+    case "split_condensing_unit":
+      return { templateId: "split_ac", reason: "split condensing unit" };
+    case "split_heat_pump":
+    case "water_source_hp":
+      return { templateId: "heat_pump", reason: productType === "water_source_hp" ? "water-source heat pump (skip outdoor-coil items)" : "split heat pump" };
+    case "chiller":
+      return /water[- ]cooled|centrifugal|cvh|19xr|23xr|rthd|yk\b|wme/.test(family) ? { templateId: "chiller_water_cooled", reason: "chiller (water-cooled family)" } : { templateId: "chiller_air_cooled", reason: "chiller (air-cooled unless the family says otherwise)" };
+    case "refrigeration_condensing_unit":
+      return /freez|low[- ]temp/.test(family) ? { templateId: "walk_in_freezer", reason: "refrigeration condensing unit (low temp)" } : { templateId: "walk_in_cooler", reason: "refrigeration condensing unit (medium temp assumed)" };
+    case "furnace":
+      return { templateId: "rtu_gas", reason: "furnace: gas heat / combustion items apply" };
+    default:
+      break;
+  }
+  if (heatPumpHeat) return { templateId: "heat_pump", reason: "heat-pump heat type on the record" };
+  if (gas) return { templateId: "rtu_gas", reason: "gas heat type on the record" };
+  if (/chiller|cgam|rtac|30ra|30rb|ylaa|yvaa/.test(family)) return { templateId: "chiller_air_cooled", reason: "model looks like an air-cooled chiller" };
+  if (/boiler/.test(family)) return { templateId: "boiler", reason: "model looks like a boiler" };
+  if (/ice|cuber|flaker|manitowoc|hoshizaki|scotsman/.test(family) || /manitowoc|hoshizaki|scotsman/.test(String(u.manufacturer || "").toLowerCase())) return { templateId: "ice_machine", reason: "ice machine manufacturer/model" };
+  return { templateId: null, reason: "no product type decoded; pick the equipment type" };
+}
+/** Templates ordered for the picker: the suggestion first (flagged), then the rest in pack order. */
+function orderPmTemplates(templates, suggestion) {
+  const list = Array.isArray(templates) ? templates.slice() : [];
+  const id = suggestion && suggestion.templateId;
+  const i = id ? list.findIndex((t) => t && t.id === id) : -1;
+  if (i > 0) list.unshift(list.splice(i, 1)[0]);
+  return list.map((t) => ({ ...t, suggested: !!id && t.id === id }));
+}
+const pmPendingKey = (vid) => `hvac.pmPending.${vid}`;
+
+/* ---- chiller readings mode ---- */
+const CHILLER_NUMERIC = ["chwSupplyF", "chwReturnF", "chwFlowGpm", "evapSatF", "evapPressurePsig", "condSatF", "condPressurePsig", "condWaterInF", "condWaterOutF", "outdoorDbF", "oilPressurePsig", "oilTempF", "compressorAmps", "rla", "percentLoad", "elevationFt"];
+/** ChillerMeasurements from form values: numbers parsed, blanks dropped, the condenser type kept, the other side's fields dropped. */
+function buildChillerMeasurements(values) {
+  const v = values || {};
+  const out = {};
+  if (v.refrigerant && String(v.refrigerant).trim()) out.refrigerant = String(v.refrigerant).trim();
+  if (v.condenserType === "water_cooled" || v.condenserType === "air_cooled") out.condenserType = v.condenserType;
+  if (v.circuit && String(v.circuit).trim()) out.circuit = String(v.circuit).trim();
+  for (const k of CHILLER_NUMERIC) {
+    if (out.condenserType === "water_cooled" && k === "outdoorDbF") continue;
+    if (out.condenserType === "air_cooled" && (k === "condWaterInF" || k === "condWaterOutF")) continue;
+    const n = toNum(v[k]);
+    if (n !== undefined) out[k] = n;
+  }
+  return out;
+}
+/** True when at least one chiller reading (not just refrigerant / type / circuit) was entered. */
+function chillerHasReadings(m) {
+  return !!m && CHILLER_NUMERIC.some((k) => typeof m[k] === "number");
+}
+const CHILLER_DERIVED_FIELDS = [
+  ["chwDeltaTF", "CHW ΔT", "°F"], ["tons", "Tons", "tons"], ["evapApproachF", "Evap approach", "°F"], ["condApproachF", "Cond approach", "°F"], ["condWaterDeltaTF", "Cond water ΔT", "°F"],
+  ["ampsPercentRla", "Amps % RLA", "%"], ["evapSatF", "Evap sat", "°F"], ["condSatF", "Cond sat", "°F"], ["patmPsia", "Patm", "psia"],
+];
+const CHILLER_MEASUREMENT_FIELDS = [
+  ["circuit", "Circuit", ""], ["condenserType", "Condenser", ""], ["chwSupplyF", "CHW supply", "°F"], ["chwReturnF", "CHW return", "°F"], ["chwFlowGpm", "CHW flow", "gpm"],
+  ["evapSatF", "Evap sat (entered)", "°F"], ["evapPressurePsig", "Evap pressure", "psig"], ["condSatF", "Cond sat (entered)", "°F"], ["condPressurePsig", "Cond pressure", "psig"],
+  ["condWaterInF", "Cond water in", "°F"], ["condWaterOutF", "Cond water out", "°F"], ["outdoorDbF", "Outdoor DB", "°F"], ["oilPressurePsig", "Oil pressure", "psig"], ["oilTempF", "Oil temp", "°F"],
+  ["compressorAmps", "Compressor amps", "A"], ["rla", "RLA", "A"], ["percentLoad", "Load", "%"], ["elevationFt", "Elevation", "ft"],
+];
+/** Compact chiller readings message for the chat. */
+function composeChillerMessage(m, derived) {
+  const mm = m || {};
+  const head = ["chiller"];
+  if (mm.circuit) head.push(`circuit ${mm.circuit}`);
+  if (mm.refrigerant) head.push(mm.refrigerant);
+  if (mm.condenserType) head.push(mm.condenserType === "water_cooled" ? "water-cooled" : "air-cooled");
+  const parts = [];
+  if (mm.chwSupplyF !== undefined || mm.chwReturnF !== undefined) parts.push(`CHW ${mm.chwReturnF !== undefined ? `${fmtNum(mm.chwReturnF)} in` : ""}${mm.chwReturnF !== undefined && mm.chwSupplyF !== undefined ? " / " : ""}${mm.chwSupplyF !== undefined ? `${fmtNum(mm.chwSupplyF)} out` : ""} °F`);
+  if (mm.chwFlowGpm !== undefined) parts.push(`flow ${fmtNum(mm.chwFlowGpm)} gpm`);
+  if (mm.evapSatF !== undefined) parts.push(`evap sat ${fmtNum(mm.evapSatF)} °F`);
+  else if (mm.evapPressurePsig !== undefined) parts.push(`evap ${fmtNum(mm.evapPressurePsig)} psig`);
+  if (mm.condSatF !== undefined) parts.push(`cond sat ${fmtNum(mm.condSatF)} °F`);
+  else if (mm.condPressurePsig !== undefined) parts.push(`cond ${fmtNum(mm.condPressurePsig)} psig`);
+  if (mm.condWaterInF !== undefined || mm.condWaterOutF !== undefined) parts.push(`cond water ${mm.condWaterInF !== undefined ? `${fmtNum(mm.condWaterInF)} in` : ""}${mm.condWaterInF !== undefined && mm.condWaterOutF !== undefined ? " / " : ""}${mm.condWaterOutF !== undefined ? `${fmtNum(mm.condWaterOutF)} out` : ""} °F`);
+  if (mm.outdoorDbF !== undefined) parts.push(`outdoor ${fmtNum(mm.outdoorDbF)} °F DB`);
+  if (mm.compressorAmps !== undefined) parts.push(`amps ${fmtNum(mm.compressorAmps)} A${mm.rla !== undefined ? ` / RLA ${fmtNum(mm.rla)} A` : ""}`);
+  if (mm.percentLoad !== undefined) parts.push(`load ${fmtNum(mm.percentLoad)} %`);
+  if (mm.oilPressurePsig !== undefined) parts.push(`oil ${fmtNum(mm.oilPressurePsig)} psig`);
+  if (mm.oilTempF !== undefined) parts.push(`oil temp ${fmtNum(mm.oilTempF)} °F`);
+  if (mm.elevationFt !== undefined) parts.push(`elevation ${fmtNum(mm.elevationFt, 0)} ft`);
+  let text = `Chiller readings (${head.join(", ")}): ${parts.length ? parts.join("; ") : "no measurements entered"}.`;
+  if (derived) {
+    const d = [];
+    const said = { chwDeltaTF: "CHW ΔT", tons: "load", evapApproachF: "evap approach", condApproachF: "cond approach", condWaterDeltaTF: "cond water ΔT", ampsPercentRla: "amps", evapSatF: "evap sat", condSatF: "cond sat" };
+    for (const [k, , unit] of CHILLER_DERIVED_FIELDS) {
+      if (typeof derived[k] !== "number" || !said[k]) continue;
+      d.push(`${said[k]} ${fmtNum(derived[k])}${unit === "%" ? " % RLA" : ` ${unit}`}`);
+    }
+    if (d.length) text += ` Derived: ${d.join(", ")}.`;
+  }
+  return text;
+}
+
+/* ---- most likely cause ---- */
+/** Top ranked non-info finding and the rest (findings arrive ranked by severity then confidence). */
+function splitFindings(findings) {
+  const list = Array.isArray(findings) ? findings.filter(Boolean) : [];
+  const i = list.findIndex((f) => f.severity && f.severity !== "info");
+  if (i < 0) return { top: null, rest: list };
+  return { top: list[i], rest: list.filter((_, j) => j !== i) };
+}
+/** First sentence of an explanation (one line "why"). */
+function firstSentence(text, max = 160) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  if (!s) return "";
+  const m = /^(.+?[.!?])(\s|$)/.exec(s);
+  const out = m ? m[1] : s;
+  return out.length > max ? `${out.slice(0, max - 1).trimEnd()}…` : out;
+}
+
+/* ---- job clock + signature ---- */
+/** "12:34" under an hour, "1:05:09" above. */
+function formatElapsed(ms) {
+  const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+/** Whole minutes as "45 min" / "1 h 05 min" (matches the report wording). */
+function formatMinutes(min) {
+  const n = Math.max(0, Math.round(Number(min) || 0));
+  const h = Math.floor(n / 60);
+  const m = n % 60;
+  return h > 0 ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min`;
+}
+/** Job bar state from the conversation payload: idle / running (elapsed from job_started_at) / stopped (+ signature). */
+function jobBarState(conv, now = Date.now()) {
+  const c = conv || {};
+  const started = c.job_started_at ? Date.parse(c.job_started_at) : NaN;
+  const ended = c.job_ended_at ? Date.parse(c.job_ended_at) : NaN;
+  let state = "idle";
+  let elapsedMs = 0;
+  if (Number.isFinite(started) && !Number.isFinite(ended)) {
+    state = "running";
+    elapsedMs = Math.max(0, now - started);
+  } else if (Number.isFinite(started) && Number.isFinite(ended)) {
+    state = "stopped";
+    elapsedMs = Math.max(0, ended - started);
+  }
+  const minutes = typeof c.minutes_on_site === "number" ? c.minutes_on_site : state === "stopped" ? Math.round(elapsedMs / 60000) : null;
+  return { state, elapsedMs, minutes, signed: !!(c.signed || c.signed_at), signedBy: c.signed_by || null, signedAt: c.signed_at || null, signatureNote: c.signature_note || null };
+}
+/** Signature note: the "declined recommendation" checkbox and free text folded into one string (≤ 500 chars). */
+function signatureNote(declined, note) {
+  const parts = [];
+  if (declined) parts.push("Declined recommendation");
+  const n = String(note || "").trim();
+  if (n) parts.push(n);
+  return parts.join(" — ").slice(0, 500) || null;
+}
+
+/* ---- calculators (wave 2) ---- */
+const CALC_GROUPS = [
+  { title: "Refrigerant", kinds: ["pt", "shsc", "leak_rate"] },
+  { title: "Airflow", kinds: ["temp_rise_cfm", "sensible_cfm", "static_pressure", "fan_laws", "belt_drive", "psychrometrics"] },
+  { title: "Combustion", kinds: ["gas_meter_clock", "combustion_co"] },
+  { title: "Electrical", kinds: ["voltage_imbalance", "capacitor_under_load", "winding_check", "voltage_drop", "motor_fla"] },
+  { title: "Parts", kinds: ["capacitor_replacement", "motor_replacement"] },
+];
+/** Per kind: which form fields may be blank and which are passed as strings (everything else must be a number). */
+const CALC_FIELD_RULES = {
+  capacitor_under_load: { optional: ["ratedUf"] },
+  psychrometrics: { optional: ["elevationFt"] },
+  leak_rate: { optional: ["applianceType"], strings: ["applianceType"] },
+  gas_meter_clock: { optional: ["heatingValueBtuPerCuft", "revolutions", "nameplateInputBtuh"] },
+  combustion_co: { optional: ["ambientCoPpm"] },
+  sensible_cfm: { optional: ["tons"] },
+  static_pressure: { optional: ["ratedMaxInWc", "blowerType"], strings: ["blowerType"] },
+  fan_laws: { optional: ["cfm1", "sp1", "bhp1"] },
+  belt_drive: { optional: ["centerDistanceIn"] },
+  voltage_drop: { optional: ["awg", "circularMils", "material", "phase"], strings: ["awg", "material"] },
+  motor_fla: {},
+  capacitor_replacement: {},
+  motor_replacement: { optional: ["hp", "rpm", "volts", "phase", "frame", "rotationFromShaftEnd", "shaftDiaIn", "enclosure"], strings: ["frame", "rotationFromShaftEnd", "enclosure"] },
+};
+/**
+ * Request body for POST /api/calc/electrical from a calculator form: numbers parsed, optional blanks dropped,
+ * string enums passed through, phase as 1 | 3. Returns {body} or {error} (the first missing/invalid field).
+ */
+function calcRequestFromForm(kind, raw, labels = {}) {
+  const rules = CALC_FIELD_RULES[kind] || {};
+  const optional = new Set(rules.optional || []);
+  const strings = new Set(rules.strings || []);
+  const body = { kind };
+  for (const [k, v0] of Object.entries(raw || {})) {
+    const v = String(v0 ?? "").trim();
+    if (k === "phase") {
+      if (v === "") {
+        if (optional.has("phase")) continue;
+        return { error: "Pick the phase." };
+      }
+      body.phase = Number(v) === 3 ? 3 : 1;
+      continue;
+    }
+    if (v === "") {
+      if (optional.has(k)) continue;
+      return { error: `Enter ${labels[k] || k}.` };
+    }
+    if (strings.has(k)) {
+      body[k] = v;
+      continue;
+    }
+    const n = toNum(v);
+    if (n === undefined) return { error: `${labels[k] || k} must be a number.` };
+    body[k] = n;
+  }
+  if (kind === "voltage_drop" && body.awg === undefined && body.circularMils === undefined) return { error: "Enter the wire size (AWG / kcmil) or circular mils." };
+  return { body };
+}
+/** Flag-like calculator values rendered as labelled chips: [label when 1, label when 0, tone when 1]. */
+const CALC_FLAG_KEYS = {
+  pass: ["PASS", "FAIL", "ok"], ok: ["OK", "NO", "ok"], microfaradsOk: ["OK", "NO", "ok"], voltageOk: ["OK", "NO", "ok"], applies: ["Yes", "No", "info"],
+  exceeded: ["EXCEEDED", "Within", "danger"], overMax: ["OVER", "Within", "danger"], stopWork: ["STOP WORK", "No", "danger"],
+};
+function calcFlagChip(key, value) {
+  if (key === "flag") return value >= 2 ? { label: "Shutdown", tone: "danger" } : value >= 1 ? { label: "Action", tone: "warn" } : { label: "OK", tone: "ok" };
+  const def = CALC_FLAG_KEYS[key];
+  if (!def) return null;
+  const on = Number(value) === 1;
+  const [yes, no, tone] = def;
+  if (key === "exceeded" || key === "overMax" || key === "stopWork") return { label: on ? yes : no, tone: on ? tone : "ok" };
+  return { label: on ? yes : no, tone: on ? tone : key === "applies" ? "" : "danger" };
+}
+
+/* ---- voice dictation ---- */
+/** Insert text at a selection, adding a space when the join needs one. Returns the new value and caret position. */
+function insertAtCursor(value, selStart, selEnd, text) {
+  const v = String(value ?? "");
+  const t = String(text ?? "");
+  const start = Math.max(0, Math.min(Number.isFinite(selStart) ? selStart : v.length, v.length));
+  const end = Math.max(start, Math.min(Number.isFinite(selEnd) ? selEnd : start, v.length));
+  if (!t) return { value: v, cursor: end };
+  const before = v.slice(0, start);
+  const after = v.slice(end);
+  const lead = before && !/\s$/.test(before) ? " " : "";
+  const trail = after && !/^\s/.test(after) && !/^[,.;:!?]/.test(after) ? " " : "";
+  const ins = `${lead}${t}${trail}`;
+  return { value: before + ins + after, cursor: (before + lead + t).length };
+}
+/** The recognizer reports the cumulative final transcript; return only what is new since the last commit. */
+function dictationDelta(committed, finalText) {
+  const c = String(committed || "");
+  const f = String(finalText || "");
+  if (f.startsWith(c)) return f.slice(c.length).trim();
+  return f.trim();
+}
+const DICTATION_SILENCE_MS = 20000;
+
+/* ---- manufacturer support (OEM fallback) ---- */
+/** Phone numbers out of a pack's free-text support line → [{number, tel, label}] (label = the words before it). */
+function supportPhones(text) {
+  const s = String(text || "");
+  const out = [];
+  const seen = new Set();
+  const re = /(?:\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}|1-8\d\d-[A-Z0-9-]{7,}|\b\d{3}-[A-Z0-9]{1,4}-[A-Z]{4,}\b)/gi;
+  let m;
+  while ((m = re.exec(s))) {
+    const number = m[0].trim();
+    const tel = number.replace(/[^\dA-Za-z+]/g, "").replace(/[A-Za-z]/g, (ch) => String("22233344455566677778889999"[ch.toUpperCase().charCodeAt(0) - 65] || ""));
+    if (!/^\+?\d{7,}$/.test(tel) || seen.has(tel)) continue;
+    seen.add(tel);
+    const before = s.slice(0, m.index).split(/[;.]\s*/).pop() || "";
+    let label = before.replace(/[:(]\s*$/, "").replace(/^\s*(and|or)\s+/i, "").trim();
+    if (!label) {
+      // "1-800-379-6484 (Carrier Commercial Service 24-hour line, per …)": the parenthesis right after names it.
+      const after = /^\s*\(([^),;]+)/.exec(s.slice(m.index + m[0].length));
+      if (after) label = after[1].trim();
+    }
+    label = label.slice(0, 60);
+    out.push({ number, tel: `tel:${tel.startsWith("1") && tel.length === 11 ? `+${tel}` : tel.length === 10 ? `+1${tel}` : tel}`, label });
+  }
+  return out;
+}
+/** Rows for the "Manufacturer support" card: phones (tel:), support site, literature (link or text), search hint, notes. */
+function supportRows(support) {
+  const sup = support && typeof support === "object" ? support : null;
+  if (!sup) return [];
+  const rows = [];
+  for (const p of supportPhones(sup.phone)) rows.push({ kind: "phone", title: p.number, sub: p.label || "Commercial technical support", href: p.tel });
+  if (sup.phone && !rows.length) rows.push({ kind: "text", title: "Support phone", sub: String(sup.phone) });
+  if (sup.url && /^https?:\/\//i.test(sup.url)) rows.push({ kind: "link", title: "Support site", sub: sup.url.replace(/^https?:\/\//, "").replace(/\/$/, ""), href: sup.url });
+  if (sup.literatureUrl) {
+    if (/^https?:\/\//i.test(sup.literatureUrl.trim())) rows.push({ kind: "link", title: "Literature (IOM, wiring)", sub: sup.literatureUrl.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").split(/\s/)[0], href: sup.literatureUrl.trim().split(/\s/)[0] });
+    else rows.push({ kind: "text", title: "Literature", sub: sup.literatureUrl });
+  }
+  if (sup.literatureSearchHint) rows.push({ kind: "text", title: "How to find the manual", sub: sup.literatureSearchHint });
+  if (sup.notes) rows.push({ kind: "text", title: "Notes", sub: sup.notes });
+  return rows;
 }
 
 function boot() {
@@ -1271,7 +1774,9 @@ function boot() {
     return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   }
   function applyTheme(pref) {
-    if (pref === "light" || pref === "dark") html.setAttribute("data-theme", pref);
+    // Sun mode (Settings → Display) forces the light theme; the saved preference is kept for when it is turned off.
+    const forced = html.hasAttribute("data-sun") ? "light" : pref;
+    if (forced === "light" || forced === "dark") html.setAttribute("data-theme", forced);
     else html.removeAttribute("data-theme");
     const eff = effectiveTheme();
     for (const meta of doc.querySelectorAll('meta[name="theme-color"]')) {
@@ -1283,10 +1788,13 @@ function boot() {
     if (radio) radio.checked = true;
   }
   function toggleTheme() {
+    if (html.hasAttribute("data-sun")) return toast("Sun mode forces the light theme — turn it off in Settings → Display");
     const next = effectiveTheme() === "dark" ? "light" : "dark";
     store.set("hvac.theme", next);
     applyTheme(next);
   }
+  if (store.get("hvac.sun") === "1") html.setAttribute("data-sun", "");
+  if (store.get("hvac.glove") === "1") html.setAttribute("data-glove", "");
   applyTheme(store.get("hvac.theme"));
   if (window.matchMedia) {
     try {
@@ -1346,9 +1854,10 @@ function boot() {
     state.route = parseHash(hash);
   }
   function parentHash(r) {
+    if (r.screen === "pm") return r.unit && r.pmVisit ? `#unit/${r.unit}/pm/${r.pmVisit}` : r.unit ? `#unit/${r.unit}` : "#units";
     if (r.screen === "units") return r.unit ? `#unit/${r.unit}` : "#units";
     if (r.screen === "chat") return r.conv ? `#chat/${r.conv}` : "#chat";
-    if (r.screen === "readings") return r.pane === "calcs" ? "#readings/calcs" : "#readings";
+    if (r.screen === "readings") return r.pane === "calcs" ? "#readings/calcs" : r.mode === "chiller" ? "#readings/chiller" : "#readings";
     return `#${r.screen}`;
   }
   function goBack(fallback) {
@@ -1375,7 +1884,7 @@ function boot() {
     state.route = r;
     state.lastAppliedHash = hash;
     els.app.dataset.screen = r.screen;
-    setTabs(r.screen);
+    setTabs(r.screen === "pm" ? "units" : r.screen);
 
     // sheets
     for (const sh of allSheets()) hideSheet(sh);
@@ -1391,6 +1900,10 @@ function boot() {
     else if (r.sheet === "qr" && r.unit) showQrSheet(r.unit);
     else if (r.sheet === "labels") showLabelsSheet();
     else if (r.sheet === "unitsActions") showUnitsActions();
+    else if (r.sheet === "refrigerant" && r.unit) showRefrigerantSheet(r.unit);
+    else if (r.sheet === "charge" && r.unit) showChargeSheet(r.unit);
+    else if (r.sheet === "pmPick" && r.unit) showPmPickSheet(r.unit);
+    else if (r.sheet === "sign" && r.conv) showSignSheet(r.conv);
 
     // screens
     if (r.screen === "chat") {
@@ -1412,9 +1925,13 @@ function boot() {
       els.screenReadings.dataset.pane = r.pane;
       const radio = doc.querySelector(`input[name="readings-pane"][value="${r.pane}"]`);
       if (radio) radio.checked = true;
+      applyReadingsMode(r.mode);
       if (readingsTargetUnit()) prefillReadingsFromUnit(readingsTargetUnit());
       renderReadingsUnitChip();
       requestWake();
+    } else if (r.screen === "pm") {
+      if (r.unit && r.pmVisit) openPmVisit(r.unit, r.pmVisit);
+      markActiveRows();
     } else if (r.screen === "history") {
       loadFollowUps({ quiet: true });
     } else if (r.screen === "settings") {
@@ -1430,7 +1947,7 @@ function boot() {
   /* ---------- sheets ---------- */
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]):not(.sr-only), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   let sheetOpener = null;
-  const allSheets = () => [els.sheetDecode, els.sheetUnitActions, els.sheetImport, els.sheetCorrect, els.sheetShare, els.sheetQr, els.sheetLabels, els.sheetUnitsActions, els.sheetPick, els.sheetFinding];
+  const allSheets = () => [els.sheetDecode, els.sheetUnitActions, els.sheetImport, els.sheetCorrect, els.sheetShare, els.sheetQr, els.sheetLabels, els.sheetUnitsActions, els.sheetPick, els.sheetFinding, $("sheet-charge"), $("sheet-refrigerant"), $("sheet-pm-pick"), $("sheet-sign")];
   const noSheetOpen = () => allSheets().every((sh) => sh.hidden);
   function setInert(on) {
     // The page behind a sheet is inert for keyboard and AT; aria-hidden is the fallback for browsers without `inert`.
@@ -1656,6 +2173,8 @@ function boot() {
   }
 
   function toolIconFor(name) {
+    if (/log_refrigerant/.test(name || "")) return "drop";
+    if (/pm_checklist/.test(name || "")) return "list";
     if (/decode|find_unit|update_unit|get_unit/.test(name || "")) return "units";
     if (/refrigerant|superheat|diagnose/.test(name || "")) return "gauge";
     if (/electrical|calc/.test(name || "")) return "bolt";
@@ -1668,7 +2187,7 @@ function boot() {
     decode_unit: "Decode unit", find_unit: "Find unit", refrigerant_pt: "PT lookup", calc_superheat_subcooling: "Superheat / subcooling",
     diagnose_refrigeration: "Diagnose cycle", electrical_reference: "Electrical reference", calc_electrical: "Electrical calc", lookup_fault_code: "Fault code lookup",
     search_history: "Search history", get_unit_history: "Unit history", save_finding: "Save finding", update_unit: "Update unit", set_conversation: "Update conversation",
-    web_search: "Web search",
+    web_search: "Web search", diagnose_chiller: "Diagnose chiller", log_refrigerant: "Log refrigerant", get_pm_checklist: "PM checklist",
   };
   const TOOL_STATE_TEXT = { running: "running", ok: "done", err: "failed" };
   const RESULT_CAP = 700;
@@ -1802,6 +2321,7 @@ function boot() {
     els.btnChatShare.hidden = !state.conversation;
     doc.title = state.conversation && state.conversation.title ? `${state.conversation.title} · HVAC Field Assistant` : "HVAC Field Assistant";
     renderCtxPanel();
+    renderJobBar();
   }
   els.btnChatUnit.addEventListener("click", () => {
     if (state.unit) navigate(`#unit/${state.unit.id}`);
@@ -2509,9 +3029,11 @@ function boot() {
       els.unitContent.append(h("div", { class: "skeleton", style: "min-height:180px" }), h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
     }
     try {
-      const [data, readingsData] = await Promise.all([
+      const [data, readingsData, refData, pmData] = await Promise.all([
         apiJson(`/api/units/${encodeURIComponent(unitId)}`),
         apiJson(`/api/units/${encodeURIComponent(unitId)}/readings?limit=20`).catch(() => null),
+        apiJson(`/api/units/${encodeURIComponent(unitId)}/refrigerant?limit=50`).catch(() => null),
+        apiJson(`/api/units/${encodeURIComponent(unitId)}/pm?limit=10`).catch(() => null),
       ]);
       const unit = data.unit || data;
       let decoded = data.decoded || null;
@@ -2525,6 +3047,8 @@ function boot() {
       state.panelUnit = {
         unit, decoded, findings: pickList(data.findings || [], "findings"), conversations: pickList(data.conversations || [], "conversations"), corrections: pickList(data.corrections || [], "corrections"),
         readings: readingsData ? pickList(readingsData.readings || [], "readings") : [], readingsFailed: !readingsData, trend: data.trend || (readingsData && readingsData.trend) || null,
+        compliance: (refData && refData.compliance) || data.compliance || null, refrigerantEvents: refData ? pickList(refData.events || [], "events") : [], refrigerantFailed: !refData,
+        lastPm: data.lastPm || null, pmVisits: pmData ? pickList(pmData.visits || [], "visits") : [], pmFailed: !pmData,
       };
       state.unitsById.set(unit.id, unit);
       renderUnitDetail();
@@ -2607,7 +3131,7 @@ function boot() {
       ),
       actions ? h("div", { class: "np-actions" },
         h("button", { class: "btn btn-primary", type: "button", onclick: attachOrStart }, icon(attached ? "chat" : "link"), attached ? "Open chat" : state.conversationId ? "Attach to chat" : "Start chat"),
-        h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } }, icon("gauge"), "Readings"),
+        h("button", { class: "btn", type: "button", onclick: () => { prefillReadingsFromUnit(u, { force: true }); navigate(readingsHashFor(u, d)); } }, icon("gauge"), "Readings"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/edit`) }, icon("edit"), "Edit"),
         h("button", { class: "btn", type: "button", onclick: () => navigate(`#unit/${u.id}/actions`) }, icon("more"), "More"),
         h("button", { class: "btn np-qr", type: "button", onclick: () => navigate(`#unit/${u.id}/qr`) }, icon("scan"), "QR label"),
@@ -2646,6 +3170,9 @@ function boot() {
 
     els.unitContent.append(buildPlate(u, d, { attached }));
     if (pu.corrections && pu.corrections.length) els.unitContent.append(buildCorrectionsCard(pu.corrections, u.id));
+    // Manufacturer support (phone / literature from the pack) when the decode exposes it
+    const support = buildSupportCard(d);
+    if (support) els.unitContent.append(support);
 
     // Decode details
     if (d) {
@@ -2658,6 +3185,9 @@ function boot() {
     els.unitContent.append(buildFindingsCard(pu.findings, { unitId: u.id }));
     // Readings history + trend since last visit
     els.unitContent.append(buildReadingsCard(pu, u));
+    // Refrigerant log + EPA compliance, then maintenance (PM visits)
+    els.unitContent.append(buildRefrigerantCard(pu, u));
+    els.unitContent.append(buildMaintenanceCard(pu, u));
 
     // Conversations on this unit
     const convs = pu.conversations || [];
@@ -2822,7 +3352,7 @@ function boot() {
     list.append(
       action("link", attached ? "Open the chat" : state.conversationId ? "Attach to this conversation" : "Start a conversation", attached ? "This unit is attached to the current chat" : "Job memory follows the unit", attachOrStart),
       action("plus", "New conversation on this unit", null, startConversationOnUnit),
-      action("gauge", "Enter readings", "Prefilled with refrigerant and elevation", () => { if (u) prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); }),
+      action("gauge", "Enter readings", "Prefilled with refrigerant and elevation", () => { if (u) prefillReadingsFromUnit(u, { force: true }); navigate(readingsHashFor(u)); }),
       action("history", "Show its conversations", "Filter History to this unit", () => { if (u) setConvFilter(u); navigate("#history"); }),
       action("edit", "Edit or re-decode", "Change model, serial, tag, site…", () => navigate(`#unit/${unitId}/edit`)),
       action("flag", "Report a wrong detail", "Correct what the decoder got wrong", () => navigate(`#unit/${unitId}/correct`)),
@@ -3452,6 +3982,11 @@ function boot() {
     const u = readingsTargetUnit();
     els.readingsUnitChip.hidden = !u;
     els.readingsUnitChip.textContent = u ? unitLabel(u) : "";
+    const cc = $("chiller-unit-chip");
+    if (cc) {
+      cc.hidden = !u;
+      cc.textContent = u ? unitLabel(u) : "";
+    }
     els.readingsSub.textContent = "";
     if (u) els.readingsSub.append(h("span", { text: `${[u.manufacturer, u.model].filter(Boolean).join(" ")} · ${u.refrigerant || "refrigerant?"}` }));
     renderReadingsSaveButton();
@@ -3465,7 +4000,7 @@ function boot() {
     }
     if (u.elevation_ft !== null && u.elevation_ft !== undefined && (force || !f.elevationFt.value)) f.elevationFt.value = String(u.elevation_ft);
     for (const el of doc.querySelectorAll(".elevation-input")) if ((force || !el.value) && u.elevation_ft !== null && u.elevation_ft !== undefined) el.value = String(u.elevation_ft);
-    for (const sel of doc.querySelectorAll("#calculators .refrigerant-select")) if (u.refrigerant && (force || !sel.dataset.touched)) setSelectValue(sel, u.refrigerant);
+    for (const sel of doc.querySelectorAll("#calculators .refrigerant-select, #chiller-form .refrigerant-select")) if (u.refrigerant && (force || !sel.dataset.touched)) setSelectValue(sel, u.refrigerant);
   }
   function setSelectValue(sel, value) {
     const norm = String(value).replace(/[\s-]/g, "").toUpperCase();
@@ -3485,7 +4020,7 @@ function boot() {
     for (const [k, val] of fd.entries()) v[k] = String(val);
     return v;
   }
-  doc.querySelectorAll('input[name="readings-pane"]').forEach((r) => r.addEventListener("change", () => navigate(r.value === "calcs" ? "#readings/calcs" : "#readings", { replace: true })));
+  doc.querySelectorAll('input[name="readings-pane"]').forEach((r) => r.addEventListener("change", () => navigate(r.value === "calcs" ? "#readings/calcs" : state.readingsMode === "chiller" ? "#readings/chiller" : "#readings", { replace: true })));
   els.btnReadingsClear.addEventListener("click", () => {
     if (state.route.pane === "calcs") {
       for (const form of doc.querySelectorAll("#calculators form")) {
@@ -3497,6 +4032,11 @@ function boot() {
       }
       populateRefrigerantSelects();
       toast("Calculators cleared");
+      return;
+    }
+    if (state.route.mode === "chiller") {
+      clearChillerForm();
+      toast("Chiller readings cleared");
       return;
     }
     els.readingsForm.reset();
@@ -3584,21 +4124,12 @@ function boot() {
     const val = h("div", { class: `validity ${ok ? "ok" : "bad"}` }, icon(ok ? "ok" : "alert"), h("div", null, h("div", { text: ok ? "Readings valid for charge determination" : "Readings not valid for charge determination" })));
     if (!ok && r.validity.issues && r.validity.issues.length) val.lastChild.append(h("ul", null, ...r.validity.issues.map((i) => h("li", { text: i }))));
     box.append(val);
+    const causeSlot = h("div", { class: "cause-slot" });
+    box.append(causeSlot);
     const tiles = derivedStats(r.derived || {});
     if (tiles.length) box.append(h("div", { class: "stats" }, ...tiles));
     if (r.summary) box.append(h("p", { class: "dx-summary", text: r.summary }));
-    if (r.findings && r.findings.length) {
-      box.append(h("div", { class: "section-title", text: `Findings (${r.findings.length})` }));
-      for (const f of r.findings) {
-        const card = h("div", { class: `dx-finding ${f.severity || "info"}` },
-          h("div", { class: "dx-finding-head" }, h("span", { class: `chip ${SEV_CLASS[f.severity] || ""}`, text: f.severity }), h("span", { class: `chip ${CONF_CLASS[f.confidence] || ""}`, text: `${f.confidence} confidence` }), h("div", { class: "dx-finding-title", text: f.condition })),
-          h("p", { text: f.explanation }),
-        );
-        if (f.nextChecks && f.nextChecks.length) card.append(h("ul", null, ...f.nextChecks.map((c) => h("li", { text: c }))));
-        if (f.safety && f.safety.length) card.append(h("div", { class: "dx-safety", text: f.safety.join(" ") }));
-        box.append(card);
-      }
-    }
+    renderFindingsBlock(box, r.findings, causeSlot);
     if (r.missing && r.missing.length) {
       box.append(h("div", { class: "section-title", text: "Would sharpen the diagnosis" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
     }
@@ -3615,7 +4146,7 @@ function boot() {
     if (withResult && state.lastDx && state.lastDx.summary) text += `\nDiagnose result: ${state.lastDx.summary}`;
     insertIntoComposer(text);
   }
-  els.btnReadingsSend.addEventListener("click", () => sendReadingsToChat(false));
+  els.btnReadingsSend.addEventListener("click", () => (state.route.mode === "chiller" ? sendChillerToChat(false) : sendReadingsToChat(false)));
 
   /* ---------- calculators ---------- */
   function sourceTag(source) {
@@ -3630,6 +4161,15 @@ function boot() {
     rhPercent: "Relative humidity %", dewPointF: "Dew point °F", enthalpyBtuLb: "Enthalpy BTU/lb", grainsPerLb: "Grains/lb", humidityRatio: "Humidity ratio",
     evapSatF: "Evap sat °F", condSatF: "Cond sat °F", superheatF: "Superheat °F", subcoolingF: "Subcooling °F", targetSuperheatF: "Target SH °F", targetSubcoolingF: "Target SC °F",
     superheatDelta: "SH vs target", subcoolingDelta: "SC vs target", patmPsia: "Patm psia", safetyClass: "Safety class", inHgVacuum: "Vacuum inHg", glideF: "Glide °F",
+    // wave 2
+    leakRatePct: "Leak rate % / yr", thresholdPct: "Threshold %", exceeded: "Threshold", daysUsed: "Days used", applies: "Rule applies (≥ 15 lb)",
+    cfh: "Gas flow ft³/h", btuh: "Input BTU/h", heatingValueBtuPerCuft: "Heating value BTU/ft³", percentOfNameplate: "% of nameplate",
+    coAirFreePpm: "CO air-free ppm", excessAirPct: "Excess air %", flag: "CO level", ambientCoPpm: "Ambient CO ppm", stopWork: "Stop work",
+    cfmPerTon: "CFM per ton", tespInWc: "TESP in. wc", ratedMaxInWc: "Rated max in. wc", overMax: "Against the rating",
+    speedRatio: "Speed ratio", cfm2: "New CFM", sp2: "New static in. wc", bhp2: "New BHP", fanRpm: "Fan RPM", ratio: "Sheave ratio", beltLengthIn: "Belt length in.", spanIn: "Span in.", deflectionIn: "Deflection target in.",
+    voltageDrop: "Voltage drop V", voltageDropPct: "Voltage drop %", circularMils: "Circular mils", k: "K Ω·cmil/ft", voltsAtLoad: "Volts at the load",
+    tableFla: "NEC table FLA A", tableVolts: "Table column V", tableHp: "Table HP", conductorAmps125: "Conductor ampacity (125 %) A", overloadMax125: "Overload max (125 %) A",
+    microfaradsOk: "µF within ±6 %", voltageOk: "Voltage rating", ok: "Substitute", hp: "HP", rpm: "RPM", volts: "Volts", phase: "Phase", shaftDiaIn: "Shaft diameter in.",
   };
   function renderCalcResult(kind, result) {
     const frag = doc.createDocumentFragment();
@@ -3659,8 +4199,10 @@ function boot() {
       if (rows.length) {
         frag.append(h("div", null, ...rows.map(([k, v]) => {
           const label = VALUE_LABEL[k] || k;
-          const val = k === "pass" ? (v ? "PASS" : "FAIL") : typeof v === "number" ? fmtNum(v, 2) : String(v);
-          return h("div", { class: "kv" }, h("span", { class: "kv-key", text: label }), h("span", { class: `kv-value${k === "pass" ? (v ? " chip chip-ok" : " chip chip-danger") : ""}`, text: val }));
+          const flag = typeof v === "number" ? calcFlagChip(k, v) : null;
+          const toneCls = { ok: "chip-ok", warn: "chip-warn", danger: "chip-danger", info: "chip-info" };
+          const val = flag ? flag.label : typeof v === "number" ? fmtNum(v, 2) : String(v);
+          return h("div", { class: "kv" }, h("span", { class: "kv-key", text: label }), h("span", { class: `kv-value${flag ? ` chip ${toneCls[flag.tone] || "chip-outline"}` : ""}`, text: val }));
         })));
       }
     }
@@ -3677,6 +4219,8 @@ function boot() {
   const CALC_TITLE = {
     pt: "PT lookup", shsc: "Superheat/subcooling", voltage_imbalance: "Voltage imbalance", capacitor_under_load: "Capacitor under load",
     temp_rise_cfm: "Temp-rise CFM", winding_check: "Winding check", psychrometrics: "Psychrometrics",
+    leak_rate: "Leak rate (EPA)", gas_meter_clock: "Gas meter clock", combustion_co: "Combustion CO air-free", sensible_cfm: "Sensible CFM", static_pressure: "Static pressure",
+    fan_laws: "Fan laws", belt_drive: "Belt drive", voltage_drop: "Voltage drop", motor_fla: "Motor FLA (NEC)", capacitor_replacement: "Capacitor replacement", motor_replacement: "Motor replacement checklist",
   };
 
   /** Offline saturation lookup for the SH/SC calculator, from cached PT answers. */
@@ -3738,15 +4282,15 @@ function boot() {
             result = CALC.calcCacheGet(kind, raw) || CALC.superheatSubcooling(body, satFromCache(raw.refrigerant));
           }
         } else {
-          const body = { kind };
-          for (const [k, v] of Object.entries(raw)) {
-            if (k === "phase") body.phase = Number(v) === 3 ? 3 : 1;
-            else {
-              const n = toNum(v);
-              if (n !== undefined) body[k] = n;
-              else if (k !== "ratedUf" && k !== "elevationFt") throw new ApiFailure("validation", `Enter ${VALUE_LABEL[k] || k}.`, 0);
-            }
+          const labels = {};
+          for (const el of form.querySelectorAll("[name]")) {
+            const lab = el.closest("label");
+            const t = lab && lab.querySelector(".field-label");
+            if (t && !labels[el.name]) labels[el.name] = t.textContent.trim();
           }
+          const parsed = calcRequestFromForm(kind, raw, labels);
+          if (parsed.error) throw new ApiFailure("validation", parsed.error, 0);
+          const body = parsed.body;
           try {
             result = await apiJson("/api/calc/electrical", { method: "POST", json: body });
             if (CALC) CALC.calcCachePut(kind, raw, result);
@@ -4538,7 +5082,9 @@ function boot() {
     rep.id = id;
     rep.busy = false;
     els.shareTitle.textContent = mode === "unit" ? "Unit report" : "Share report";
-    els.shareSub.textContent = mode === "unit" ? `${shareLabel(mode, id)} — nameplate, findings by date, corrections, recent conversations` : `${shareLabel(mode, id)} — complaint, readings, findings, open items, summary`;
+    const jobLine = mode === "conversation" && state.conversationId === id && state.conversation ? jobBarState(state.conversation) : null;
+    const onSite = jobLine && jobLine.state !== "idle" ? ` · time on site ${jobLine.state === "running" ? "(clock running)" : formatMinutes(jobLine.minutes)}${jobLine.signed ? `, signed by ${jobLine.signedBy || "customer"}` : ""}` : "";
+    els.shareSub.textContent = mode === "unit" ? `${shareLabel(mode, id)} — nameplate, findings by date, refrigerant log, last PM, recent conversations` : `${shareLabel(mode, id)} — complaint, readings, findings, open items, time on site, signature, summary${onSite}`;
     els.shareFallback.hidden = true;
     els.shareFallback.textContent = "";
     els.shareList.textContent = "";
@@ -4816,6 +5362,7 @@ function boot() {
     return null;
   }
   async function saveReadingToUnit() {
+    if (state.route.mode === "chiller") return evaluateChiller({ save: true });
     const target = readingsTargetUnit();
     if (!target) return navigate("#readings/pick");
     const m = buildMeasurements(readingsValues());
@@ -4887,7 +5434,7 @@ function boot() {
     state.readingsUnit = u;
     prefillReadingsFromUnit(u, { force: true });
     renderReadingsUnitChip();
-    setTimeout(() => saveReadingToUnit(), 0);
+    setTimeout(() => (state.route.mode === "chiller" ? evaluateChiller({ save: true }) : saveReadingToUnit()), 0);
   }
   async function attachUnitToChat(u) {
     try {
@@ -4914,7 +5461,7 @@ function boot() {
     const readings = pu.readings || [];
     const card = h("div", { class: "card readings-card" },
       h("div", { class: "card-title" }, h("span", { text: `Readings (${readings.length})` }),
-        h("button", { class: "text-btn", type: "button", text: "Add", onclick: () => { state.readingsUnit = u; prefillReadingsFromUnit(u, { force: true }); navigate("#readings"); } })));
+        h("button", { class: "text-btn", type: "button", text: "Add", onclick: () => { state.readingsUnit = u; prefillReadingsFromUnit(u, { force: true }); navigate(readingsHashFor(u, pu.decoded)); } })));
     if (pu.trend && Array.isArray(pu.trend.deltas) && pu.trend.deltas.length) card.append(buildTrendCallout(pu.trend));
     if (pu.readingsFailed) card.append(h("div", { class: "list-empty", text: "Could not load the readings history." }));
     else if (!readings.length) card.append(h("div", { class: "list-empty", text: "No saved readings yet. Diagnose on the Readings tab and tap Save to unit; the next visit then shows the trend." }));
@@ -5130,6 +5677,1173 @@ function boot() {
     }
   }
 
+  /* ======================================================================================
+   * Wave 2 (DESIGN.md "Web UI"): refrigerant log + compliance, PM checklists, chiller mode, job clock +
+   * signature, grouped calculators, glove / sun modes, voice dictation, manufacturer support, most likely cause
+   * ==================================================================================== */
+  const w2 = {
+    jobBar: $("job-bar"), voiceStrip: $("voice-strip"), btnMic: $("btn-mic"),
+    sheetCharge: $("sheet-charge"), chargeForm: $("charge-form"), chargeSub: $("charge-sub"), chargeError: $("charge-error"), chFull: $("ch-full"), chCircuits: $("ch-circuits"), chType: $("ch-type"), btnChargeSave: $("btn-charge-save"),
+    sheetRefrigerant: $("sheet-refrigerant"), rfForm: $("refrigerant-form"), rfSub: $("rf-sub"), rfVerifyRow: $("rf-verify-row"), rfRefrigerant: $("rf-refrigerant"), rfCircuit: $("rf-circuit"), rfAmountRow: $("rf-amount-row"),
+    rfLbs: $("rf-lbs"), rfOz: $("rf-oz"), rfAmountHint: $("rf-amount-hint"), rfCylinder: $("rf-cylinder"), rfDate: $("rf-date"), rfTech: $("rf-tech"), rfCert: $("rf-cert"), rfLeakRow: $("rf-leak-row"), rfLeakFound: $("rf-leak-found"),
+    rfPassedRow: $("rf-passed-row"), rfPassed: $("rf-passed"), rfNote: $("rf-note"), rfError: $("rf-error"), btnRfSave: $("btn-rf-save"),
+    sheetPmPick: $("sheet-pm-pick"), pmPickSub: $("pm-pick-sub"), pmTech: $("pm-tech"), pmPickList: $("pm-pick-list"),
+    pmTitle: $("pm-title"), pmSub: $("pm-sub"), pmProgress: $("pm-progress"), pmSaveState: $("pm-save-state"), pmBody: $("pm-body"), pmScroll: $("pm-scroll"), btnPmBack: $("btn-pm-back"), btnPmComplete: $("btn-pm-complete"), btnPmShare: $("btn-pm-share"),
+    sheetSign: $("sheet-sign"), signSub: $("sign-sub"), signExisting: $("sign-existing"), signPad: $("sign-pad"), btnSignClear: $("btn-sign-clear"), signForm: $("sign-form"), signName: $("sign-name"), signDeclined: $("sign-declined"), signNote: $("sign-note"), signError: $("sign-error"), btnSignRemove: $("btn-sign-remove"), btnSignSave: $("btn-sign-save"),
+    chillerForm: $("chiller-form"), chillerResult: $("chiller-result"), chillerError: $("chiller-error"), chillerChip: $("chiller-unit-chip"), btnDiagnose: $("btn-diagnose"),
+    sGlove: $("s-glove"), sSun: $("s-sun"), themeHint: $("theme-hint"), btnRefrigerantExport: $("btn-refrigerant-export"),
+  };
+  const TECH_NAME_KEY = "hvac.techName";
+  const TECH_CERT_KEY = "hvac.techCert";
+  const rememberTech = (name, cert) => {
+    store.set(TECH_NAME_KEY, (name || "").trim() || null);
+    if (cert !== undefined) store.set(TECH_CERT_KEY, (cert || "").trim() || null);
+  };
+
+  /* ---- display modes: glove (bigger targets through the size variables) and sun (forced high-contrast light) ---- */
+  function applyDisplayModes() {
+    const glove = store.get("hvac.glove") === "1";
+    const sun = store.get("hvac.sun") === "1";
+    html.toggleAttribute("data-glove", glove);
+    html.toggleAttribute("data-sun", sun);
+    w2.sGlove.checked = glove;
+    w2.sSun.checked = sun;
+    for (const r of doc.querySelectorAll("#theme-seg input")) r.disabled = sun;
+    w2.themeHint.textContent = sun ? "Sun mode is on: the light theme is forced at maximum contrast." : "Dark for low light; Light is high-contrast for direct sunlight.";
+    applyTheme(store.get("hvac.theme"));
+  }
+  w2.sGlove.addEventListener("change", () => {
+    store.set("hvac.glove", w2.sGlove.checked ? "1" : null);
+    applyDisplayModes();
+    toast(w2.sGlove.checked ? "Glove mode on" : "Glove mode off");
+  });
+  w2.sSun.addEventListener("change", () => {
+    store.set("hvac.sun", w2.sSun.checked ? "1" : null);
+    applyDisplayModes();
+    toast(w2.sSun.checked ? "Sun mode on — light theme forced" : "Sun mode off");
+  });
+  applyDisplayModes();
+
+  /* ---- voice dictation (web/voice.js): one shared handler for the composer, finding fields and PM notes ---- */
+  const VOICE = globalThis.HVAC_VOICE || null;
+  const voiceOk = !!(VOICE && VOICE.supported);
+  const voice = { btn: null, target: null, strip: null, committed: "", silenceTimer: null };
+  for (const b of doc.querySelectorAll(".btn-mic")) b.hidden = !voiceOk;
+  function voiceStripFor(target) {
+    if (target === els.composerInput) return w2.voiceStrip;
+    const parent = target.parentElement;
+    let strip = parent ? parent.querySelector(":scope > .voice-strip") : null;
+    if (!strip && parent) {
+      strip = h("div", { class: "voice-strip", role: "status", "aria-live": "polite", hidden: true });
+      parent.insertBefore(strip, target);
+    }
+    return strip;
+  }
+  function renderVoiceStrip(interim) {
+    const strip = voice.strip;
+    if (!strip) return;
+    strip.hidden = false;
+    strip.textContent = "";
+    strip.append(h("span", { class: "job-dot" }), h("b", { text: "Listening…" }), h("span", { class: "voice-interim", text: interim || "say the reading, e.g. “suction 118 psig, line 52 degrees”" }), h("button", { class: "text-btn", type: "button", text: "Stop", onclick: () => voiceStop() }));
+  }
+  function voiceReset() {
+    clearTimeout(voice.silenceTimer);
+    voice.silenceTimer = null;
+    if (voice.btn) voice.btn.setAttribute("aria-pressed", "false");
+    if (voice.strip) {
+      voice.strip.hidden = true;
+      voice.strip.textContent = "";
+    }
+    voice.btn = null;
+    voice.target = null;
+    voice.strip = null;
+    voice.committed = "";
+  }
+  function voiceStop() {
+    if (VOICE) VOICE.stop();
+    voiceReset();
+  }
+  function voiceArmSilence() {
+    clearTimeout(voice.silenceTimer);
+    voice.silenceTimer = setTimeout(() => {
+      if (!voice.btn) return;
+      toast("Dictation stopped after 20 s of silence");
+      voiceStop();
+    }, DICTATION_SILENCE_MS);
+  }
+  function voiceCommit(text) {
+    const ta = voice.target;
+    if (!ta) return;
+    const clean = VOICE.normalizeDictation(text);
+    if (!clean) return;
+    const r = insertAtCursor(ta.value, ta.selectionStart, ta.selectionEnd, clean);
+    ta.value = r.value;
+    try {
+      ta.setSelectionRange(r.cursor, r.cursor);
+    } catch {
+      /* input types without selection */
+    }
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function voiceToggle(btn, target) {
+    if (!voiceOk || !target) return;
+    if (voice.btn === btn) return voiceStop();
+    if (voice.btn) voiceStop();
+    const rec = VOICE.start({
+      onText: (finalText, interim) => {
+        const delta = dictationDelta(voice.committed, finalText);
+        if (delta) {
+          voiceCommit(delta);
+          voice.committed = finalText;
+        }
+        renderVoiceStrip(interim);
+        voiceArmSilence();
+      },
+      onError: (code, message) => {
+        toast(message);
+        if (code !== "no-speech") voiceReset();
+      },
+      onEnd: () => voiceReset(),
+    });
+    if (!rec) return;
+    voice.btn = btn;
+    voice.target = target;
+    voice.strip = voiceStripFor(target);
+    voice.committed = "";
+    btn.setAttribute("aria-pressed", "true");
+    renderVoiceStrip("");
+    voiceArmSilence();
+    target.focus({ preventScroll: true });
+  }
+  /** Wire a mic button to its field (data-mic-for="<id>", or an explicit element for dynamically built fields). */
+  function attachMic(btn, target) {
+    const el = target || (btn.dataset.micFor ? $(btn.dataset.micFor) : null);
+    btn.hidden = !voiceOk;
+    btn.addEventListener("click", () => voiceToggle(btn, el));
+  }
+  for (const b of doc.querySelectorAll(".btn-mic[data-mic-for]")) attachMic(b);
+  // Leaving the chat screen or opening/closing a sheet ends dictation so text never lands in the wrong field.
+  window.addEventListener("hashchange", () => { if (voice.btn) voiceStop(); });
+
+  /* ---- most likely cause: top finding highlighted, the rest collapsed ---- */
+  function findingCard(f) {
+    const card = h("div", { class: `dx-finding ${f.severity || "info"}` },
+      h("div", { class: "dx-finding-head" }, h("span", { class: `chip ${SEV_CLASS[f.severity] || ""}`, text: f.severity }), h("span", { class: `chip ${CONF_CLASS[f.confidence] || ""}`, text: `${f.confidence} confidence` }), h("div", { class: "dx-finding-title", text: f.condition })),
+      h("p", { text: f.explanation }),
+    );
+    if (f.nextChecks && f.nextChecks.length) card.append(h("ul", null, ...f.nextChecks.map((c) => h("li", { text: c }))));
+    if (f.safety && f.safety.length) card.append(h("div", { class: "dx-safety", text: f.safety.join(" ") }));
+    return card;
+  }
+  /** Findings for a DX / chiller result: the most likely cause goes where `slot` sits (right under the validity line, above
+   *  the numbers), the remaining findings collapse under "More findings (n)" at the end of `box`. */
+  function renderFindingsBlock(box, findings, slot = null) {
+    const list = Array.isArray(findings) ? findings : [];
+    const { top, rest } = splitFindings(list);
+    if (!list.length || !top) {
+      if (slot) slot.remove();
+      if (!list.length) return;
+      box.append(h("div", { class: "section-title", text: `Findings (${list.length})` }));
+      for (const f of list) box.append(findingCard(f));
+      return;
+    }
+    const checks = Array.isArray(top.nextChecks) ? top.nextChecks : [];
+    const card = h("div", { class: "cause-card", role: "note" },
+      h("div", { class: "cause-kicker", text: "Most likely cause" }),
+      h("div", { class: "cause-title", text: top.condition }),
+      h("div", { class: "cause-chips" }, h("span", { class: `chip ${SEV_CLASS[top.severity] || ""}`, text: top.severity }), top.confidence ? h("span", { class: `chip ${CONF_CLASS[top.confidence] || ""}`, text: `${top.confidence} confidence` }) : null),
+      h("div", { class: "cause-why", text: firstSentence(top.explanation) }),
+      checks.length ? h("div", { class: "cause-next" }, h("b", { text: "First check:" }), h("span", { text: checks[0] })) : null,
+      top.safety && top.safety.length ? h("div", { class: "cause-safety", text: top.safety.join(" ") }) : null,
+    );
+    if (String(top.explanation || "").length > firstSentence(top.explanation).length || checks.length > 1) {
+      card.append(h("details", { class: "more-findings" }, h("summary", null, h("span", { text: `Full explanation${checks.length > 1 ? ` and ${checks.length} checks` : ""}` })),
+        h("p", { class: "cause-why", text: top.explanation }), checks.length ? h("ul", { class: "dc-list" }, ...checks.map((c) => h("li", { text: c }))) : null));
+    }
+    if (slot) slot.replaceWith(card);
+    else box.append(card);
+    if (rest.length) box.append(h("details", { class: "more-findings" }, h("summary", null, h("span", { text: `More findings (${rest.length})` })), ...rest.map(findingCard)));
+  }
+
+  /* ---- chiller readings mode ---- */
+  state.lastChiller = null;
+  /** Readings entry for a unit: chillers open in chiller mode. */
+  function readingsHashFor(u, decoded) {
+    const d = decoded || (state.panelUnit && u && state.panelUnit.unit.id === u.id ? state.panelUnit.decoded : null);
+    const sug = suggestPmTemplate(u || {}, d);
+    return sug.templateId && sug.templateId.startsWith("chiller") ? "#readings/chiller" : "#readings";
+  }
+  function chillerValues() {
+    const fd = new FormData(w2.chillerForm);
+    const v = {};
+    for (const [k, val] of fd.entries()) v[k] = String(val);
+    return v;
+  }
+  for (const r of w2.chillerForm.querySelectorAll('input[name="condenserType"]')) r.addEventListener("change", () => { w2.chillerForm.dataset.condenser = r.value; });
+  doc.querySelectorAll('input[name="readings-mode"]').forEach((r) => r.addEventListener("change", () => navigate(r.value === "chiller" ? "#readings/chiller" : "#readings", { replace: true })));
+  function applyReadingsMode(mode) {
+    if (state.route.pane !== "calcs") state.readingsMode = mode;
+    els.screenReadings.dataset.mode = mode;
+    const radio = doc.querySelector(`input[name="readings-mode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+    w2.btnDiagnose.textContent = "";
+    w2.btnDiagnose.append(icon("gauge"), mode === "chiller" ? "Evaluate" : "Diagnose");
+  }
+  const isChillerMode = () => state.route.mode === "chiller" && state.route.screen === "readings";
+  function chillerSatFromCache(refrigerant) {
+    return (psig, kind) => {
+      if (!CALC || !refrigerant) return null;
+      const r = CALC.ptLookupOffline(refrigerant, { psig: Math.round(psig * 10) / 10 });
+      if (!r) return null;
+      const t = kind === "dew" ? r.dewTempF : r.bubbleTempF;
+      return typeof t === "number" ? t : null;
+    };
+  }
+  function showChillerError(text) {
+    w2.chillerError.hidden = !text;
+    w2.chillerError.textContent = text || "";
+  }
+  async function evaluateChiller({ save = false } = {}) {
+    const m = buildChillerMeasurements(chillerValues());
+    showChillerError("");
+    if (!chillerHasReadings(m)) return showChillerError("Enter at least one reading — CHW supply plus the evaporator saturated temperature (or pressure) gives the approach.");
+    const target = save ? readingsTargetUnit() : null;
+    if (save && !target) return navigate("#readings/chiller/pick");
+    w2.btnDiagnose.disabled = true;
+    fx.btnReadingsSave.disabled = true;
+    w2.chillerResult.hidden = false;
+    w2.chillerResult.textContent = "";
+    w2.chillerResult.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton", style: "min-height:120px" }));
+    try {
+      const body = { ...m };
+      if (save) {
+        body.unit_id = target.id;
+        if (state.conversationId && state.unit && state.unit.id === target.id) body.conversation_id = state.conversationId;
+      }
+      let result;
+      try {
+        result = await apiJson("/api/calc/chiller", { method: "POST", json: body });
+      } catch (err) {
+        if (save || !isNetworkError(err) || !CALC) throw err;
+        result = CALC.chillerLocal(m, chillerSatFromCache(m.refrigerant));
+      }
+      state.lastChiller = result;
+      renderChillerResult(result);
+      if (save) {
+        toast(`Saved to ${unitLabel(target)}`);
+        if (state.panelUnit && state.panelUnit.unit.id === target.id) loadUnitPanel(target.id, { quiet: true });
+        if (state.ctx && state.ctx.unit.id === target.id) state.ctx = null;
+      }
+      requestWake();
+    } catch (err) {
+      w2.chillerResult.hidden = true;
+      w2.chillerResult.textContent = "";
+      showChillerError(isNetworkError(err) ? (save ? "Saving needs a connection." : "Evaluation needs a connection.") : `${err.code}: ${err.message}`);
+    } finally {
+      w2.btnDiagnose.disabled = false;
+      fx.btnReadingsSave.disabled = false;
+    }
+  }
+  function renderChillerResult(r) {
+    const box = w2.chillerResult;
+    box.hidden = false;
+    box.textContent = "";
+    box.append(h("div", { class: "card-title" }, h("span", { text: "Chiller evaluation" }), r.readingId ? h("span", { class: "chip chip-ok" }, icon("check", "icon"), "Saved to unit") : r.source && r.source !== "server" ? sourceTag(r.source) : null));
+    if (r.validity && r.validity.ok === false && r.validity.issues && r.validity.issues.length) {
+      box.append(h("div", { class: "validity bad" }, icon("alert"), h("div", null, h("div", { text: "Some readings could not be used" }), h("ul", null, ...r.validity.issues.map((i) => h("li", { text: i }))))));
+    }
+    const causeSlot = h("div", { class: "cause-slot" });
+    box.append(causeSlot);
+    const d = r.derived || {};
+    const tiles = [];
+    for (const [k, label, unit] of CHILLER_DERIVED_FIELDS) {
+      if (typeof d[k] !== "number" || k === "patmPsia") continue;
+      const m = r.measurements || {};
+      if ((k === "evapSatF" && typeof m.evapSatF === "number") || (k === "condSatF" && typeof m.condSatF === "number")) continue; // entered, not derived
+      let cls = "";
+      if (k === "evapApproachF") cls = d[k] > 10 ? "hi" : d[k] > 5 ? "hi" : "";
+      if (k === "condApproachF") cls = d[k] > (r.condenserType === "air_cooled" ? 25 : 5) ? "hi" : "";
+      if (k === "ampsPercentRla" && d[k] > 110) cls = "hi";
+      tiles.push(statTile(cls === "hi" ? `${label} · high` : label, fmtNum(d[k], 1), unit === "tons" ? "" : unit, cls));
+    }
+    if (tiles.length) box.append(h("div", { class: "stats" }, ...tiles));
+    if (r.summary) box.append(h("p", { class: "dx-summary", text: r.summary }));
+    renderFindingsBlock(box, r.findings, causeSlot);
+    if (r.offline) box.append(h("div", { class: "dc-warn", text: "Offline: ΔT, tons and approaches were computed on this device. Findings need the server — reconnect and evaluate again." }));
+    if (r.missing && r.missing.length) box.append(h("div", { class: "section-title", text: "Would sharpen the result" }), h("ul", { class: "dc-list" }, ...r.missing.map((m) => h("li", { text: m }))));
+    if (Array.isArray(r.notes) && r.notes.length) box.append(h("ul", { class: "kv-list" }, ...r.notes.filter((n) => typeof n === "string").map((n) => h("li", { text: n }))));
+    box.append(h("div", { class: "btn-row", style: "margin-top:8px" },
+      h("button", { class: "btn btn-primary grow", type: "button", onclick: () => sendChillerToChat(true) }, icon("send"), "Send to chat"),
+      r.readingId ? null : h("button", { class: "btn grow", type: "button", onclick: () => evaluateChiller({ save: true }) }, icon("units"), readingsTargetUnit() ? `Save to ${unitLabel(readingsTargetUnit())}` : "Save to unit"),
+    ));
+    if (!isTwoColDx()) box.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+  }
+  function sendChillerToChat(withResult) {
+    const m = buildChillerMeasurements(chillerValues());
+    let text = composeChillerMessage(m, withResult && state.lastChiller ? state.lastChiller.derived : null);
+    if (withResult && state.lastChiller && state.lastChiller.summary) text += `\nChiller evaluation: ${state.lastChiller.summary}`;
+    insertIntoComposer(text);
+  }
+  w2.chillerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    evaluateChiller();
+  });
+  w2.btnDiagnose.addEventListener("click", (e) => {
+    if (!isChillerMode()) return;
+    e.preventDefault();
+    evaluateChiller();
+  });
+  function clearChillerForm() {
+    w2.chillerForm.reset();
+    w2.chillerForm.dataset.condenser = "water_cooled";
+    populateRefrigerantSelects();
+    w2.chillerResult.hidden = true;
+    w2.chillerResult.textContent = "";
+    showChillerError("");
+    state.lastChiller = null;
+    if (readingsTargetUnit()) prefillReadingsFromUnit(readingsTargetUnit(), { force: true });
+  }
+
+  /* ---- job clock + customer signature (chat) ---- */
+  const job = { timer: null };
+  function renderJobBar() {
+    const bar = w2.jobBar;
+    clearInterval(job.timer);
+    job.timer = null;
+    const show = !!(state.conversation && state.conversationId && state.unit);
+    bar.hidden = !show;
+    if (!show) return;
+    const conv = state.conversation;
+    const st = jobBarState(conv);
+    bar.classList.toggle("running", st.state === "running");
+    bar.textContent = "";
+    const text = h("span", { class: "job-text" });
+    const sub = h("span", { class: "job-sub" });
+    if (st.state === "running") {
+      text.textContent = `On site ${formatElapsed(st.elapsedMs)}`;
+      sub.textContent = `since ${timeOfDay(conv.job_started_at)}`;
+    } else if (st.state === "stopped") {
+      text.textContent = `On site ${formatMinutes(st.minutes)}`;
+      sub.textContent = `${timeOfDay(conv.job_started_at)} → ${timeOfDay(conv.job_ended_at)}`;
+    } else {
+      text.textContent = "Job clock";
+      sub.textContent = "time on site goes on the report";
+    }
+    const clock = h("div", { class: "job-clock" }, st.state === "running" ? h("span", { class: "job-dot", "aria-hidden": "true" }) : icon("clock", "icon icon-sm"), text, sub);
+    const actions = h("div", { class: "job-actions" });
+    if (st.state === "running") actions.append(h("button", { class: "btn btn-sm", type: "button", onclick: () => jobAction("stop") }, icon("stop", "icon icon-sm"), "Stop"));
+    else actions.append(h("button", { class: `btn btn-sm${st.state === "idle" ? " btn-primary" : ""}`, type: "button", onclick: () => jobAction("start") }, icon("clock", "icon icon-sm"), st.state === "idle" ? "Start job" : "Start again"));
+    if (st.signed) {
+      actions.append(h("button", { class: "job-signed", type: "button", "aria-label": `Signed by ${st.signedBy || "customer"} — view or replace the signature`, onclick: () => navigate(`#chat/${state.conversationId}/sign`) },
+        icon("check", "icon icon-sm"), h("span", { text: `Signed by ${st.signedBy || "customer"} ${timeOfDay(st.signedAt) || relTime(st.signedAt)}` })));
+    } else actions.append(h("button", { class: "btn btn-sm", type: "button", onclick: () => navigate(`#chat/${state.conversationId}/sign`) }, icon("sign", "icon icon-sm"), "Customer sign-off"));
+    bar.append(clock, actions);
+    if (st.state === "running") {
+      job.timer = setInterval(() => {
+        if (!state.conversation || state.conversation.id !== conv.id) return clearInterval(job.timer);
+        text.textContent = `On site ${formatElapsed(jobBarState(state.conversation).elapsedMs)}`;
+      }, 1000);
+    }
+  }
+  async function jobAction(action) {
+    const id = state.conversationId;
+    if (!id) return;
+    if (action === "start" && state.conversation && state.conversation.job_ended_at && !confirm("Start the job clock again? The previous time on site is replaced.")) return;
+    try {
+      const r = await apiJson(`/api/conversations/${encodeURIComponent(id)}/job`, { method: "POST", json: { action } });
+      if (state.conversationId === id) {
+        state.conversation = (r && r.conversation) || state.conversation;
+        renderJobBar();
+      }
+      toast(action === "start" ? "Job clock started" : "Job clock stopped");
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+    }
+  }
+
+  const sig = { convId: null, ctx: null, drawing: false, strokes: 0 };
+  function sizeSignaturePad() {
+    const c = w2.signPad;
+    const rect = c.getBoundingClientRect();
+    if (!rect.width) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    c.width = Math.round(rect.width * dpr);
+    c.height = Math.round(rect.height * dpr);
+    const ctx = c.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#111";
+    sig.ctx = ctx;
+    sig.strokes = 0;
+  }
+  function padPoint(e) {
+    const rect = w2.signPad.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+  w2.signPad.addEventListener("pointerdown", (e) => {
+    if (!sig.ctx) sizeSignaturePad();
+    if (!sig.ctx) return;
+    e.preventDefault();
+    sig.drawing = true;
+    sig.strokes += 1;
+    try {
+      w2.signPad.setPointerCapture(e.pointerId);
+    } catch {
+      /* unsupported */
+    }
+    const p = padPoint(e);
+    sig.ctx.beginPath();
+    sig.ctx.moveTo(p.x, p.y);
+    sig.ctx.lineTo(p.x + 0.1, p.y + 0.1);
+    sig.ctx.stroke();
+  });
+  w2.signPad.addEventListener("pointermove", (e) => {
+    if (!sig.drawing || !sig.ctx) return;
+    e.preventDefault();
+    const p = padPoint(e);
+    sig.ctx.lineTo(p.x, p.y);
+    sig.ctx.stroke();
+  });
+  // Rotating the phone changes the pad's CSS size: re-scale an untouched pad so strokes land under the finger.
+  window.addEventListener("resize", () => { if (!w2.sheetSign.hidden && !sig.strokes) sizeSignaturePad(); });
+  const endStroke = () => { sig.drawing = false; };
+  w2.signPad.addEventListener("pointerup", endStroke);
+  w2.signPad.addEventListener("pointercancel", endStroke);
+  w2.signPad.addEventListener("pointerleave", endStroke);
+  w2.btnSignClear.addEventListener("click", () => {
+    sizeSignaturePad();
+    w2.signError.hidden = true;
+  });
+  /** PNG data URL of the pad, re-rendered at 1× when the 2× export would pass the server's 200 KB limit. */
+  function signaturePng() {
+    const c = w2.signPad;
+    let url = c.toDataURL("image/png");
+    if (url.length > 200 * 1024) {
+      const small = doc.createElement("canvas");
+      small.width = Math.round(c.width / 2);
+      small.height = Math.round(c.height / 2);
+      small.getContext("2d").drawImage(c, 0, 0, small.width, small.height);
+      url = small.toDataURL("image/png");
+    }
+    return url;
+  }
+  async function showSignSheet(convId) {
+    sig.convId = convId;
+    const conv = state.conversation && state.conversationId === convId ? state.conversation : null;
+    fillSignSheet(conv, true);
+    showSheet(w2.sheetSign);
+    requestAnimationFrame(sizeSignaturePad);
+    // Always ask the server: a cold link (#chat/<id>/sign) opens before the conversation has loaded, and the stored
+    // signature image is only returned with ?include=signature.
+    w2.signExisting.hidden = false;
+    w2.signExisting.textContent = "";
+    w2.signExisting.append(h("div", { class: "skeleton", style: "min-height:72px" }));
+    try {
+      const data = await apiJson(`/api/conversations/${encodeURIComponent(convId)}?include=signature`);
+      if (sig.convId !== convId || w2.sheetSign.hidden) return;
+      fillSignSheet(data && data.conversation ? data.conversation : conv, false, data && data.unit);
+      w2.signExisting.textContent = "";
+      if (data && data.signature && data.signature.png) {
+        w2.signExisting.append(h("img", { src: data.signature.png, alt: `Signature of ${data.signature.signed_by || "the customer"}` }),
+          h("div", { class: "hint", text: `Signed by ${data.signature.signed_by || "customer"}${data.signature.signed_at ? ` · ${relTime(data.signature.signed_at)}` : ""}${data.signature.note ? ` · ${data.signature.note}` : ""}. Signing below replaces it.` }));
+      } else w2.signExisting.hidden = true;
+    } catch {
+      w2.signExisting.hidden = true;
+    }
+  }
+  /** Prefill the sign-off sheet from a conversation (name / declined / note only when the user has not typed yet). */
+  function fillSignSheet(conv, reset, unit) {
+    const st = jobBarState(conv);
+    const u = unit || (state.unit && conv && state.unit.id === conv.unit_id ? state.unit : null);
+    w2.signSub.textContent = conv ? `${conv.title || "Conversation"}${u ? ` · ${unitLabel(u)}` : ""}${st.state === "stopped" && st.minutes !== null ? ` · ${formatMinutes(st.minutes)} on site` : st.state === "running" ? " · job clock running" : ""}` : "";
+    if (reset || !w2.signForm.dataset.dirty) {
+      w2.signName.value = st.signedBy || "";
+      w2.signDeclined.checked = /declined recommendation/i.test(st.signatureNote || "");
+      w2.signNote.value = String(st.signatureNote || "").replace(/^declined recommendation\s*(—\s*)?/i, "");
+    }
+    if (reset) {
+      delete w2.signForm.dataset.dirty;
+      w2.signError.hidden = true;
+      w2.signExisting.hidden = true;
+      w2.signExisting.textContent = "";
+    }
+    w2.btnSignRemove.hidden = !st.signed;
+    w2.btnSignSave.textContent = "";
+    w2.btnSignSave.append(icon("check"), st.signed ? "Replace" : "Save");
+  }
+  w2.signForm.addEventListener("input", () => { w2.signForm.dataset.dirty = "1"; });
+  w2.signForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!sig.convId) return;
+    if (!sig.strokes) {
+      w2.signError.hidden = false;
+      w2.signError.textContent = "Sign in the box first.";
+      return;
+    }
+    w2.btnSignSave.disabled = true;
+    try {
+      const body = { png: signaturePng() };
+      const name = w2.signName.value.trim();
+      if (name) body.signed_by = name;
+      const note = signatureNote(w2.signDeclined.checked, w2.signNote.value);
+      if (note) body.note = note;
+      const r = await apiJson(`/api/conversations/${encodeURIComponent(sig.convId)}/signature`, { method: "POST", json: body });
+      if (state.conversationId === sig.convId) {
+        state.conversation = (r && r.conversation) || state.conversation;
+        renderJobBar();
+      }
+      toast(`Signed${name ? ` by ${name}` : ""}`);
+      closeSheets();
+    } catch (err) {
+      w2.signError.hidden = false;
+      w2.signError.textContent = isNetworkError(err) ? "Saving the signature needs a connection." : `${err.code}: ${err.message}`;
+    } finally {
+      w2.btnSignSave.disabled = false;
+    }
+  });
+  w2.btnSignRemove.addEventListener("click", async () => {
+    if (!sig.convId || !confirm("Remove the customer signature from this conversation?")) return;
+    try {
+      const r = await apiJson(`/api/conversations/${encodeURIComponent(sig.convId)}/signature`, { method: "DELETE" });
+      if (state.conversationId === sig.convId) {
+        state.conversation = (r && r.conversation) || state.conversation;
+        renderJobBar();
+      }
+      toast("Signature removed");
+      closeSheets();
+    } catch (err) {
+      toast(`${err.code}: ${err.message}`);
+    }
+  });
+
+  /* ---- unit card: manufacturer support (OEM fallback) ---- */
+  function buildSupportCard(d) {
+    const rows = supportRows(d && d.support);
+    if (!rows.length) return null;
+    const card = h("div", { class: "card support-card" }, h("div", { class: "card-title", text: "Manufacturer support" }));
+    const list = h("div", { class: "list support-list", role: "list" });
+    const texts = [];
+    for (const r of rows) {
+      if (r.kind === "phone" || r.kind === "link") {
+        const lit = /^Literature/.test(r.title);
+        list.append(h("a", { class: "row", role: "listitem", href: r.href, target: r.kind === "link" ? "_blank" : null, rel: r.kind === "link" ? "noopener noreferrer" : null },
+          h("div", { class: `row-lead ${r.kind === "phone" ? "ok" : "info"}` }, icon(r.kind === "phone" ? "phone" : lit ? "file" : "link")),
+          h("div", { class: "row-body" }, h("div", { class: "row-title", text: r.kind === "phone" ? `Call ${r.title}` : r.title }), h("div", { class: "row-sub" }, h("span", { text: r.sub }))),
+          icon("chevron", "icon icon-sm row-chevron")));
+      } else texts.push(r);
+    }
+    card.append(list);
+    // Search hints and pack notes are long: one disclosure keeps the card to the tappable rows.
+    if (texts.length) {
+      card.append(h("details", { class: "disclosure support-more" }, h("summary", null, h("span", { text: "Finding the manual" })),
+        h("div", { class: "disclosure-body" }, ...texts.map((r) => h("div", { class: "support-text" }, h("b", { text: r.title }), r.sub)))));
+    }
+    return card;
+  }
+
+  /* ---- unit card: refrigerant log + compliance ---- */
+  const RF_ICON = { add: "drop", recover: "download", leak_check: "search", verification_initial: "flask", verification_followup: "flask", repair: "tool", retrofit_plan: "file" };
+  function buildRefrigerantCard(pu, u) {
+    const c = pu.compliance || null;
+    const chip = complianceChip(c);
+    const chipCls = { ok: "chip-ok", exceeded: "chip-danger", na: "chip-outline", unknown: "chip-warn" }[chip.kind] || "";
+    const card = h("div", { class: "card refrigerant-card" }, h("div", { class: "card-title" }, h("span", { text: "Refrigerant" }), h("button", { class: "text-btn", type: "button", text: "Log refrigerant", onclick: () => navigate(`#unit/${u.id}/refrigerant`) })));
+    card.append(h("div", { class: "comp-head" }, h("span", { class: `chip ${chipCls}` }, chip.kind === "exceeded" ? icon("alert", "icon") : chip.kind === "ok" ? icon("check", "icon") : null, chip.label),
+      chip.kind === "unknown" ? h("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => navigate(`#unit/${u.id}/charge`) }, icon("edit", "icon icon-sm"), "Set full charge") : null));
+    card.append(h("div", { class: "comp-detail", text: chip.detail }));
+    if (c && c.fullChargeLbs !== null && c.fullChargeLbs !== undefined) {
+      const nb = "\u00a0";
+      const circuits = typeof c.circuitsCount === "number" ? c.circuitsCount : 1;
+      const bits = [`Full charge ${fmtNum(c.fullChargeLbs)}${nb}lb`, c.applianceType ? `${APPLIANCE_TYPE_LABEL[c.applianceType] || c.applianceType} (${c.thresholdPct}${nb}%)` : `type not set (${c.thresholdPct}${nb}% assumed)`, `${circuits}${nb}circuit${circuits === 1 ? "" : "s"}${circuits > 1 && c.circuitChargeLbs ? ` (${fmtNum(c.circuitChargeLbs)}${nb}lb each)` : ""}`];
+      card.append(h("div", { class: "comp-line" }, h("span", { text: bits.join(" · ") }), h("button", { class: "text-btn", type: "button", "aria-label": "Edit full charge, appliance type and circuits", text: "Edit", onclick: () => navigate(`#unit/${u.id}/charge`) })));
+    }
+    card.append(h("div", { class: "rule-line", text: LEAK_RATE_RULE_LINE }));
+    const obligations = c && Array.isArray(c.obligations) ? c.obligations : [];
+    if (obligations.length) {
+      card.append(h("div", { class: "section-title", style: "padding-bottom:0", text: `Obligations (${obligations.length})` }));
+      card.append(h("ul", { class: "obl-list" }, ...obligations.filter((o) => o && typeof o === "object").map((o) => {
+        const oc = obligationChip(o);
+        // The server text is a full sentence ("Repair within 30 days of …"); the kind label only stands in when it is missing.
+        const text = typeof o.text === "string" && o.text.trim() ? o.text : OBLIGATION_LABEL[o.kind] || o.kind || "Obligation";
+        return h("li", { class: `obl-row${o.overdue ? " overdue" : ""}` }, h("div", { class: "obl-head" }, h("b", { text: OBLIGATION_LABEL[o.kind] || "Obligation" }), h("span", { class: `chip due-chip ${oc.kind}`, text: oc.label })), h("div", { class: "obl-text", text }));
+      })));
+    }
+    const events = pu.refrigerantEvents || [];
+    if (pu.refrigerantFailed) card.append(h("div", { class: "list-empty", text: "Could not load the refrigerant log." }));
+    else if (!events.length) card.append(h("div", { class: "list-empty", text: "No refrigerant events yet. Log every add, recovery, leak check, verification test and repair — the leak rate is computed on each add." }));
+    else {
+      const list = h("div", { class: "list rf-list", role: "list" });
+      const render = (limit) => {
+        list.textContent = "";
+        for (const e of events.slice(0, limit)) {
+          const t = refrigerantEventText(e);
+          list.append(h("div", { class: "rf-item", role: "listitem" },
+            h("div", { class: `row-lead ${t.tone}` }, icon(RF_ICON[e.event_type] || "drop")),
+            h("div", { class: "row-body" }, h("div", { class: "row-title", text: t.title }), t.meta ? h("div", { class: "row-sub" }, h("span", { text: t.meta })) : null, e.note ? h("div", { class: "rf-note", text: e.note }) : null),
+            h("button", { class: "icon-btn", type: "button", "aria-label": `Delete event: ${t.title}`, onclick: () => deleteRefrigerantEvent(e, u) }, icon("trash", "icon icon-sm")),
+          ));
+        }
+        if (events.length > limit) list.append(h("button", { class: "btn btn-sm btn-ghost", type: "button", style: "margin:8px", text: `Show all ${events.length}`, onclick: () => render(events.length) }));
+      };
+      render(6);
+      card.append(list);
+    }
+    return card;
+  }
+  async function deleteRefrigerantEvent(e, u) {
+    if (!confirm("Delete this refrigerant event? Leak rates are recomputed from the remaining log.")) return;
+    try {
+      await apiJson(`/api/units/${encodeURIComponent(u.id)}/refrigerant/${encodeURIComponent(e.id)}`, { method: "DELETE" });
+      toast("Event deleted");
+      loadUnitPanel(u.id, { quiet: true });
+    } catch (err) {
+      toast(`${err.code}: ${err.message}`);
+    }
+  }
+  /**
+   * The unit (and its compliance summary) behind a unit sheet. A sheet opened from a cold link (#unit/<id>/charge)
+   * can show before the unit panel has loaded, so fetch the unit instead of guessing — never prefill blanks.
+   */
+  async function unitForSheet(unitId) {
+    const pu = state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit : null;
+    if (pu) return { unit: pu.unit, compliance: pu.compliance || null, decoded: pu.decoded || null };
+    const data = await apiJson(`/api/units/${encodeURIComponent(unitId)}`);
+    const unit = (data && (data.unit || data)) || null;
+    if (unit && unit.id) state.unitsById.set(unit.id, unit);
+    return { unit, compliance: (data && data.compliance) || null, decoded: (data && data.decoded) || null };
+  }
+  let chargeUnitId = null;
+  async function showChargeSheet(unitId) {
+    chargeUnitId = unitId;
+    w2.chargeForm.reset();
+    w2.chargeSub.textContent = "Loading the unit…";
+    w2.chargeError.hidden = true;
+    w2.btnChargeSave.disabled = true;
+    showSheet(w2.sheetCharge);
+    let u = null;
+    try {
+      u = (await unitForSheet(unitId)).unit;
+    } catch (e) {
+      if (chargeUnitId === unitId) showFieldError(w2.chargeError, isNetworkError(e) ? "Editing the charge needs a connection." : `${e.code}: ${e.message}`);
+      return;
+    }
+    if (chargeUnitId !== unitId || w2.sheetCharge.hidden || !u) return;
+    w2.chargeSub.textContent = [unitLabel(u), u.refrigerant, u.site].filter(Boolean).join(" · ");
+    w2.chFull.value = u.full_charge_lbs !== null && u.full_charge_lbs !== undefined ? String(u.full_charge_lbs) : "";
+    w2.chCircuits.value = u.circuits_count ? String(u.circuits_count) : "";
+    w2.chType.value = u.appliance_type || "";
+    w2.btnChargeSave.disabled = false;
+  }
+  w2.chargeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!chargeUnitId) return;
+    const full = toNum(w2.chFull.value);
+    const circuits = toNum(w2.chCircuits.value);
+    if (w2.chFull.value.trim() && (full === undefined || full < 0)) return showFieldError(w2.chargeError, "Full charge must be a number of pounds.");
+    if (w2.chCircuits.value.trim() && (circuits === undefined || !Number.isInteger(circuits) || circuits < 1)) return showFieldError(w2.chargeError, "Circuits must be a whole number (1 or more).");
+    const body = { full_charge_lbs: full === undefined ? null : full, circuits_count: circuits === undefined ? null : circuits, appliance_type: w2.chType.value || null };
+    w2.btnChargeSave.disabled = true;
+    try {
+      await apiJson(`/api/units/${encodeURIComponent(chargeUnitId)}`, { method: "PATCH", json: body });
+      toast("Charge saved");
+      closeSheets();
+      loadUnitPanel(chargeUnitId, { quiet: true });
+    } catch (err) {
+      showFieldError(w2.chargeError, `${err.code}: ${err.message}`);
+    } finally {
+      w2.btnChargeSave.disabled = false;
+    }
+  });
+  function showFieldError(el, text) {
+    el.hidden = !text;
+    el.textContent = text || "";
+  }
+  let rfUnitId = null;
+  function rfEventType() {
+    const t = (w2.rfForm.querySelector('input[name="event_type"]:checked') || {}).value || "add";
+    if (t === "verification") return (w2.rfForm.querySelector('input[name="verification_kind"]:checked') || {}).value || "verification_initial";
+    return t;
+  }
+  function syncRefrigerantForm() {
+    const raw = (w2.rfForm.querySelector('input[name="event_type"]:checked') || {}).value || "add";
+    w2.rfVerifyRow.hidden = raw !== "verification";
+    w2.rfAmountRow.hidden = !(raw === "add" || raw === "recover");
+    w2.rfLeakRow.hidden = raw !== "leak_check";
+    w2.rfPassedRow.hidden = raw !== "verification";
+    const lbs = lbsFromLbsOz(w2.rfLbs.value, w2.rfOz.value);
+    w2.rfAmountHint.textContent = lbs !== null && lbs > 0 ? `= ${fmtNum(lbs, 2)} lb (${formatLbs(lbs)})` : "";
+  }
+  w2.rfForm.addEventListener("change", syncRefrigerantForm);
+  w2.rfLbs.addEventListener("input", syncRefrigerantForm);
+  w2.rfOz.addEventListener("input", syncRefrigerantForm);
+  function rfSubText(u, c) {
+    if (!u) return "";
+    const full = c && typeof c.fullChargeLbs === "number" ? c.fullChargeLbs : typeof u.full_charge_lbs === "number" ? u.full_charge_lbs : null;
+    const pct = c && typeof c.thresholdPct === "number" ? c.thresholdPct : null;
+    return `${unitLabel(u)}${full !== null ? ` · full charge ${fmtNum(full)}\u00a0lb${pct !== null ? ` · ${pct}\u00a0% threshold` : ""}` : " · full charge not set — the rate cannot be computed"}`;
+  }
+  async function showRefrigerantSheet(unitId) {
+    rfUnitId = unitId;
+    w2.rfForm.reset();
+    populateRefrigerantSelects();
+    w2.rfDate.value = localYmd();
+    w2.rfTech.value = store.get(TECH_NAME_KEY) || "";
+    w2.rfCert.value = store.get(TECH_CERT_KEY) || "";
+    w2.rfError.hidden = true;
+    w2.rfSub.textContent = "";
+    syncRefrigerantForm();
+    showSheet(w2.sheetRefrigerant);
+    try {
+      const { unit: u, compliance: c } = await unitForSheet(unitId);
+      if (rfUnitId !== unitId || w2.sheetRefrigerant.hidden || !u) return;
+      if (u.refrigerant && !w2.rfRefrigerant.dataset.touched) setSelectValue(w2.rfRefrigerant, u.refrigerant);
+      w2.rfSub.textContent = rfSubText(u, c);
+    } catch {
+      /* offline: the form still works when the connection returns; the save says so */
+    }
+  }
+  w2.rfRefrigerant.addEventListener("change", () => { w2.rfRefrigerant.dataset.touched = "1"; });
+  w2.rfForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!rfUnitId) return;
+    const type = rfEventType();
+    const body = { event_type: type };
+    const ref = w2.rfRefrigerant.value;
+    if (ref) body.refrigerant = ref;
+    const amount = lbsFromLbsOz(w2.rfLbs.value, w2.rfOz.value);
+    if (type === "add" || type === "recover") {
+      if (amount === null || !(amount > 0)) return showFieldError(w2.rfError, "Enter the amount (lb and/or oz).");
+      body.amount_lbs = amount;
+    } else if (amount !== null && amount > 0) body.amount_lbs = amount;
+    const circuit = toNum(w2.rfCircuit.value);
+    if (w2.rfCircuit.value.trim()) {
+      if (circuit === undefined || !Number.isInteger(circuit) || circuit < 1) return showFieldError(w2.rfError, "Circuit must be a whole number (1, 2, …).");
+      body.circuit = circuit;
+    }
+    for (const [el, key] of [[w2.rfCylinder, "cylinder_id"], [w2.rfTech, "tech_name"], [w2.rfCert, "tech_cert"], [w2.rfNote, "note"]]) {
+      const v = el.value.trim();
+      if (v) body[key] = v;
+    }
+    if (type === "leak_check") body.leak_found = w2.rfLeakFound.checked;
+    if (type === "verification_initial" || type === "verification_followup") body.passed = w2.rfPassed.checked;
+    if (w2.rfDate.value && w2.rfDate.value !== localYmd()) body.date = w2.rfDate.value;
+    if (state.conversationId && state.unit && state.unit.id === rfUnitId) body.conversation_id = state.conversationId;
+    w2.btnRfSave.disabled = true;
+    try {
+      const r = await apiJson(`/api/units/${encodeURIComponent(rfUnitId)}/refrigerant`, { method: "POST", json: body });
+      rememberTech(w2.rfTech.value, w2.rfCert.value);
+      const ev = (r && r.event) || {};
+      if (ev.event_type === "add" && typeof ev.leak_rate_pct === "number") toast(ev.exceeded ? `Leak rate ${fmtNum(ev.leak_rate_pct)} % exceeds ${ev.threshold_pct} % — repair follow-up created` : `Logged · leak rate ${fmtNum(ev.leak_rate_pct)} % (threshold ${ev.threshold_pct} %)`);
+      else if (ev.event_type === "add") toast("Logged — set the full charge to compute the leak rate");
+      else toast("Logged");
+      closeSheets();
+      loadUnitPanel(rfUnitId, { quiet: true });
+      if (r && r.finding) loadFollowUps({ quiet: true });
+    } catch (err) {
+      showFieldError(w2.rfError, isNetworkError(err) ? "Logging needs a connection." : `${err.code}: ${err.message}`);
+    } finally {
+      w2.btnRfSave.disabled = false;
+    }
+  });
+  /* Settings → Refrigerant log → Export CSV (download with the Bearer token, like the corrections export) */
+  w2.btnRefrigerantExport.addEventListener("click", async () => {
+    const btn = w2.btnRefrigerantExport;
+    btn.disabled = true;
+    try {
+      const res = await api("/api/refrigerant/export.csv");
+      if (!res.ok) throw await readError(res);
+      const name = refrigerantExportFilename(res.headers.get("content-disposition"));
+      const blob = new Blob([await res.blob()], { type: "text/csv" });
+      let outcome = "saved";
+      let done = false;
+      if (isIOS()) {
+        const file = typeof File === "function" ? new File([blob], name, { type: "text/csv" }) : null;
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: name });
+            done = true;
+          } catch (err) {
+            if (err && err.name === "AbortError") {
+              done = true;
+              outcome = "cancelled";
+            }
+          }
+        }
+        if (!done) {
+          const url = URL.createObjectURL(blob);
+          window.open(url, "_blank") || (location.href = url);
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = h("a", { href: url, download: name });
+        doc.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+      toast(correctionsExportToast(outcome, name));
+    } catch (e) {
+      toast(`Export failed: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- unit card: maintenance (last PM visit) + template picker + full-screen checklist ---- */
+  function buildMaintenanceCard(pu, u) {
+    const card = h("div", { class: "card maintenance-card" }, h("div", { class: "card-title" }, h("span", { text: "Maintenance" }), h("button", { class: "text-btn", type: "button", "aria-label": "Start a PM checklist", text: "Start PM", onclick: () => navigate(`#unit/${u.id}/pm`) })));
+    const last = pu.lastPm || null;
+    if (pu.pmFailed && !last) card.append(h("div", { class: "list-empty", text: "Could not load PM visits." }));
+    else if (!last) {
+      card.append(h("div", { class: "list-empty", text: "No PM visit yet. Start a checklist for this equipment type: pass / fail per item, as-found / as-left numbers checked against the nameplate." }));
+      card.append(h("div", { class: "card-actions" }, h("button", { class: "btn btn-primary", type: "button", onclick: () => navigate(`#unit/${u.id}/pm`) }, icon("list", "icon icon-sm"), "Start PM checklist")));
+    }
+    else {
+      const s = pmVisitSummaryText(last);
+      const open = () => navigate(`#unit/${u.id}/pm/${last.id}`);
+      const block = h("div", { class: "pm-last" },
+        h("div", { class: "pm-last-title" }, h("span", { text: s.title }), h("span", { class: `chip ${last.status === "complete" ? "chip-ok" : "chip-warn"}`, text: s.status }), s.tech ? h("span", { class: "chip chip-outline", text: s.tech }) : null),
+        h("div", { class: "pm-last-counts", text: s.counts }),
+      );
+      if (s.safetyFails.length) block.append(h("div", { class: "dc-warn" }, h("b", { text: "Safety items failed: " }), s.safetyFails.join("; ")));
+      if (s.flagged.length) block.append(h("div", null, h("div", { class: "attr-label", text: "Nameplate deviations" }), h("ul", { class: "pm-flag-list" }, ...s.flagged.map((x) => h("li", { text: x })))));
+      const otherFails = s.fails.filter((x) => !s.flagged.includes(x) && !s.safetyFails.includes(x));
+      if (otherFails.length) block.append(h("div", null, h("div", { class: "attr-label", text: "Failed items" }), h("ul", { class: "pm-flag-list" }, ...otherFails.map((x) => h("li", { text: x })))));
+      block.append(h("div", { class: "card-actions" }, h("button", { class: `btn btn-sm${last.status === "complete" ? "" : " btn-primary"}`, type: "button", onclick: open }, icon(last.status === "complete" ? "list" : "edit", "icon icon-sm"), last.status === "complete" ? "Open checklist" : "Continue checklist")));
+      card.append(block);
+      const older = (pu.pmVisits || []).filter((v) => v.id !== last.id);
+      if (older.length) {
+        const list = h("div", { class: "list pm-visits", role: "list" });
+        for (const v of older.slice(0, 5)) {
+          const t = pmVisitSummaryText(v);
+          list.append(listRow(h("button", { class: "row", type: "button", onclick: () => navigate(`#unit/${u.id}/pm/${v.id}`) },
+            h("div", { class: "row-lead" }, icon("list")),
+            h("div", { class: "row-body" }, h("div", { class: "row-title", text: t.title }), h("div", { class: "row-sub" }, h("span", { text: `${t.counts} · ${t.status}` }))),
+            icon("chevron", "icon icon-sm row-chevron")), { role: "listitem" }));
+        }
+        card.append(list);
+      }
+    }
+    return card;
+  }
+  let pmPickUnitId = null;
+  async function showPmPickSheet(unitId) {
+    const pu0 = state.panelUnit && state.panelUnit.unit.id === unitId ? state.panelUnit : null;
+    let u = (pu0 && pu0.unit) || state.unitsById.get(unitId) || null;
+    let decoded = pu0 ? pu0.decoded : null;
+    pmPickUnitId = unitId;
+    w2.pmPickSub.textContent = u ? `${unitLabel(u)}${u.site ? ` · ${u.site}` : ""} — pick the checklist; the suggestion comes from the decoded nameplate.` : "Pick the checklist for this equipment.";
+    w2.pmTech.value = store.get(TECH_NAME_KEY) || "";
+    w2.pmPickList.textContent = "";
+    w2.pmPickList.append(h("div", { class: "skeleton" }), h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
+    showSheet(w2.sheetPmPick);
+    try {
+      const [j, info] = await Promise.all([apiJson("/api/pm/templates"), pu0 ? Promise.resolve(null) : unitForSheet(unitId).catch(() => null)]);
+      if (pmPickUnitId !== unitId || w2.sheetPmPick.hidden) return;
+      if (info && info.unit) {
+        u = info.unit;
+        decoded = info.decoded;
+        w2.pmPickSub.textContent = `${unitLabel(u)}${u.site ? ` · ${u.site}` : ""} — pick the checklist; the suggestion comes from the decoded nameplate.`;
+      }
+      const suggestion = suggestPmTemplate(u, decoded);
+      const templates = orderPmTemplates(pickList(j, "templates"), suggestion);
+      w2.pmPickList.textContent = "";
+      if (!templates.length) return w2.pmPickList.append(h("div", { class: "list-empty", text: "No templates on this server." }));
+      for (const t of templates) {
+        w2.pmPickList.append(listRow(h("button", { class: `row${t.suggested ? " pm-suggest" : ""}`, type: "button", onclick: () => startPmVisit(unitId, t.id) },
+          h("div", { class: "row-lead" }, icon("list")),
+          h("div", { class: "row-body" }, h("div", { class: "row-title" }, t.name, t.suggested ? h("span", { class: "chip chip-accent", style: "margin-left:6px", text: "Suggested" }) : null), h("div", { class: "row-sub" }, h("span", { text: t.suggested ? `${suggestion.reason} · ${t.itemCount} items` : `${t.itemCount} items · ${(t.sections || []).length} sections` }))),
+          icon("chevron", "icon icon-sm row-chevron")), { role: "listitem" }));
+      }
+    } catch (e) {
+      w2.pmPickList.textContent = "";
+      w2.pmPickList.append(h("div", { class: "list-empty", text: isNetworkError(e) ? "Templates need a connection." : `Could not load templates: ${e.message}` }));
+    }
+  }
+  async function startPmVisit(unitId, templateId) {
+    const tech = w2.pmTech.value.trim();
+    rememberTech(tech);
+    const body = { template_id: templateId };
+    if (tech) body.tech_name = tech;
+    if (state.conversationId && state.unit && state.unit.id === unitId) body.conversation_id = state.conversationId;
+    for (const b of w2.pmPickList.querySelectorAll("button")) b.disabled = true;
+    try {
+      const r = await apiJson(`/api/units/${encodeURIComponent(unitId)}/pm`, { method: "POST", json: body });
+      navigate(`#unit/${unitId}/pm/${r.visit.id}`, { replace: true });
+    } catch (e) {
+      toast(`${e.code}: ${e.message}`);
+      for (const b of w2.pmPickList.querySelectorAll("button")) b.disabled = false;
+    }
+  }
+
+  const pm = { unitId: null, visitId: null, visit: null, template: null, unit: null, pending: {}, timer: null, saving: false, dirty: false, retryTimer: null };
+  function readPending(vid) {
+    try {
+      const v = JSON.parse(store.get(pmPendingKey(vid)) || "{}");
+      return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+    } catch {
+      return {};
+    }
+  }
+  function persistPending() {
+    if (!pm.visitId) return;
+    store.set(pmPendingKey(pm.visitId), Object.keys(pm.pending).length ? JSON.stringify(pm.pending) : null);
+  }
+  function pmMergedResults() {
+    const out = { ...((pm.visit && pm.visit.results) || {}) };
+    for (const [id, patch] of Object.entries(pm.pending)) out[id] = { ...(out[id] || {}), ...patch };
+    return out;
+  }
+  function pmEvalOf(id) {
+    const items = pm.visit && pm.visit.summary && Array.isArray(pm.visit.summary.items) ? pm.visit.summary.items : [];
+    return items.find((i) => i.id === id) || null;
+  }
+  function setPmSaveState(kind, text) {
+    const el = w2.pmSaveState;
+    el.hidden = !kind;
+    el.className = `chip pm-save ${kind || ""}`;
+    el.textContent = text || "";
+  }
+  function renderPmProgress() {
+    if (!pm.template) return;
+    const p = pmProgress(pm.template, pmMergedResults());
+    w2.pmProgress.textContent = `${p.done} / ${p.total}`;
+    w2.pmProgress.setAttribute("aria-label", `${p.done} of ${p.total} items recorded`);
+  }
+  function setPmItem(id, patch) {
+    pm.pending[id] = { ...(pm.pending[id] || {}), ...patch };
+    persistPending();
+    renderPmProgress();
+    setPmSaveState("pending", "Unsaved");
+    schedulePmSave();
+  }
+  function schedulePmSave(delay = 800) {
+    clearTimeout(pm.timer);
+    pm.timer = setTimeout(() => flushPmSave(), delay);
+  }
+  async function flushPmSave() {
+    clearTimeout(pm.timer);
+    pm.timer = null;
+    if (!pm.visitId || !Object.keys(pm.pending).length) return;
+    if (pm.saving) {
+      pm.dirty = true;
+      return;
+    }
+    const vid = pm.visitId;
+    const unitId = pm.unitId;
+    const snapshot = JSON.parse(JSON.stringify(pm.pending));
+    pm.saving = true;
+    setPmSaveState("saving", "Saving…");
+    try {
+      const r = await apiJson(`/api/units/${encodeURIComponent(unitId)}/pm/${encodeURIComponent(vid)}`, { method: "PATCH", json: { results: snapshot } });
+      if (pm.visitId !== vid) return;
+      pm.visit = r.visit;
+      for (const [id, sent] of Object.entries(snapshot)) {
+        if (JSON.stringify(pm.pending[id]) === JSON.stringify(sent)) delete pm.pending[id];
+      }
+      persistPending();
+      setPmSaveState("saved", "Saved");
+      refreshPmFeedback();
+      renderPmProgress();
+      if (state.panelUnit && state.panelUnit.unit.id === unitId) loadUnitPanel(unitId, { quiet: true });
+    } catch (e) {
+      if (pm.visitId !== vid) return;
+      if (isNetworkError(e)) {
+        setPmSaveState("pending", "Offline · will retry");
+        clearTimeout(pm.retryTimer);
+        pm.retryTimer = setTimeout(() => flushPmSave(), 15000);
+      } else {
+        // A validation error cannot be fixed by retrying: drop the rejected patch and say why.
+        pm.pending = {};
+        persistPending();
+        setPmSaveState("error", "Not saved");
+        toast(`${e.code}: ${e.message}`);
+      }
+    } finally {
+      pm.saving = false;
+      if (pm.dirty) {
+        pm.dirty = false;
+        schedulePmSave(200);
+      }
+    }
+  }
+  window.addEventListener("online", () => { if (pm.visitId && Object.keys(pm.pending).length) schedulePmSave(0); });
+  doc.addEventListener("visibilitychange", () => { if (doc.visibilityState === "hidden" && pm.visitId) flushPmSave(); });
+  function pmItemClass(id) {
+    const ev = pmEvalOf(id);
+    const pendingState = pm.pending[id] ? pmItemState(pmMergedResults()[id]) : null;
+    const status = pendingState || (ev ? ev.status : "na");
+    return `pm-item${status === "pass" ? " pass" : status === "fail" ? " fail" : ""}`;
+  }
+  function refreshPmFeedback() {
+    for (const el of w2.pmBody.querySelectorAll(".pm-item[data-item-id]")) {
+      const id = el.dataset.itemId;
+      el.className = pmItemClass(id);
+      const fb = el.querySelector(".pm-feedback");
+      if (fb) {
+        const f = pmFeedback(pmEvalOf(id));
+        fb.hidden = !f.text;
+        fb.className = `pm-feedback ${f.tone}`;
+        fb.textContent = f.text;
+      }
+    }
+  }
+  function pmItemEl(item) {
+    const merged = pmMergedResults();
+    const r = merged[item.id] || {};
+    const el = h("div", { class: pmItemClass(item.id), dataset: { itemId: item.id } });
+    el.append(h("div", { class: "pm-item-head" }, h("div", { class: "pm-label" }, item.label, item.safety ? h("span", { class: "chip chip-danger", text: "Safety" }) : null)));
+    if (item.hint) el.append(h("div", { class: "pm-hint", text: item.hint }));
+    if (item.kind === "check") {
+      const seg = h("div", { class: "pm-seg", role: "group", "aria-label": `${item.label}: result` });
+      const current = pmItemState(r) || (r && r.checked === null && r.pass === null ? "na" : null);
+      for (const [key, label] of [["pass", "Pass"], ["fail", "Fail"], ["na", "N/A"]]) {
+        const b = h("button", { type: "button", dataset: { state: key }, "aria-pressed": String(current === key), text: label });
+        b.addEventListener("click", () => {
+          setPmItem(item.id, pmCheckPatch(key));
+          for (const x of seg.children) x.setAttribute("aria-pressed", String(x === b));
+          el.className = `pm-item${key === "na" ? "" : ` ${key}`}`;
+        });
+        seg.append(b);
+      }
+      el.append(seg);
+    } else if (item.kind === "number") {
+      const grid = h("div", { class: "pm-num" });
+      const numField = (label, key) => h("label", { class: "field" }, h("span", { class: "field-label", text: label }), h("span", { class: "num" },
+        h("input", { type: "text", inputmode: "decimal", value: r[key] === null || r[key] === undefined ? "" : String(r[key]), "aria-label": `${item.label}: ${label}`, oninput: (e) => { const n = toNum(e.target.value); setPmItem(item.id, { [key]: n === undefined ? null : n }); } }),
+        item.unit ? h("span", { class: "suffix", text: item.unit }) : null));
+      if (item.asFoundAsLeft) grid.append(numField("As found", "asFound"), numField("As left", "asLeft"));
+      else grid.append(numField("Value", "value"));
+      if (item.nameplateCompare === "capacitor_uf") grid.append(numField("Rated µF (on the can)", "rated"));
+      else if (item.nameplateCompare === "amps") grid.append(numField("Nameplate RLA / FLA", "rated"));
+      el.append(grid);
+    } else {
+      el.append(h("label", { class: "field" }, h("span", { class: "sr-only", text: item.label }), h("input", { type: "text", value: typeof r.value === "string" ? r.value : "", placeholder: "Record it…", oninput: (e) => setPmItem(item.id, { value: e.target.value.trim() || null }) })));
+    }
+    const f = pmFeedback(pmEvalOf(item.id));
+    el.append(h("div", { class: `pm-feedback ${f.tone}`, hidden: !f.text, text: f.text }));
+    const ta = h("textarea", { rows: "2", placeholder: "Note (what you found, parts, photos taken…)", "aria-label": `${item.label}: note`, oninput: (e) => setPmItem(item.id, { note: e.target.value.trim() || null }) });
+    if (typeof r.note === "string") ta.value = r.note;
+    const mic = h("button", { class: "icon-btn btn-mic", type: "button", "aria-label": `Dictate a note for ${item.label}`, "aria-pressed": "false" }, icon("mic"));
+    attachMic(mic, ta);
+    const noteBox = h("div", { class: "pm-note", hidden: !(typeof r.note === "string" && r.note) }, ta, mic);
+    const toggle = h("button", { class: "text-btn", type: "button", text: typeof r.note === "string" && r.note ? "Note" : "Add note", onclick: () => { noteBox.hidden = !noteBox.hidden; if (!noteBox.hidden) ta.focus(); } });
+    el.append(h("div", { class: "pm-note-row" }, toggle), noteBox);
+    return el;
+  }
+  function renderPmScreen() {
+    const t = pm.template;
+    const v = pm.visit;
+    w2.pmTitle.textContent = t ? t.name : "PM checklist";
+    w2.pmSub.textContent = "";
+    w2.pmSub.append(h("span", { text: [pm.unit ? unitLabel(pm.unit) : "", v && v.tech_name ? v.tech_name : "", v ? ymdLabel(v.date) : ""].filter(Boolean).join(" · ") }));
+    renderPmProgress();
+    const body = w2.pmBody;
+    body.textContent = "";
+    const complete = v && v.status === "complete";
+    if (complete) body.append(buildPmSummary(v));
+    for (const s of t.sections || []) {
+      const ids = (s.items || []).map((i) => i.id);
+      const merged = pmMergedResults();
+      const done = ids.filter((id) => pmItemDone(merged[id])).length;
+      const head = h("div", { class: "pm-section" }, h("span", { text: s.title }), h("span", { class: "muted", text: `${done} / ${ids.length}` }));
+      body.append(head);
+      for (const item of s.items || []) body.append(pmItemEl(item));
+    }
+    body.append(h("div", { class: "pm-tech-row" },
+      h("label", { class: "field" }, h("span", { class: "field-label", text: "Technician" }), h("input", { type: "text", value: (v && v.tech_name) || store.get(TECH_NAME_KEY) || "", autocomplete: "name", onchange: (e) => savePmMeta({ tech_name: e.target.value.trim() || null }) })),
+    ));
+    body.append(h("label", { class: "field", style: "margin-top:12px" }, h("span", { class: "field-label", text: "Visit note" }), h("textarea", { rows: "2", placeholder: "Overall condition, recommendations, parts to bring next time…", onchange: (e) => savePmMeta({ note: e.target.value.trim() || null }), text: (v && v.note) || "" })));
+    w2.btnPmComplete.textContent = "";
+    w2.btnPmComplete.append(icon(complete ? "edit" : "check"), complete ? "Reopen" : "Complete visit");
+    w2.btnPmComplete.className = `btn${complete ? "" : " btn-primary"}`;
+    w2.pmScroll.scrollTo({ top: 0, behavior: "instant" });
+  }
+  function buildPmSummary(v) {
+    const s = pmVisitSummaryText(v);
+    const sum = v.summary || {};
+    const card = h("div", { class: "card pm-summary" },
+      h("div", { class: "pm-done-banner" }, icon("ok", "icon icon-sm"), h("span", { text: `Visit complete · ${s.title}` })),
+      h("div", { class: "stats" }, statTile("Pass", String(sum.pass || 0), ""), statTile("Fail", String(sum.fail || 0), "", sum.fail ? "hi" : ""), statTile("N/A", String(sum.na || 0), ""), statTile("Items", String(sum.total || 0), "")),
+    );
+    if (s.safetyFails.length) card.append(h("div", { class: "dc-warn", style: "margin-top:12px" }, h("b", { text: "Safety items failed: " }), s.safetyFails.join("; ")));
+    if (s.flagged.length) card.append(h("div", { style: "margin-top:12px" }, h("div", { class: "attr-label", text: "Nameplate deviations" }), h("ul", { class: "pm-flag-list" }, ...s.flagged.map((x) => h("li", { text: x })))));
+    const other = s.fails.filter((x) => !s.flagged.includes(x) && !s.safetyFails.includes(x));
+    if (other.length) card.append(h("div", { style: "margin-top:12px" }, h("div", { class: "attr-label", text: "Failed items" }), h("ul", { class: "pm-flag-list" }, ...other.map((x) => h("li", { text: x })))));
+    return card;
+  }
+  async function savePmMeta(patch) {
+    if (!pm.visitId) return;
+    if (patch.tech_name !== undefined) rememberTech(patch.tech_name || "");
+    try {
+      const r = await apiJson(`/api/units/${encodeURIComponent(pm.unitId)}/pm/${encodeURIComponent(pm.visitId)}`, { method: "PATCH", json: patch });
+      pm.visit = r.visit;
+      setPmSaveState("saved", "Saved");
+    } catch (e) {
+      toast(isNetworkError(e) ? "Needs a connection — the checklist items are kept until it returns." : `${e.code}: ${e.message}`);
+    }
+  }
+  async function openPmVisit(unitId, vid) {
+    if (pm.visitId === vid && pm.template) return;
+    if (pm.visitId && pm.visitId !== vid) await flushPmSave();
+    pm.unitId = unitId;
+    pm.visitId = vid;
+    pm.visit = null;
+    pm.template = null;
+    pm.pending = readPending(vid);
+    setPmSaveState(Object.keys(pm.pending).length ? "pending" : null, "Unsaved");
+    w2.pmTitle.textContent = "PM checklist";
+    w2.pmSub.textContent = "";
+    w2.pmProgress.textContent = "…";
+    w2.pmBody.textContent = "";
+    w2.pmBody.append(h("div", { class: "skeleton", style: "margin-top:16px" }), h("div", { class: "skeleton" }), h("div", { class: "skeleton" }));
+    try {
+      const [vdata, udata] = await Promise.all([
+        apiJson(`/api/units/${encodeURIComponent(unitId)}/pm?limit=200`),
+        state.panelUnit && state.panelUnit.unit.id === unitId ? Promise.resolve(null) : apiJson(`/api/units/${encodeURIComponent(unitId)}`).catch(() => null),
+      ]);
+      if (pm.visitId !== vid) return;
+      const visit = pickList(vdata, "visits").find((x) => x.id === vid);
+      if (!visit) {
+        toast("PM visit not found");
+        return navigate(`#unit/${unitId}`, { replace: true });
+      }
+      const tdata = await apiJson(`/api/pm/templates/${encodeURIComponent(visit.template_id)}`);
+      if (pm.visitId !== vid) return;
+      pm.visit = visit;
+      pm.template = tdata.template;
+      pm.unit = (state.panelUnit && state.panelUnit.unit.id === unitId && state.panelUnit.unit) || (udata && (udata.unit || udata)) || state.unitsById.get(unitId) || null;
+      renderPmScreen();
+      if (Object.keys(pm.pending).length) schedulePmSave(0);
+    } catch (e) {
+      w2.pmBody.textContent = "";
+      w2.pmBody.append(h("div", { class: "field-error", role: "alert", style: "margin-top:16px", text: isNetworkError(e) ? "The checklist needs a connection to load. Items you recorded before are kept on this device." : `${e.code}: ${e.message}` }));
+    }
+  }
+  w2.btnPmBack.addEventListener("click", () => { flushPmSave(); goBack(`#unit/${pm.unitId || ""}`); });
+  w2.btnPmComplete.addEventListener("click", async () => {
+    if (!pm.visitId || !pm.visit) return;
+    const reopen = pm.visit.status === "complete";
+    await flushPmSave();
+    if (Object.keys(pm.pending).length && !reopen) return toast("Some items are not saved yet — reconnect, then complete the visit.");
+    w2.btnPmComplete.disabled = true;
+    try {
+      const r = await apiJson(`/api/units/${encodeURIComponent(pm.unitId)}/pm/${encodeURIComponent(pm.visitId)}`, { method: "PATCH", json: { status: reopen ? "in_progress" : "complete" } });
+      pm.visit = r.visit;
+      renderPmScreen();
+      toast(reopen ? "Visit reopened" : "Visit complete");
+      if (state.panelUnit && state.panelUnit.unit.id === pm.unitId) loadUnitPanel(pm.unitId, { quiet: true });
+    } catch (e) {
+      toast(isNetworkError(e) ? "Completing the visit needs a connection." : `${e.code}: ${e.message}`);
+    } finally {
+      w2.btnPmComplete.disabled = false;
+    }
+  });
+  w2.btnPmShare.addEventListener("click", () => { if (pm.unitId && pm.visitId) navigate(`#unit/${pm.unitId}/pm/${pm.visitId}/report`); });
+
   /* ---------- init ---------- */
   let booted = false;
   async function init() {
@@ -5186,6 +6900,13 @@ globalThis.HVAC_UI = {
   truncateText, filenameFromDisposition, reportFilename, reportShareText, reportSharePayload, appBaseUrl, unitUrl, labelText,
   qrMatrix, qrPathFromMatrix, qrSvgMarkup, labelsDocumentHtml, serverUrlPrompt,
   DECODE_PROMPT, QUICK_PROMPTS, FALLBACK_REFRIGERANTS, APP_VERSION, SSE_IDLE_MS,
+  // wave 2: refrigerant log, PM checklists, chiller mode, job clock + signature, calculators, voice, support, most likely cause
+  LEAK_RATE_RULE_LINE, APPLIANCE_TYPE_LABEL, REFRIGERANT_EVENT_LABEL, OBLIGATION_LABEL, lbsFromLbsOz, formatLbs, complianceChip, refrigerantEventText, obligationChip, refrigerantExportFilename,
+  PM_STATUS_LABEL, pmTemplateItems, pmItemState, pmItemDone, pmProgress, pmCheckPatch, pmFeedback, pmVisitSummaryText, suggestPmTemplate, orderPmTemplates, pmPendingKey,
+  CHILLER_NUMERIC, CHILLER_DERIVED_FIELDS, CHILLER_MEASUREMENT_FIELDS, buildChillerMeasurements, chillerHasReadings, composeChillerMessage,
+  splitFindings, firstSentence, formatElapsed, formatMinutes, jobBarState, signatureNote,
+  CALC_GROUPS, CALC_FIELD_RULES, calcRequestFromForm, CALC_FLAG_KEYS, calcFlagChip,
+  insertAtCursor, dictationDelta, DICTATION_SILENCE_MS, supportPhones, supportRows,
 };
 
 if (typeof document !== "undefined" && typeof window !== "undefined") {

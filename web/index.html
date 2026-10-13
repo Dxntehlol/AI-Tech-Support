@@ -72,6 +72,11 @@
       <symbol id="i-fan" viewBox="0 0 24 24"><path d="M12 12c0-4 1.5-7 4-7s2 4-4 7M12 12c4 0 7 1.5 7 4s-4 2-7-4M12 12c0 4-1.5 7-4 7s-2-4 4-7M12 12c-4 0-7-1.5-7-4s4-2 7 4"/><circle cx="12" cy="12" r="1.5"/></symbol>
       <symbol id="i-coil" viewBox="0 0 24 24"><path d="M4 8c2-3 4-3 6 0s4 3 6 0 4-3 6 0M4 16c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></symbol>
       <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></symbol>
+      <symbol id="i-sign" viewBox="0 0 24 24"><path d="M3 20h18M4 15c3-1 4-5 6-5s1 5 3 5 2-4 4-4 1 3 3 3"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="i-glove" viewBox="0 0 24 24"><path d="M7 11V5a1.5 1.5 0 0 1 3 0v5M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v7l2.5-2a1.4 1.4 0 0 1 2 2L17 17v4H8l-4-6V9a1.5 1.5 0 0 1 3 0v2"/></symbol>
     </defs>
   </svg>
 
@@ -134,6 +139,7 @@
               <button id="btn-conv-delete" class="icon-btn phone-hide" type="button" aria-label="Delete this conversation" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trash"/></svg></button>
             </div>
           </header>
+          <div id="job-bar" class="job-bar" role="region" aria-label="Job clock and customer sign-off" hidden></div>
           <div id="banners" class="banners" aria-live="polite"></div>
           <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="false"></div>
           <div id="messages" class="messages" role="log">
@@ -152,11 +158,13 @@
           </div>
           <div class="composer" id="composer">
             <div id="image-previews" class="image-previews" hidden></div>
+            <div id="voice-strip" class="voice-strip" role="status" aria-live="polite" hidden></div>
             <div class="composer-row">
               <button id="btn-camera" class="icon-btn" type="button" aria-label="Take a photo"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-camera"/></svg></button>
               <div class="composer-field">
                 <label class="sr-only" for="composer-input">Message</label>
                 <textarea id="composer-input" rows="1" placeholder="Message…" enterkeyhint="send" autocapitalize="sentences"></textarea>
+                <button id="btn-mic" class="icon-btn btn-mic" type="button" aria-label="Dictate" aria-pressed="false" data-mic-for="composer-input" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button>
                 <button id="btn-attach" class="icon-btn" type="button" aria-label="Attach photos"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-attach"/></svg></button>
               </div>
               <button id="btn-send" class="icon-btn icon-btn-accent" type="button" aria-label="Send message"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-send"/></svg></button>
@@ -241,7 +249,11 @@
               </div>
 
               <div id="pane-dx" class="pane">
-                <div class="dx-layout">
+                <div class="seg seg-accent readings-mode" role="radiogroup" aria-label="Readings mode" id="readings-mode-seg">
+                  <label><input type="radio" name="readings-mode" value="dx" checked><span>DX · packaged / split</span></label>
+                  <label><input type="radio" name="readings-mode" value="chiller"><span>Chiller</span></label>
+                </div>
+                <div class="dx-layout" id="dx-layout">
                   <form id="readings-form" class="card form" autocomplete="off" novalidate>
                     <div class="card-title">System <span id="readings-unit-chip" class="badge" hidden></span></div>
                     <div class="form-grid cols-2">
@@ -296,10 +308,59 @@
                   </form>
                   <div id="readings-result" class="card dx-result" hidden></div>
                 </div>
+                <div class="dx-layout" id="chiller-layout">
+                  <form id="chiller-form" class="card form" autocomplete="off" novalidate data-condenser="water_cooled">
+                    <div class="card-title">Chiller <span id="chiller-unit-chip" class="badge" hidden></span></div>
+                    <div class="form-grid cols-2">
+                      <label class="field"><span class="field-label">Refrigerant</span><select name="refrigerant" class="refrigerant-select"></select></label>
+                      <label class="field"><span class="field-label">Circuit</span><input name="circuit" type="text" placeholder="1" inputmode="text"></label>
+                    </div>
+                    <div class="field"><span class="field-label" id="lbl-cond-type">Condenser</span>
+                      <div class="seg" role="radiogroup" aria-labelledby="lbl-cond-type">
+                        <label><input type="radio" name="condenserType" value="water_cooled" checked><span>Water-cooled</span></label>
+                        <label><input type="radio" name="condenserType" value="air_cooled"><span>Air-cooled</span></label>
+                      </div>
+                    </div>
+                    <h2 class="form-subhead">Chilled water</h2>
+                    <div class="form-grid cols-2">
+                      <label class="field"><span class="field-label">CHW supply (leaving)</span><span class="num"><input name="chwSupplyF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">CHW return (entering)</span><span class="num"><input name="chwReturnF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">CHW flow</span><span class="num"><input name="chwFlowGpm" type="text" inputmode="decimal"><span class="suffix">gpm</span></span></label>
+                      <label class="field"><span class="field-label">Load (controller)</span><span class="num"><input name="percentLoad" type="text" inputmode="decimal"><span class="suffix">%</span></span></label>
+                    </div>
+                    <h2 class="form-subhead">Refrigerant side <span class="form-subhead-note">sat temp from the display, or pressure</span></h2>
+                    <div class="form-grid cols-2">
+                      <label class="field"><span class="field-label">Evap sat temp</span><span class="num"><input name="evapSatF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">or evap pressure</span><span class="num"><input name="evapPressurePsig" type="text" inputmode="decimal"><span class="suffix">psig</span></span></label>
+                      <label class="field"><span class="field-label">Cond sat temp</span><span class="num"><input name="condSatF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">or cond pressure</span><span class="num"><input name="condPressurePsig" type="text" inputmode="decimal"><span class="suffix">psig</span></span></label>
+                    </div>
+                    <h2 class="form-subhead">Condenser side</h2>
+                    <div class="form-grid cols-2 chiller-water">
+                      <label class="field"><span class="field-label">Cond water in</span><span class="num"><input name="condWaterInF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">Cond water out</span><span class="num"><input name="condWaterOutF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                    </div>
+                    <div class="form-grid cols-2 chiller-air">
+                      <label class="field"><span class="field-label">Outdoor DB (entering air)</span><span class="num"><input name="outdoorDbF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                    </div>
+                    <h2 class="form-subhead">Compressor and oil</h2>
+                    <div class="form-grid cols-2">
+                      <label class="field"><span class="field-label">Compressor amps</span><span class="num"><input name="compressorAmps" type="text" inputmode="decimal"><span class="suffix">A</span></span></label>
+                      <label class="field"><span class="field-label">Nameplate RLA</span><span class="num"><input name="rla" type="text" inputmode="decimal"><span class="suffix">A</span></span></label>
+                      <label class="field"><span class="field-label">Oil pressure (net)</span><span class="num"><input name="oilPressurePsig" type="text" inputmode="decimal"><span class="suffix">psig</span></span></label>
+                      <label class="field"><span class="field-label">Oil temperature</span><span class="num"><input name="oilTempF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      <label class="field"><span class="field-label">Elevation</span><span class="num"><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"><span class="suffix">ft</span></span></label>
+                    </div>
+                    <p class="hint">Approaches tell the story: evaporator ≤ 5 °F, condenser ≤ 5 °F water-cooled / ≤ 25 °F air-cooled. Charge is by weight or the manufacturer's procedure, never from these gauges.</p>
+                    <div id="chiller-error" class="field-error" role="alert" hidden></div>
+                  </form>
+                  <div id="chiller-result" class="card dx-result" hidden></div>
+                </div>
               </div>
 
               <div id="pane-calcs" class="pane">
                 <div id="calculators">
+                  <h2 class="section-title calc-group-title">Refrigerant</h2>
                   <details class="calc" data-calc="pt">
                     <summary><span class="row-lead info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-thermo"/></svg></span><span class="row-body"><span class="row-title">PT chart</span><span class="row-sub"><span>Saturation temperature ↔ pressure</span></span></span></summary>
                     <form class="form" novalidate>
@@ -328,6 +389,139 @@
                       <div class="calc-result" hidden></div>
                     </form>
                   </details>
+                  <details class="calc" data-calc="leak_rate">
+                    <summary><span class="row-lead danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-drop"/></svg></span><span class="row-body"><span class="row-title">Leak rate (EPA)</span><span class="row-sub"><span>Annualized rate vs the 10 / 20 / 30&nbsp;% thresholds</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Refrigerant added</span><span class="num"><input name="addedLbs" type="text" inputmode="decimal" placeholder="25"><span class="suffix">lb</span></span></label>
+                        <label class="field"><span class="field-label">Full charge</span><span class="num"><input name="fullChargeLbs" type="text" inputmode="decimal" placeholder="400"><span class="suffix">lb</span></span></label>
+                        <label class="field"><span class="field-label">Days since last add</span><span class="num"><input name="daysSinceLastAdd" type="text" inputmode="numeric" placeholder="60"><span class="suffix">days</span></span></label>
+                        <label class="field"><span class="field-label">Appliance type</span><select name="applianceType"><option value="">Comfort · 10 %</option><option value="commercial_refrigeration">Comm. refrig. · 20 %</option><option value="industrial_process">Industrial · 30 %</option></select></label>
+                      </div>
+                      <p class="hint calc-hint">EPA: leak rate = lb added ÷ full charge × 365 ÷ days since last add, up to 365 days. First add with no prior date: count from the install date. Applies from 15 lb (HFC).</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+
+                  <h2 class="section-title calc-group-title">Airflow</h2>
+                  <details class="calc" data-calc="temp_rise_cfm">
+                    <summary><span class="row-lead danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-fan"/></svg></span><span class="row-body"><span class="row-title">Temp-rise CFM</span><span class="row-sub"><span>Airflow from heater output and ΔT</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid">
+                        <label class="field"><span class="field-label">Heater input</span><span class="num"><input name="inputBtuh" type="text" inputmode="decimal"><span class="suffix">BTU/h</span></span></label>
+                        <label class="field"><span class="field-label">Efficiency</span><span class="num"><input name="efficiencyPercent" type="text" inputmode="decimal" value="80"><span class="suffix">%</span></span></label>
+                        <label class="field"><span class="field-label">Temperature rise</span><span class="num"><input name="riseF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                      </div>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="sensible_cfm">
+                    <summary><span class="row-lead info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-fan"/></svg></span><span class="row-body"><span class="row-title">Sensible CFM</span><span class="row-sub"><span>CFM = BTU/h ÷ (1.08 × ΔT), with CFM per ton</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid">
+                        <label class="field"><span class="field-label">Sensible heat</span><span class="num"><input name="btuh" type="text" inputmode="decimal" placeholder="54000"><span class="suffix">BTU/h</span></span></label>
+                        <label class="field"><span class="field-label">Temperature change</span><span class="num"><input name="deltaTF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                        <label class="field"><span class="field-label">Nominal tons (optional)</span><span class="num"><input name="tons" type="text" inputmode="decimal"><span class="suffix">ton</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">Electric heat is the cleanest source: kW × 3412 at 100 %. Design band 350–450 CFM/ton.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="static_pressure">
+                    <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-gauge"/></svg></span><span class="row-body"><span class="row-title">Static pressure</span><span class="row-sub"><span>TESP = |supply| + |return| vs the blower rating</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid">
+                        <label class="field"><span class="field-label">Supply static</span><span class="num"><input name="supplyInWc" type="text" inputmode="decimal" placeholder="0.35"><span class="suffix">in. wc</span></span></label>
+                        <label class="field"><span class="field-label">Return static</span><span class="num"><input name="returnInWc" type="text" inputmode="decimal" placeholder="-0.30"><span class="suffix">in. wc</span></span></label>
+                        <label class="field"><span class="field-label">Rated max (optional)</span><span class="num"><input name="ratedMaxInWc" type="text" inputmode="decimal"><span class="suffix">in. wc</span></span></label>
+                      </div>
+                      <div class="field"><span class="field-label" id="lbl-blower">Blower</span>
+                        <div class="seg" role="radiogroup" aria-labelledby="lbl-blower">
+                          <label><input type="radio" name="blowerType" value="psc" checked><span>PSC (max 0.5)</span></label>
+                          <label><input type="radio" name="blowerType" value="ecm"><span>ECM (max 0.8)</span></label>
+                        </div>
+                      </div>
+                      <p class="hint calc-hint">Supply after the coil / heat exchanger, return before the filter, blower on high with filters in.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="fan_laws">
+                    <summary><span class="row-lead info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></span><span class="row-body"><span class="row-title">Fan laws</span><span class="row-sub"><span>CFM ∝ RPM, SP ∝ RPM², BHP ∝ RPM³</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Current fan RPM</span><span class="num"><input name="rpm1" type="text" inputmode="decimal" placeholder="1000"><span class="suffix">rpm</span></span></label>
+                        <label class="field"><span class="field-label">New fan RPM</span><span class="num"><input name="rpm2" type="text" inputmode="decimal" placeholder="1100"><span class="suffix">rpm</span></span></label>
+                        <label class="field"><span class="field-label">Current CFM (optional)</span><span class="num"><input name="cfm1" type="text" inputmode="decimal"><span class="suffix">CFM</span></span></label>
+                        <label class="field"><span class="field-label">Current static (optional)</span><span class="num"><input name="sp1" type="text" inputmode="decimal"><span class="suffix">in. wc</span></span></label>
+                        <label class="field"><span class="field-label">Current BHP (optional)</span><span class="num"><input name="bhp1" type="text" inputmode="decimal"><span class="suffix">hp</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">Same fan and duct system, speed change only. A 10 % speed increase costs ~33 % more power.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="belt_drive">
+                    <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-fan"/></svg></span><span class="row-body"><span class="row-title">Belt drive</span><span class="row-sub"><span>Sheave ratio, belt length, deflection target</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Motor RPM</span><span class="num"><input name="motorRpm" type="text" inputmode="decimal" placeholder="1750"><span class="suffix">rpm</span></span></label>
+                        <label class="field"><span class="field-label">Motor sheave pitch dia.</span><span class="num"><input name="motorSheaveIn" type="text" inputmode="decimal"><span class="suffix">in.</span></span></label>
+                        <label class="field"><span class="field-label">Fan sheave pitch dia.</span><span class="num"><input name="fanSheaveIn" type="text" inputmode="decimal"><span class="suffix">in.</span></span></label>
+                        <label class="field"><span class="field-label">Center distance (optional)</span><span class="num"><input name="centerDistanceIn" type="text" inputmode="decimal"><span class="suffix">in.</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">Fan RPM = motor RPM × motor sheave ÷ fan sheave; L = 2C + 1.57(D + d) + (D − d)² ÷ 4C; deflection = span ÷ 64.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="psychrometrics">
+                    <summary><span class="row-lead info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-drop"/></svg></span><span class="row-body"><span class="row-title">Psychrometrics</span><span class="row-sub"><span>RH, dew point, enthalpy, grains (online)</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid">
+                        <label class="field"><span class="field-label">Dry bulb</span><span class="num"><input name="dbF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                        <label class="field"><span class="field-label">Wet bulb</span><span class="num"><input name="wbF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
+                        <label class="field"><span class="field-label">Elevation</span><span class="num"><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"><span class="suffix">ft</span></span></label>
+                      </div>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+
+                  <h2 class="section-title calc-group-title">Combustion</h2>
+                  <details class="calc" data-calc="gas_meter_clock">
+                    <summary><span class="row-lead danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg></span><span class="row-body"><span class="row-title">Clock a gas meter</span><span class="row-sub"><span>CFH = 3600 × dial ÷ seconds; input BTU/h vs nameplate ±5 %</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Test dial size</span><span class="num"><input name="dialCuft" type="text" inputmode="decimal" placeholder="1"><span class="suffix">ft³</span></span></label>
+                        <label class="field"><span class="field-label">Seconds per revolution</span><span class="num"><input name="secondsPerRev" type="text" inputmode="decimal" placeholder="36"><span class="suffix">s</span></span></label>
+                        <label class="field"><span class="field-label">Revolutions timed</span><span class="num"><input name="revolutions" type="text" inputmode="numeric" value="1"><span class="suffix">rev</span></span></label>
+                        <label class="field"><span class="field-label">Heating value</span><span class="num"><input name="heatingValueBtuPerCuft" type="text" inputmode="decimal" value="1000"><span class="suffix">BTU/ft³</span></span></label>
+                        <label class="field span-2"><span class="field-label">Nameplate input (optional)</span><span class="num"><input name="nameplateInputBtuh" type="text" inputmode="decimal" placeholder="100000"><span class="suffix">BTU/h</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">Dial 1/2, 1, 2 or 5 ft³; every other gas appliance off, unit at steady high fire. Ask the utility for the local heating value (1000–1050).</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="combustion_co">
+                    <summary><span class="row-lead danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg></span><span class="row-body"><span class="row-title">Combustion (air-free CO)</span><span class="row-sub"><span>CO × 20.9 ÷ (20.9 − O₂); 100 / 400 ppm flags, ambient stop-work</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid">
+                        <label class="field"><span class="field-label">Flue CO (as measured)</span><span class="num"><input name="coPpm" type="text" inputmode="decimal"><span class="suffix">ppm</span></span></label>
+                        <label class="field"><span class="field-label">Flue O₂</span><span class="num"><input name="o2Pct" type="text" inputmode="decimal"><span class="suffix">%</span></span></label>
+                        <label class="field"><span class="field-label">Ambient CO (optional)</span><span class="num"><input name="ambientCoPpm" type="text" inputmode="decimal"><span class="suffix">ppm</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">Probe in the flue upstream of the draft hood at steady state (5–10 min). Ambient over 20 ppm = stop work.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+
+                  <h2 class="section-title calc-group-title">Electrical</h2>
                   <details class="calc" data-calc="voltage_imbalance">
                     <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wave"/></svg></span><span class="row-body"><span class="row-title">Voltage imbalance</span><span class="row-sub"><span>NEMA MG-1 with derate factor</span></span></span></summary>
                     <form class="form" novalidate>
@@ -352,18 +546,6 @@
                       <div class="calc-result" hidden></div>
                     </form>
                   </details>
-                  <details class="calc" data-calc="temp_rise_cfm">
-                    <summary><span class="row-lead danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-fan"/></svg></span><span class="row-body"><span class="row-title">Temp-rise CFM</span><span class="row-sub"><span>Airflow from heater output and ΔT</span></span></span></summary>
-                    <form class="form" novalidate>
-                      <div class="form-grid">
-                        <label class="field"><span class="field-label">Heater input</span><span class="num"><input name="inputBtuh" type="text" inputmode="decimal"><span class="suffix">BTU/h</span></span></label>
-                        <label class="field"><span class="field-label">Efficiency</span><span class="num"><input name="efficiencyPercent" type="text" inputmode="decimal" value="80"><span class="suffix">%</span></span></label>
-                        <label class="field"><span class="field-label">Temperature rise</span><span class="num"><input name="riseF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
-                      </div>
-                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
-                      <div class="calc-result" hidden></div>
-                    </form>
-                  </details>
                   <details class="calc" data-calc="winding_check">
                     <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bolt"/></svg></span><span class="row-body"><span class="row-title">Winding check</span><span class="row-sub"><span>Compressor ohms, 1-ph or 3-ph</span></span></span></summary>
                     <form class="form" novalidate>
@@ -382,15 +564,97 @@
                       <div class="calc-result" hidden></div>
                     </form>
                   </details>
-                  <details class="calc" data-calc="psychrometrics">
-                    <summary><span class="row-lead info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-drop"/></svg></span><span class="row-body"><span class="row-title">Psychrometrics</span><span class="row-sub"><span>RH, dew point, enthalpy, grains (online)</span></span></span></summary>
+                  <details class="calc" data-calc="voltage_drop">
+                    <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bolt"/></svg></span><span class="row-body"><span class="row-title">Voltage drop</span><span class="row-sub"><span>2 (or 1.732) × K × I × L ÷ cmil; 3 % / 5 % flags</span></span></span></summary>
                     <form class="form" novalidate>
-                      <div class="form-grid">
-                        <label class="field"><span class="field-label">Dry bulb</span><span class="num"><input name="dbF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
-                        <label class="field"><span class="field-label">Wet bulb</span><span class="num"><input name="wbF" type="text" inputmode="decimal"><span class="suffix">°F</span></span></label>
-                        <label class="field"><span class="field-label">Elevation</span><span class="num"><input name="elevationFt" type="text" inputmode="decimal" class="elevation-input"><span class="suffix">ft</span></span></label>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">System volts</span><span class="num"><input name="volts" type="text" inputmode="decimal" placeholder="240"><span class="suffix">V</span></span></label>
+                        <label class="field"><span class="field-label">Load amps</span><span class="num"><input name="amps" type="text" inputmode="decimal"><span class="suffix">A</span></span></label>
+                        <label class="field"><span class="field-label">One-way length</span><span class="num"><input name="oneWayFt" type="text" inputmode="decimal"><span class="suffix">ft</span></span></label>
+                        <label class="field"><span class="field-label">Wire size</span><input name="awg" type="text" placeholder="10, 1/0, 250 kcmil" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
                       </div>
+                      <div class="form-grid cols-2">
+                        <div class="field"><span class="field-label" id="lbl-vd-mat">Conductor</span>
+                          <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-vd-mat">
+                            <label><input type="radio" name="material" value="cu" checked><span>Copper</span></label>
+                            <label><input type="radio" name="material" value="al"><span>Aluminum</span></label>
+                          </div>
+                        </div>
+                        <div class="field"><span class="field-label" id="lbl-vd-ph">Phase</span>
+                          <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-vd-ph">
+                            <label><input type="radio" name="phase" value="1" checked><span>1-ph</span></label>
+                            <label><input type="radio" name="phase" value="3"><span>3-ph</span></label>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="hint calc-hint">K = 12.9 Ω·cmil/ft copper, 21.2 aluminum (75 °C). Use running amps; NEC recommends ≤ 3 % branch, ≤ 5 % total.</p>
                       <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="motor_fla">
+                    <summary><span class="row-lead warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-fan"/></svg></span><span class="row-body"><span class="row-title">Motor FLA (NEC table)</span><span class="row-sub"><span>Table 430.248 / 430.250 current and 125 % conductor sizing</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Motor HP</span><span class="num"><input name="hp" type="text" inputmode="decimal" placeholder="15"><span class="suffix">hp</span></span></label>
+                        <label class="field"><span class="field-label">Nameplate volts</span><span class="num"><input name="volts" type="text" inputmode="decimal" placeholder="460"><span class="suffix">V</span></span></label>
+                      </div>
+                      <div class="field"><span class="field-label" id="lbl-fla-ph">Phase</span>
+                        <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-fla-ph">
+                          <label><input type="radio" name="phase" value="1"><span>Single (115 / 230 V)</span></label>
+                          <label><input type="radio" name="phase" value="3" checked><span>Three (208 / 230 / 460 / 575 V)</span></label>
+                        </div>
+                      </div>
+                      <p class="hint calc-hint">For conductors, disconnects and short-circuit protection. The overload is set from the nameplate FLA, not this table.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Calculate</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+
+                  <h2 class="section-title calc-group-title">Parts</h2>
+                  <details class="calc" data-calc="capacitor_replacement">
+                    <summary><span class="row-lead ok"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-cap"/></svg></span><span class="row-body"><span class="row-title">Capacitor replacement</span><span class="row-sub"><span>Substitute OK within ±6 % µF and ≥ rated volts</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">Original µF</span><span class="num"><input name="ratedUf" type="text" inputmode="decimal" placeholder="45"><span class="suffix">µF</span></span></label>
+                        <label class="field"><span class="field-label">Original volts</span><span class="num"><input name="ratedV" type="text" inputmode="decimal" placeholder="370"><span class="suffix">V</span></span></label>
+                        <label class="field"><span class="field-label">Replacement µF</span><span class="num"><input name="replacementUf" type="text" inputmode="decimal"><span class="suffix">µF</span></span></label>
+                        <label class="field"><span class="field-label">Replacement volts</span><span class="num"><input name="replacementV" type="text" inputmode="decimal" placeholder="440"><span class="suffix">V</span></span></label>
+                      </div>
+                      <p class="hint calc-hint">A 440 V can replaces a 370 V one, never the reverse. Match HERM / FAN sections separately on dual-run caps.</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Check</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
+                      <div class="calc-result" hidden></div>
+                    </form>
+                  </details>
+                  <details class="calc" data-calc="motor_replacement">
+                    <summary><span class="row-lead ok"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-tool"/></svg></span><span class="row-body"><span class="row-title">Motor replacement checklist</span><span class="row-sub"><span>What must match: RPM, volts/phase, rotation from the shaft end, frame</span></span></span></summary>
+                    <form class="form" novalidate>
+                      <div class="form-grid cols-2">
+                        <label class="field"><span class="field-label">HP</span><span class="num"><input name="hp" type="text" inputmode="decimal"><span class="suffix">hp</span></span></label>
+                        <label class="field"><span class="field-label">RPM</span><span class="num"><input name="rpm" type="text" inputmode="decimal" placeholder="1075"><span class="suffix">rpm</span></span></label>
+                        <label class="field"><span class="field-label">Volts</span><span class="num"><input name="volts" type="text" inputmode="decimal"><span class="suffix">V</span></span></label>
+                        <label class="field"><span class="field-label">Shaft diameter</span><span class="num"><input name="shaftDiaIn" type="text" inputmode="decimal" placeholder="0.5"><span class="suffix">in.</span></span></label>
+                        <label class="field"><span class="field-label">Frame</span><input name="frame" type="text" placeholder="48Y" autocapitalize="characters" autocorrect="off"></label>
+                        <label class="field"><span class="field-label">Enclosure</span><input name="enclosure" type="text" placeholder="TEAO, ODP…" autocapitalize="characters" autocorrect="off"></label>
+                      </div>
+                      <div class="form-grid cols-2">
+                        <div class="field"><span class="field-label" id="lbl-mr-ph">Phase</span>
+                          <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-mr-ph">
+                            <label><input type="radio" name="phase" value="1"><span>1-ph</span></label>
+                            <label><input type="radio" name="phase" value="3"><span>3-ph</span></label>
+                            <label><input type="radio" name="phase" value="" checked><span>?</span></label>
+                          </div>
+                        </div>
+                        <div class="field"><span class="field-label" id="lbl-mr-rot">Rotation (shaft end)</span>
+                          <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-mr-rot">
+                            <label><input type="radio" name="rotationFromShaftEnd" value="cw"><span>CW</span></label>
+                            <label><input type="radio" name="rotationFromShaftEnd" value="ccw"><span>CCW</span></label>
+                            <label><input type="radio" name="rotationFromShaftEnd" value="" checked><span>?</span></label>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="hint calc-hint">Everything is optional; the checklist says what must match and what may substitute (HP up only when amps, breaker and contactor allow).</p>
+                      <div class="btn-row"><button class="btn btn-primary grow" type="submit">Build checklist</button><button class="btn btn-send" type="button" disabled>Send to chat</button></div>
                       <div class="calc-result" hidden></div>
                     </form>
                   </details>
@@ -501,16 +765,24 @@
                 </div>
               </section>
 
-              <div class="card">
-                <div class="card-title">Appearance</div>
+              <section id="refrigerant-card" class="card" aria-labelledby="refrigerant-card-title">
+                <div class="card-title"><h2 id="refrigerant-card-title" class="card-title-text">Refrigerant log</h2></div>
+                <p class="ai-detail">Every add, recovery, leak check, verification test and repair on every unit, with the EPA leak rate per add — the owner's three-year record.</p>
+                <button id="btn-refrigerant-export" class="btn btn-block" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-download"/></svg>Export refrigerant log (CSV)</button>
+              </section>
+
+              <section class="card" id="display-card" aria-labelledby="display-card-title">
+                <div class="card-title"><h2 id="display-card-title" class="card-title-text">Display</h2></div>
                 <div class="seg seg-accent" role="radiogroup" aria-label="Theme" id="theme-seg">
                   <label><input type="radio" name="theme" value="auto"><span>System</span></label>
                   <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
                   <label><input type="radio" name="theme" value="light"><span>Light</span></label>
                 </div>
-                <p class="hint">Dark for low light; Light is high-contrast for direct sunlight.</p>
-                <label class="switch-row" style="margin-top:12px"><span class="switch-text"><span class="switch-title">Show tool activity</span><span class="hint">Shows the lookups and calculations the assistant runs under each reply. Off keeps the chat to just the conversation.</span></span><input id="show-tools" type="checkbox" class="switch" role="switch"></label>
-              </div>
+                <p class="hint" id="theme-hint">Dark for low light; Light is high-contrast for direct sunlight.</p>
+                <label class="switch-row display-switch"><span class="switch-text"><span class="switch-title"><svg class="icon icon-sm" aria-hidden="true" focusable="false"><use href="#i-glove"/></svg>Glove mode</span><span class="hint">Bigger buttons, rows, inputs and text for gloved hands.</span></span><input id="s-glove" type="checkbox" class="switch" role="switch"></label>
+                <label class="switch-row display-switch"><span class="switch-text"><span class="switch-title"><svg class="icon icon-sm" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg>Sun mode</span><span class="hint">Forces the light theme at maximum contrast: white surfaces, black text, thick borders, no greys.</span></span><input id="s-sun" type="checkbox" class="switch" role="switch"></label>
+                <label class="switch-row display-switch"><span class="switch-text"><span class="switch-title">Show tool activity</span><span class="hint">Shows the lookups and calculations the assistant runs under each reply. Off keeps the chat to just the conversation.</span></span><input id="show-tools" type="checkbox" class="switch" role="switch"></label>
+              </section>
 
               <div class="card">
                 <div class="card-title">Assistant <span id="demo-badge-settings" class="chip chip-warn" hidden>Demo mode</span></div>
@@ -536,6 +808,28 @@
                 <p class="small muted">Photos you attach are sent to the assistant for analysis and stored with the conversation; no analytics or tracking.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PM CHECKLIST (full screen, #unit/<id>/pm/<vid>) ================= -->
+      <section id="screen-pm" class="screen" aria-label="PM checklist">
+        <div class="screen-main">
+          <header class="topbar">
+            <button id="btn-pm-back" class="icon-btn" type="button" aria-label="Back to the unit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-back"/></svg></button>
+            <div class="topbar-text">
+              <h1 id="pm-title" class="topbar-title">PM checklist</h1>
+              <div id="pm-sub" class="topbar-sub"></div>
+            </div>
+            <div class="topbar-actions">
+              <span id="pm-save-state" class="chip pm-save" role="status" aria-live="polite" hidden></span>
+              <span id="pm-progress" class="chip chip-outline pm-progress" aria-label="Items recorded">0 / 0</span>
+            </div>
+          </header>
+          <div id="pm-scroll" class="scroll"><div class="content-wrap pm-wrap" id="pm-body"></div></div>
+          <div id="pm-actions" class="action-bar">
+            <button id="btn-pm-complete" class="btn btn-primary" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Complete visit</button>
+            <button id="btn-pm-share" class="btn" type="button"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-share"/></svg>Share</button>
           </div>
         </div>
       </section>
@@ -679,14 +973,14 @@
       <form id="finding-form" class="form" autocomplete="off" novalidate>
         <p id="finding-sub" class="hint" style="margin-top:0"></p>
         <label class="field"><span class="field-label">Symptom <span class="req" aria-hidden="true">*</span></span><input id="fi-symptom" name="symptom" type="text" required aria-required="true" placeholder="What the unit was doing"></label>
-        <label class="field"><span class="field-label">Cause</span><input id="fi-cause" name="cause" type="text" placeholder="Root cause found"></label>
-        <label class="field"><span class="field-label">Fix</span><textarea id="fi-resolution" name="resolution" rows="2" placeholder="What was done (or the plan)"></textarea></label>
+        <div class="field"><div class="field-label-mic"><label class="field-label" for="fi-cause">Cause</label><button class="icon-btn btn-mic mic-inline" type="button" aria-label="Dictate the cause" aria-pressed="false" data-mic-for="fi-cause" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button></div><input id="fi-cause" name="cause" type="text" placeholder="Root cause found"></div>
+        <div class="field"><div class="field-label-mic"><label class="field-label" for="fi-resolution">Fix</label><button class="icon-btn btn-mic mic-inline" type="button" aria-label="Dictate the fix" aria-pressed="false" data-mic-for="fi-resolution" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button></div><textarea id="fi-resolution" name="resolution" rows="2" placeholder="What was done (or the plan)"></textarea></div>
         <div class="form-grid cols-2">
           <label class="field"><span class="field-label">Status</span><select id="fi-status" name="status"><option value="open">Open</option><option value="monitor">Monitor</option><option value="resolved">Resolved</option></select></label>
           <label class="field"><span class="field-label">Circuit</span><input id="fi-circuit" name="circuit" type="text" placeholder="1" inputmode="text"></label>
         </div>
         <h2 class="form-subhead">Follow-up</h2>
-        <label class="field"><span class="field-label">What to do next visit</span><textarea id="fi-follow-up" name="follow_up" rows="2" placeholder="Recheck subcooling, leak search ckt 2…"></textarea></label>
+        <div class="field"><div class="field-label-mic"><label class="field-label" for="fi-follow-up">What to do next visit</label><button class="icon-btn btn-mic mic-inline" type="button" aria-label="Dictate the follow-up" aria-pressed="false" data-mic-for="fi-follow-up" hidden><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button></div><textarea id="fi-follow-up" name="follow_up" rows="2" placeholder="Recheck subcooling, leak search ckt 2…"></textarea></div>
         <div class="form-grid cols-2">
           <label class="field"><span class="field-label">Due date</span><input id="fi-due" name="follow_up_due" type="date"></label>
           <label class="checkbox" id="fi-done-row" hidden><input id="fi-done" name="follow_up_done" type="checkbox"><span>Follow-up done</span></label>
@@ -757,12 +1051,139 @@
     <div class="sheet-actions" id="units-actions-list"></div>
   </section>
 
+  <!-- Full charge / appliance type / circuits (EPA leak-rate basis) -->
+  <section id="sheet-charge" class="sheet" role="dialog" aria-modal="true" aria-labelledby="charge-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="charge-title" tabindex="-1">Full charge and appliance type</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <form id="charge-form" class="form" autocomplete="off" novalidate>
+        <p id="charge-sub" class="hint" style="margin-top:0"></p>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">Full charge (whole unit)</span><span class="num"><input id="ch-full" name="full_charge_lbs" type="text" inputmode="decimal" placeholder="e.g. 24"><span class="suffix">lb</span></span></label>
+          <label class="field"><span class="field-label">Independent circuits</span><span class="num"><input id="ch-circuits" name="circuits_count" type="text" inputmode="numeric" placeholder="1"><span class="suffix">ckt</span></span></label>
+          <label class="field span-2"><span class="field-label">Appliance type (EPA threshold)</span><select id="ch-type" name="appliance_type"><option value="">Not set — 10 % assumed</option><option value="comfort_cooling">Comfort cooling — 10 %</option><option value="commercial_refrigeration">Commercial refrigeration — 20 %</option><option value="industrial_process">Industrial process — 30 %</option><option value="other">Other — 10 %</option></select></label>
+        </div>
+        <p class="hint">EPA: leak rate = lb added ÷ full charge × 365 ÷ days since last add, up to 365 days. The rule applies from 15 lb (R-22: 50 lb); each independent circuit counts as its own appliance (full charge ÷ circuits).</p>
+        <div id="charge-error" class="field-error" role="alert" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-charge-save" class="btn btn-primary" type="submit" form="charge-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Save</button>
+    </div>
+  </section>
+
+  <!-- Log a refrigerant event -->
+  <section id="sheet-refrigerant" class="sheet" role="dialog" aria-modal="true" aria-labelledby="rf-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="rf-title" tabindex="-1">Log refrigerant</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <form id="refrigerant-form" class="form" autocomplete="off" novalidate>
+        <p id="rf-sub" class="hint" style="margin-top:0"></p>
+        <div class="field"><span class="field-label" id="lbl-rf-type">Event</span>
+          <div class="seg seg-wrap" role="radiogroup" aria-labelledby="lbl-rf-type">
+            <label><input type="radio" name="event_type" value="add" checked><span>Added</span></label>
+            <label><input type="radio" name="event_type" value="recover"><span>Recovered</span></label>
+            <label><input type="radio" name="event_type" value="leak_check"><span>Leak check</span></label>
+            <label><input type="radio" name="event_type" value="verification"><span>Verification test</span></label>
+            <label><input type="radio" name="event_type" value="repair"><span>Repair</span></label>
+            <label><input type="radio" name="event_type" value="retrofit_plan"><span>Retrofit plan</span></label>
+          </div>
+        </div>
+        <div class="field" id="rf-verify-row" hidden><span class="field-label" id="lbl-rf-verify">Which test</span>
+          <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-rf-verify">
+            <label><input type="radio" name="verification_kind" value="verification_initial" checked><span>Initial · before adding</span></label>
+            <label><input type="radio" name="verification_kind" value="verification_followup"><span>Follow-up · within 10 days</span></label>
+          </div>
+        </div>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">Refrigerant</span><select id="rf-refrigerant" name="refrigerant" class="refrigerant-select"></select></label>
+          <label class="field"><span class="field-label">Circuit</span><span class="num"><input id="rf-circuit" name="circuit" type="text" inputmode="numeric" placeholder="1"><span class="suffix">#</span></span></label>
+        </div>
+        <div class="form-grid cols-2" id="rf-amount-row">
+          <label class="field"><span class="field-label">Amount</span><span class="num"><input id="rf-lbs" name="lbs" type="text" inputmode="decimal"><span class="suffix">lb</span></span></label>
+          <label class="field"><span class="field-label">plus ounces</span><span class="num"><input id="rf-oz" name="oz" type="text" inputmode="decimal"><span class="suffix">oz</span></span></label>
+          <span id="rf-amount-hint" class="hint span-2" aria-live="polite"></span>
+        </div>
+        <div class="form-grid cols-2">
+          <label class="field"><span class="field-label">Cylinder ID</span><input id="rf-cylinder" name="cylinder_id" type="text" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Tank #"></label>
+          <label class="field"><span class="field-label">Date</span><input id="rf-date" name="date" type="date"></label>
+          <label class="field"><span class="field-label">Technician</span><input id="rf-tech" name="tech_name" type="text" autocomplete="name" placeholder="Your name"></label>
+          <label class="field"><span class="field-label">EPA 608 cert #</span><input id="rf-cert" name="tech_cert" type="text" autocapitalize="characters" autocorrect="off" spellcheck="false"></label>
+        </div>
+        <label class="checkbox" id="rf-leak-row" hidden><input id="rf-leak-found" name="leak_found" type="checkbox"><span>Leak found</span></label>
+        <label class="checkbox" id="rf-passed-row" hidden><input id="rf-passed" name="passed" type="checkbox"><span>Test passed — no leak at operating conditions</span></label>
+        <label class="field"><span class="field-label">Note</span><textarea id="rf-note" name="note" rows="2" placeholder="Where, what was found, parts…"></textarea></label>
+        <p class="hint">EPA: leak rate = lb added ÷ full charge × 365 ÷ days since last add, up to 365 days. An add over the threshold opens a 30-day repair follow-up automatically.</p>
+        <div id="rf-error" class="field-error" role="alert" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-rf-save" class="btn btn-primary" type="submit" form="refrigerant-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Log event</button>
+    </div>
+  </section>
+
+  <!-- PM template picker -->
+  <section id="sheet-pm-pick" class="sheet" role="dialog" aria-modal="true" aria-labelledby="pm-pick-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="pm-pick-title" tabindex="-1">Start PM checklist</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <p id="pm-pick-sub" class="hint" style="margin-top:0"></p>
+      <label class="field" style="margin-bottom:12px"><span class="field-label">Technician</span><input id="pm-tech" type="text" autocomplete="name" placeholder="Your name"></label>
+      <div id="pm-pick-list" class="list list-card" role="list" aria-label="Checklist templates"></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+    </div>
+  </section>
+
+  <!-- Customer signature pad -->
+  <section id="sheet-sign" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sign-title" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="sign-title" tabindex="-1">Customer sign-off</h2>
+      <button class="icon-btn btn-sheet-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <p id="sign-sub" class="hint" style="margin-top:0"></p>
+      <div id="sign-existing" class="sign-existing" hidden></div>
+      <span class="field-label sign-label" id="sign-pad-label">Customer signature — sign with a finger or stylus</span>
+      <div class="sign-pad-wrap">
+        <canvas id="sign-pad" class="sign-pad" role="img" aria-labelledby="sign-pad-label"></canvas>
+        <span class="sign-line" aria-hidden="true"></span>
+        <button id="btn-sign-clear" class="btn btn-sm sign-clear" type="button">Clear</button>
+      </div>
+      <form id="sign-form" class="form" autocomplete="off" novalidate>
+        <label class="field"><span class="field-label">Customer name</span><input id="sign-name" name="signed_by" type="text" placeholder="Who signed"></label>
+        <label class="checkbox"><input id="sign-declined" type="checkbox"><span>Customer declined the recommendation</span></label>
+        <label class="field"><span class="field-label">Note (optional)</span><input id="sign-note" type="text" placeholder="e.g. declined coil cleaning quote"></label>
+        <div id="sign-error" class="field-error" role="alert" hidden></div>
+      </form>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-sheet-close" type="button">Cancel</button>
+      <button id="btn-sign-remove" class="btn btn-danger" type="button" hidden>Remove</button>
+      <button id="btn-sign-save" class="btn btn-primary" type="submit" form="sign-form"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Save</button>
+    </div>
+  </section>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="vendor/marked.umd.js"></script>
   <script src="vendor/purify.min.js"></script>
   <script src="vendor/qrcode.js"></script>
   <script src="calc.js"></script>
+  <script src="voice.js"></script>
   <script src="config.js" onerror="this.remove()"></script>
   <script src="app.js"></script>
 </body>

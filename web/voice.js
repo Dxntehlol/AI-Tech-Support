@@ -22,12 +22,16 @@
   /** Technician vocabulary the recognizers get wrong often. Pure; tested in app.test.ts via HVAC_UI. */
   function normalizeDictation(text) {
     var s = String(text || "");
+    // "are" (a common mis-hearing of "R") only counts in front of a lettered blend, so "temps are 22" stays a sentence.
     var rules = [
-      [/\b(r|are)[ -]?(four|4) ?(ten|10) ?a\b/gi, "R-410A"],
-      [/\b(r|are)[ -]?(four|4) ?(fifty|50) ?(four|4) ?b\b/gi, "R-454B"],
-      [/\b(r|are)[ -]?(twenty|22|twenty[ -]two)\b/gi, "R-22"],
-      [/\b(r|are)[ -]?(one|1) ?(thirty|34) ?(four)? ?a\b/gi, "R-134a"],
-      [/\b(r|are)[ -]?(four|4) ?(oh|o|0) ?(seven|7) ?c\b/gi, "R-407C"],
+      [/\b(?:r|are)[ -]?(?:four|4) ?(?:ten|10) ?a\b/gi, "R-410A"],
+      [/\b(?:r|are)[ -]?(?:four|4) ?(?:fifty|5) ?(?:four|4) ?b\b/gi, "R-454B"],
+      [/\b(?:r|are)[ -]?(?:one|1) ?(?:thirty[ -]?four|thirty|34) ?(?:four)? ?a\b/gi, "R-134a"],
+      [/\b(?:r|are)[ -]?(?:four|4) ?(?:oh|o|0) ?(?:seven|7) ?c\b/gi, "R-407C"],
+      [/\b(?:r|are)[ -]?(?:four|4) ?(?:oh|o|0) ?(?:four|4) ?a\b/gi, "R-404A"],
+      [/\br[ -]?(?:22|twenty[ -]?two)\b/gi, "R-22"],
+      [/\br[ -]?(?:32|thirty[ -]?two)\b/gi, "R-32"],
+      [/\br-?(\d{3})([abc])\b/gi, function (_m, n, l) { return "R-" + n + (n === "134" ? l.toLowerCase() : l.toUpperCase()); }],
       [/\bp ?s ?i(?: ?g)?\b/gi, "psig"],
       [/\bsuper ?heat\b/gi, "superheat"],
       [/\bsub ?cooling\b/gi, "subcooling"],

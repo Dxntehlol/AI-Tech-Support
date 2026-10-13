@@ -93,6 +93,13 @@ machine a private HTTPS address that only your own devices can reach, with no po
 Check: create a unit from the Units tab. Then turn on airplane mode and open Readings; the
 calculators must still work.
 
+On the roof: **Settings → Display → Glove mode** makes every button, row and input at least 56 px with
+18 px text, and **Sun mode** forces the light theme at maximum contrast (white, black, thick borders). The
+microphone next to the attach button dictates into the message (and into a finding's cause / fix and PM item
+notes); it uses the browser's speech service, needs a connection, and is hidden where the browser has none
+(Firefox). Readings and the field calculators work offline; the chiller mode computes ΔT, tons and approaches
+offline but needs the server for its findings.
+
 QR stickers (**QR label** on a unit card, or **Units → ⋮ → Print QR labels** for the whole list) encode
 the unit's address; scanning one with the phone camera opens it in the browser (Safari/Chrome), not in the
 installed home-screen app, and the page routes straight to that unit.
@@ -122,7 +129,12 @@ installed home-screen app, and the page routes straight to that unit.
    The share button in the chat header turns the conversation into a service report (share as text,
    open a printable page for Print / Save as PDF, or copy Markdown); **Unit report** on the unit card
    does the same for the unit's whole history.
-6. Every so often, **Settings → Decode corrections → Export** downloads
+6. For units with 15 lb or more of HFC (50 lb of R-22), tap **Set full charge** on the unit's Refrigerant card
+   (full charge, appliance type, independent circuits) so every **Log refrigerant** add gets its EPA leak rate;
+   **Settings → Refrigerant log → Export refrigerant log (CSV)** is the record to keep three years. **Start PM**
+   on the Maintenance card opens the checklist for the equipment type (the decoded nameplate suggests one); items
+   save as you go and are kept on the phone until the server answers.
+7. Every so often, **Settings → Decode corrections → Export** downloads
    `hvac-corrections-YYYY-MM-DD.json` (on iPhone it opens the share sheet) with every correction,
    the model and serial it was about and the decoder format that produced it, and marks them
    exported. Send that file to whoever maintains the manufacturer packs under

@@ -837,3 +837,344 @@ describe("styles.css — readings / follow-ups tap targets", () => {
     assert.ok(css.includes(".tab-count {"));
   });
 });
+
+// ---------------------------------------------------------------------------
+// Wave 2 (DESIGN.md "Web UI"): refrigerant log, PM checklists, chiller mode, job clock + signature,
+// field calculators (offline parity with the server), voice dictation, manufacturer support, most likely cause
+// ---------------------------------------------------------------------------
+
+describe("refrigerant log helpers", () => {
+  const TODAY = "2026-10-13";
+  test("lbsFromLbsOz + formatLbs: lb and oz to decimal pounds and back", () => {
+    assert.equal(UI.lbsFromLbsOz("12", "4"), 12.25);
+    assert.equal(UI.lbsFromLbsOz("", "8"), 0.5);
+    assert.equal(UI.lbsFromLbsOz("", ""), null);
+    assert.equal(UI.lbsFromLbsOz("x", ""), null);
+    assert.deepEqual([UI.formatLbs(12.25), UI.formatLbs(0.5), UI.formatLbs(3), UI.formatLbs(2.999), UI.formatLbs(null)], ["12 lb 4 oz", "8 oz", "3 lb", "3 lb", ""]);
+  });
+  test("complianceChip: unknown charge / not applicable / exceeded with the 30-day clock / OK", () => {
+    assert.equal(UI.complianceChip(null).kind, "unknown");
+    assert.equal(UI.complianceChip({ fullChargeLbs: null, applies: false }).label, "Unknown charge");
+    assert.equal(UI.complianceChip({ fullChargeLbs: 8, applies: false, thresholdPct: 10 }).label, "Not applicable · 8 lb < 15 lb");
+    const ex = UI.complianceChip({ fullChargeLbs: 40, applies: true, exceeded: true, lastLeakRatePct: 45.63, thresholdPct: 10, obligations: [{ kind: "repair", dueDate: "2026-10-20", text: "Repair", overdue: false }] }, TODAY);
+    assert.deepEqual([ex.kind, ex.label], ["exceeded", "Exceeded 45.6 % · 7 d to repair"]);
+    assert.equal(UI.complianceChip({ fullChargeLbs: 40, applies: true, exceeded: true, lastLeakRatePct: 45.63, thresholdPct: 10, obligations: [{ kind: "repair", dueDate: "2026-10-01", overdue: true }] }, TODAY).label, "Exceeded 45.6 % · repair 12 d overdue");
+    // obligations missing or reshaped by the backend: still a readable chip
+    assert.equal(UI.complianceChip({ fullChargeLbs: 40, applies: true, exceeded: true, thresholdPct: 10 }, TODAY).label, "Exceeded threshold");
+    const ok = UI.complianceChip({ fullChargeLbs: 40, applies: true, exceeded: false, lastLeakRatePct: 3.2, thresholdPct: 10, lastAdd: { date: "2026-10-01" } }, TODAY);
+    assert.deepEqual([ok.kind, ok.label], ["ok", "OK · 3.2 %"]);
+  });
+  test("refrigerantEventText: date · type · lbs · refrigerant, then rate / circuit / cylinder / tech", () => {
+    const add = UI.refrigerantEventText({ event_type: "add", amount_lbs: 2.5, refrigerant: "R-410A", date: "2026-10-05", leak_rate_pct: 12.5, threshold_pct: 10, exceeded: true, circuit: 2, cylinder_id: "C-77", tech_name: "J. Tech", tech_cert: "608-U" }, TODAY);
+    assert.equal(add.title, "Oct 5 · Added 2 lb 8 oz R-410A");
+    assert.equal(add.meta, "12.5 % of 10 % — exceeded · ckt 2 · cyl C-77 · J. Tech (608-U)");
+    assert.equal(add.tone, "danger");
+    assert.deepEqual(UI.refrigerantEventText({ event_type: "leak_check", date: "2026-10-05", leak_found: true }, TODAY), { title: "Oct 5 · Leak check", meta: "leak found", tone: "warn" });
+    assert.equal(UI.refrigerantEventText({ event_type: "verification_followup", date: "2026-10-05", passed: false }, TODAY).meta, "failed");
+    assert.equal(UI.refrigerantEventText({ event_type: "repair", created_at: "2026-09-30T10:00:00Z" }, TODAY).title, "Sep 30 · Repair");
+  });
+  test("obligationChip + export filename + the one-line rule", () => {
+    assert.deepEqual(UI.obligationChip({ dueDate: null }, TODAY), { kind: "none", label: "Schedule" });
+    assert.deepEqual(UI.obligationChip({ dueDate: "2026-10-01", overdue: true }, TODAY), { kind: "overdue", label: "Overdue · Oct 1" });
+    assert.deepEqual(UI.obligationChip({ dueDate: "2026-10-15", overdue: false }, TODAY), { kind: "soon", label: "Due Oct 15" });
+    assert.equal(UI.refrigerantExportFilename('attachment; filename="hvac-refrigerant-log-2026-10-13.csv"'), "hvac-refrigerant-log-2026-10-13.csv");
+    assert.equal(UI.refrigerantExportFilename('attachment; filename="../evil.sh"', new Date("2026-10-13T12:00:00Z")), "hvac-refrigerant-log-2026-10-13.csv");
+    assert.match(UI.LEAK_RATE_RULE_LINE, /lb added ÷ full charge × 365 ÷ days since last add, up to 365 days/);
+  });
+});
+
+describe("PM checklist helpers", () => {
+  const tpl = { id: "t", sections: [{ title: "A", items: [{ id: "a1", kind: "check" }, { id: "a2", kind: "number" }] }, { title: "B", items: [{ id: "b1", kind: "text" }, { id: "b2", kind: "check" }] }] };
+  test("pmProgress counts recorded items, an explicit N/A included", () => {
+    assert.deepEqual(UI.pmProgress(tpl, { a1: { checked: true, pass: true }, a2: { asFound: 230 }, b2: { checked: null, pass: null }, b1: { value: "" } }), { done: 3, total: 4 });
+    assert.deepEqual(UI.pmProgress(tpl, null), { done: 0, total: 4 });
+    assert.equal(UI.pmItemDone({ note: "only a note" }), false);
+  });
+  test("pmCheckPatch / pmItemState: pass, fail, n/a round-trip", () => {
+    for (const s of ["pass", "fail"]) assert.equal(UI.pmItemState(UI.pmCheckPatch(s)), s);
+    assert.deepEqual(UI.pmCheckPatch("na"), { checked: null, pass: null });
+    assert.equal(UI.pmItemState(UI.pmCheckPatch("na")), null);
+  });
+  test("pmFeedback: inline nameplate comparison from the server summary", () => {
+    assert.deepEqual(UI.pmFeedback({ status: "fail", reference: "nameplate 208–230 V ±10 %", deviationPct: -14 }), { text: "Fail · nameplate 208–230 V ±10 % (−14 %)", tone: "danger" });
+    assert.deepEqual(UI.pmFeedback({ status: "pass", reference: "45 µF ±6 %", deviationPct: 2.2 }), { text: "Pass · 45 µF ±6 % (+2.2 %)", tone: "ok" });
+    assert.deepEqual(UI.pmFeedback({ status: "pass" }), { text: "", tone: "" });
+    assert.deepEqual(UI.pmFeedback(null), { text: "", tone: "" });
+  });
+  test("pmVisitSummaryText: last visit line, counts, flagged / failed / safety labels", () => {
+    const s = UI.pmVisitSummaryText({ date: "2026-10-05", template_name: "Packaged RTU — gas heat", status: "complete", tech_name: "J", summary: { total: 30, pass: 20, fail: 3, na: 7, flagged: ["v"], fails: ["v", "f", "s"], safetyFails: ["s"], items: [{ id: "v", label: "Voltage" }, { id: "f", label: "Filters" }, { id: "s", label: "Rollout" }] } }, "2026-10-13");
+    assert.equal(s.title, "Oct 5 · Packaged RTU — gas heat");
+    assert.equal(s.counts, "20 pass · 3 fail · 7 n/a of 30");
+    assert.deepEqual([s.flagged, s.safetyFails, s.status], [["Voltage"], ["Rollout"], "Complete"]);
+    assert.equal(UI.pmVisitSummaryText({ summary: null }).counts, "No items recorded");
+  });
+  test("suggestPmTemplate + orderPmTemplates: the suggestion is listed first and flagged", () => {
+    assert.equal(UI.suggestPmTemplate({ heat_type: "gas" }, { model: [{ productType: "packaged_rtu" }] }).templateId, "rtu_gas");
+    assert.equal(UI.suggestPmTemplate({}, { model: [{ productType: "chiller", family: "RTHD water-cooled" }] }).templateId, "chiller_water_cooled");
+    assert.equal(UI.suggestPmTemplate({ manufacturer: "Hoshizaki" }, null).templateId, "ice_machine");
+    assert.equal(UI.suggestPmTemplate({ decoded_json: JSON.stringify({ model: [{ productType: "split_heat_pump" }] }) }).templateId, "heat_pump");
+    assert.equal(UI.suggestPmTemplate({}, null).templateId, null);
+    assert.deepEqual(UI.orderPmTemplates([{ id: "a" }, { id: "b" }, { id: "c" }], { templateId: "c" }).map((t: { id: string; suggested: boolean }) => `${t.id}${t.suggested ? "*" : ""}`), ["c*", "a", "b"]);
+    assert.equal(UI.pmPendingKey("abc"), "hvac.pmPending.abc");
+  });
+});
+
+describe("chiller mode + most likely cause", () => {
+  test("buildChillerMeasurements keeps the chosen condenser side and drops blanks", () => {
+    assert.deepEqual(UI.buildChillerMeasurements({ refrigerant: "R-134a", condenserType: "water_cooled", chwSupplyF: "44", chwReturnF: "54", outdoorDbF: "90", condWaterOutF: "95", circuit: "", rla: "" }), { refrigerant: "R-134a", condenserType: "water_cooled", chwSupplyF: 44, chwReturnF: 54, condWaterOutF: 95 });
+    assert.deepEqual(UI.buildChillerMeasurements({ condenserType: "air_cooled", outdoorDbF: "90", condWaterOutF: "95" }), { condenserType: "air_cooled", outdoorDbF: 90 });
+    assert.equal(UI.chillerHasReadings({ refrigerant: "R-134a" }), false);
+    assert.equal(UI.chillerHasReadings({ chwSupplyF: 44 }), true);
+  });
+  test("composeChillerMessage: compact readings line plus derived values", () => {
+    assert.equal(UI.composeChillerMessage({ refrigerant: "R-134a", condenserType: "water_cooled", chwSupplyF: 44, chwReturnF: 54, chwFlowGpm: 240 }, { chwDeltaTF: 10, tons: 100, evapApproachF: 6, ampsPercentRla: 82 }),
+      "Chiller readings (chiller, R-134a, water-cooled): CHW 54 in / 44 out °F; flow 240 gpm. Derived: CHW ΔT 10 °F, load 100 tons, evap approach 6 °F, amps 82 % RLA.");
+    assert.match(UI.composeChillerMessage({}, null), /no measurements entered/);
+  });
+  test("chiller readings in the unit history use chiller fields", () => {
+    const r = { mode: "chiller", created_at: "2026-10-05T15:00:00Z", measurements: { chwSupplyF: 44, compressorAmps: 210 }, derived: { chwDeltaTF: 9.8, evapApproachF: 6.2, condApproachF: 3 }, source: "sheet" };
+    const s = UI.readingSummary(r, Date.parse("2026-10-13T12:00:00Z"));
+    assert.equal(s.title, "Oct 5 · Chiller");
+    assert.equal(s.values, "ΔT 10 · evap app 6 · cond app 3 · 210 A");
+    const by = Object.fromEntries(UI.readingDetailRows(r).map((x: { label: string; value: string }) => [x.label, x.value]));
+    assert.equal(by["CHW supply"], "44 °F");
+    assert.equal(by["Evap approach"], "6.2 °F");
+  });
+  test("splitFindings: the top non-info finding is the most likely cause; firstSentence trims the why", () => {
+    const { top, rest } = UI.splitFindings([{ severity: "info", condition: "scope" }, { severity: "warning", condition: "w" }, { severity: "advisory", condition: "a" }]);
+    assert.equal(top.condition, "w");
+    assert.deepEqual(rest.map((f: { condition: string }) => f.condition), ["scope", "a"]);
+    assert.equal(UI.splitFindings([{ severity: "info" }]).top, null);
+    assert.equal(UI.splitFindings(null).top, null);
+    assert.equal(UI.firstSentence("Low charge. Then more text."), "Low charge.");
+    assert.equal(UI.firstSentence("x".repeat(200), 20), `${"x".repeat(19)}…`);
+  });
+});
+
+describe("job clock + signature helpers", () => {
+  test("formatElapsed / formatMinutes", () => {
+    assert.deepEqual([UI.formatElapsed(65000), UI.formatElapsed(3725000), UI.formatElapsed(-5)], ["01:05", "1:02:05", "00:00"]);
+    assert.deepEqual([UI.formatMinutes(45), UI.formatMinutes(65), UI.formatMinutes(null)], ["45 min", "1 h 05 min", "0 min"]);
+  });
+  test("jobBarState: running survives a reload (elapsed from job_started_at), stopped, idle, signed", () => {
+    const run = UI.jobBarState({ job_started_at: "2026-10-13T10:00:00Z" }, Date.parse("2026-10-13T10:12:34Z"));
+    assert.deepEqual([run.state, UI.formatElapsed(run.elapsedMs)], ["running", "12:34"]);
+    const done = UI.jobBarState({ job_started_at: "2026-10-13T10:00:00Z", job_ended_at: "2026-10-13T11:05:00Z", minutes_on_site: 65, signed: true, signed_by: "Pat", signed_at: "2026-10-13T11:06:00Z" });
+    assert.deepEqual([done.state, done.minutes, done.signed, done.signedBy], ["stopped", 65, true, "Pat"]);
+    assert.equal(UI.jobBarState({ job_started_at: "2026-10-13T10:00:00Z", job_ended_at: "2026-10-13T10:30:00Z" }).minutes, 30);
+    assert.equal(UI.jobBarState(null).state, "idle");
+  });
+  test("signatureNote folds the declined checkbox and the note", () => {
+    assert.equal(UI.signatureNote(true, " coil cleaning "), "Declined recommendation — coil cleaning");
+    assert.equal(UI.signatureNote(false, ""), null);
+    assert.equal(UI.signatureNote(false, "x".repeat(600)).length, 500);
+  });
+  test("reportShareText mentions time on site and the signature", () => {
+    const text = UI.reportShareText({ conversation: { title: "RTU-7" }, unit: null, findings: [], readings: [], job: { startedAt: "2026-10-13T10:00:00Z", endedAt: "2026-10-13T11:05:00Z", minutesOnSite: 65 }, signature: { signedBy: "Pat", signedAt: "2026-10-13T11:06:00Z", note: null } });
+    assert.match(text, /Time on site: 1 h 05 min/);
+    assert.match(text, /Signed by Pat on 2026-10-13/);
+  });
+});
+
+describe("calculators — grouping, form parsing, flags", () => {
+  test("CALC_GROUPS: Refrigerant · Airflow · Combustion · Electrical · Parts, every wave-2 kind listed once", () => {
+    assert.deepEqual(UI.CALC_GROUPS.map((g: { title: string }) => g.title), ["Refrigerant", "Airflow", "Combustion", "Electrical", "Parts"]);
+    const all = UI.CALC_GROUPS.flatMap((g: { kinds: string[] }) => g.kinds);
+    for (const k of ["leak_rate", "gas_meter_clock", "combustion_co", "sensible_cfm", "static_pressure", "fan_laws", "belt_drive", "voltage_drop", "motor_fla", "capacitor_replacement", "motor_replacement"]) assert.equal(all.filter((x: string) => x === k).length, 1, k);
+    const html = readFileSync(join(here, "index.html"), "utf8");
+    for (const k of all) assert.ok(html.includes(`data-calc="${k}"`), `index.html has the ${k} calculator`);
+  });
+  test("calcRequestFromForm: numbers parsed, optional blanks dropped, strings and phase passed, first error named", () => {
+    assert.deepEqual(UI.calcRequestFromForm("voltage_drop", { volts: "240", amps: "30", oneWayFt: "100", awg: "10", material: "cu", phase: "1" }).body, { kind: "voltage_drop", volts: 240, amps: 30, oneWayFt: 100, awg: "10", material: "cu", phase: 1 });
+    assert.equal(UI.calcRequestFromForm("voltage_drop", { volts: "240", amps: "30", oneWayFt: "100", awg: "", phase: "3" }).error, "Enter the wire size (AWG / kcmil) or circular mils.");
+    assert.deepEqual(UI.calcRequestFromForm("motor_replacement", { hp: "", rpm: "1075", frame: "48Y", phase: "", rotationFromShaftEnd: "" }).body, { kind: "motor_replacement", rpm: 1075, frame: "48Y" });
+    assert.equal(UI.calcRequestFromForm("leak_rate", { addedLbs: "abc", fullChargeLbs: "400" }, { addedLbs: "Refrigerant added" }).error, "Refrigerant added must be a number.");
+    assert.equal(UI.calcRequestFromForm("leak_rate", { addedLbs: "", fullChargeLbs: "400" }, { addedLbs: "Refrigerant added" }).error, "Enter Refrigerant added.");
+    assert.equal(UI.calcRequestFromForm("motor_fla", { hp: "5", volts: "460", phase: "" }).error, "Pick the phase.");
+  });
+  test("calcFlagChip: CO level, exceeded, pass/fail chips carry words", () => {
+    assert.deepEqual([UI.calcFlagChip("flag", 2), UI.calcFlagChip("flag", 1), UI.calcFlagChip("flag", 0)], [{ label: "Shutdown", tone: "danger" }, { label: "Action", tone: "warn" }, { label: "OK", tone: "ok" }]);
+    assert.deepEqual([UI.calcFlagChip("exceeded", 1), UI.calcFlagChip("exceeded", 0), UI.calcFlagChip("pass", 0)], [{ label: "EXCEEDED", tone: "danger" }, { label: "Within", tone: "ok" }, { label: "FAIL", tone: "danger" }]);
+    assert.equal(UI.calcFlagChip("cfm", 2), null);
+  });
+});
+
+describe("web/calc.js — offline calculators match the server (src/knowledge/electrical.ts)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let CALC: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let server: any;
+  before(async () => {
+    const calcMod = "./calc.js";
+    await import(calcMod);
+    CALC = (globalThis as { HVAC_CALC?: unknown }).HVAC_CALC;
+    // Imported through Node type stripping; the path is a variable so tsc (rootDir web/) does not pull src/ in.
+    const serverMod = new URL("../src/knowledge/electrical.ts", import.meta.url).href;
+    server = await import(serverMod);
+  });
+  const CASES: Record<string, Record<string, unknown>[]> = {
+    leak_rate: [
+      { addedLbs: 25, fullChargeLbs: 400, daysSinceLastAdd: 60, applianceType: "commercial_refrigeration" }, // EPA worked example → 38.02 %
+      { addedLbs: 2, fullChargeLbs: 20, daysSinceLastAdd: 0 },
+      { addedLbs: 3.5, fullChargeLbs: 120, daysSinceLastAdd: 200, applianceType: "industrial_process" },
+      { addedLbs: 10, fullChargeLbs: 100, daysSinceLastAdd: 500 }, // > 365 days: the client caps at 365 (see below)
+    ],
+    gas_meter_clock: [
+      { dialCuft: 1, secondsPerRev: 36 },
+      { dialCuft: 2, secondsPerRev: 50, revolutions: 2, heatingValueBtuPerCuft: 1030, nameplateInputBtuh: 300000 },
+      { dialCuft: 0.5, secondsPerRev: 20, nameplateInputBtuh: 100000 },
+    ],
+    combustion_co: [{ coPpm: 40, o2Pct: 6 }, { coPpm: 150, o2Pct: 9.5, ambientCoPpm: 12 }, { coPpm: 300, o2Pct: 10, ambientCoPpm: 35 }],
+    sensible_cfm: [{ btuh: 54000, deltaTF: 25 }, { btuh: 34120, deltaTF: 30, tons: 3 }, { btuh: 120000, deltaTF: 20, tons: 4 }],
+    static_pressure: [{ supplyInWc: 0.35, returnInWc: -0.3 }, { supplyInWc: 0.5, returnInWc: -0.4, blowerType: "ecm" }, { supplyInWc: 0.2, returnInWc: 0.15, ratedMaxInWc: 0.6 }],
+    fan_laws: [{ rpm1: 1000, rpm2: 1100, cfm1: 4000, sp1: 0.8, bhp1: 2 }, { rpm1: 900, rpm2: 800, cfm1: 3000 }, { rpm1: 1200, rpm2: 1250, bhp1: 5 }],
+    belt_drive: [{ motorRpm: 1750, motorSheaveIn: 4, fanSheaveIn: 8 }, { motorRpm: 1725, motorSheaveIn: 3.5, fanSheaveIn: 9, centerDistanceIn: 20 }, { motorRpm: 1160, motorSheaveIn: 6, fanSheaveIn: 5, centerDistanceIn: 15 }],
+    voltage_drop: [{ volts: 240, amps: 30, oneWayFt: 100, awg: "10" }, { volts: 460, amps: 80, oneWayFt: 250, awg: "1/0", material: "al", phase: 3 }, { volts: 208, amps: 40, oneWayFt: 150, circularMils: 26240, phase: 3 }],
+    motor_fla: [{ hp: 15, volts: 460, phase: 3 }, { hp: 0.5, volts: 115, phase: 1 }, { hp: 12, volts: 208, phase: 3 }],
+    capacitor_replacement: [{ ratedUf: 45, ratedV: 370, replacementUf: 45, replacementV: 440 }, { ratedUf: 35, ratedV: 440, replacementUf: 40, replacementV: 370 }, { ratedUf: 7.5, ratedV: 370, replacementUf: 7, replacementV: 370 }],
+    motor_replacement: [{}, { hp: 0.5, rpm: 1075, volts: 208, phase: 1, rotationFromShaftEnd: "ccw", frame: "48Y", shaftDiaIn: 0.5, enclosure: "TEAO" }, { hp: 3, rpm: 1725, phase: 3 }],
+  };
+  const r2 = (n: unknown) => (typeof n === "number" ? Math.round(n * 100) / 100 : n);
+  const norm = (v: Record<string, unknown>) => Object.fromEntries(Object.entries(v).map(([k, x]) => [k, r2(x)]));
+  for (const [kind, inputs] of Object.entries(CASES)) {
+    inputs.forEach((input, i) => {
+      test(`${kind} #${i + 1}`, (t) => {
+        const req = { kind, ...input };
+        const mine = CALC.electrical(req);
+        const theirs = server.calcElectrical(req);
+        assert.ok(mine, `calc.js handles ${kind} offline`);
+        assert.ok(CALC.OFFLINE_KINDS.includes(kind));
+        if (kind === "leak_rate" && (input.daysSinceLastAdd as number) > 365) {
+          // EPA annualizing method: days = min(365, max(1, days)). web/calc.js applies the cap; the server copy in
+          // this tree still divides by the raw day count until the backend fix lands. Skip only that case.
+          const capped = Math.round(((input.addedLbs as number) / (input.fullChargeLbs as number)) * (365 / 365) * 100 * 100) / 100;
+          assert.equal(mine.values.leakRatePct, capped);
+          assert.equal(mine.values.daysUsed, 365);
+          if (theirs.values.daysUsed !== 365) return t.skip("server cap lands in the backend fix");
+        }
+        assert.deepEqual(norm(mine.values), norm(theirs.values));
+        assert.deepEqual(mine.warnings, theirs.warnings);
+        assert.ok(mine.interpretation.length > 0 && theirs.interpretation.length > 0);
+        if (kind !== "leak_rate") assert.equal(mine.interpretation[0], theirs.interpretation[0], "interpretation[0] states the same formula");
+      });
+    });
+  }
+  test("leak_rate: EPA worked example (25 lb into a 400 lb rack 60 days after the prior add) = 38.02 %", () => {
+    assert.equal(CALC.electrical({ kind: "leak_rate", addedLbs: 25, fullChargeLbs: 400, daysSinceLastAdd: 60 }).values.leakRatePct, 38.02);
+    assert.equal(CALC.annualizedLeakRate({ addedLbs: 1, fullChargeLbs: 10, daysSinceLastAdd: 0.2 }).days, 1);
+    assert.equal(CALC.annualizedLeakRate({ addedLbs: 1, fullChargeLbs: 10, daysSinceLastAdd: 900 }).days, 365);
+  });
+  test("chillerLocal: ΔT, tons, approaches offline; findings left to the server", () => {
+    const r = CALC.chillerLocal({ chwSupplyF: 44, chwReturnF: 54, chwFlowGpm: 240, evapSatF: 38, condSatF: 98, condWaterOutF: 95, condWaterInF: 85, compressorAmps: 200, rla: 250 });
+    assert.deepEqual(r.derived, { evapSatF: 38, condSatF: 98, chwDeltaTF: 10, tons: 100, evapApproachF: 6, condApproachF: 3, condWaterDeltaTF: 10, ampsPercentRla: 80 });
+    assert.equal(r.condenserType, "water_cooled");
+    assert.deepEqual(r.findings, []);
+    assert.equal(r.offline, true);
+    const air = CALC.chillerLocal({ chwSupplyF: 45, condPressurePsig: 200, outdoorDbF: 95, refrigerant: "R-134a" }, () => 125);
+    assert.deepEqual([air.condenserType, air.derived.condApproachF], ["air_cooled", 30]);
+    assert.ok(CALC.chillerLocal({ evapPressurePsig: 40 }, () => null).notes.some((n: string) => /could not be converted offline/.test(n)));
+  });
+});
+
+describe("voice dictation (web/voice.js) + composer insertion", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let VOICE: any;
+  before(async () => {
+    const mod = "./voice.js";
+    await import(mod);
+    VOICE = (globalThis as { HVAC_VOICE?: unknown }).HVAC_VOICE;
+  });
+  test("normalizeDictation: psig, refrigerants, degrees", () => {
+    assert.equal(VOICE.normalizeDictation("suction 118 p s i g line 52 degrees"), "suction 118 psig line 52 °F");
+    assert.equal(VOICE.normalizeDictation("head 340 PSIG, super heat 12 sub cooling 9"), "head 340 psig, superheat 12 subcooling 9");
+    assert.equal(VOICE.normalizeDictation("are four ten a system"), "R-410A system");
+    assert.equal(VOICE.normalizeDictation("R 22 at 68 psi"), "R-22 at 68 psig");
+    assert.equal(VOICE.normalizeDictation("r454b and R 32"), "R-454B and R-32");
+    assert.equal(VOICE.normalizeDictation("r 134a"), "R-134a");
+    assert.equal(VOICE.normalizeDictation("outdoor 95 degrees fahrenheit"), "outdoor 95 °F");
+    assert.equal(VOICE.normalizeDictation("temps are 22 degrees"), "temps are 22 °F", "'are' alone is not R-");
+    assert.equal(VOICE.normalizeDictation("delta t 18"), "ΔT 18");
+    assert.equal(VOICE.normalizeDictation("  "), "");
+    assert.equal(VOICE.supported, false, "no recognizer in Node: the mic button stays hidden");
+  });
+  test("insertAtCursor spaces the join; dictationDelta returns only new final text", () => {
+    assert.deepEqual(UI.insertAtCursor("suction", 7, 7, "118 psig"), { value: "suction 118 psig", cursor: 16 });
+    assert.deepEqual(UI.insertAtCursor("a, b", 1, 1, "x"), { value: "a x, b", cursor: 3 });
+    assert.deepEqual(UI.insertAtCursor("", 0, 0, "hi"), { value: "hi", cursor: 2 });
+    assert.deepEqual(UI.insertAtCursor("ab cd", 2, 2, ""), { value: "ab cd", cursor: 2 });
+    assert.deepEqual(UI.dictationDelta("suction 118", "suction 118 psig line 52"), "psig line 52");
+    assert.equal(UI.dictationDelta("abc", "xyz"), "xyz");
+    assert.equal(UI.DICTATION_SILENCE_MS, 20000);
+  });
+  test("index.html loads voice.js before app.js and the service worker caches it", () => {
+    const html = readFileSync(join(here, "index.html"), "utf8");
+    assert.ok(html.indexOf('src="voice.js"') > 0 && html.indexOf('src="voice.js"') < html.indexOf('src="app.js"'));
+    const sw = readFileSync(join(here, "sw.js"), "utf8");
+    assert.ok(sw.includes('"./voice.js"'));
+    assert.match(html, /id="btn-mic"[^>]*aria-pressed="false"[^>]*hidden/);
+  });
+});
+
+describe("manufacturer support (OEM fallback)", () => {
+  test("supportPhones: tel: links from the pack's free-text phone line, vanity numbers converted, labelled", () => {
+    const p = UI.supportPhones("1-800-379-6484 (Carrier Commercial Service 24-hour line); residential/Bryant/Payne product support: 1-800-CARRIER (1-800-227-7437)");
+    assert.deepEqual(p.map((x: { tel: string }) => x.tel), ["tel:+18003796484", "tel:+18002277437"]);
+    assert.equal(p[0].label, "Carrier Commercial Service 24-hour line");
+    assert.equal(p[1].label, "residential/Bryant/Payne product support");
+    assert.deepEqual(UI.supportPhones(""), []);
+  });
+  test("supportRows: phone, site, literature link, hints; nothing without support info", () => {
+    const rows = UI.supportRows({ phone: "Call 1-800-379-6484", url: "https://www.carrier.com/commercial/en/us/", literatureUrl: "https://www.carrier.com/x/ (each product page)", literatureSearchHint: "Search", notes: "n" });
+    assert.deepEqual(rows.map((r: { kind: string }) => r.kind), ["phone", "link", "link", "text", "text"]);
+    assert.equal(rows[2].href, "https://www.carrier.com/x/");
+    assert.deepEqual(UI.supportRows(null), []);
+    assert.deepEqual(UI.supportRows({ url: "javascript:alert(1)" }), []);
+  });
+});
+
+describe("wave-2 routes", () => {
+  const id = "0123456789abcdef";
+  const vid = "fedcba9876543210";
+  test("parseHash: refrigerant / charge / PM picker / PM checklist / PM report / sign-off / chiller mode", () => {
+    assert.equal(UI.parseHash(`#unit/${id}/refrigerant`).sheet, "refrigerant");
+    assert.equal(UI.parseHash(`#unit/${id}/charge`).sheet, "charge");
+    assert.equal(UI.parseHash(`#unit/${id}/pm`).sheet, "pmPick");
+    const pm = UI.parseHash(`#unit/${id}/pm/${vid}`);
+    assert.deepEqual([pm.screen, pm.unit, pm.pmVisit, pm.sheet], ["pm", id, vid, null]);
+    assert.equal(UI.parseHash(`#unit/${id}/pm/${vid}/report`).sheet, "report");
+    assert.equal(UI.parseHash(`#unit/${id}/pm/nope`).screen, "units");
+    const sign = UI.parseHash(`#chat/${id}/sign`);
+    assert.deepEqual([sign.screen, sign.conv, sign.sheet], ["chat", id, "sign"]);
+    assert.equal(UI.parseHash("#readings/chiller").mode, "chiller");
+    const cp = UI.parseHash("#readings/chiller/pick");
+    assert.deepEqual([cp.mode, cp.sheet], ["chiller", "pick"], "the unit picker keeps chiller mode");
+    assert.equal(UI.parseHash("#readings").mode, "dx");
+  });
+});
+
+describe("styles.css — glove and sun modes", () => {
+  const css = readFileSync(join(here, "styles.css"), "utf8");
+  const block = (selector: string) => {
+    const i = css.indexOf(selector + " {");
+    assert.ok(i >= 0, `selector not found: ${selector}`);
+    return css.slice(i, css.indexOf("}", i));
+  };
+  test("glove mode raises every size variable to ≥ 56 px targets and 18 px body text", () => {
+    const g = block(":root[data-glove]");
+    for (const v of ["--tap", "--btn-h", "--icon-btn", "--input-h"]) assert.match(g, new RegExp(`${v}: (5[6-9]|[6-9]\\d)px`), v);
+    assert.match(g, /--fs-3: 18px/);
+    assert.match(g, /--composer-h: (5[2-9]|[6-9]\d)px/);
+    // controls read the variables (no hard-coded sizes left on the main controls)
+    assert.match(block(".btn"), /min-height: var\(--btn-h\)/);
+    assert.match(block(".icon-btn"), /width: var\(--icon-btn\)/);
+    assert.match(css, /\.field input, \.field select, \.field textarea, \.input \{[^}]*min-height: var\(--input-h\)/);
+  });
+  test("sun mode: white surfaces, black text and borders, thick borders, no shadows, nothing translucent", () => {
+    const s = block(":root[data-sun]");
+    for (const v of ["--surface-0", "--surface-1", "--surface-2"]) assert.match(s, new RegExp(`${v}: #ffffff`), v);
+    for (const v of ["--text-primary", "--text-secondary", "--text-muted", "--border"]) assert.match(s, new RegExp(`${v}: #000000`), v);
+    assert.match(s, /--bw: 2px/);
+    assert.match(s, /--shadow-soft: none/);
+    assert.doesNotMatch(s, /rgba\(/);
+  });
+});

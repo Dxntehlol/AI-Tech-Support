@@ -964,6 +964,80 @@ shown (best effort).
   a cold load; an installed PWA is not launched by the camera. Pure helpers (`unitUrl`, `appBaseUrl`,
   `labelText`, `qrMatrix`, `qrPathFromMatrix`, `qrSvgMarkup`, `labelsDocumentHtml`) are tested in
   `web/app.test.ts`, including the encoder against reference matrices from an independent implementation.
+- Refrigerant log (unit card "Refrigerant" card): compliance chip from the `compliance` summary (`complianceChip`:
+  "Unknown charge" + **Set full charge** when `fullChargeLbs` is null, "Not applicable · N lb < 15 lb", "OK · r %",
+  "Exceeded r % · d d to repair" / "repair d d overdue" from the repair obligation's `dueDate`), the full charge ·
+  appliance type (threshold) · circuits line with **Edit** (`#unit/<id>/charge` sheet → PATCH `/api/units/:id`
+  `full_charge_lbs`, `appliance_type`, `circuits_count`; a cold link fetches the unit before prefilling, Save stays
+  disabled until then), the one-line rule ("EPA: leak rate = lb added ÷ full charge × 365 ÷ days since last add, up to
+  365 days"), obligations (kind label, `obligationChip` due chip, the server's sentence), and the event list
+  (`refrigerantEventText`: date · type · lb/oz · refrigerant, then rate % of threshold · circuit · cylinder · tech
+  (cert); 44 px delete with confirm → DELETE). **Log refrigerant** → `#unit/<id>/refrigerant` sheet: event segmented
+  (Added / Recovered / Leak check / Verification test (initial | follow-up) / Repair / Retrofit plan), refrigerant
+  (defaults to the unit's), lb + oz (`lbsFromLbsOz`, live "= 3.25 lb (3 lb 4 oz)"), circuit, cylinder ID, date, tech
+  name + EPA 608 cert (remembered in localStorage `hvac.techName` / `hvac.techCert`), leak found / test passed
+  checkboxes, note → POST; the toast states the computed rate. All fields are read defensively (obligations or
+  `exceeded` missing → a readable chip). Settings → "Refrigerant log" → **Export refrigerant log (CSV)** fetches
+  `/api/refrigerant/export.csv` with the Bearer token (download, or the share sheet on iOS) like the corrections export.
+- PM checklists: unit card "Maintenance" card (last visit: date · template, status and tech chips, pass/fail/n/a
+  counts, safety fails, nameplate deviations, failed items; Open / Continue; older visits as rows) and **Start PM** →
+  `#unit/<id>/pm` picker sheet (technician name, templates from `/api/pm/templates` with the `suggestPmTemplate`
+  client mirror first and flagged "Suggested") → POST → full-screen `#unit/<id>/pm/<vid>` (`screen-pm`): top bar with
+  the template, unit · tech · date, save-state chip and "12 / 28" progress (`pmProgress`; an explicit N/A counts);
+  sticky section headers with per-section counts; per item: label (Safety chip), hint, pass / fail / N/A segmented
+  for check items (`pmCheckPatch`), as-found / as-left (or value) numeric inputs with the unit suffix plus a rated
+  field for capacitor / amps comparisons, text input for text items, inline verdict from the server summary after
+  each PATCH (`pmFeedback`: "Fail · nameplate 208–230 V ±10 % (−13.5 %)"), note with the shared mic. Edits are
+  debounced (800 ms) into a PATCH of only the changed items; pending items live in localStorage `hvac.pmPending.<vid>`
+  until a PATCH succeeds (offline → "Offline · will retry", retried every 15 s, on `online`, on reload and when the
+  page is hidden; a 400 drops the patch and says why). **Complete visit** flushes first, then PATCH status → summary
+  card (pass / fail / n/a / items, safety fails, deviations, failed items) and **Reopen**; **Share** opens the unit
+  report sheet (`#unit/<id>/pm/<vid>/report`).
+- Chiller mode (Readings → "DX · packaged / split | Chiller", `#readings/chiller`, picker `#readings/chiller/pick`):
+  refrigerant, circuit, condenser water-/air-cooled segmented (the other side's fields hidden and dropped by
+  `buildChillerMeasurements`), CHW supply/return/flow/load, evap/cond sat temp or pressure, condenser water in/out or
+  outdoor DB, compressor amps/RLA, oil pressure/temperature, elevation; **Evaluate** posts `/api/calc/chiller`; the
+  result card shows derived tiles (ΔT, tons, approaches flagged high, cond water ΔT, % RLA), the summary, findings and
+  "Would sharpen the result"; **Save to <unit>** (`unit_id`, `conversation_id` when the chat's unit matches) and **Send
+  to chat** (`composeChillerMessage`). Offline, `HVAC_CALC.chillerLocal` computes ΔT, tons, approaches, cond water ΔT and
+  % RLA (sat temps from the PT cache when pressures were entered) and the card says findings need the server. Unit
+  "Readings" entries open chiller mode for chillers. Chiller rows in the unit's readings history use chiller fields.
+- Most likely cause (DX and chiller results): `splitFindings` picks the top-ranked non-info finding; it renders right
+  under the validity line as a highlighted card (kicker, condition, severity/confidence chips, first sentence of the
+  explanation, "First check: …", safety line, "Full explanation and N checks" disclosure); the rest collapse under
+  "More findings (n)".
+- Job clock + customer sign-off (chat with a unit attached): `#job-bar` under the chat header — idle **Start job**;
+  running "On site mm:ss since 10:05 AM" (pulsing dot, ticks every second from `job_started_at`, so it survives a
+  reload) + **Stop**; stopped "On site 1 h 05 min · 10:05 → 11:10" + **Start again** (confirm). **Customer sign-off**
+  → `#chat/<id>/sign` sheet: canvas pad (pointer events with capture, `touch-action: none`, DPR-scaled, Clear),
+  customer name, "Customer declined the recommendation" checkbox folded into the note (`signatureNote`), note → POST
+  `/api/conversations/:id/signature` (PNG ≤ 200 KB, re-rendered at 1× when larger); an existing signature (fetched with
+  `?include=signature`) is shown with **Remove** (DELETE) and **Replace**; the bar then shows "Signed by <name> <time>".
+  The share sheet subtitle and `reportShareText` mention time on site and the signature.
+- Calculators grouped Refrigerant (PT, SH/SC, Leak rate EPA) · Airflow (temp-rise CFM, sensible CFM, static pressure,
+  fan laws, belt drive, psychrometrics) · Combustion (clock a gas meter, air-free CO) · Electrical (voltage imbalance,
+  capacitor under load, winding check, voltage drop, NEC motor FLA) · Parts (capacitor replacement, motor replacement
+  checklist) (`CALC_GROUPS`); forms are parsed by `calcRequestFromForm` (optional blanks dropped, enums as strings,
+  first missing field named) and flags render as worded chips (`calcFlagChip`). Every wave-2 kind is mirrored in
+  `web/calc.js` (`OFFLINE_KINDS`) and used when the request fails for lack of a connection; `web/app.test.ts` imports
+  `src/knowledge/electrical.ts` and asserts equal values (2 decimals), warnings and `interpretation[0]` for three inputs
+  per kind. The client leak rate caps the day count at 365 (`days = min(365, max(1, days))`); the one parity case over
+  365 days is skipped until the server applies the same cap.
+- Display modes (Settings → Display, localStorage `hvac.glove` / `hvac.sun`, applied at boot together with the theme): glove mode
+  (`html[data-glove]`) raises the size variables (`--tap`, `--btn-h`, `--icon-btn`, `--row-h`, `--input-h`, `--seg-h`,
+  `--composer-h`, chip and type scale: 56 px targets, 18 px body text, bigger switches; on phones the composer field
+  wraps mic + attach under the text); sun mode (`html[data-sun]`) forces `data-theme="light"` (the theme control is
+  disabled and the top-bar toggle explains why) with white surfaces, black text and borders, 2 px borders (`--bw`), no
+  shadows, solid tints, an opaque scrim and inverted selected segments. Both keep the 360 px no-overflow rule.
+- Voice dictation (`web/voice.js`, `window.HVAC_VOICE`): a mic button beside attach in the composer and beside the
+  finding sheet's cause / fix / follow-up and each PM note (one shared handler), hidden when `supported` is false;
+  a tap starts listening (accent + pulse, `aria-pressed="true"`), interim text shows in a strip above the field, final
+  text is normalized (`normalizeDictation`: psig, refrigerant names such as "are four ten a" → R-410A, °F, ΔT,
+  superheat / subcooling) and inserted at the cursor (`insertAtCursor`, only the new part of the cumulative transcript
+  via `dictationDelta`); a second tap, 20 s without speech, a route change or a recognizer end stops it; errors are toasts.
+- Manufacturer support (unit card, when the decode carries `support` from the pack): call rows (`tel:` links parsed
+  from the free-text phone line by `supportPhones`, vanity numbers converted), support site and literature links, and
+  a "Finding the manual" disclosure with the pack's search hint and notes (`supportRows`).
 
 ## Mobile-first, PWA, and App Store portability
 
@@ -991,8 +1065,9 @@ hosted backend — without code changes.
   `web/sw.js` (cache-first for the app shell, vendor files, fonts-free typography, refrigerant
   tables and `/api/reference/refrigerants`; network-first for other `/api/*`; never caches SSE;
   versioned cache name; skipWaiting + clients.claim; offline fallback shows the calculators).
-  The PT chart, SH/SC and electrical calculators are implemented client-side (`web/calc.js`) so
-  they work with no signal; chat requires the backend. Icons are generated by
+  The PT chart, SH/SC, electrical and wave-2 field calculators and the chiller ΔT / tons / approach arithmetic are
+  implemented client-side (`web/calc.js`) so they work with no signal; chat, chiller findings, the refrigerant log,
+  PM checklists (items wait in localStorage) and the job clock require the backend. `web/voice.js` is in the shell. Icons are generated by
   `scripts/gen_icons.py` (Pillow) from a vector-style design; committed under `web/icons/`.
 - **Native wrapper path (scaffolded, not built):** `capacitor.config.json` (appId
   `com.hvacfieldassistant.app`, appName "HVAC Field Assistant", `webDir: "web"`, `server.androidScheme:
