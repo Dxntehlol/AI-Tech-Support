@@ -792,6 +792,10 @@ export function validatePmChecklists(pm: unknown, problems: string[], where = "p
           if (!PM_NAMEPLATE_COMPARES.has(item.nameplateCompare as string)) problems.push(`${iw}: unknown nameplateCompare ${JSON.stringify(item.nameplateCompare)}`);
           if (item.kind !== "number") problems.push(`${iw}: nameplateCompare only applies to number items`);
         }
+        if (item.nameplateKey !== undefined) {
+          if (item.nameplateKey !== "blower_fla" && item.nameplateKey !== "fan_fla") problems.push(`${iw}: nameplateKey must be blower_fla or fan_fla`);
+          if (item.nameplateCompare !== "amps") problems.push(`${iw}: nameplateKey only applies to amps items`);
+        }
         if (item.asFoundAsLeft !== undefined && typeof item.asFoundAsLeft !== "boolean") problems.push(`${iw}: asFoundAsLeft must be a boolean`);
         if (item.asFoundAsLeft === true && item.kind !== "number") problems.push(`${iw}: asFoundAsLeft only applies to number items`);
         if (item.safety !== undefined && typeof item.safety !== "boolean") problems.push(`${iw}: safety must be a boolean`);

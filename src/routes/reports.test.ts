@@ -30,7 +30,7 @@ interface Ctx {
 
 async function withServer(fn: (ctx: Ctx) => Promise<void>, config: Partial<AppConfig> = {}): Promise<void> {
   const db = openDatabase(":memory:");
-  const repos = createRepos(db);
+  const repos = createRepos(db, { now: () => NOW.toISOString() });
   const cfg: AppConfig = { ...loadConfig({}), ...config };
   const deps: AppDeps = { client: createFakeClient(), config: cfg, kb, repos, log: () => {}, now: () => NOW, demo: true, version: "9.9.9" };
   const app = createApp(deps);

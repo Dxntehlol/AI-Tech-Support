@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { AppDeps } from "../app.ts";
 import { REFRIGERANT_EVENT_TYPES, type RefrigerantEventInput } from "../db/repos.ts";
 import { refrigerantEventView, refrigerantLogCsv, unitCompliance } from "../complianceStore.ts";
+import { complianceRefrigerantLookup } from "../knowledge/refrigerants.ts";
 import { badRequest, body, notFound, optBoolean, optEnum, optNumber, optString, optionalId, queryInt, requireId, type Body } from "./util.ts";
 
 /** Validate + whitelist a refrigerant event body (POST /api/units/:id/refrigerant and the log_refrigerant tool). */
@@ -48,6 +49,7 @@ export function refrigerantRouter(deps: AppDeps): Router {
   const r = Router();
   const { repos } = deps;
   const today = (): string => (deps.now ? deps.now() : new Date()).toISOString().slice(0, 10);
+  const lookup = complianceRefrigerantLookup(deps.kb);
 
   r.get("/:id/refrigerant", (req, res) => {
     const id = requireId(req.params.id);
@@ -55,7 +57,7 @@ export function refrigerantRouter(deps: AppDeps): Router {
     if (!unit) throw notFound("Unit not found.");
     const limit = queryInt(req, "limit", { min: 1, max: 1000 }) ?? 100;
     const events = repos.refrigerantEvents.list({ unitId: id, limit });
-    res.json({ events: events.map(refrigerantEventView), compliance: unitCompliance(repos, unit, today()) });
+    res.json({ events: events.map(refrigerantEventView), compliance: unitCompliance(repos, unit, today(), undefined, lookup) });
   });
 
   r.post("/:id/refrigerant", (req, res) => {
@@ -66,7 +68,7 @@ export function refrigerantRouter(deps: AppDeps): Router {
     if (input.conversation_id && !repos.conversations.get(input.conversation_id)) throw notFound("Conversation not found.");
     const event = repos.refrigerantEvents.create(input);
     const finding = event.finding_id ? (repos.findings.get(event.finding_id) ?? null) : null;
-    res.status(201).json({ event: refrigerantEventView(event), finding, compliance: unitCompliance(repos, unit, today()) });
+    res.status(201).json({ event: refrigerantEventView(event), finding, compliance: unitCompliance(repos, unit, today(), undefined, lookup) });
   });
 
   r.delete("/:id/refrigerant/:eid", (req, res) => {

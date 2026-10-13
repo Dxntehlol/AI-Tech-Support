@@ -3,6 +3,7 @@ import type { MessagesStreamer, StreamLike, StreamParams } from "./client.ts";
 import type { Repos } from "../db/repos.ts";
 import type { AppConfig, ChatEvent, KnowledgeBase, MessageRow } from "../types.ts";
 import { staticSystemPrompt, unitContextBlock } from "./systemPrompt.ts";
+import { complianceRefrigerantLookup } from "../knowledge/refrigerants.ts";
 import { describeToolCall, executeTool, toolDefinitions, type ToolContext, type ToolOutcome } from "./tools.ts";
 
 export interface ChatDeps {
@@ -399,6 +400,7 @@ async function runTurnInner(
       repos.readings.list({ unitId: unit.id, limit: 20 }),
       repos.refrigerantEvents.list({ unitId: unit.id, limit: 50 }),
       repos.pmVisits.list({ unitId: unit.id, limit: 5 }),
+      complianceRefrigerantLookup(deps.kb),
     );
     return [staticBlock, { type: "text", text: block }];
   };

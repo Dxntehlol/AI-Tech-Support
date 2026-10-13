@@ -3,6 +3,7 @@ import type { AppDeps } from "../app.ts";
 import { readPackageVersion } from "../config.ts";
 import { buildConversationReport, buildUnitReport, renderReport, REPORT_FORMATS, type ReportFormat } from "../reports.ts";
 import { unitCompliance } from "../complianceStore.ts";
+import { complianceRefrigerantLookup } from "../knowledge/refrigerants.ts";
 import { badRequest, notFound, queryString, requireId } from "./util.ts";
 
 /** `?format=md|html|json|markdown` → ReportFormat (default md); anything else → 400. */
@@ -49,7 +50,7 @@ export function reportsRouter(deps: AppDeps): Router {
       now: now(),
       appVersion: version(),
       refrigerantEvents: unitEvents.filter((e) => e.conversation_id === id),
-      compliance: unit ? unitCompliance(repos, unit, today, unitEvents) : null,
+      compliance: unit ? unitCompliance(repos, unit, today, unitEvents, complianceRefrigerantLookup(deps.kb)) : null,
       pmVisits: unit ? repos.pmVisits.list({ unitId: unit.id, limit: 20 }).filter((v) => v.conversation_id === id) : [],
       signaturePng: repos.conversations.signaturePng(id),
     });
@@ -70,7 +71,7 @@ export function reportsRouter(deps: AppDeps): Router {
       now: now(),
       appVersion: version(),
       refrigerantEvents: events,
-      compliance: unitCompliance(repos, unit, now().toISOString().slice(0, 10), events),
+      compliance: unitCompliance(repos, unit, now().toISOString().slice(0, 10), events, complianceRefrigerantLookup(deps.kb)),
       pmVisits: repos.pmVisits.list({ unitId: id, limit: 20 }),
     });
     send(res, renderReport(report, format));

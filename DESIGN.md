@@ -150,17 +150,28 @@ the contract; extend types with optional fields only.
   `leak_rate_pct`, `threshold_pct`, `exceeded` (0/1; NULL when no rate could be computed) and `finding_id` — the
   open follow-up finding ("EPA leak rate X % exceeds T % - repair within 30 days and verify", `follow_up_due` =
   date + 30, origin tech, tags refrigerant,leak,epa) created once per exceeded add inside the same transaction.
+  The follow-up tracks the open exceedance (see "Refrigerant compliance"): a later top-off below the threshold
+  leaves it open; logging a passed `verification_followup` (or a `retrofit_plan`) dated after the exceeded add marks
+  it `follow_up_done` = 1 in the same transaction (a passed follow-up also sets status resolved and, when empty, the
+  resolution "Follow-up verification test passed <date> (40 CFR 84.106)").
   `repos.refrigerantEvents.create` reads the unit: appliance charge = `full_charge_lbs` (÷ `circuits_count` when
   the add names a circuit; EPA treats each independent circuit as its own appliance), previous add = the newest
-  earlier add on that circuit (any circuit when none), days floored at 1; first add falls back to mid-`install_year`
-  (flagged approximate) else no rate. `latestAdd(unitId, circuit?)`, `list` (newest first), `listAll` (joined with
-  unit site/tag/model/serial/nickname, oldest first; CSV export + backup), `remove`. Indexed `(unit_id, created_at DESC)`.
+  earlier add on that circuit or logged at unit level (circuit NULL; basis `previous_add_unit_level`) — any circuit
+  when the add names none —, days floored at 1 and capped at 365 (annualizing method); first add falls back to
+  mid-`install_year` (flagged approximate; an install year after the add date, or an add before mid-year of the
+  install year, gives no rate with a reason to fix `install_year`) else no rate. `latestAdd(unitId, circuit?)` (strict
+  per circuit), `list` (newest first), `listAll` (joined with unit site/tag/model/serial/nickname, oldest first; CSV
+  export + backup), `remove` (deletes the event and, in the same transaction, the follow-up finding it auto-created;
+  later adds keep the leak rates stored when they were logged). Indexed `(unit_id, created_at DESC)`.
 - `pm_visits` (PM checklist visits per unit): id, `unit_id` (CASCADE), `conversation_id` (SET NULL), created_at,
   updated_at, `template_id` (knowledge/pm template), `status` (in_progress | complete), tech_name, `results_json`
   (`PmResults`: per item `{ value | checked | asFound, asLeft, pass: true|false|null, note, rated }`), `summary_json`
   (`PmSummary` from `evaluate`: `{ templateId, templateName, total, pass, fail, na, flagged[], fails[], safetyFails[],
   items[] }`), note. The repo stores the JSON as given; `src/pmStore.ts` evaluates (`evaluateForUnit`) with the unit's
-  nameplate (`nameplateOf`: voltage range from `units.voltage`, RLA from `nameplate_json` rla/rla_1/…).
+  nameplate (`nameplateOf`: voltage range from `units.voltage` — every number 100–700, so "208-230/3/60",
+  "208/230-3-60" and "208/230/3/60" all give 208–230; compressor RLA (rla/rla_1/compressor_rla…), blower FLA
+  (blower_fla/blower_motor_fla/ifm_fla), fan FLA (fan_fla/fan_motor_fla/ofm_fla/exhaust_fan_fla) and run capacitor µF
+  from `nameplate_json`).
 - `usage_events`: one row per model request (conversation_id SET NULL on delete, created_at, model
   served, input/output/cache-read/cache-write tokens, web_searches, stop_reason); pruned after 400 days.
 - `corrections` (technician "it got this wrong" list): unit_id (SET NULL on hard delete), created_at,
@@ -395,7 +406,8 @@ precedence; the engine says so.
 `rtu_electric_or_cooling_only`, `split_ac`, `heat_pump`, `chiller_air_cooled`, `chiller_water_cooled`,
 `walk_in_cooler`, `walk_in_freezer`, `ice_machine`, `mau_exhaust`, `boiler`. Template: `id` (snake_case, unique),
 `name`, `appliesTo`, `sections[{ title, items[{ id (unique per template), label, kind: check | number | text, unit?,
-nameplateCompare?: volts | amps | capacitor_uf, asFoundAsLeft?, safety?, hint? }] }]`, ≥ 10 items each (loader
+nameplateCompare?: volts | amps | capacitor_uf, nameplateKey?: blower_fla | fan_fla (amps items for a blower / fan
+motor: blower_amps, fan_motor_amps), asFoundAsLeft?, safety?, hint? }] }]`, ≥ 10 items each (loader
 minimum `MIN_PM_ITEMS_PER_TEMPLATE`). Content follows the research: RTU filters, belts/sheaves, economizer
 actuator/dampers/sensors/low limit, V/A vs nameplate ±10 %, HX inspection + CO air-free, condensate, coils, static,
 contactors, capacitors ±6 %, SH/SC/ΔT, gas pressure/flame sense/temperature rise; chiller CHW supply/return,
@@ -403,12 +415,14 @@ approaches (tube-cleaning trigger ≈ 3 °F rise), oil level/pressure/temperatur
 gaskets, frost pattern, defrost, drain, condenser; ice machine 6-month clean/sanitize, condenser, water filter;
 MAU/exhaust LOTO, belts, grease, fans run; boiler combustion O2/CO/stack, relief valve, LWCO, high limit, venting.
 Loader validation (`validatePmChecklists`): shape, kinds/compare enums, `nameplateCompare`/`asFoundAsLeft` only on
-number items, unique template and item ids, non-empty `sources`; `check-knowledge` prints template/item counts.
+number items, `nameplateKey` only blower_fla / fan_fla on amps items, unique template and item ids, non-empty `sources`; `check-knowledge` prints template/item counts.
 
 Evaluation (`src/knowledge/pm.ts`, pure): `evaluate(template, results, nameplate)` → per item pass/fail/na: an
 explicit `pass` wins; a check item passes when checked (unchecked safety item or unchecked with a note = fail, else
 n/a); a number item uses as-left ?? as-found ?? value and, with a `nameplateCompare`, is compared with the reference
-(volts within [min×0.9, max×1.1] of the nameplate range; amps ≤ 110 % of RLA/FLA (`rated` on the result overrides);
+(volts within [min×0.9, max×1.1] of the nameplate range; amps ≤ 110 % of the reference: `rated` on the result, else
+the item's `nameplateKey` FLA, else — compressor items only (id/label "comp") — the compressor RLA; a blower / fan
+amps item with no FLA is n/a with reference "enter motor FLA (rated) to compare", never judged against the RLA;
 capacitor within ±6 % of `rated`) and `flagged` on deviation (`deviationPct`, `reference` text); text items pass when
 recorded. `suggestPmTemplate(unit, decoded?)` maps productType/heat type → template (packaged_rtu + gas → rtu_gas,
 heat-pump heat → heat_pump, chiller by family wording, refrigeration_condensing_unit → walk_in_cooler/freezer,
@@ -417,20 +431,35 @@ furnace → rtu_gas, ice-machine makers → ice_machine).
 ### Refrigerant compliance (`src/knowledge/refrigerantCompliance.ts`, pure)
 
 `thresholdFor(applianceType)` → 10 / 20 / 30 % (other/unknown → 10) per 40 CFR 84.106 (EPA fact sheet, Jan 2026);
-`applies(fullChargeLbs)` → ≥ 15 lb (HFC regime; `appliesOds` ≥ 50 lb for R-22 under 40 CFR 82.157);
-`annualizedLeakRate({ addedLbs, fullChargeLbs, daysSinceLastAdd })` → `(added ÷ full charge) × (365 ÷ days) × 100`,
-days < 1 → 1, null rate with a reason when the charge or days are unknown (EPA worked example: 25 lb into a 400 lb
-rack 60 days after the prior add = 38.02 %); `evaluateAdd` (per-circuit charge, previous-add / install-year basis);
-`nextObligations(events, unit, today)` → when the latest add exceeded: "Repair within 30 days of <date>" (120 with
-a shutdown), "Initial verification test before adding refrigerant" (until a passed one after the exceedance),
-"Follow-up verification test within 10 days of the initial test" (after a passed initial, until a passed follow-up),
-"Retrofit or retirement plan" when the exceedance is older than 30 days with no passed verification and no
-retrofit_plan logged; after any exceedance on record the inspection cadence (quarterly ≥ 500 lb, annual 15–499 lb)
-from the last leak_check (dueDate null when none; the four-clean-quarters reset is out of scope). Each obligation
-`{ kind, dueDate, text, overdue }`; everything is YYYY-MM-DD with a `today` parameter. `complianceSummary` →
-`{ applies, fullChargeLbs, applianceType, thresholdPct, circuitsCount, circuitChargeLbs, lastAdd, lastLeakRatePct,
-exceeded, obligations[], formula, source, notes[] }` (the `compliance` object on the unit card, the log route, the
-tool and the reports).
+`applicability(fullChargeLbs, refrigerant?, lookup?)` (40 CFR 84.106(a) / 82.157(a)) → `{ applies, regime, thresholdLbs,
+refrigerantId, gwp, note? }`: a known ODS (`ODS_REFRIGERANT_IDS`: R-11, R-12, R-22, R-123, R-401A, R-402A, R-408A,
+R-409A, R-500, R-502 … matched on the canonical id) → regime `ods`, applies from 50 lb (`appliesOds`, 40 CFR 82.157);
+GWP ≤ 53 and not ODS (R-744, R-717, R-290, R-600a, HFOs) → `not_covered`, never applies, with a note; an HFC or
+HFC-containing blend with GWP > 53 → `hfc`, from 15 lb; refrigerant not recorded or not in the lookup → `unknown`,
+the HFC 15 lb rule is assumed with a note. The refrigerant facts come from an injected `RefrigerantLookup`
+(`complianceRefrigerantLookup(kb)` in `knowledge/refrigerants.ts`: canonical id + `gwp.ar4` (else ar5) from
+`knowledge/refrigerants/index.json`); the regime uses the unit's refrigerant, else the newest event's. `applies(fullChargeLbs,
+refrigerant?, lookup?)` is its boolean. `annualizedLeakRate({ addedLbs, fullChargeLbs, daysSinceLastAdd })` →
+`(added ÷ full charge) × (365 ÷ shorter of days since last add or 365) × 100` (the "annualizing method" of 40 CFR 82.152 /
+84.102), days < 1 → 1 and > 365 → 365, null rate with a reason when the charge or days are unknown (EPA worked
+example: 25 lb into a 400 lb rack 60 days after the prior add = 38.02 %; 100 lb into 400 lb after 730 days = 25 %);
+`evaluateAdd` (per-circuit charge, previous-add / unit-level previous-add / install-year basis).
+`openExceedance(events)` → the most recent add with exceeded = 1 unless a passed `verification_followup` or a
+`retrofit_plan` is dated after it (a later top-off below the threshold does not close it); it drives the obligations,
+`exceeded`, `lastLeakRatePct` and `openExceedance` of the summary, the unit context and the owner documentation.
+`nextObligations(events, unit, today, lookup?)` → while an exceedance is open: "Repair within 30 days of <date>"
+(120 with a shutdown), "Initial verification test before adding refrigerant" (until a passed one after the
+exceedance), "Follow-up verification test within 10 days of the initial test" (after a passed initial, until a passed
+follow-up), "Retrofit or retirement plan" once the repair deadline has passed with no passed initial verification,
+an initial verification passed after the deadline, or a failed follow-up (an on-time repair with a passed initial test
+needs only the follow-up); after any exceedance on record the inspection cadence (quarterly ≥ 500 lb, annual from the
+applicability charge to 499 lb) from the last leak_check (dueDate null when none; the four-clean-quarters reset is out
+of scope); nothing when no rule applies. Each obligation `{ kind, dueDate, text, overdue }`; everything is YYYY-MM-DD
+with a `today` parameter. `complianceSummary(events, unit, today, lookup?)` → `{ applies, fullChargeLbs, applianceType,
+thresholdPct, circuitsCount, circuitChargeLbs, regime, applicabilityLbs, lastAdd, openExceedance { id, date, amountLbs,
+circuit, leakRatePct, thresholdPct } | null, lastLeakRatePct (the open exceedance's rate when one is open, else the last
+add's), exceeded (an exceedance is open), obligations[], formula, source, notes[] }` (the `compliance` object on the
+unit card, the log route, the tool and the reports; all of them pass the knowledge-base lookup).
 
 ### Chiller readings mode (`src/knowledge/chiller.ts`, pure)
 
@@ -441,7 +470,8 @@ oilPressurePsig?, oilTempF?, compressorAmps?, rla?, percentLoad?, elevationFt. D
 (500 × gpm × ΔT ÷ 12000), evapApproachF (chwSupply − evapSat), condApproachF (condSat − condWaterOut, or − outdoorDb),
 condWaterDeltaTF, ampsPercentRla. Findings (DxFinding shape, ranked): evap approach > 5 °F warning / > 10 critical
 (fouled tubes, low charge, low flow, oil); cond approach > 5 °F water-cooled (fouled tubes, ~3 °F rise over baseline
-= tube-cleaning trigger; purge) or > 25 °F air-cooled (dirty coil / fan / recirculation); low CHW ΔT (< 6 °F) at
+= tube-cleaning trigger; purge) or > 25 °F air-cooled (dirty coil / fan / recirculation); CHW ΔT ≤ 0
+(`chiller_chw_dt_zero`: no load / no flow / swapped sensors — checked first, at any load), else low CHW ΔT (< 6 °F) at
 ≥ 70 % load (flow too high / low capacity), ΔT > 14 (low flow), leaving water < 38 °F (freeze risk), amps > 110 %
 RLA, amps < 40 % RLA with > 80 % commanded load, oil pressure outside 15–100 psig / oil temperature outside 90–170 °F
 (generic bands, manufacturer band wins), a `chiller_scope` info (charge by weight / procedure). Pressures without a
@@ -501,7 +531,8 @@ nameplate ±10 %), psychrometrics (RH, dew point, enthalpy, grains from DB/WB/el
 winding_check (1-ph C-S + C-R ≈ S-R within ~10 %; 3-ph legs within ±5 %; open/short flags),
 megohm (bands above). Wave 2 (`CALC_KINDS` is the single list the route enum and tool schema read; the
 `interpretation` lines spell out every formula so `web/calc.js` can mirror them offline): leak_rate (added_lbs,
-full_charge_lbs, days_since_last_add, appliance_type → EPA annualized rate vs 10/20/30 %, applies ≥ 15 lb);
+full_charge_lbs, days_since_last_add (> 365 counts as 365), appliance_type, refrigerant? → EPA annualized rate vs
+10/20/30 %, `applies` per `applicability` with the knowledge-base lookup: HFC ≥ 15 lb, ODS ≥ 50 lb, GWP ≤ 53 not covered);
 gas_meter_clock (dial_cuft, seconds_per_rev, revolutions=1, heating_value_btu_per_cuft=1000 → CFH = 3600 × dial × rev ÷ s,
 BTU/h = CFH × HV, vs nameplate_input_btuh ±5 % under/over-fired); combustion_co (co_ppm, o2_pct → CO air-free =
 CO × 20.9 ÷ (20.9 − O2); flag 1 at ≥ 100 ppm (NCI action), 2 at ≥ 400 (ANSI Z21.47 ceiling); ambient_co_ppm > 20 →
@@ -560,7 +591,7 @@ attached unit's; stores a `chiller` readings row with source `chat` when a unit 
 derived, validity, findings (top 6), missing, summary, readingId); `log_refrigerant` (event_type, refrigerant?,
 amount_lbs?, circuit?, cylinder_id?, tech_name?, tech_cert?, leak_found?, passed?, note?, date?; requires an attached
 unit; returns the event view, the auto-created finding, the compliance object and `notes` that spell out an
-exceedance and the 30-day clock); `get_pm_checklist` (equipment_type? — one of the template ids; omitted →
+exceedance and the 30-day clock, an earlier exceedance that is still open, and when no leak-repair rule applies); `get_pm_checklist` (equipment_type? — one of the template ids; omitted →
 `suggestPmTemplate` from the attached unit; returns the template sections/items, `suggestedFrom`, the available ids
 and `lastPm` {date, status, counts, fails, flagged}); `calc_electrical` gains the wave-2 kinds with `CALC_REQUIRED`
 per kind and enum-coded appliance_type / blower_type / material / rotation_from_shaft_end.
@@ -616,7 +647,9 @@ shows `due <date>` or `(done)`), assistant hypotheses (unconfirmed) listed separ
 the last 12 months, then "REFRIGERANT / COMPLIANCE (EPA leak-repair rule; 40 CFR 84.106)" (when the unit has a full
 charge or any refrigerant event: full charge / circuits, appliance type → threshold, applicability; "Last add <date>:
 <lb> <refrigerant> → leak rate X %/yr — EXCEEDS T %" or "(within threshold)"; "EXCEEDANCE OPEN: do not recommend
-topping off" when the last add exceeded; "Open obligations (n)" with `OVERDUE` and `[due <date>]`; the last 5
+topping off … Open since the <date> add (X %/yr vs T %)" while an exceedance is open (`openExceedance`, so a later
+top-off does not hide it and a passed follow-up clears it); applicability per regime ("rule applies (≥ 15 lb)",
+"(≥ 50 lb, ODS — 40 CFR 82.157)", "does not apply (GWP ≤ 53 …)"); "Open obligations (n)" with `OVERDUE` and `[due <date>]`; the last 5
 events one line each), then "SAVED READINGS" (last 3, one compact line each: date, mode, source, OD,
 suction/liquid, SH/SC/ΔT/% RLA, `[not valid for charge]`, note) with "TREND SINCE LAST VISIT (date)" lines
 from `trendFromReadings` (or a "no notable change" sentence when ≥ 2 rows), "LAST PM VISIT <date> — <template>
@@ -624,7 +657,7 @@ from `trendFromReadings` (or a "no notable change" sentence when ≥ 2 rows), "L
 "Nameplate deviations: <label> <value> vs <reference> (±x %)", last 5 conversation titles +
 summaries + dates excluding the current one; no "now" timestamps. `runTurn` passes
 `repos.readings.list({unitId, limit: 20})`, `repos.refrigerantEvents.list({unitId, limit: 50})` and
-`repos.pmVisits.list({unitId, limit: 5})`. The system prompt tells the assistant to log every add with
+`repos.pmVisits.list({unitId, limit: 5})` and `complianceRefrigerantLookup(kb)`. The system prompt tells the assistant to log every add with
 `log_refrigerant` and, before any charging advice, to read this section and state an exceedance, its rate and the
 30-day repair / verification deadlines instead of recommending a top-off.
 
@@ -694,8 +727,10 @@ GET  /api/units/:id                 {unit, decoded, findings, conversations, cor
 GET  /api/units/:id/refrigerant?limit=   {events (newest first, booleans for leak_found/passed/exceeded, date), compliance}
 POST /api/units/:id/refrigerant {event_type, refrigerant?, amount_lbs?, circuit?, cylinder_id?, tech_name?, tech_cert?, leak_found?, passed?, note?,
                                  conversation_id?, date?}   201 {event, finding (auto follow-up or null), compliance}
-DELETE /api/units/:id/refrigerant/:eid   {deleted, id}   (404 unless the event belongs to that unit)
-GET  /api/refrigerant/export.csv         text/csv attachment hvac-refrigerant-log-YYYY-MM-DD.csv; RFC 4180 (quotes doubled, CRLF);
+DELETE /api/units/:id/refrigerant/:eid   {deleted, id}   (404 unless the event belongs to that unit; also deletes the follow-up finding the event auto-created)
+GET  /api/refrigerant/export.csv         text/csv attachment hvac-refrigerant-log-YYYY-MM-DD.csv; RFC 4180 (quotes doubled, CRLF); string fields
+                                         starting with = + - @ tab or CR get a leading ' and are quoted (formula injection); up to 50000 events,
+                                         then a trailing "TRUNCATED: export stopped at the 50000-event cap …" row;
                                          columns date, site, unit_tag, nickname, model, serial, event_type, refrigerant, amount_lbs, circuit, cylinder_id,
                                          tech_name, tech_cert, leak_found, passed, leak_rate_pct, threshold_pct, exceeded, note, unit_id, event_id
 GET  /api/pm/templates                   {templates: [{id, name, appliesTo, itemCount, sections[{title, itemCount}]}], sources, version}
@@ -874,8 +909,9 @@ measurements from the input, derived values / validity / top findings / summary 
 say so — plus readings-sheet messages `Readings (…): …`), "Findings" (rows with `conversation_id` = this
 conversation: symptom → cause → resolution, parts, refrigerant added, confirmed / hypothesis / status),
 "Open items / follow-up" (open and monitor findings, any `follow_up`), "Owner documentation (refrigerant / EPA
-leak-repair record)" (`ownerDocumentation`: full charge / circuits, appliance type and threshold, last leak rate +
-exceeded chip, the formula and its source, the refrigerant events logged in this conversation — date, type, lb,
+leak-repair record)" (`ownerDocumentation`: full charge / circuits, appliance type and threshold with the applicability
+(`regime`, `applicabilityLbs`), "Open exceedance" rate + the add date (`openExceedanceDate`) while one is open, else
+"Last leak rate", with the exceeded chip, the formula and its source, the refrigerant events logged in this conversation — date, type, lb,
 circuit, leak rate vs threshold with EXCEEDED, cylinder, tech + cert, note — and the unit's open obligations with
 overdue flags; "No refrigerant events or full charge recorded." otherwise), "Preventive maintenance" (`pm`: the
 newest PM visit from this conversation — template, status, tech, pass/fail/n/a counts, safety fails, failed items,

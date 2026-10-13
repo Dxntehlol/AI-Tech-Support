@@ -5,7 +5,7 @@ import { evaluateChiller } from "../knowledge/chiller.ts";
 import { CALC_KINDS, calcElectrical, lookupElectrical, type ElectricalLookupKind } from "../knowledge/electrical.ts";
 import { APPLIANCE_TYPES } from "../knowledge/refrigerantCompliance.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
-import { getTable, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
+import { complianceRefrigerantLookup, getTable, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import type { ElectricalCalcRequest, RefrigerantMeta, RefrigerantTable } from "../types.ts";
 import { badRequest, body, camelize, notFound, optEnum, optNumber, optString, optionalId, parseChillerMeasurements, parseMeasurements, queryNumber, queryString, requireNumber, type Body } from "./util.ts";
 import { storeChillerReading, storeReading } from "../readingsStore.ts";
@@ -201,6 +201,7 @@ export function parseElectricalCalc(b: Body): ElectricalCalcRequest {
       const out: ElectricalCalcRequest = { kind, addedLbs: req("addedLbs"), fullChargeLbs: req("fullChargeLbs"), daysSinceLastAdd: req("daysSinceLastAdd") };
       const applianceType = optEnum(v.applianceType, "appliance_type", APPLIANCE_TYPES);
       if (applianceType) out.applianceType = applianceType;
+      if (typeof v.refrigerant === "string" && v.refrigerant.trim() !== "") out.refrigerant = v.refrigerant.trim().slice(0, 40);
       return out;
     }
     case "gas_meter_clock": {
@@ -330,7 +331,7 @@ export function calcRouter(deps: AppDeps): Router {
 
   // POST /api/calc/electrical {ElectricalCalcRequest}
   r.post("/electrical", (req, res) => {
-    res.json(calcElectrical(parseElectricalCalc(body(req))));
+    res.json(calcElectrical(parseElectricalCalc(body(req)), { refrigerantLookup: complianceRefrigerantLookup(kb) }));
   });
 
   // POST /api/calc/chiller {ChillerMeasurements-like, unit_id?, conversation_id?, note?}  ChillerResult (+ readingId with unit_id)

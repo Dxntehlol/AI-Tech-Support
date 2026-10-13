@@ -7,6 +7,7 @@ import { runFleetImport } from "./fleetImport.ts";
 import { createCorrection } from "./corrections.ts";
 import { unitReadingsSummary } from "../readingsStore.ts";
 import { unitCompliance } from "../complianceStore.ts";
+import { complianceRefrigerantLookup } from "../knowledge/refrigerants.ts";
 import { unitLastPm } from "../pmStore.ts";
 import { APPLIANCE_TYPES } from "../knowledge/refrigerantCompliance.ts";
 import { HttpError, badRequest, body, notFound, optBoolean, optEnum, optNumber, optString, optionalId, queryBool, queryInt, queryString, requireId, requireString, safeParseJson, type Body } from "./util.ts";
@@ -291,7 +292,7 @@ export function unitsRouter(deps: AppDeps): Router {
       corrections: repos.corrections.list({ unitId: id, limit: 500 }),
       lastReading,
       trend,
-      compliance: unitCompliance(repos, unit, today),
+      compliance: unitCompliance(repos, unit, today, undefined, complianceRefrigerantLookup(deps.kb)),
       lastPm: unitLastPm(repos, id, deps.kb),
     });
   });

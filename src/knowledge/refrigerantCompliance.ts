@@ -10,16 +10,22 @@
  *    leak inspections (quarterly ≥ 500 lb, annual 15–499 lb) after an exceedance, and a retrofit/retirement
  *    plan within 30 days when the appliance is not repaired in time.
  *  - 40 CFR 82.157 (ODS, e.g. R-22): the same structure for appliances with ≥ 50 lb.
+ *  - Applicability (40 CFR 84.106(a) / 82.157(a)): the HFC rule covers refrigerants that are or contain an HFC
+ *    with GWP > 53; ODS (CFC / HCFC and blends containing them) fall under 82.157 from 50 lb; refrigerants with
+ *    GWP ≤ 53 that are not ODS (R-744, R-717, R-290, R-600a, HFOs) are not covered. The refrigerant facts (id,
+ *    GWP) come from an injected `RefrigerantLookup` so this module stays pure (the store builds one from the
+ *    knowledge base, src/knowledge/refrigerants.ts `complianceRefrigerantLookup`).
  *  - Leak-rate formula ("annualizing method", 40 CFR 82.152 / 84.102 definition of "leak rate"):
- *      leak rate % = (lb added / full charge lb) × (365 / days since the last add) × 100.
+ *      leak rate % = (lb added / full charge lb) × (365 / shorter of: days since the last add, or 365) × 100.
  *    EPA worked example: 25 lb added to a 400 lb rack 60 days after the previous add = 38.02 % per year.
  *
  * Everything date-based uses YYYY-MM-DD strings (an ISO timestamp is reduced to its date) and a `today`
  * parameter; nothing here reads the clock.
  */
 import type { ApplianceType, RefrigerantEventType } from "../types.ts";
+import { canonicalRefrigerantId } from "./refrigerants.ts";
 
-export const LEAK_RATE_FORMULA = "leak rate % = (lb added ÷ full charge lb) × (365 ÷ days since last add) × 100";
+export const LEAK_RATE_FORMULA = "leak rate % = (lb added ÷ full charge lb) × (365 ÷ shorter of days since last add or 365) × 100";
 export const LEAK_RATE_SOURCE = "40 CFR 84.106 (EPA leak repair fact sheet, Jan 2026); formula per 40 CFR 82.152 / 84.102 'annualizing method'";
 
 /** Leak-rate thresholds (% per year) by appliance category; `other` is treated as comfort cooling (10 %). */
@@ -34,6 +40,20 @@ export const APPLIANCE_TYPES: readonly ApplianceType[] = ["comfort_cooling", "co
 /** HFC regime (40 CFR 84.106) applies from 15 lb; the ODS regime (40 CFR 82.157, R-22 etc.) from 50 lb. */
 export const HFC_APPLICABILITY_LBS = 15;
 export const ODS_APPLICABILITY_LBS = 50;
+/** 40 CFR 84.106(a): only refrigerants that are or contain an HFC with a GWP above 53 are covered by the HFC rule. */
+export const HFC_GWP_COVERAGE_LIMIT = 53;
+/** Longest elapsed time the annualizing method uses (40 CFR 82.152 / 84.102: "shorter of … or 365 days"). */
+export const ANNUALIZING_MAX_DAYS = 365;
+/**
+ * Ozone-depleting refrigerants regulated by 40 CFR 82.157 (class I CFCs, class II HCFCs and blends that contain
+ * them). Matched against the canonical id (R-22, R-401A …); everything else is judged by its GWP.
+ */
+export const ODS_REFRIGERANT_IDS: readonly string[] = [
+  "R-11", "R-12", "R-13", "R-22", "R-113", "R-114", "R-115", "R-123", "R-124", "R-142b",
+  "R-401A", "R-401B", "R-402A", "R-402B", "R-403B", "R-406A", "R-408A", "R-409A", "R-411A", "R-411B",
+  "R-412A", "R-414A", "R-414B", "R-416A", "R-500", "R-502", "R-503", "R-509A",
+];
+const ODS_ID_SET = new Set(ODS_REFRIGERANT_IDS.map((id) => id.toUpperCase()));
 export const REPAIR_DAYS = 30;
 export const REPAIR_DAYS_SHUTDOWN = 120;
 export const FOLLOWUP_VERIFICATION_DAYS = 10;
@@ -46,11 +66,85 @@ export function thresholdFor(applianceType: string | null | undefined): number {
   return LEAK_RATE_THRESHOLDS.other;
 }
 
-/** Whether the HFC leak-repair rule applies: full charge ≥ 15 lb (ODS appliances: ≥ 50 lb, see `appliesOds`). */
-export function applies(fullChargeLbs: number | null | undefined): boolean {
+/** Refrigerant facts the applicability check needs; `gwp` is the AR4 100-year GWP (the AIM Act basis). */
+export interface RefrigerantFacts {
+  id: string;
+  gwp: number | null;
+}
+/** Resolves a refrigerant name ("R22", "Puron", "CO2") to its facts; undefined when unknown. Injected by callers. */
+export type RefrigerantLookup = (refrigerant: string) => RefrigerantFacts | undefined;
+
+/** hfc: 40 CFR 84.106 from 15 lb; ods: 40 CFR 82.157 from 50 lb; not_covered: GWP ≤ 53 and not ODS; unknown: HFC assumed. */
+export type ComplianceRegime = "hfc" | "ods" | "not_covered" | "unknown";
+
+export interface Applicability {
+  applies: boolean;
+  regime: ComplianceRegime;
+  /** Full charge from which the leak-repair rule applies (15 HFC / unknown, 50 ODS); null when not covered. */
+  thresholdLbs: number | null;
+  refrigerantId: string | null;
+  gwp: number | null;
+  /** Explains a not-covered or unknown refrigerant. */
+  note?: string;
+}
+
+/**
+ * Which leak-repair regime covers the appliance (40 CFR 84.106(a) and 82.157(a)): a known ODS → 82.157 from
+ * 50 lb; GWP ≤ 53 (not ODS) → not covered; an HFC / HFC blend with GWP > 53 → 84.106 from 15 lb; a refrigerant
+ * that is not recorded or not in the lookup → the HFC 15 lb applicability is assumed, with a note.
+ */
+export function applicability(fullChargeLbs: number | null | undefined, refrigerant?: string | null, lookup?: RefrigerantLookup): Applicability {
+  const charge = typeof fullChargeLbs === "number" && Number.isFinite(fullChargeLbs) ? fullChargeLbs : null;
+  const name = typeof refrigerant === "string" ? refrigerant.trim() : "";
+  let facts: RefrigerantFacts | undefined;
+  if (name && lookup) {
+    try {
+      facts = lookup(name);
+    } catch {
+      facts = undefined;
+    }
+  }
+  const id = facts?.id ?? (name ? canonicalRefrigerantId(name) || null : null);
+  const gwp = facts && typeof facts.gwp === "number" && Number.isFinite(facts.gwp) ? facts.gwp : null;
+  if (id && ODS_ID_SET.has(id.toUpperCase())) {
+    return { applies: appliesOds(charge), regime: "ods", thresholdLbs: ODS_APPLICABILITY_LBS, refrigerantId: id, gwp };
+  }
+  if (gwp !== null && gwp <= HFC_GWP_COVERAGE_LIMIT) {
+    return {
+      applies: false,
+      regime: "not_covered",
+      thresholdLbs: null,
+      refrigerantId: id,
+      gwp,
+      note: `${id} (GWP ${gwp}) is neither an HFC with GWP > ${HFC_GWP_COVERAGE_LIMIT} nor an ODS: the EPA leak-repair rules (40 CFR 84.106 / 82.157) do not apply; leak rates are computed for the record only.`,
+    };
+  }
+  if (facts && gwp !== null) return { applies: appliesHfc(charge), regime: "hfc", thresholdLbs: HFC_APPLICABILITY_LBS, refrigerantId: id, gwp };
+  return {
+    applies: appliesHfc(charge),
+    regime: "unknown",
+    thresholdLbs: HFC_APPLICABILITY_LBS,
+    refrigerantId: id,
+    gwp: null,
+    note: name
+      ? `${name} is not in the refrigerant knowledge base (GWP unknown): the HFC ${HFC_APPLICABILITY_LBS} lb applicability is assumed.`
+      : `Refrigerant not recorded: the HFC ${HFC_APPLICABILITY_LBS} lb applicability is assumed (ODS such as R-22: ${ODS_APPLICABILITY_LBS} lb; refrigerants with GWP ≤ ${HFC_GWP_COVERAGE_LIMIT} are not covered).`,
+  };
+}
+
+/**
+ * Whether a leak-repair rule applies. Without a refrigerant: full charge ≥ 15 lb (HFC assumed); with one, per
+ * `applicability` (ODS ≥ 50 lb, GWP ≤ 53 not covered).
+ */
+export function applies(fullChargeLbs: number | null | undefined, refrigerant?: string | null, lookup?: RefrigerantLookup): boolean {
+  return applicability(fullChargeLbs, refrigerant, lookup).applies;
+}
+
+function appliesHfc(fullChargeLbs: number | null | undefined): boolean {
   return typeof fullChargeLbs === "number" && Number.isFinite(fullChargeLbs) && fullChargeLbs >= HFC_APPLICABILITY_LBS;
 }
 
+/** ODS appliances (40 CFR 82.157(a)): full charge ≥ 50 lb. */
 export function appliesOds(fullChargeLbs: number | null | undefined): boolean {
   return typeof fullChargeLbs === "number" && Number.isFinite(fullChargeLbs) && fullChargeLbs >= ODS_APPLICABILITY_LBS;
 }
@@ -97,13 +191,13 @@ export function addDays(day: string, days: number): string {
 export interface LeakRateInput {
   addedLbs: number;
   fullChargeLbs: number | null | undefined;
-  /** Days since the previous add (or since installation for the first add); < 1 counts as 1. Null = unknown. */
+  /** Days since the previous add (or since installation for the first add); < 1 counts as 1, > 365 as 365. Null = unknown. */
   daysSinceLastAdd: number | null | undefined;
 }
 
 export interface LeakRateResult {
   ratePct: number | null;
-  /** Days actually used in the formula (after the < 1 → 1 floor). */
+  /** Days actually used in the formula (the shorter of the elapsed days or 365, floored at 1). */
   days: number | null;
   formula: string;
   reason?: string;
@@ -114,7 +208,8 @@ function round2(n: number): number {
 }
 
 /**
- * Annualized leak rate per the EPA method: (added / fullCharge) × (365 / days) × 100. Days below 1 are
+ * Annualized leak rate per the EPA annualizing method (40 CFR 82.152 / 84.102 "leak rate"):
+ * (added / fullCharge) × (365 / the shorter of the days since the last add or 365) × 100. Days below 1 are
  * treated as 1 (two adds on the same day). Null rate with a reason when the full charge or the days are
  * unknown or not positive.
  */
@@ -130,7 +225,7 @@ export function annualizedLeakRate(input: LeakRateInput): LeakRateResult {
   if (!(typeof daysSinceLastAdd === "number" && Number.isFinite(daysSinceLastAdd))) {
     return { ratePct: null, days: null, formula, reason: "days since the last add are unknown (no previous add and no installation date on record)" };
   }
-  const days = Math.max(1, daysSinceLastAdd);
+  const days = Math.min(ANNUALIZING_MAX_DAYS, Math.max(1, daysSinceLastAdd));
   const ratePct = round2((addedLbs / fullChargeLbs) * (365 / days) * 100);
   return { ratePct, days, formula };
 }
@@ -187,19 +282,20 @@ export interface AddEvaluation {
   exceeded: boolean;
   days: number | null;
   applianceChargeLbs: number | null;
-  /** Where the elapsed days came from. */
-  basis: "previous_add" | "install_year" | "none";
+  /** Where the elapsed days came from ("previous_add_unit_level": a circuit add measured from an add logged with no circuit). */
+  basis: "previous_add" | "previous_add_unit_level" | "install_year" | "none";
   previousAddDate: string | null;
   reason?: string;
   formula: string;
 }
 
 /**
- * Leak-rate evaluation of one add: elapsed days from the previous add on the same circuit (any circuit when
- * the add has none), else from the middle of the install year (approximate, flagged), else unknown.
+ * Leak-rate evaluation of one add: elapsed days from the previous add on the same circuit or at unit level
+ * (any circuit when the add has none; `previousAddUnitLevel` marks a circuit add measured from a unit-level
+ * add), else from the middle of the install year (approximate, flagged), else unknown.
  */
-export function evaluateAdd(input: { amountLbs: number; date: string; circuit?: number | null; previousAddDate?: string | null; unit: ComplianceUnit }): AddEvaluation {
-  const { amountLbs, date, circuit, previousAddDate, unit } = input;
+export function evaluateAdd(input: { amountLbs: number; date: string; circuit?: number | null; previousAddDate?: string | null; previousAddUnitLevel?: boolean; unit: ComplianceUnit }): AddEvaluation {
+  const { amountLbs, date, circuit, previousAddDate, previousAddUnitLevel, unit } = input;
   const thresholdPct = thresholdFor(unit.applianceType);
   const charge = applianceChargeLbs(unit, circuit);
   let basis: AddEvaluation["basis"] = "none";
@@ -207,16 +303,27 @@ export function evaluateAdd(input: { amountLbs: number; date: string; circuit?: 
   let reason: string | undefined;
   if (previousAddDate) {
     days = daysBetween(previousAddDate, date);
-    basis = "previous_add";
+    const unitLevel = previousAddUnitLevel === true && typeof circuit === "number";
+    basis = unitLevel ? "previous_add_unit_level" : "previous_add";
+    if (unitLevel) reason = `days counted from the previous add logged at unit level (no circuit) on ${dateOnly(previousAddDate)}`;
+    if (days !== null && days < 0) {
+      days = null;
+      basis = "none";
+      reason = "the add is dated before the previous add; enter events in date order";
+    }
   } else if (typeof unit.installYear === "number" && Number.isFinite(unit.installYear)) {
-    days = daysBetween(`${unit.installYear}-07-01`, date);
+    const installYear = Math.round(unit.installYear);
+    days = daysBetween(`${installYear}-07-01`, date);
     basis = "install_year";
-    reason = `no previous add on record; days counted from mid-${unit.installYear} (install year) — approximate`;
-  }
-  if (days !== null && days < 0) {
-    days = null;
-    basis = "none";
-    reason = "the add is dated before the previous add; enter events in date order";
+    reason = `no previous add on record; days counted from mid-${installYear} (install year) — approximate`;
+    if (days !== null && days < 0) {
+      days = null;
+      basis = "none";
+      const addYear = Number((dateOnly(date) ?? "").slice(0, 4));
+      reason = installYear > addYear
+        ? `install year ${installYear} is after the add date (${dateOnly(date)}); set the correct install_year`
+        : `the add is dated before mid-${installYear} (install year), so the days since installation are unknown; the next add is annualized from this one`;
+    }
   }
   const lr = annualizedLeakRate({ addedLbs: amountLbs, fullChargeLbs: charge, daysSinceLastAdd: days });
   const exceeded = lr.ratePct !== null && lr.ratePct > thresholdPct;
@@ -256,6 +363,35 @@ function sortedByDate(events: ComplianceEvent[]): ComplianceEvent[] {
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
+/** A passed follow-up verification test or a retrofit/retirement plan closes the exceedance before it. */
+function closesExceedance(e: ComplianceEvent): boolean {
+  return (e.type === "verification_followup" && truthy(e.passed)) || e.type === "retrofit_plan";
+}
+
+/**
+ * The open exceedance: the most recent add with exceeded = 1, unless a passed verification_followup or a
+ * retrofit_plan is dated after it (same day counts). A later top-off below the threshold does not close it
+ * (the repair / verification clock of 40 CFR 84.106(c)–(d) / 82.157(d)–(e) still runs). Undefined when none is open.
+ */
+export function openExceedance(events: ComplianceEvent[]): ComplianceEvent | undefined {
+  const sorted = sortedByDate(events);
+  let lastExceeded: ComplianceEvent | undefined;
+  for (const e of sorted) if (e.type === "add" && truthy(e.exceeded)) lastExceeded = e;
+  if (!lastExceeded) return undefined;
+  const day = dateOnly(lastExceeded.date)!;
+  return sorted.some((e) => closesExceedance(e) && e.date > day) ? undefined : lastExceeded;
+}
+
+/** The refrigerant the regime is judged by: the unit's, else the newest event that names one. */
+function refrigerantOf(unit: ComplianceUnit, sorted: ComplianceEvent[]): string | null {
+  if (typeof unit.refrigerant === "string" && unit.refrigerant.trim() !== "") return unit.refrigerant;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const r = sorted[i]!.refrigerant;
+    if (typeof r === "string" && r.trim() !== "") return r;
+  }
+  return null;
+}
+
 function latest(events: ComplianceEvent[], type: RefrigerantEventType, after?: string): ComplianceEvent | undefined {
   let best: ComplianceEvent | undefined;
   for (const e of events) {
@@ -267,47 +403,51 @@ function latest(events: ComplianceEvent[], type: RefrigerantEventType, after?: s
 }
 
 /**
- * Open obligations from the event history. When the latest add exceeded its threshold: repair within 30 days
- * of that add, an initial verification test (passed) before refrigerant is added again, a follow-up
- * verification within 10 days of a passed initial test, and a retrofit/retirement plan when the exceedance is
- * more than 30 days old with no passed verification. After any exceedance on record the leak-inspection cadence
- * applies (quarterly ≥ 500 lb, annual 15–499 lb) from the last leak check; the four-clean-quarters reset is out
- * of scope. Only when the rule applies (charge ≥ 15 lb).
+ * Open obligations from the event history. While an exceedance is open (`openExceedance`): repair within 30 days
+ * of that add, an initial verification test (passed) before refrigerant is added again, a follow-up verification
+ * within 10 days of a passed initial test, and a retrofit/retirement plan once the repair deadline has passed
+ * without a timely passed initial verification (none, or passed after the deadline) or after a failed follow-up.
+ * After any exceedance on record the leak-inspection cadence applies (quarterly ≥ 500 lb, annual below) from the
+ * last leak check; the four-clean-quarters reset is out of scope. Only when a rule applies (`applicability`:
+ * HFC ≥ 15 lb, ODS ≥ 50 lb, not for GWP ≤ 53).
  */
-export function nextObligations(events: ComplianceEvent[], unit: ComplianceUnit, today: string): Obligation[] {
+export function nextObligations(events: ComplianceEvent[], unit: ComplianceUnit, today: string, lookup?: RefrigerantLookup): Obligation[] {
   const out: Obligation[] = [];
-  if (!applies(unit.fullChargeLbs)) return out;
   const sorted = sortedByDate(events);
+  const app = applicability(unit.fullChargeLbs, refrigerantOf(unit, sorted), lookup);
+  if (!app.applies) return out;
   const adds = sorted.filter((e) => e.type === "add");
-  const lastAdd = adds[adds.length - 1];
+  const open = openExceedance(sorted);
   const todayDay = dateOnly(today) ?? today;
   const push = (kind: ObligationKind, dueDate: string | null, text: string): void => {
     out.push({ kind, dueDate, text, overdue: dueDate !== null && dueDate < todayDay });
   };
 
-  if (lastAdd && truthy(lastAdd.exceeded)) {
-    const exceedDate = dateOnly(lastAdd.date)!;
+  if (open) {
+    const exceedDate = dateOnly(open.date)!;
     const repairDue = addDays(exceedDate, REPAIR_DAYS);
     const repair = latest(sorted, "repair", exceedDate);
     const initial = latest(sorted, "verification_initial", exceedDate);
     const initialPassed = initial && truthy(initial.passed) ? initial : undefined;
     const followup = initialPassed ? latest(sorted, "verification_followup", initialPassed.date) : undefined;
-    const followupPassed = followup && truthy(followup.passed) ? followup : undefined;
-    const rate = typeof lastAdd.leakRatePct === "number" ? `${lastAdd.leakRatePct} %` : "the threshold";
-    const threshold = typeof lastAdd.thresholdPct === "number" ? `${lastAdd.thresholdPct} %` : `${thresholdFor(unit.applianceType)} %`;
+    const followupFailed = followup !== undefined && !truthy(followup.passed);
+    const rate = typeof open.leakRatePct === "number" ? `${open.leakRatePct} %` : "the threshold";
+    const threshold = typeof open.thresholdPct === "number" ? `${open.thresholdPct} %` : `${thresholdFor(unit.applianceType)} %`;
     if (!repair) {
       push("repair", repairDue, `Repair within ${REPAIR_DAYS} days of ${exceedDate} (leak rate ${rate} exceeds ${threshold}; by ${repairDue}, ${REPAIR_DAYS_SHUTDOWN} days when a shutdown is required)`);
     }
     if (!initialPassed) {
       const due = repair ? dateOnly(repair.date) : repairDue;
       push("verification_initial", due, `Initial verification test before adding refrigerant${repair ? ` (repair logged ${dateOnly(repair.date)}; test not yet passed)` : " (after the repair)"}`);
-    } else if (!followupPassed) {
+    } else {
       const initDate = dateOnly(initialPassed.date)!;
-      push("verification_followup", addDays(initDate, FOLLOWUP_VERIFICATION_DAYS), `Follow-up verification test within ${FOLLOWUP_VERIFICATION_DAYS} days of the initial test (${initDate}) with the appliance at normal operating conditions`);
+      push("verification_followup", addDays(initDate, FOLLOWUP_VERIFICATION_DAYS), `Follow-up verification test within ${FOLLOWUP_VERIFICATION_DAYS} days of the initial test (${initDate}) with the appliance at normal operating conditions${followupFailed ? ` (the ${dateOnly(followup!.date)} follow-up test failed)` : ""}`);
     }
-    const planLogged = latest(sorted, "retrofit_plan", exceedDate);
-    if (!followupPassed && !planLogged && todayDay > repairDue) {
-      push("retrofit_plan", addDays(repairDue, REPAIR_DAYS), `Retrofit or retirement plan: the ${exceedDate} exceedance is older than ${REPAIR_DAYS} days with no passed verification test — EPA requires a plan within ${REPAIR_DAYS} days of the repair deadline (${repairDue}) and completion within 1 year`);
+    // 40 CFR 84.106(h) / 82.157(h): a plan is due when the appliance is not repaired (verified) by the deadline.
+    const initialLate = initialPassed !== undefined && dateOnly(initialPassed.date)! > repairDue;
+    if (todayDay > repairDue && (!initialPassed || initialLate || followupFailed)) {
+      const why = !initialPassed ? "with no passed verification test" : initialLate ? `and the initial verification passed only on ${dateOnly(initialPassed.date)}, after the deadline` : "and the follow-up verification test failed";
+      push("retrofit_plan", addDays(repairDue, REPAIR_DAYS), `Retrofit or retirement plan: the ${exceedDate} exceedance is older than ${REPAIR_DAYS} days ${why} — EPA requires a plan within ${REPAIR_DAYS} days of the repair deadline (${repairDue}) and completion within 1 year`);
     }
   }
 
@@ -316,7 +456,7 @@ export function nextObligations(events: ComplianceEvent[], unit: ComplianceUnit,
     const full = unit.fullChargeLbs as number;
     const quarterly = full >= INSPECTION_QUARTERLY_LBS;
     const interval = quarterly ? INSPECTION_QUARTERLY_DAYS : INSPECTION_ANNUAL_DAYS;
-    const cadence = quarterly ? `Quarterly leak inspection (charge ≥ ${INSPECTION_QUARTERLY_LBS} lb)` : `Annual leak inspection (charge ${HFC_APPLICABILITY_LBS}–${INSPECTION_QUARTERLY_LBS - 1} lb)`;
+    const cadence = quarterly ? `Quarterly leak inspection (charge ≥ ${INSPECTION_QUARTERLY_LBS} lb)` : `Annual leak inspection (charge ${app.thresholdLbs ?? HFC_APPLICABILITY_LBS}–${INSPECTION_QUARTERLY_LBS - 1} lb)`;
     const lastCheck = latest(sorted, "leak_check");
     if (lastCheck) {
       const lastDate = dateOnly(lastCheck.date)!;
@@ -340,8 +480,15 @@ export interface ComplianceSummary {
   circuitsCount: number;
   /** Charge each circuit is measured against (full charge ÷ circuits). */
   circuitChargeLbs: number | null;
+  /** Which rule covers the appliance (`applicability`) and the full charge it applies from (null: not covered). */
+  regime: ComplianceRegime;
+  applicabilityLbs: number | null;
   lastAdd: { id?: string; date: string; amountLbs: number | null; circuit: number | null; refrigerant: string | null; leakRatePct: number | null; exceeded: boolean } | null;
+  /** The open exceedance (`openExceedance`) that drives the repair / verification / retrofit obligations; null when none. */
+  openExceedance: { id?: string; date: string; amountLbs: number | null; circuit: number | null; leakRatePct: number | null; thresholdPct: number | null } | null;
+  /** The open exceedance's rate when one is open, else the last add's. */
   lastLeakRatePct: number | null;
+  /** True while an exceedance is open (not just when the last add exceeded). */
   exceeded: boolean;
   obligations: Obligation[];
   formula: string;
@@ -349,16 +496,23 @@ export interface ComplianceSummary {
   notes: string[];
 }
 
-export function complianceSummary(events: ComplianceEvent[], unit: ComplianceUnit, today: string): ComplianceSummary {
+export function complianceSummary(events: ComplianceEvent[], unit: ComplianceUnit, today: string, lookup?: RefrigerantLookup): ComplianceSummary {
   const sorted = sortedByDate(events);
   const adds = sorted.filter((e) => e.type === "add");
   const last = adds[adds.length - 1];
   const full = typeof unit.fullChargeLbs === "number" && Number.isFinite(unit.fullChargeLbs) ? unit.fullChargeLbs : null;
   const applianceType = APPLIANCE_TYPES.includes(unit.applianceType as ApplianceType) ? (unit.applianceType as ApplianceType) : null;
   const notes: string[] = [];
-  const on = applies(full);
+  const app = applicability(full, refrigerantOf(unit, sorted), lookup);
+  const on = app.applies;
   if (full === null) notes.push("Full charge not recorded: set full_charge_lbs (and appliance_type, circuits_count) on the unit to compute leak rates.");
-  else if (!on) notes.push(`Full charge ${full} lb is below the ${HFC_APPLICABILITY_LBS} lb HFC threshold (40 CFR 84.106); ODS appliances (R-22) are regulated from ${ODS_APPLICABILITY_LBS} lb (40 CFR 82.157). Leak rates are still computed for the record.`);
+  if (app.regime === "not_covered") notes.push(app.note!);
+  else if (app.regime === "ods") {
+    if (full !== null && !on) notes.push(`${app.refrigerantId} is an ozone-depleting refrigerant: the leak-repair rule (40 CFR 82.157) applies from ${ODS_APPLICABILITY_LBS} lb and the full charge ${full} lb is below it. Leak rates are still computed for the record.`);
+  } else {
+    if (full !== null && !on) notes.push(`Full charge ${full} lb is below the ${HFC_APPLICABILITY_LBS} lb HFC threshold (40 CFR 84.106); ODS appliances (R-22) are regulated from ${ODS_APPLICABILITY_LBS} lb (40 CFR 82.157). Leak rates are still computed for the record.`);
+    if (app.regime === "unknown") notes.push(app.note!);
+  }
   if (applianceType === null) notes.push("Appliance type not set: the 10 % comfort-cooling threshold is assumed (20 % commercial refrigeration, 30 % industrial process).");
   const circuits = circuitsOf(unit);
   if (circuits > 1) notes.push(`${circuits} circuits: an add logged against a circuit is measured against the full charge ÷ ${circuits} (EPA treats each independent circuit as its own appliance).`);
@@ -373,6 +527,17 @@ export function complianceSummary(events: ComplianceEvent[], unit: ComplianceUni
         exceeded: truthy(last.exceeded),
       }
     : null;
+  const open = openExceedance(sorted);
+  const openView = open
+    ? {
+        id: open.id,
+        date: dateOnly(open.date) ?? open.date,
+        amountLbs: typeof open.amountLbs === "number" ? open.amountLbs : null,
+        circuit: typeof open.circuit === "number" ? open.circuit : null,
+        leakRatePct: typeof open.leakRatePct === "number" ? open.leakRatePct : null,
+        thresholdPct: typeof open.thresholdPct === "number" ? open.thresholdPct : null,
+      }
+    : null;
   return {
     applies: on,
     fullChargeLbs: full,
@@ -380,10 +545,13 @@ export function complianceSummary(events: ComplianceEvent[], unit: ComplianceUni
     thresholdPct: thresholdFor(unit.applianceType),
     circuitsCount: circuits,
     circuitChargeLbs: full === null ? null : round2(full / circuits),
+    regime: app.regime,
+    applicabilityLbs: app.thresholdLbs,
     lastAdd,
-    lastLeakRatePct: lastAdd?.leakRatePct ?? null,
-    exceeded: lastAdd?.exceeded ?? false,
-    obligations: nextObligations(sorted, unit, today),
+    openExceedance: openView,
+    lastLeakRatePct: openView ? openView.leakRatePct : (lastAdd?.leakRatePct ?? null),
+    exceeded: openView !== null,
+    obligations: nextObligations(sorted, unit, today, lookup),
     formula: LEAK_RATE_FORMULA,
     source: LEAK_RATE_SOURCE,
     notes,

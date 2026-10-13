@@ -176,12 +176,13 @@ export function evaluateChiller(kb: KnowledgeBase, input: ChillerMeasurements): 
     }
   }
   if (derived.chwDeltaTF !== undefined) {
-    if (derived.chwDeltaTF < L.chwDeltaTLowF && load !== undefined && load >= L.highLoadPercent) {
+    // Zero / negative ΔT first: at high load it is a sensor or no-flow problem, not low-ΔT syndrome.
+    if (derived.chwDeltaTF <= 0) {
+      findings.push(finding("chiller_chw_dt_zero", "Chilled-water ΔT zero or negative", "advisory", "medium", "Return water is not warmer than supply: no load, no flow through the evaporator, or swapped sensors.", ["Confirm flow and sensor placement; confirm the compressor is actually loaded."]));
+    } else if (derived.chwDeltaTF < L.chwDeltaTLowF && load !== undefined && load >= L.highLoadPercent) {
       findings.push(finding("chiller_low_chw_dt_high_load", `Low chilled-water ΔT (${derived.chwDeltaTF} °F) at ${Math.round(load)} % load`, "advisory", "medium", `Design ΔT is usually 10 °F. A ΔT this small while the compressor is loaded means chilled-water flow is above design (pumps, bypass, balancing) or the chiller is not delivering its capacity (approaches, charge). Low ΔT syndrome wastes pump energy and starves other loads.`, ["Measure flow / evaporator ΔP against design; check bypass valves and balancing.", "Compare the evaporator approach and amps with the log at the same load."]));
     } else if (derived.chwDeltaTF > L.chwDeltaTHighF) {
       findings.push(finding("chiller_high_chw_dt", `High chilled-water ΔT (${derived.chwDeltaTF} °F)`, "advisory", "medium", "A ΔT well above the usual 10 °F design means low chilled-water flow (strainer, pump, closed valves, VFD at minimum) or a very high load; the leaving-water low limit may trip.", ["Check the evaporator ΔP / flow switch and the pump; clean the strainer."]));
-    } else if (derived.chwDeltaTF <= 0) {
-      findings.push(finding("chiller_chw_dt_zero", "Chilled-water ΔT zero or negative", "advisory", "medium", "Return water is not warmer than supply: no load, no flow through the evaporator, or swapped sensors.", ["Confirm flow and sensor placement; confirm the compressor is actually loaded."]));
     }
   }
   if (m.chwSupplyF !== undefined && m.chwSupplyF < L.chwSupplyFreezeWarnF) {

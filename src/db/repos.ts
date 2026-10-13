@@ -1109,11 +1109,16 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
     return row ? plain<RefrigerantEventRow>(row) : undefined;
   };
 
-  const latestAddRow = (unitId: string, circuit: number | null | undefined, before?: string): RefrigerantEventRow | undefined => {
+  /**
+   * Newest add on the unit (before `before` when given). With a circuit: the newest add on that circuit, or with
+   * `includeUnitLevel` the newest add on that circuit or logged at unit level (circuit NULL) — the previous add a
+   * circuit add is annualized from (an earlier unit-level add still counts as the last add for that circuit).
+   */
+  const latestAddRow = (unitId: string, circuit: number | null | undefined, before?: string, includeUnitLevel = false): RefrigerantEventRow | undefined => {
     const hasCircuit = typeof circuit === "number" && Number.isFinite(circuit);
     const sql =
       `SELECT ${REFRIGERANT_EVENT_COLS} FROM refrigerant_events WHERE unit_id = ? AND event_type = 'add'` +
-      (hasCircuit ? " AND circuit = ?" : "") +
+      (hasCircuit ? (includeUnitLevel ? " AND (circuit = ? OR circuit IS NULL)" : " AND circuit = ?") : "") +
       (before !== undefined ? " AND created_at <= ?" : "") +
       " ORDER BY created_at DESC, rowid DESC LIMIT 1";
     const params: SqlValue[] = [unitId];
@@ -1155,12 +1160,13 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       let exceeded: 0 | 1 | null = null;
       let previous: RefrigerantEventRow | undefined;
       if (type === "add") {
-        previous = latestAddRow(unit.id, circuit, createdAt);
+        previous = latestAddRow(unit.id, circuit, createdAt, true);
         const ev = evaluateAdd({
           amountLbs: amount as number,
           date: createdAt,
           circuit,
           previousAddDate: previous?.created_at ?? null,
+          previousAddUnitLevel: circuit !== null && previous !== undefined && previous.circuit === null,
           unit: { fullChargeLbs: unit.full_charge_lbs ?? null, applianceType: unit.appliance_type ?? null, circuitsCount: unit.circuits_count ?? null, installYear: unit.install_year },
         });
         leakRate = ev.leakRatePct;
@@ -1212,6 +1218,26 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
           });
           prep("UPDATE refrigerant_events SET finding_id = ? WHERE id = ?").run(finding.id, id);
         }
+        // A passed follow-up verification or a retrofit/retirement plan closes the open exceedance
+        // (refrigerantCompliance.ts openExceedance): mark the auto follow-ups of the exceeded adds before it done.
+        // A later top-off below the threshold leaves them open.
+        if ((type === "verification_followup" && passed === 1) || type === "retrofit_plan") {
+          const exceededAdds = prep("SELECT created_at, finding_id FROM refrigerant_events WHERE unit_id = ? AND event_type = 'add' AND exceeded = 1 AND finding_id IS NOT NULL")
+            .all(unit.id)
+            .map((r) => plain<{ created_at: string; finding_id: string }>(r));
+          const day = dateOnly(createdAt) ?? createdAt.slice(0, 10);
+          for (const add of exceededAdds) {
+            if (!(createdAt > (dateOnly(add.created_at) ?? add.created_at))) continue;
+            const f = getFinding(add.finding_id);
+            if (!f || f.follow_up_done === 1) continue;
+            const patch: FindingPatch = { follow_up_done: 1 };
+            if (type === "verification_followup") {
+              if (f.status === "open") patch.status = "resolved";
+              if (f.resolution === null || f.resolution.trim() === "") patch.resolution = `Follow-up verification test passed ${day} (40 CFR 84.106)`;
+            }
+            findings.update!(f.id, patch);
+          }
+        }
         return getRefrigerantEvent(id)!;
       });
     },
@@ -1232,9 +1258,19 @@ export function createRepos(db: Db, options: RepoOptions = {}): Repos {
       return latestAddRow(unitId, circuit ?? null);
     },
 
+    /**
+     * Deletes the event and, in the same transaction, the follow-up finding it auto-created (an exceeded add's
+     * finding_id). Later adds keep their stored leak rates (they were annualized from this add when it was logged).
+     */
     remove(id) {
       if (typeof id !== "string") return false;
-      return Number(prep("DELETE FROM refrigerant_events WHERE id = ?").run(id).changes) > 0;
+      const row = getRefrigerantEvent(id);
+      if (!row) return false;
+      return transaction(() => {
+        const deleted = Number(prep("DELETE FROM refrigerant_events WHERE id = ?").run(id).changes) > 0;
+        if (deleted && row.finding_id) findings.remove(row.finding_id);
+        return deleted;
+      });
     },
 
     listAll(opts = {}) {

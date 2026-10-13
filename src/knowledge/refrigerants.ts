@@ -1,4 +1,5 @@
 import type { DxMeasurements, KnowledgeBase, PtLookupResult, RefrigerantMeta, RefrigerantTable } from "../types.ts";
+import type { RefrigerantLookup } from "./refrigerantCompliance.ts";
 
 /** Standard sea-level atmospheric pressure, psia. */
 export const SEA_LEVEL_PATM_PSIA = 14.696;
@@ -87,6 +88,20 @@ export function resolveRefrigerant(kb: KnowledgeBase, input: string): Refrigeran
     };
   }
   return undefined;
+}
+
+/**
+ * Refrigerant facts for the EPA leak-repair applicability (refrigerantCompliance.ts `applicability`): canonical id
+ * and the AR4 GWP (falling back to AR5) from knowledge/refrigerants/index.json; undefined when unknown.
+ */
+export function complianceRefrigerantLookup(kb: KnowledgeBase | null | undefined): RefrigerantLookup {
+  return (name) => {
+    if (!kb) return undefined;
+    const m = resolveRefrigerant(kb, name);
+    if (!m) return undefined;
+    const gwp = m.gwp?.ar4 ?? m.gwp?.ar5;
+    return { id: m.id, gwp: typeof gwp === "number" && Number.isFinite(gwp) ? gwp : null };
+  };
 }
 
 export function getTable(kb: KnowledgeBase, id: string): RefrigerantTable | undefined {

@@ -83,6 +83,22 @@ describe("nameplate references", () => {
     assert.deepEqual(np, { voltageMinV: 208, voltageMaxV: 230, rlaA: 14.2, capacitorUf: 45 });
     assert.deepEqual(nameplateOf({ voltage: null, nameplate_json: "not json" }), {});
   });
+  test("parseVoltageRange: slash-first nameplate formats keep both voltages (208/230-3-60, 208/230/3/60)", () => {
+    assert.deepEqual(parseVoltageRange("208/230-3-60"), { min: 208, max: 230 });
+    assert.deepEqual(parseVoltageRange("208/230/3/60"), { min: 208, max: 230 });
+    assert.deepEqual(parseVoltageRange("208-230-1-60"), { min: 208, max: 230 });
+    assert.deepEqual(parseVoltageRange("460V 3PH 60HZ"), { min: 460, max: 460 });
+    // 236 V on a 208/230-3-60 unit is inside the nameplate range, not 13 % over 208
+    const rtu = findTemplate(kb.pm, "rtu_gas")!;
+    const s = evaluate(rtu, { supply_volts: { value: 236 } }, nameplateOf({ voltage: "208/230-3-60", nameplate_json: null }));
+    const volts = s.items.find((i) => i.id === "supply_volts")!;
+    assert.equal(volts.status, "pass");
+    assert.equal(volts.reference, "nameplate 208–230 V ±10 %");
+  });
+  test("nameplateOf reads blower / fan motor FLA keys", () => {
+    const np = nameplateOf({ voltage: null, nameplate_json: JSON.stringify({ RLA: 14.2, "Blower FLA": 4.1, ofm_fla: 1.2 }) });
+    assert.deepEqual(np, { rlaA: 14.2, blowerFlaA: 4.1, fanFlaA: 1.2 });
+  });
 });
 
 describe("evaluate", () => {
@@ -148,6 +164,34 @@ describe("evaluate", () => {
     const strNum = evaluate(rtu, { comp_amps: { value: "13.1" } }, nameplate);
     assert.equal(strNum.items.find((i) => i.id === "comp_amps")!.status, "pass");
     assert.equal(strNum.items.find((i) => i.id === "comp_amps")!.value, 13.1);
+  });
+});
+
+describe("evaluate: blower / fan amps never use the compressor RLA", () => {
+  const rtu = findTemplate(kb.pm, "rtu_gas")!;
+  test("blower amps with only a compressor RLA on file → n/a asking for the motor FLA (not a pass/fail vs 14.2 A RLA)", () => {
+    const s = evaluate(rtu, { blower_amps: { value: 15.8 }, comp_amps: { value: 13.1 } }, { rlaA: 14.2 });
+    const blower = s.items.find((i) => i.id === "blower_amps")!;
+    assert.equal(blower.status, "na");
+    assert.match(blower.reference ?? "", /enter motor FLA/);
+    assert.equal(blower.flagged, false);
+    assert.equal(s.items.find((i) => i.id === "comp_amps")!.reference, "RLA/FLA 14.2 A (fail above 110 %)");
+  });
+  test("blower amps compare with the per-item rated FLA or the nameplate blower_fla (nameplateKey)", () => {
+    const rated = evaluate(rtu, { blower_amps: { value: 5, rated: 4.1 } }, { rlaA: 14.2 });
+    const b1 = rated.items.find((i) => i.id === "blower_amps")!;
+    assert.equal(b1.status, "fail", "5 A > 110 % of 4.1 A FLA");
+    assert.equal(b1.reference, "RLA/FLA 4.1 A (fail above 110 %)");
+    const keyed = evaluate(rtu, { blower_amps: { value: 4 } }, { rlaA: 14.2, blowerFlaA: 4.1 });
+    assert.equal(keyed.items.find((i) => i.id === "blower_amps")!.status, "pass");
+    assert.equal(keyed.items.find((i) => i.id === "blower_amps")!.reference, "RLA/FLA 4.1 A (fail above 110 %)");
+  });
+  test("exhaust fan_motor_amps uses fan_fla, never the compressor RLA", () => {
+    const t = kb.pm!.templates.find((x) => x.sections.some((sec) => sec.items.some((i) => i.id === "fan_motor_amps")))!;
+    const none = evaluate(t, { fan_motor_amps: { value: 3 } }, { rlaA: 14.2 });
+    assert.equal(none.items.find((i) => i.id === "fan_motor_amps")!.status, "na");
+    const fan = evaluate(t, { fan_motor_amps: { value: 3 } }, { rlaA: 14.2, fanFlaA: 2.5 });
+    assert.equal(fan.items.find((i) => i.id === "fan_motor_amps")!.status, "fail");
   });
 });
 

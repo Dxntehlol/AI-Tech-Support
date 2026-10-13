@@ -65,6 +65,14 @@ describe("evaluateChiller", () => {
     assert.match(bad.validity.issues[0]!, /not in the PT tables/);
   });
 
+  test("zero or negative CHW ΔT at high load reports chiller_chw_dt_zero, not low ΔT at load", () => {
+    for (const [supply, ret] of [[44, 44], [46, 44]] as const) {
+      const r = evaluateChiller(kb, { chwSupplyF: supply, chwReturnF: ret, percentLoad: 90 });
+      assert.ok(r.findings.some((f) => f.ruleId === "chiller_chw_dt_zero"), `${supply}/${ret}`);
+      assert.ok(!r.findings.some((f) => f.ruleId === "chiller_low_chw_dt_high_load"), `${supply}/${ret}`);
+    }
+  });
+
   test("low ΔT at high load, high ΔT, freeze risk, amps > 110 % RLA, oil bands", () => {
     const lowDt = evaluateChiller(kb, { chwSupplyF: 44, chwReturnF: 48, percentLoad: 90 });
     assert.ok(lowDt.findings.some((f) => f.ruleId === "chiller_low_chw_dt_high_load"));

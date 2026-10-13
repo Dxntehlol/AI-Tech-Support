@@ -135,11 +135,18 @@ export interface ReportOwnerDocumentation {
   applianceType: string | null;
   thresholdPct: number;
   applies: boolean;
+  /** Rule covering the appliance (hfc 84.106 / ods 82.157 / not_covered / unknown) and the charge it applies from. */
+  regime: string;
+  applicabilityLbs: number | null;
   circuitsCount: number;
   formula: string;
   source: string;
+  /** The open exceedance's rate while one is open (refrigerantCompliance `openExceedance`), else the last add's. */
   lastLeakRatePct: number | null;
+  /** True while an exceedance is open (a later top-off below the threshold does not clear it). */
   exceeded: boolean;
+  /** Date of the add whose exceedance is open; null when none is open. */
+  openExceedanceDate: string | null;
   events: ReportRefrigerantEvent[];
   obligations: { kind: string; dueDate: string | null; text: string; overdue: boolean }[];
   notes: string[];
@@ -599,11 +606,14 @@ export function ownerDocumentationOf(compliance: ComplianceSummary | null | unde
     applianceType: compliance.applianceType,
     thresholdPct: compliance.thresholdPct,
     applies: compliance.applies,
+    regime: compliance.regime,
+    applicabilityLbs: compliance.applicabilityLbs,
     circuitsCount: compliance.circuitsCount,
     formula: compliance.formula,
     source: compliance.source,
     lastLeakRatePct: compliance.lastLeakRatePct,
     exceeded: compliance.exceeded,
+    openExceedanceDate: compliance.openExceedance?.date ?? null,
     events: rows.map(reportRefrigerantEvent),
     obligations: compliance.obligations.map((o) => ({ kind: o.kind, dueDate: o.dueDate, text: o.text, overdue: o.overdue })),
     notes: compliance.notes,
@@ -812,6 +822,13 @@ function eventLineMd(e: ReportRefrigerantEvent): string {
   return `- ${e.date} · ${bits.join(" · ")}`;
 }
 
+/** " · rule applicability: …" when the leak-repair rule does not apply (empty when it does). */
+function applicabilityText(doc: ReportOwnerDocumentation): string {
+  if (doc.applies) return "";
+  if (doc.regime === "not_covered") return " · leak-repair rule does not apply (GWP ≤ 53, not an HFC or ODS)";
+  return ` · rule applicability: below ${doc.applicabilityLbs ?? 15} lb${doc.regime === "ods" ? " (ODS, 40 CFR 82.157)" : ""}`;
+}
+
 function ownerDocMd(doc: ReportOwnerDocumentation | null): string[] {
   const out: string[] = ["## Owner documentation (refrigerant / EPA leak-repair record)", ""];
   if (!doc) {
@@ -819,8 +836,8 @@ function ownerDocMd(doc: ReportOwnerDocumentation | null): string[] {
     return out;
   }
   out.push(`- **Full charge:** ${doc.fullChargeLbs !== null ? `${doc.fullChargeLbs} lb${doc.circuitsCount > 1 ? ` (${doc.circuitsCount} circuits)` : ""}` : "not recorded"}`);
-  out.push(`- **Appliance type / threshold:** ${doc.applianceType ? mdCell(doc.applianceType.replace(/_/g, " ")) : "not set (comfort cooling assumed)"} · ${doc.thresholdPct} % per year${doc.applies ? "" : " · rule applicability: below 15 lb"}`);
-  out.push(`- **Last leak rate:** ${doc.lastLeakRatePct !== null ? `${doc.lastLeakRatePct} %/yr${doc.exceeded ? " — EXCEEDS the threshold" : ""}` : "none computed"}`);
+  out.push(`- **Appliance type / threshold:** ${doc.applianceType ? mdCell(doc.applianceType.replace(/_/g, " ")) : "not set (comfort cooling assumed)"} · ${doc.thresholdPct} % per year${applicabilityText(doc)}`);
+  out.push(`- **${doc.exceeded ? "Open exceedance" : "Last leak rate"}:** ${doc.lastLeakRatePct !== null ? `${doc.lastLeakRatePct} %/yr${doc.exceeded ? ` — EXCEEDS the threshold${doc.openExceedanceDate ? ` (add of ${doc.openExceedanceDate}; open until a passed follow-up verification or a retrofit/retirement plan)` : ""}` : ""}` : "none computed"}`);
   out.push(`- **Formula:** ${mdCell(doc.formula)} (${mdCell(doc.source)})`);
   out.push("", "### Refrigerant events", "");
   if (doc.events.length) for (const e of doc.events) out.push(eventLineMd(e));
@@ -1044,8 +1061,8 @@ function ownerDocHtml(doc: ReportOwnerDocumentation | null): string {
   parts.push(
     `<div class="grid"><div class="kv"><b>Full charge</b>${doc.fullChargeLbs !== null ? `${escapeHtml(doc.fullChargeLbs)} lb${doc.circuitsCount > 1 ? ` (${doc.circuitsCount} circuits)` : ""}` : "not recorded"}</div>` +
       `<div class="kv"><b>Appliance type</b>${doc.applianceType ? escapeHtml(doc.applianceType.replace(/_/g, " ")) : "not set (comfort cooling assumed)"}</div>` +
-      `<div class="kv"><b>Threshold</b>${escapeHtml(doc.thresholdPct)} % per year${doc.applies ? "" : " · below 15 lb applicability"}</div>` +
-      `<div class="kv"><b>Last leak rate</b>${doc.lastLeakRatePct !== null ? `${escapeHtml(doc.lastLeakRatePct)} %/yr${doc.exceeded ? ' <span class="chip bad">exceeds threshold</span>' : ' <span class="chip ok">within threshold</span>'}` : "none computed"}</div></div>`,
+      `<div class="kv"><b>Threshold</b>${escapeHtml(doc.thresholdPct)} % per year${escapeHtml(applicabilityText(doc))}</div>` +
+      `<div class="kv"><b>${doc.exceeded ? "Open exceedance" : "Last leak rate"}</b>${doc.lastLeakRatePct !== null ? `${escapeHtml(doc.lastLeakRatePct)} %/yr${doc.exceeded ? `${doc.openExceedanceDate ? ` (add of ${escapeHtml(doc.openExceedanceDate)})` : ""} <span class="chip bad">exceeds threshold</span>` : ' <span class="chip ok">within threshold</span>'}` : "none computed"}</div></div>`,
   );
   parts.push(`<p class="muted">Formula: ${escapeHtml(doc.formula)} — ${escapeHtml(doc.source)}.</p>`);
   parts.push("<h3>Refrigerant events</h3>", doc.events.length ? `<ul class="events">${doc.events.map(eventHtml).join("")}</ul>` : '<p class="muted">None logged.</p>');
