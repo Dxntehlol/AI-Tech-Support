@@ -22,7 +22,7 @@
           "items": [
             { "id": "filters", "label": "Filters replaced (size and quantity noted)", "kind": "text", "hint": "Record size × count so the next visit brings the right ones; note loaded filters as a static-pressure cause." },
             { "id": "belt_condition", "label": "Belts: condition, tension and sheave alignment checked", "kind": "check", "hint": "Deflection ≈ 1/64 in. per inch of span; glazed, cracked or dusty belts are replaced; check sheave wear with a gauge." },
-            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true, "hint": "Clamp one leg with the filters in; amps well under FLA with low airflow points to a slipping belt or wrong sheave." },
+            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "nameplateKey": "blower_fla", "asFoundAsLeft": true, "hint": "Clamp one leg with the filters in; amps well under FLA with low airflow points to a slipping belt or wrong sheave." },
             { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true, "hint": "Supply + return magnitude; compare with the nameplate/design static (PSC blowers ≈ 0.5 in. wc max, ECM ≈ 0.8–1.0)." },
             { "id": "evap_coil", "label": "Evaporator coil clean, no ice or oil stains", "kind": "check" },
             { "id": "condensate", "label": "Condensate drain and pan clear, trap primed, overflow switch tested", "kind": "check", "safety": true },
@@ -91,7 +91,7 @@
           "items": [
             { "id": "filters", "label": "Filters replaced (size and quantity noted)", "kind": "text" },
             { "id": "belt_condition", "label": "Belts: condition, tension and sheave alignment checked", "kind": "check", "hint": "Deflection ≈ 1/64 in. per inch of span." },
-            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "asFoundAsLeft": true },
+            { "id": "blower_amps", "label": "Blower motor amps vs nameplate FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "nameplateKey": "blower_fla", "asFoundAsLeft": true },
             { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
             { "id": "evap_coil", "label": "Evaporator coil clean, no ice or oil stains", "kind": "check" },
             { "id": "condensate", "label": "Condensate drain and pan clear, trap primed, overflow switch tested", "kind": "check", "safety": true },
@@ -157,7 +157,7 @@
             { "id": "filters", "label": "Filters replaced (size noted)", "kind": "text" },
             { "id": "evap_coil", "label": "Evaporator coil clean; blower wheel clean", "kind": "check" },
             { "id": "condensate", "label": "Condensate drain clear, trap primed, float switch tested", "kind": "check", "safety": true },
-            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "nameplateKey": "blower_fla" },
             { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
             { "id": "delta_t", "label": "Cooling delta-T (return − supply)", "kind": "number", "unit": "°F" }
           ]
@@ -191,7 +191,7 @@
             { "id": "indoor_coil", "label": "Indoor coil and blower wheel clean", "kind": "check" },
             { "id": "condensate", "label": "Condensate drain clear, overflow switch tested", "kind": "check", "safety": true },
             { "id": "static_pressure", "label": "Total external static pressure", "kind": "number", "unit": "in. wc", "asFoundAsLeft": true },
-            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" }
+            { "id": "blower_amps", "label": "Blower motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "nameplateKey": "blower_fla" }
           ]
         },
         {
@@ -405,7 +405,7 @@
             { "id": "belts", "label": "Belts condition and tension; sheaves aligned and not worn", "kind": "check", "hint": "Grease-laden belts slip and glaze; replace in matched sets." },
             { "id": "bearings", "label": "Bearings greased / inspected; shaft and wheel free, no wobble", "kind": "check" },
             { "id": "grease_wheel", "label": "Fan wheel, housing and filters degreased (grease on hood filters and fan = fire load)", "kind": "check", "safety": true },
-            { "id": "fan_motor_amps", "label": "Exhaust fan motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps" },
+            { "id": "fan_motor_amps", "label": "Exhaust fan motor amps vs FLA", "kind": "number", "unit": "A", "nameplateCompare": "amps", "nameplateKey": "fan_fla" },
             { "id": "fans_run", "label": "Fans run on command from the hood controls / fire system interlock and stop correctly", "kind": "check" },
             { "id": "hood_filters", "label": "Hood filters in place, undamaged and clean; grease cup emptied", "kind": "check" }
           ]

@@ -123,15 +123,65 @@ describe("refrigerantEvents repo", () => {
     const repos = createRepos(openDatabase(":memory:"), { now: () => NOW.toISOString() });
     const rtu = repos.units.create({ model: "48TC", unit_tag: "RTU-7", refrigerant: "R-410A", full_charge_lbs: 40, appliance_type: "comfort_cooling", circuits_count: 2, install_year: 2020 });
     const c1 = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 1, circuit: 1, date: "2026-01-01" });
-    assert.ok(c1.leak_rate_pct !== null && c1.leak_rate_pct < 2, `install-year basis: ${c1.leak_rate_pct}`);
+    // install-year basis, > 365 days → capped at 365: 1 / 20 × 365 / 365 × 100 = 5 %
+    assert.equal(c1.leak_rate_pct, 5, `install-year basis: ${c1.leak_rate_pct}`);
     const c2 = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 1, circuit: 2, date: "2026-03-01" });
-    assert.ok(c2.leak_rate_pct !== null && c2.leak_rate_pct < 2, "circuit 2 has no previous add: install-year basis, not circuit 1's add");
+    assert.equal(c2.leak_rate_pct, 5, "circuit 2 has no previous add: install-year basis, not circuit 1's add");
     // circuit 1 again, 181 days after its own add: 1/20 × 365/181 × 100 = 10.08 % > 10
     const c1b = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 1, circuit: 1, date: "2026-07-01" });
     assert.equal(c1b.leak_rate_pct, 10.08);
     assert.equal(c1b.exceeded, 1);
     assert.equal(repos.refrigerantEvents.latestAdd(rtu.id, 2)!.id, c2.id);
     assert.equal(repos.refrigerantEvents.latestAdd(rtu.id)!.id, c1b.id);
+  });
+
+  test("a circuit-tagged add is annualized from an earlier unit-level add (circuit NULL), not treated as a first add", () => {
+    const repos = createRepos(openDatabase(":memory:"), { now: () => NOW.toISOString() });
+    const rtu = repos.units.create({ model: "48TC", unit_tag: "RTU-8", refrigerant: "R-410A", full_charge_lbs: 40, appliance_type: "comfort_cooling", circuits_count: 2 });
+    const unitLevel = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 2, date: "2026-01-01" });
+    assert.equal(unitLevel.leak_rate_pct, null, "first add, no install year");
+    // circuit 1, 60 days after the unit-level add: 2 / 20 × 365 / 60 × 100 = 60.83 %
+    const c1 = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 2, circuit: 1, date: "2026-03-02" });
+    assert.equal(c1.leak_rate_pct, 60.83);
+    assert.equal(c1.exceeded, 1);
+    // a newer add on the circuit itself wins over the older unit-level add
+    const c1b = repos.refrigerantEvents.create({ unit_id: rtu.id, event_type: "add", amount_lbs: 1, circuit: 1, date: "2026-09-01" });
+    assert.equal(c1b.leak_rate_pct, 9.97, "1 / 20 × 365 / 183 × 100 from the circuit add of 03-02");
+    // latestAdd(unitId, circuit) keeps its strict per-circuit meaning
+    assert.equal(repos.refrigerantEvents.latestAdd(rtu.id, 2), undefined);
+  });
+
+  test("removing an exceeded add deletes its auto-created EPA follow-up finding in the same transaction", () => {
+    const repos = createRepos(openDatabase(":memory:"), { now: () => NOW.toISOString() });
+    const unit = makeRack(repos);
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "add", amount_lbs: 10, date: "2026-01-01" });
+    const ex = repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "add", amount_lbs: 25, date: "2026-03-02" });
+    assert.ok(ex.finding_id);
+    assert.equal(repos.findings.listFollowUps({ unitId: unit.id }).length, 1);
+    assert.equal(repos.refrigerantEvents.remove(ex.id), true);
+    assert.equal(repos.findings.get(ex.finding_id!), undefined);
+    assert.equal(repos.findings.listFollowUps({ unitId: unit.id }).length, 0);
+    assert.equal(repos.refrigerantEvents.remove(ex.id), false, "already gone");
+  });
+
+  test("auto follow-up follows the open exceedance: a top-off keeps it open, a passed follow-up verification closes it", () => {
+    const repos = createRepos(openDatabase(":memory:"), { now: () => NOW.toISOString() });
+    const unit = makeRack(repos);
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "add", amount_lbs: 10, date: "2026-01-01" });
+    const ex = repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "add", amount_lbs: 25, date: "2026-03-02" });
+    const topOff = repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "add", amount_lbs: 2, date: "2026-03-20" });
+    assert.equal(topOff.exceeded, 0, "2 / 400 × 365 / 18 × 100 = 10.14 % < 20 %");
+    assert.equal(repos.findings.get(ex.finding_id!)!.follow_up_done, 0, "top-off does not close it");
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "repair", date: "2026-03-20" });
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "verification_initial", date: "2026-03-20", passed: true });
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "verification_followup", date: "2026-03-25", passed: false });
+    assert.equal(repos.findings.get(ex.finding_id!)!.follow_up_done, 0, "a failed follow-up does not close it");
+    repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "verification_followup", date: "2026-03-28", passed: true });
+    const f = repos.findings.get(ex.finding_id!)!;
+    assert.equal(f.follow_up_done, 1);
+    assert.equal(f.status, "resolved");
+    assert.match(f.resolution ?? "", /Follow-up verification test passed 2026-03-28/);
+    assert.equal(repos.findings.listFollowUps({ unitId: unit.id }).length, 0);
   });
 
   test("validation: event type, amount for add/recover, circuit range, unit/conversation existence, dates", () => {
@@ -257,6 +307,79 @@ describe("refrigerant log routes", () => {
       assert.deepEqual(await del.json(), { deleted: true, id: eid });
       await expectError(await c.json("DELETE", `/api/units/${unit.id}/refrigerant/${eid}`), 404, "not_found");
     });
+  });
+
+  test("open exceedance: GET /api/units/:id compliance, the owner documentation and the unit context keep a topped-off exceedance open and drop a verified one", async () => {
+    await withServer(async (c) => {
+      const unit = makeRack(c.repos);
+      const conv = c.repos.conversations.create({ unit_id: unit.id });
+      const post = async (b: Record<string, unknown>): Promise<void> => {
+        const r = await c.json("POST", `/api/units/${unit.id}/refrigerant`, { conversation_id: conv.id, ...b });
+        assert.equal(r.status, 201);
+      };
+      await post({ event_type: "add", amount_lbs: 10, date: "2026-01-01" });
+      await post({ event_type: "add", amount_lbs: 25, date: "2026-03-02" });
+      await post({ event_type: "add", amount_lbs: 2, date: "2026-03-20" });
+      type Page = { compliance: { exceeded: boolean; lastLeakRatePct: number; openExceedance: { date: string } | null; lastAdd: { exceeded: boolean }; obligations: { kind: string }[] } };
+      const page = (await (await c.get(`/api/units/${unit.id}`)).json()) as Page;
+      assert.equal(page.compliance.exceeded, true, "(a) the 2 lb top-off below the threshold does not clear the 03-02 exceedance");
+      assert.equal(page.compliance.lastAdd.exceeded, false);
+      assert.equal(page.compliance.lastLeakRatePct, 38.02);
+      assert.equal(page.compliance.openExceedance?.date, "2026-03-02");
+      assert.ok(page.compliance.obligations.some((o) => o.kind === "repair"));
+      const md = await (await c.get(`/api/conversations/${conv.id}/report`)).text();
+      assert.match(md, /\*\*Open exceedance:\*\* 38.02 %\/yr — EXCEEDS the threshold \(add of 2026-03-02/);
+      const ctxText = unitContextBlock(c.repos.units.get(unit.id)!, [], [], "c0", NOW, [], [], c.repos.refrigerantEvents.list({ unitId: unit.id }), []);
+      assert.ok(ctxText.includes("EXCEEDANCE OPEN: do not recommend topping off"), ctxText);
+      assert.ok(ctxText.includes("Open since the 2026-03-02 add (38.02 %/yr vs 20 %)"));
+      // (b) repair + passed initial 03-20, passed follow-up 03-28 → closed
+      await post({ event_type: "repair", date: "2026-03-20" });
+      await post({ event_type: "verification_initial", date: "2026-03-20", passed: true });
+      await post({ event_type: "verification_followup", date: "2026-03-28", passed: true });
+      const after = (await (await c.get(`/api/units/${unit.id}`)).json()) as Page;
+      assert.equal(after.compliance.exceeded, false);
+      assert.equal(after.compliance.openExceedance, null);
+      assert.deepEqual(after.compliance.obligations.map((o) => o.kind), ["inspection"]);
+      const md2 = await (await c.get(`/api/conversations/${conv.id}/report`)).text();
+      assert.match(md2, /\*\*Last leak rate:\*\* 10.14 %\/yr\n/);
+      const ctx2 = unitContextBlock(c.repos.units.get(unit.id)!, [], [], "c0", NOW, [], [], c.repos.refrigerantEvents.list({ unitId: unit.id }), []);
+      assert.ok(!ctx2.includes("EXCEEDANCE OPEN"));
+    });
+  });
+
+  test("applicability by refrigerant from the knowledge base: R-22 under 50 lb and R-744 are not covered; leak_rate calc agrees", async () => {
+    await withServer(async (c) => {
+      const r22 = c.repos.units.create({ model: "X", unit_tag: "RTU-22", refrigerant: "R-22", full_charge_lbs: 40, appliance_type: "comfort_cooling" });
+      const co2 = makeRack(c.repos, { unit_tag: "CO2 rack", refrigerant: "R744" });
+      const hfc = c.repos.units.create({ model: "X", unit_tag: "RTU-410", refrigerant: "Puron", full_charge_lbs: 20, appliance_type: "comfort_cooling" });
+      type C = { compliance: { applies: boolean; regime: string; applicabilityLbs: number | null; notes: string[] } };
+      const g22 = ((await (await c.get(`/api/units/${r22.id}`)).json()) as C).compliance;
+      assert.deepEqual([g22.applies, g22.regime, g22.applicabilityLbs], [false, "ods", 50]);
+      const gco2 = ((await (await c.get(`/api/units/${co2.id}`)).json()) as C).compliance;
+      assert.deepEqual([gco2.applies, gco2.regime, gco2.applicabilityLbs], [false, "not_covered", null]);
+      assert.ok(gco2.notes.some((n) => /R-744 \(GWP 1\)/.test(n)), gco2.notes.join(" | "));
+      const ghfc = ((await (await c.get(`/api/units/${hfc.id}`)).json()) as C).compliance;
+      assert.deepEqual([ghfc.applies, ghfc.regime, ghfc.applicabilityLbs], [true, "hfc", 15]);
+      const calc = (await (await c.json("POST", "/api/calc/electrical", { kind: "leak_rate", added_lbs: 5, full_charge_lbs: 40, days_since_last_add: 90, refrigerant: "R-22" })).json()) as { values: Record<string, number>; interpretation: string[] };
+      assert.equal(calc.values.applies, 0);
+      assert.match(calc.interpretation[2]!, /R-22 is an ODS: full charge 40 lb is below the 50 lb applicability/);
+      const calcCo2 = (await (await c.json("POST", "/api/calc/electrical", { kind: "leak_rate", added_lbs: 5, full_charge_lbs: 400, days_since_last_add: 90, refrigerant: "CO2" })).json()) as { values: Record<string, number>; interpretation: string[] };
+      assert.equal(calcCo2.values.applies, 0);
+      assert.match(calcCo2.interpretation[2]!, /does not apply/);
+    });
+  });
+
+  test("CSV export neutralises spreadsheet formulas and marks the row cap", () => {
+    assert.equal(csvLine(["=HYPERLINK(\"http://x\")", "+1", "-2 psi", "@SUM(A1)", "\tTab", "\rCR", -5, "ok"]), `"'=HYPERLINK(""http://x"")","'+1","'-2 psi","'@SUM(A1)","'\tTab","'\rCR",-5,ok`);
+    const repos = createRepos(openDatabase(":memory:"), { now: () => NOW.toISOString() });
+    const unit = makeRack(repos, { site: "=cmd|' /C calc'!A0" });
+    for (const d of ["2026-01-01", "2026-02-01", "2026-03-01"]) repos.refrigerantEvents.create({ unit_id: unit.id, event_type: "leak_check", date: d });
+    const full = refrigerantLogCsv(repos).split("\r\n");
+    assert.equal(full.length, 5, "header + 3 rows + trailing CRLF; no cap marker");
+    assert.ok(full[1]!.startsWith(`2026-01-01,"'=cmd|' /C calc'!A0",`), full[1]);
+    const capped = refrigerantLogCsv(repos, 2).split("\r\n");
+    assert.equal(capped.length, 5, "header + 2 rows + marker + trailing CRLF");
+    assert.match(capped[3]!, /^TRUNCATED: export stopped at the 2-event cap; events after 2026-02-01 are not included$/);
   });
 
   test("GET /api/refrigerant/export.csv: attachment, RFC 4180 quoting, unit identity joined; GET /api/export carries the events", async () => {

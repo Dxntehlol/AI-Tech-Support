@@ -1045,12 +1045,11 @@ describe("web/calc.js — offline calculators match the server (src/knowledge/el
         assert.ok(mine, `calc.js handles ${kind} offline`);
         assert.ok(CALC.OFFLINE_KINDS.includes(kind));
         if (kind === "leak_rate" && (input.daysSinceLastAdd as number) > 365) {
-          // EPA annualizing method: days = min(365, max(1, days)). web/calc.js applies the cap; the server copy in
-          // this tree still divides by the raw day count until the backend fix lands. Skip only that case.
+          // EPA annualizing method: days = min(365, max(1, days)); both calc.js and the server apply the cap.
           const capped = Math.round(((input.addedLbs as number) / (input.fullChargeLbs as number)) * (365 / 365) * 100 * 100) / 100;
           assert.equal(mine.values.leakRatePct, capped);
           assert.equal(mine.values.daysUsed, 365);
-          if (theirs.values.daysUsed !== 365) return t.skip("server cap lands in the backend fix");
+          assert.equal(theirs.values.daysUsed, 365, "server caps the days at 365 too");
         }
         assert.deepEqual(norm(mine.values), norm(theirs.values));
         assert.deepEqual(mine.warnings, theirs.warnings);

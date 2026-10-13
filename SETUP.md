@@ -104,6 +104,14 @@ QR stickers (**QR label** on a unit card, or **Units → ⋮ → Print QR labels
 the unit's address; scanning one with the phone camera opens it in the browser (Safari/Chrome), not in the
 installed home-screen app, and the page routes straight to that unit.
 
+### Let friends test it
+
+In the app (signed in with the access password) open **Settings → Testers**, add a name, and send the
+generated password with the address. Each tester gets their own chats, a daily spend cap (default $2,
+`TESTER_DAILY_CAP_USD` in `.env`, or per person from the list) and can be turned off or removed from
+the same card. Over Tailscale they also need the Tailscale app, signed in to an account you invited at
+https://login.tailscale.com/admin/users. Hand them `docs/TESTERS.md`.
+
 ## 4. Seed it with your own fleet (an afternoon, then ongoing)
 
 1. Import the fleet in one go: **Units → Import units** (the upload icon in the Units top bar).

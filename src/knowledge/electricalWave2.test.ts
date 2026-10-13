@@ -35,6 +35,24 @@ describe("wave-2 calculators", () => {
     assert.deepEqual(bad.values, {});
   });
 
+  test("leak_rate: days beyond 365 count as 365 (40 CFR 82.152 / 84.102 annualizing method): 100 lb into 400 lb after 730 days = 25 %", () => {
+    const r = calcElectrical({ kind: "leak_rate", addedLbs: 100, fullChargeLbs: 400, daysSinceLastAdd: 730, applianceType: "commercial_refrigeration" });
+    assert.equal(r.values.leakRatePct, 25);
+    assert.equal(r.values.daysUsed, 365);
+    assert.equal(r.values.exceeded, 1);
+    assert.match(r.interpretation[0]!, /\(100 ÷ 400\) × \(365 ÷ 365\) × 100 = 25 %.*shorter of the days since the last add or 365/);
+  });
+
+  test("leak_rate applicability by refrigerant with an injected lookup: ODS from 50 lb, GWP ≤ 53 not covered", () => {
+    const lookup = (n: string) => (n === "R-22" ? { id: "R-22", gwp: 1810 } : n === "R-290" ? { id: "R-290", gwp: 3 } : undefined);
+    const r22 = calcElectrical({ kind: "leak_rate", addedLbs: 5, fullChargeLbs: 40, daysSinceLastAdd: 90, refrigerant: "R-22" }, { refrigerantLookup: lookup });
+    assert.equal(r22.values.applies, 0);
+    assert.match(r22.interpretation[2]!, /R-22 is an ODS: full charge 40 lb is below the 50 lb applicability \(40 CFR 82.157\)/);
+    const r290 = calcElectrical({ kind: "leak_rate", addedLbs: 5, fullChargeLbs: 40, daysSinceLastAdd: 90, refrigerant: "R-290" }, { refrigerantLookup: lookup });
+    assert.equal(r290.values.applies, 0);
+    assert.match(r290.interpretation[2]!, /R-290 \(GWP 3\) is neither an HFC with GWP > 53 nor an ODS/);
+  });
+
   test("gas_meter_clock: CFH = 3600 × dial × rev / s; BTU/h = CFH × HV; ±5 % of nameplate", () => {
     // 1 ft³ dial, 36 s per rev → 100 CFH → 100,000 BTU/h at 1000 BTU/ft³
     const r = calcElectrical({ kind: "gas_meter_clock", dialCuft: 1, secondsPerRev: 36, nameplateInputBtuh: 100000 });

@@ -744,6 +744,28 @@
                 <div id="usage-body" class="usage-body" aria-live="polite"></div>
               </section>
 
+              <section id="tester-card" class="card" aria-labelledby="tester-card-title" hidden>
+                <div class="card-title"><h2 id="tester-card-title" class="card-title-text">Test account</h2><span id="tester-chip" class="chip chip-ok">Tester</span></div>
+                <div id="tester-body" class="tester-body" aria-live="polite"></div>
+              </section>
+
+              <section id="testers-card" class="card" aria-labelledby="testers-card-title" hidden>
+                <div class="card-title"><h2 id="testers-card-title" class="card-title-text">Testers</h2><button id="btn-testers-refresh" class="icon-btn" type="button" aria-label="Refresh testers"><svg class="icon icon-sm" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></button></div>
+                <p class="hint testers-intro">Give each friend their own login. Their chats are kept apart from yours, their spend is counted and capped per day, and you can turn anyone off here.</p>
+                <div id="testers-list" class="list testers-list" role="list" aria-live="polite"></div>
+                <div id="tester-reveal" class="tester-reveal" role="status" aria-live="polite" hidden></div>
+                <form id="tester-add-form" class="form tester-add" novalidate autocomplete="off">
+                  <h3 class="form-subhead">Add a tester</h3>
+                  <div class="tester-add-row">
+                    <label class="field grow"><span class="field-label">Name</span><input id="tester-name" name="name" type="text" maxlength="60" placeholder="e.g. Marcus" autocapitalize="words" autocomplete="off" required></label>
+                    <label class="field tester-cap-field"><span class="field-label">Daily cap</span><div class="input-prefix"><span aria-hidden="true">$</span><input id="tester-cap" name="cap" type="number" inputmode="decimal" min="0" step="0.5" placeholder="default"></div></label>
+                  </div>
+                  <div id="tester-add-error" class="field-error" role="alert" hidden></div>
+                  <div class="btn-row"><button id="btn-tester-add" class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>Add tester</button></div>
+                  <p id="testers-cap-hint" class="hint"></p>
+                </form>
+              </section>
+
               <form id="settings-form" class="card form" novalidate>
                 <div class="card-title">Server</div>
                 <div id="settings-status" class="settings-status"><span class="status-dot"></span><span id="settings-status-text">Checking…</span></div>

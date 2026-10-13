@@ -1,3 +1,4 @@
+import { DEFAULT_TESTER_DAILY_CAP_USD } from "./testers.ts";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,6 +78,12 @@ export function readPackageVersion(root = PROJECT_ROOT): string {
   }
 }
 
+/** A non-negative dollar amount; blank or invalid → the default. */
+export function parseCapUsd(raw: string | undefined, fallback: number): number {
+  const n = Number.parseFloat((raw ?? "").trim());
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const effort = (env.CLAUDE_EFFORT ?? "high").toLowerCase();
   return {
@@ -93,5 +100,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     knowledgeDir: resolve(PROJECT_ROOT, "knowledge"),
     webDir: resolve(PROJECT_ROOT, "web"),
     allowOrigins: parseAllowOrigins(env.ALLOW_ORIGINS),
+    testerDailyCapUsd: parseCapUsd(env.TESTER_DAILY_CAP_USD, DEFAULT_TESTER_DAILY_CAP_USD),
   };
 }

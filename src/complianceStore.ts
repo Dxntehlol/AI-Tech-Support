@@ -3,7 +3,7 @@
  * outside routes/ so agent/tools.ts can import it without a routes/util.ts ↔ agent/tools.ts cycle).
  */
 import type { Repos } from "./db/repos.ts";
-import { complianceSummary, type ComplianceEvent, type ComplianceSummary } from "./knowledge/refrigerantCompliance.ts";
+import { complianceSummary, type ComplianceEvent, type ComplianceSummary, type RefrigerantLookup } from "./knowledge/refrigerantCompliance.ts";
 import type { RefrigerantEventRow, UnitRow } from "./types.ts";
 
 /** Rows considered for the compliance summary (newest first from the repo). */
@@ -76,8 +76,12 @@ export function refrigerantEventView(row: RefrigerantEventRow): RefrigerantEvent
   };
 }
 
-/** The compliance object for a unit (GET /api/units/:id `compliance`, the refrigerant log route, tools, reports). */
-export function unitCompliance(repos: Repos, unit: UnitRow, today: string, events?: RefrigerantEventRow[]): ComplianceSummary {
+/**
+ * The compliance object for a unit (GET /api/units/:id `compliance`, the refrigerant log route, tools, reports).
+ * `lookup` resolves the unit's refrigerant to its id / GWP for the applicability (pass
+ * `complianceRefrigerantLookup(kb)`; without it the HFC 15 lb rule is assumed unless the id is a known ODS).
+ */
+export function unitCompliance(repos: Repos, unit: UnitRow, today: string, events?: RefrigerantEventRow[], lookup?: RefrigerantLookup): ComplianceSummary {
   const rows = events ?? repos.refrigerantEvents.list({ unitId: unit.id, limit: COMPLIANCE_WINDOW });
   return complianceSummary(rows.map(toComplianceEvent), {
     fullChargeLbs: unit.full_charge_lbs ?? null,
@@ -85,18 +89,32 @@ export function unitCompliance(repos: Repos, unit: UnitRow, today: string, event
     circuitsCount: unit.circuits_count ?? null,
     installYear: unit.install_year,
     refrigerant: unit.refrigerant,
-  }, today);
+  }, today, lookup);
 }
 
-/** RFC 4180 CSV: fields with a comma, quote, CR or LF are quoted and inner quotes doubled; rows end in CRLF. */
+/**
+ * RFC 4180 CSV: fields with a comma, quote, CR or LF are quoted and inner quotes doubled; rows end in CRLF.
+ * Spreadsheet formula injection (OWASP "CSV injection"): a string field starting with = + - @ tab or CR gets a
+ * leading single quote and is quoted, so Excel / Sheets show it as text instead of evaluating it. Numbers
+ * (a negative amount) are left alone.
+ */
 export function csvLine(fields: unknown[]): string {
   return fields
     .map((f) => {
-      const s = f === null || f === undefined ? "" : typeof f === "number" ? String(f) : String(f);
-      return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      if (f === null || f === undefined) return "";
+      let s = String(f);
+      let quote = /[",\r\n]/.test(s);
+      if (typeof f !== "number" && /^[=+\-@\t\r]/.test(s)) {
+        s = `'${s}`;
+        quote = true;
+      }
+      return quote ? `"${s.replace(/"/g, '""')}"` : s;
     })
     .join(",");
 }
+
+/** Most events one CSV export holds (the repo's listAll ceiling); a trailing row says so when it is reached. */
+export const REFRIGERANT_CSV_CAP = 50_000;
 
 export const REFRIGERANT_CSV_COLUMNS = [
   "date",
@@ -122,11 +140,12 @@ export const REFRIGERANT_CSV_COLUMNS = [
   "event_id",
 ] as const;
 
-/** The whole refrigerant log as CSV text (every event joined with its unit, oldest first). */
-export function refrigerantLogCsv(repos: Repos): string {
+/** The whole refrigerant log as CSV text (every event joined with its unit, oldest first). `cap` is for tests. */
+export function refrigerantLogCsv(repos: Repos, cap: number = REFRIGERANT_CSV_CAP): string {
   const yn = (v: 0 | 1 | null): string => (v === null || v === undefined ? "" : v === 1 ? "yes" : "no");
   const lines = [csvLine([...REFRIGERANT_CSV_COLUMNS])];
-  for (const e of repos.refrigerantEvents.listAll()) {
+  const rows = repos.refrigerantEvents.listAll({ limit: cap });
+  for (const e of rows) {
     lines.push(
       csvLine([
         e.created_at.slice(0, 10),
@@ -152,6 +171,9 @@ export function refrigerantLogCsv(repos: Repos): string {
         e.id,
       ]),
     );
+  }
+  if (rows.length >= cap) {
+    lines.push(csvLine([`TRUNCATED: export stopped at the ${cap}-event cap; events after ${rows[rows.length - 1]?.created_at.slice(0, 10) ?? "the last row"} are not included`]));
   }
   return `${lines.join("\r\n")}\r\n`;
 }

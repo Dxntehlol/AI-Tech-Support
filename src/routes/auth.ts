@@ -1,7 +1,25 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { posix } from "node:path";
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
+import type { TesterRow } from "../types.ts";
 import { sendError } from "./util.ts";
+
+/**
+ * Who a request is from, decided by authMiddleware and stored in res.locals.principal:
+ *  - owner: the APP_PASSWORD holder, or anyone when no password is configured (loopback-only install);
+ *  - tester: a Settings → Testers login (its own password; usage attributed and capped, owner-only routes refused).
+ */
+export type Principal = { role: "owner" } | { role: "tester"; id: string; name: string };
+
+/** Minimal tester lookup the middleware needs (Repos["testers"] satisfies it). */
+export interface TesterSource {
+  list(): TesterRow[];
+  getByName(name: string): TesterRow | undefined;
+  touch(id: string): void;
+}
+
+/** How often last_seen_at is written per tester (one UPDATE per request would be wasteful). */
+export const TESTER_TOUCH_INTERVAL_MS = 60_000;
 
 const REALM = "HVAC Field Assistant";
 const STATE_CHANGING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -55,14 +73,28 @@ export function secretsMatch(candidate: string, expected: string): boolean {
   return timingSafeEqual(sha256(candidate), sha256(expected));
 }
 
-/** Extract the password from an Authorization header: Basic (any username) or Bearer <password>. */
-export function passwordFromAuthorization(header: string | undefined): string | undefined {
+/** Hex SHA-256 of a tester password, as stored in testers.password_sha256. */
+export function hashTesterPassword(password: string): string {
+  return createHash("sha256").update(password, "utf8").digest("hex");
+}
+
+/** A fresh tester password: 16 chars from an unambiguous alphabet (no 0/O/1/l), ~82 bits. */
+export function generateTesterPassword(): string {
+  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const bytes = randomBytes(16);
+  let out = "";
+  for (let i = 0; i < 16; i++) out += alphabet[bytes[i]! % alphabet.length];
+  return out;
+}
+
+/** Credentials from an Authorization header: Basic (username kept, may name a tester) or Bearer <password>. */
+export function credentialsFromAuthorization(header: string | undefined): { username: string | null; password: string } | undefined {
   if (typeof header !== "string") return undefined;
   const m = /^\s*(Basic|Bearer)\s+(.+?)\s*$/i.exec(header);
   if (!m) return undefined;
   const scheme = m[1]!.toLowerCase();
   const value = m[2]!;
-  if (scheme === "bearer") return value;
+  if (scheme === "bearer") return { username: null, password: value };
   let decoded: string;
   try {
     decoded = Buffer.from(value, "base64").toString("utf8");
@@ -70,7 +102,49 @@ export function passwordFromAuthorization(header: string | undefined): string | 
     return undefined;
   }
   const colon = decoded.indexOf(":");
-  return colon >= 0 ? decoded.slice(colon + 1) : decoded;
+  return colon >= 0 ? { username: decoded.slice(0, colon), password: decoded.slice(colon + 1) } : { username: null, password: decoded };
+}
+
+/** Extract the password from an Authorization header: Basic (any username) or Bearer <password>. */
+export function passwordFromAuthorization(header: string | undefined): string | undefined {
+  return credentialsFromAuthorization(header)?.password;
+}
+
+/** The principal authMiddleware attached (owner when auth is off or the middleware did not run). */
+export function principalOf(req: Request): Principal {
+  const p = (req.res?.locals as { principal?: Principal } | undefined)?.principal;
+  return p ?? { role: "owner" };
+}
+
+/** Tester id of the request, or null for the owner. */
+export function testerIdOf(req: Request): string | null {
+  const p = principalOf(req);
+  return p.role === "tester" ? p.id : null;
+}
+
+/**
+ * Match a supplied password against the tester table. The Basic username, when it names a tester, narrows
+ * the comparison to that row; otherwise every enabled-or-disabled row is compared (constant time each) so a
+ * disabled tester gets a clear message instead of a generic 401.
+ */
+export function matchTester(testers: TesterSource, creds: { username: string | null; password: string }): { tester: TesterRow; disabled: boolean } | undefined {
+  const digest = hashTesterPassword(creds.password);
+  const candidates = creds.username ? [testers.getByName(creds.username)].filter((t): t is TesterRow => !!t) : [];
+  const rows = candidates.length > 0 ? candidates : testers.list();
+  for (const t of rows) {
+    if (t.password_sha256.length === digest.length && timingSafeEqual(Buffer.from(t.password_sha256, "hex"), Buffer.from(digest, "hex"))) {
+      return { tester: t, disabled: t.disabled !== 0 };
+    }
+  }
+  return undefined;
+}
+
+/** Only the owner may continue; testers get 403. Mount on /api/settings, /api/usage, /api/testers, /api/export. */
+export function ownerOnly(): RequestHandler {
+  return (req, res, next) => {
+    if (principalOf(req).role === "owner") return next();
+    sendError(res, 403, "forbidden", "Only the app owner can do that.");
+  };
 }
 
 /**
@@ -80,14 +154,38 @@ export function passwordFromAuthorization(header: string | undefined): string | 
  * Passthrough when no password is configured. A 401 always carries WWW-Authenticate so browsers can
  * prompt; native clients read the JSON envelope and open Settings instead.
  */
-export function authMiddleware(appPassword: string | null | undefined): RequestHandler {
+export function authMiddleware(appPassword: string | null | undefined, testers?: TesterSource, opts: { now?: () => number } = {}): RequestHandler {
   const expected = typeof appPassword === "string" && appPassword !== "" ? appPassword : null;
+  const clock = opts.now ?? Date.now;
+  const lastTouch = new Map<string, number>();
   return (req, res, next) => {
+    res.locals.principal = { role: "owner" } satisfies Principal;
     if (!expected) return next();
     if (req.method === "OPTIONS") return next();
     if (isPublicPath(req.path)) return next();
-    const supplied = passwordFromAuthorization(req.headers.authorization);
-    if (supplied !== undefined && secretsMatch(supplied, expected)) return next();
+    const creds = credentialsFromAuthorization(req.headers.authorization);
+    if (creds !== undefined && secretsMatch(creds.password, expected)) return next();
+    if (creds !== undefined && testers) {
+      const hit = matchTester(testers, creds);
+      if (hit && !hit.disabled) {
+        res.locals.principal = { role: "tester", id: hit.tester.id, name: hit.tester.name } satisfies Principal;
+        const t = clock();
+        if ((lastTouch.get(hit.tester.id) ?? 0) + TESTER_TOUCH_INTERVAL_MS <= t) {
+          lastTouch.set(hit.tester.id, t);
+          try {
+            testers.touch(hit.tester.id);
+          } catch {
+            /* bookkeeping only */
+          }
+        }
+        return next();
+      }
+      if (hit && hit.disabled) {
+        res.setHeader("WWW-Authenticate", `Basic realm="${REALM}", charset="UTF-8"`);
+        sendError(res, 401, "auth", "This tester login has been turned off. Ask the app owner to enable it again.");
+        return;
+      }
+    }
     res.setHeader("WWW-Authenticate", `Basic realm="${REALM}", charset="UTF-8"`);
     sendError(res, 401, "auth", "Authentication required — enter the app password (any username) or a Bearer token.");
   };

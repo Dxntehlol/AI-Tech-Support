@@ -40,8 +40,12 @@ export interface PmNameplate {
   /** Nameplate voltage range (208-230 → 208…230; 460 → 460…460). */
   voltageMinV?: number;
   voltageMaxV?: number;
-  /** Compressor RLA (or the motor FLA when that is what the item compares with). */
+  /** Compressor RLA (the reference for compressor amps items only). */
   rlaA?: number;
+  /** Indoor blower motor FLA (`nameplate_json` blower_fla / blower_motor_fla / ifm_fla); items with nameplateKey "blower_fla". */
+  blowerFlaA?: number;
+  /** Fan motor FLA (`nameplate_json` fan_fla / fan_motor_fla / ofm_fla / exhaust_fan_fla); items with nameplateKey "fan_fla". */
+  fanFlaA?: number;
   capacitorUf?: number;
 }
 
@@ -135,16 +139,23 @@ function safeParse(text: string | null | undefined): Record<string, unknown> | n
   }
 }
 
-/** "208-230/3/60" → [208, 230]; "460/3/60" → [460, 460]; "575" → [575, 575]; unknown → undefined. */
+/**
+ * "208-230/3/60" and "208/230-3-60" and "208/230/3/60" → [208, 230]; "460/3/60" → [460, 460]; "575" → [575, 575];
+ * unknown → undefined. Every number in 100–700 is a voltage; phase (1/3) and frequency (50/60 Hz) fall outside
+ * that band, so the separators ("/" or "-") do not matter.
+ */
 export function parseVoltageRange(voltage: string | null | undefined): { min: number; max: number } | undefined {
   if (typeof voltage !== "string") return undefined;
-  const head = voltage.split("/")[0] ?? "";
-  const nums = head.match(/\d{2,3}/g)?.map(Number).filter((n) => n >= 100 && n <= 700) ?? [];
+  const nums = voltage.match(/\d+(?:\.\d+)?/g)?.map(Number).filter((n) => n >= 100 && n <= 700) ?? [];
   if (nums.length === 0) return undefined;
   return { min: Math.min(...nums), max: Math.max(...nums) };
 }
 
-/** Nameplate references for comparisons: voltage from `units.voltage`, RLA from `nameplate_json` (rla, rla_1, RLA, compressor_rla…). */
+/**
+ * Nameplate references for comparisons: voltage from `units.voltage`; compressor RLA (rla, rla_1, compressor_rla…),
+ * blower FLA (blower_fla, blower_motor_fla, ifm_fla), fan FLA (fan_fla, fan_motor_fla, ofm_fla, exhaust_fan_fla)
+ * and run capacitor µF from `nameplate_json`.
+ */
 export function nameplateOf(unit: Pick<UnitRow, "voltage" | "nameplate_json">): PmNameplate {
   const out: PmNameplate = {};
   const v = parseVoltageRange(unit.voltage);
@@ -160,6 +171,8 @@ export function nameplateOf(unit: Pick<UnitRow, "voltage" | "nameplate_json">): 
       if (n === undefined || n <= 0) continue;
       if (out.rlaA === undefined && /^(rla|rla_?1|compressor_?rla|comp_?rla)$/.test(key)) out.rlaA = n;
       if (out.capacitorUf === undefined && /^(run_?cap(acitor)?_?uf|capacitor_?uf|cap_?uf)$/.test(key)) out.capacitorUf = n;
+      if (out.blowerFlaA === undefined && /^(blower_?(motor_?)?fla|ifm_?fla|indoor_?fan_?fla)$/.test(key)) out.blowerFlaA = n;
+      if (out.fanFlaA === undefined && /^(fan_?(motor_?)?fla|ofm_?fla|condenser_?fan_?fla|exhaust_?fan_?fla)$/.test(key)) out.fanFlaA = n;
     }
   }
   return out;
@@ -169,7 +182,12 @@ export function nameplateOf(unit: Pick<UnitRow, "voltage" | "nameplate_json">): 
 // Evaluation
 // ---------------------------------------------------------------------------
 
-function compare(kind: PmNameplateCompare, value: number, nameplate: PmNameplate, rated: number | undefined): { status: PmItemStatus; reference: string; deviationPct?: number } | undefined {
+/** Compressor amps items ("comp_amps", "Compressor running amps vs RLA") are the only ones compared with the compressor RLA. */
+function isCompressorItem(item: Pick<PmItem, "id" | "label">): boolean {
+  return /comp/i.test(item.id) || /compressor/i.test(item.label);
+}
+
+function compare(kind: PmNameplateCompare, value: number, nameplate: PmNameplate, rated: number | undefined, item: PmItem): { status: PmItemStatus; reference: string; deviationPct?: number } | undefined {
   switch (kind) {
     case "volts": {
       const min = nameplate.voltageMinV;
@@ -183,8 +201,12 @@ function compare(kind: PmNameplateCompare, value: number, nameplate: PmNameplate
       return { status: value >= lo && value <= hi ? "pass" : "fail", reference: `nameplate ${label} ±${PM_TOLERANCES.volts} %`, deviationPct };
     }
     case "amps": {
-      const rla = rated ?? nameplate.rlaA;
-      if (rla === undefined) return undefined;
+      // Fan / blower motors are judged against their own FLA (per-item `rated` or the item's nameplateKey), never
+      // the compressor RLA; without a reference the item is n/a and asks for the motor FLA.
+      const compressor = isCompressorItem(item);
+      const fromKey = item.nameplateKey === "blower_fla" ? nameplate.blowerFlaA : item.nameplateKey === "fan_fla" ? nameplate.fanFlaA : undefined;
+      const rla = rated ?? fromKey ?? (compressor ? nameplate.rlaA : undefined);
+      if (rla === undefined) return compressor ? undefined : { status: "na", reference: "enter motor FLA (rated) to compare" };
       const pct = round1((value / rla) * 100);
       return { status: value <= rla * (1 + PM_TOLERANCES.amps / 100) ? "pass" : "fail", reference: `RLA/FLA ${rla} A (fail above ${100 + PM_TOLERANCES.amps} %)`, deviationPct: round1(pct - 100) };
     }
@@ -228,7 +250,7 @@ export function evaluate(template: PmTemplate, results: PmResults | null | undef
       if (measured !== undefined) {
         status = "pass";
         if (item.nameplateCompare) {
-          const c = compare(item.nameplateCompare, measured, nameplate, num(r.rated));
+          const c = compare(item.nameplateCompare, measured, nameplate, num(r.rated), item);
           if (c) {
             status = c.status;
             ev.reference = c.reference;

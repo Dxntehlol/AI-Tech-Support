@@ -12,7 +12,7 @@ import type {
   ElectricalProcedure,
   KnowledgeBase,
 } from "../types.ts";
-import { LEAK_RATE_FORMULA, annualizedLeakRate, applies as leakRuleApplies, thresholdFor } from "./refrigerantCompliance.ts";
+import { LEAK_RATE_FORMULA, annualizedLeakRate, applicability as leakRuleApplicability, thresholdFor, type RefrigerantLookup } from "./refrigerantCompliance.ts";
 
 /** Every calculator kind, in menu order (the tool schema and the route enum both read this list). */
 export const CALC_KINDS = [
@@ -596,7 +596,7 @@ function calcMegohm(req: Extract<ElectricalCalcRequest, { kind: "megohm" }>): El
 // Wave 2 calculators (mirrored offline in web/calc.js — keep the formulas exactly as the interpretation states)
 // ---------------------------------------------------------------------------
 
-function calcLeakRate(req: Extract<ElectricalCalcRequest, { kind: "leak_rate" }>): ElectricalCalcResult {
+function calcLeakRate(req: Extract<ElectricalCalcRequest, { kind: "leak_rate" }>, lookup?: RefrigerantLookup): ElectricalCalcResult {
   const v = validator();
   const ok = [v.check("addedLbs", req.addedLbs, { positive: true }), v.check("fullChargeLbs", req.fullChargeLbs, { positive: true }), v.check("daysSinceLastAdd", req.daysSinceLastAdd, { nonNegative: true })].every(Boolean);
   if (!ok) return result("leak_rate", {}, [`Enter pounds added, the appliance full charge (lb) and days since the previous add. ${LEAK_RATE_FORMULA}.`], v.warnings);
@@ -604,15 +604,24 @@ function calcLeakRate(req: Extract<ElectricalCalcRequest, { kind: "leak_rate" }>
   const lr = annualizedLeakRate({ addedLbs: req.addedLbs, fullChargeLbs: req.fullChargeLbs, daysSinceLastAdd: req.daysSinceLastAdd });
   const rate = lr.ratePct as number;
   const exceeded = rate > threshold;
-  const values: Record<string, number> = { leakRatePct: rate, thresholdPct: threshold, exceeded: exceeded ? 1 : 0, daysUsed: lr.days as number, applies: leakRuleApplies(req.fullChargeLbs) ? 1 : 0 };
+  // 40 CFR 84.106(a) / 82.157(a): HFC (GWP > 53) from 15 lb, ODS from 50 lb, GWP ≤ 53 not covered.
+  const app = leakRuleApplicability(req.fullChargeLbs, req.refrigerant ?? null, lookup);
+  const values: Record<string, number> = { leakRatePct: rate, thresholdPct: threshold, exceeded: exceeded ? 1 : 0, daysUsed: lr.days as number, applies: app.applies ? 1 : 0 };
+  const refName = app.refrigerantId ?? req.refrigerant;
   const interp = [
-    `Leak rate = (${req.addedLbs} ÷ ${req.fullChargeLbs}) × (365 ÷ ${lr.days}) × 100 = ${rate} % per year (EPA annualizing method; days below 1 count as 1).`,
+    `Leak rate = (${req.addedLbs} ÷ ${req.fullChargeLbs}) × (365 ÷ ${lr.days}) × 100 = ${rate} % per year (EPA annualizing method, 40 CFR 82.152 / 84.102: days = the shorter of the days since the last add or 365; days below 1 count as 1).`,
     exceeded
       ? `EXCEEDS the ${threshold} % threshold for ${req.applianceType ?? "comfort cooling (default)"} (40 CFR 84.106): repair within 30 days of this add (120 if a shutdown is needed), initial verification test before adding refrigerant again, follow-up verification within 10 days, and keep the records 3 years.`
       : `Below the ${threshold} % threshold for ${req.applianceType ?? "comfort cooling (default)"} (40 CFR 84.106). Log the add anyway: the next add is annualized from this date.`,
-    leakRuleApplies(req.fullChargeLbs)
-      ? "The HFC leak-repair rule applies from 15 lb full charge (ODS such as R-22: from 50 lb under 40 CFR 82.157)."
-      : `Full charge ${req.fullChargeLbs} lb is below the 15 lb HFC applicability (50 lb for ODS); the rate is informational.`,
+    app.regime === "not_covered"
+      ? `${refName} (GWP ${app.gwp}) is neither an HFC with GWP > 53 nor an ODS: the leak-repair rule (40 CFR 84.106 / 82.157) does not apply; the rate is informational.`
+      : app.regime === "ods"
+        ? app.applies
+          ? `${refName} is an ODS: the leak-repair rule applies from 50 lb full charge (40 CFR 82.157).`
+          : `${refName} is an ODS: full charge ${req.fullChargeLbs} lb is below the 50 lb applicability (40 CFR 82.157); the rate is informational.`
+        : app.applies
+          ? `The HFC leak-repair rule applies from 15 lb full charge (40 CFR 84.106; ODS such as R-22: from 50 lb under 40 CFR 82.157)${app.regime === "unknown" ? `; ${req.refrigerant ? `${req.refrigerant} is not in the refrigerant list, so an HFC is assumed` : "refrigerant not given, so an HFC is assumed"}` : ""}.`
+          : `Full charge ${req.fullChargeLbs} lb is below the 15 lb HFC applicability (50 lb for ODS); the rate is informational.`,
   ];
   return result("leak_rate", values, interp, v.warnings);
 }
@@ -952,7 +961,8 @@ function calcMotorReplacement(req: Extract<ElectricalCalcRequest, { kind: "motor
   return result("motor_replacement", values, interp, v.warnings);
 }
 
-export function calcElectrical(req: ElectricalCalcRequest): ElectricalCalcResult {
+/** `opts.refrigerantLookup` (complianceRefrigerantLookup(kb)) lets leak_rate judge applicability by refrigerant. */
+export function calcElectrical(req: ElectricalCalcRequest, opts: { refrigerantLookup?: RefrigerantLookup } = {}): ElectricalCalcResult {
   if (!req || typeof req !== "object" || typeof (req as { kind?: unknown }).kind !== "string") {
     return { kind: "ohms_law", values: {}, interpretation: [], warnings: ["Request must be an object with a `kind`."] };
   }
@@ -978,7 +988,7 @@ export function calcElectrical(req: ElectricalCalcRequest): ElectricalCalcResult
     case "megohm":
       return calcMegohm(req);
     case "leak_rate":
-      return calcLeakRate(req);
+      return calcLeakRate(req, opts.refrigerantLookup);
     case "gas_meter_clock":
       return calcGasMeterClock(req);
     case "combustion_co":

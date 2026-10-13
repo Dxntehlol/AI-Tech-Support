@@ -16,7 +16,7 @@ import { decodeUnit } from "../knowledge/decoder.ts";
 import { diagnose } from "../knowledge/diagnostics.ts";
 import { CALC_KINDS, calcElectrical, lookupElectrical } from "../knowledge/electrical.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
-import { ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
+import { complianceRefrigerantLookup, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import { DX_MEASUREMENT_ENUM_CODED_KEYS, DX_MEASUREMENT_NUMERIC_KEYS } from "../knowledge/loader.ts";
 import { toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
 import { storeChillerReading, storeReading } from "../readingsStore.ts";
@@ -506,7 +506,8 @@ const SPECS: ToolSpec[] = [
       test_volts: opt("number", "Megger test voltage, VDC (megohm), typically 500.", { min: 0, max: 5000 }),
       added_lbs: opt("number", "Refrigerant added, lb (leak_rate).", { min: 0, max: 100000 }),
       full_charge_lbs: opt("number", "Appliance full charge, lb (leak_rate).", { min: 0, max: 100000 }),
-      days_since_last_add: opt("number", "Days since the previous add (leak_rate; < 1 counts as 1).", { min: 0, max: 36500 }),
+      days_since_last_add: opt("number", "Days since the previous add (leak_rate; < 1 counts as 1, more than 365 counts as 365).", { min: 0, max: 36500 }),
+      refrigerant: opt("string", "Refrigerant (leak_rate applicability: HFC with GWP > 53 from 15 lb, ODS such as R-22 from 50 lb, GWP ≤ 53 not covered).", { maxLength: 40 }),
       appliance_type: opt("string", "EPA appliance category (leak_rate): comfort_cooling 10 %, commercial_refrigeration 20 %, industrial_process 30 %, other 10 %.", { enum: APPLIANCE_TYPES }),
       dial_cuft: opt("number", "Meter test dial size, ft³ per revolution: 0.5, 1, 2, 5 (gas_meter_clock).", { min: 0, max: 100 }),
       seconds_per_rev: opt("number", "Seconds for the revolutions timed (gas_meter_clock).", { min: 0, max: 36000 }),
@@ -624,7 +625,7 @@ const SPECS: ToolSpec[] = [
       refrigerant: opt("string", "Refrigerant involved, e.g. R-410A.", { maxLength: 40 }),
       refrigerant_added_lbs: opt("number", "Refrigerant added, pounds (decimal).", { min: 0, max: 100000 }),
       refrigerant_recovered_lbs: opt("number", "Refrigerant recovered, pounds (decimal).", { min: 0, max: 100000 }),
-      follow_up: opt("string", "What to do on the next visit.", { maxLength: 400 }),
+      follow_up: opt("string", "The one action for the next visit, as a short checklist line (under 120 characters, e.g. \"Re-check fan amps and subcooling after cap swap\"). Details and target numbers go in resolution/notes, not here.", { maxLength: 400 }),
       follow_up_due: opt("string", "When the follow-up is due, YYYY-MM-DD (only with follow_up).", { maxLength: 10 }),
       service_date: opt("string", "Service date YYYY-MM-DD; defaults to today.", { maxLength: 30 }),
       confirmed: opt("boolean", "true only when the tech explicitly confirmed the cause and fix."),
@@ -1354,7 +1355,7 @@ const CALC_REQUIRED: Record<(typeof CALC_KINDS)[number], string[]> = {
   motor_replacement: [],
 };
 
-function toolCalcElectrical(v: Validated): ToolOutcome {
+function toolCalcElectrical(v: Validated, ctx: ToolContext): ToolOutcome {
   const kind = str(v.kind) as (typeof CALC_KINDS)[number];
   const missing = CALC_REQUIRED[kind].filter((k) => v[k] === undefined);
   if (missing.length) return fail(`${kind} needs ${CALC_REQUIRED[kind].join(", ")}; missing: ${missing.join(", ")}.`, `Calc ${kind}: missing inputs`);
@@ -1405,7 +1406,7 @@ function toolCalcElectrical(v: Validated): ToolOutcome {
       request = { kind, megohms: num(v.megohms)!, testVolts: num(v.test_volts) };
       break;
     case "leak_rate":
-      request = { kind, addedLbs: num(v.added_lbs)!, fullChargeLbs: num(v.full_charge_lbs)!, daysSinceLastAdd: num(v.days_since_last_add)!, applianceType: str(v.appliance_type) as ElectricalCalcRequest extends { applianceType?: infer T } ? T : never };
+      request = { kind, addedLbs: num(v.added_lbs)!, fullChargeLbs: num(v.full_charge_lbs)!, daysSinceLastAdd: num(v.days_since_last_add)!, applianceType: str(v.appliance_type) as ElectricalCalcRequest extends { applianceType?: infer T } ? T : never, refrigerant: str(v.refrigerant) };
       break;
     case "gas_meter_clock":
       request = { kind, dialCuft: num(v.dial_cuft)!, secondsPerRev: num(v.seconds_per_rev)!, heatingValueBtuPerCuft: num(v.heating_value_btu_per_cuft), revolutions: num(v.revolutions), nameplateInputBtuh: num(v.nameplate_input_btuh) };
@@ -1438,7 +1439,7 @@ function toolCalcElectrical(v: Validated): ToolOutcome {
       request = { kind, hp: num(v.hp), rpm: num(v.rpm), volts: num(v.volts), phase: phase as 1 | 3 | undefined, frame: str(v.frame), rotationFromShaftEnd: str(v.rotation_from_shaft_end) as "cw" | "ccw" | undefined, shaftDiaIn: num(v.shaft_dia_in), enclosure: str(v.enclosure) };
       break;
   }
-  const r = calcElectrical(request);
+  const r = calcElectrical(request, { refrigerantLookup: complianceRefrigerantLookup(ctx.kb) });
   const summary = `${kind.replace(/_/g, " ")}: ${clip(r.interpretation[0] ?? r.warnings[0] ?? Object.entries(r.values).map(([k, n]) => `${k}=${fmt(n, 2)}`).join(", "), 120)}`;
   return ok({ ...r, request }, summary);
 }
@@ -1705,7 +1706,7 @@ function toolLogRefrigerant(v: Validated, ctx: ToolContext): ToolOutcome {
     date: date ?? null,
   });
   const today = (ctx.now ?? new Date()).toISOString().slice(0, 10);
-  const compliance = unitCompliance(ctx.repos, unit, today);
+  const compliance = unitCompliance(ctx.repos, unit, today, undefined, complianceRefrigerantLookup(ctx.kb));
   const event = refrigerantEventView(row);
   const finding = row.finding_id ? ctx.repos.findings.get(row.finding_id) : undefined;
   const notes: string[] = [];
@@ -1713,6 +1714,11 @@ function toolLogRefrigerant(v: Validated, ctx: ToolContext): ToolOutcome {
     if (row.leak_rate_pct === null) notes.push(`Leak rate not computed: ${compliance.fullChargeLbs === null ? "the unit has no full_charge_lbs — ask for the nameplate charge and call update_unit" : "no previous add or install year on record; the next add will be annualized from this one"}.`);
     else if (row.exceeded === 1) notes.push(`EXCEEDANCE: ${row.leak_rate_pct} % per year exceeds the ${row.threshold_pct} % threshold. Tell the tech: repair within 30 days of ${event.date} (120 if a shutdown is needed), initial verification test before adding refrigerant again, follow-up verification within 10 days, records kept 3 years. A follow-up finding was opened${finding ? ` (due ${finding.follow_up_due})` : ""}.`);
     else notes.push(`${row.leak_rate_pct} % per year is below the ${row.threshold_pct} % threshold.`);
+  }
+  const oe = compliance.openExceedance;
+  if (oe && oe.id !== row.id) notes.push(`The ${oe.date} exceedance (${oe.leakRatePct ?? "?"} %/yr) is still open: it closes only with a passed follow-up verification test or a retrofit/retirement plan, not with a top-off.`);
+  if (!compliance.applies && compliance.fullChargeLbs !== null && (eventType === "add" || oe)) {
+    notes.push(compliance.regime === "not_covered" ? `The EPA leak-repair obligations do not apply to this unit's refrigerant (GWP ≤ 53, not an HFC or ODS); the rate is for the record.` : `The EPA leak-repair obligations do not apply: the full charge is below the ${compliance.applicabilityLbs} lb applicability${compliance.regime === "ods" ? " for an ODS (40 CFR 82.157)" : " (40 CFR 84.106)"}.`);
   }
   const out = { event, finding: finding ? trimFinding(finding) : undefined, compliance, notes: notes.length ? notes : undefined, formula: compliance.formula };
   const label = eventType.replace(/_/g, " ");
@@ -1826,7 +1832,7 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
       case "electrical_reference":
         return toolElectricalReference(v, ctx);
       case "calc_electrical":
-        return toolCalcElectrical(v);
+        return toolCalcElectrical(v, ctx);
       case "lookup_fault_code":
         return toolLookupFaultCode(v, ctx);
       case "search_history":

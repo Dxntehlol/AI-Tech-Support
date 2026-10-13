@@ -3,7 +3,8 @@ import express, { type Express, type RequestHandler, type Response } from "expre
 import type { ChatDeps } from "./agent/chat.ts";
 import { isFallbacksSupported } from "./agent/chat.ts";
 import { readPackageVersion } from "./config.ts";
-import { authMiddleware, corsMiddleware, originAndContentTypeGuard } from "./routes/auth.ts";
+import { authMiddleware, corsMiddleware, originAndContentTypeGuard, ownerOnly } from "./routes/auth.ts";
+import { meRouter, testersRouter } from "./routes/testers.ts";
 import { conversationsRouter } from "./routes/conversations.ts";
 import { calcRouter, referenceRouter } from "./routes/reference.ts";
 import { exportRouter, searchRouter } from "./routes/search.ts";
@@ -104,7 +105,8 @@ export function createApp(appDeps: AppDeps): Express {
   const allowOrigins = deps.allowOrigins ?? config.allowOrigins ?? [];
   const version = deps.version ?? readPackageVersion();
   app.use(corsMiddleware(allowOrigins));
-  app.use(authMiddleware(config.appPassword));
+  // Tester logins (Settings → Testers) are matched after the owner password; the principal lands in res.locals.
+  app.use(authMiddleware(config.appPassword, deps.repos.testers, deps.now ? { now: () => deps.now!().getTime() } : {}));
 
   // ----- /api -----
   const api = express.Router();
@@ -143,11 +145,13 @@ export function createApp(appDeps: AppDeps): Express {
   api.use("/decode", decodeRouter(deps));
   api.use("/findings", findingsRouter(deps));
   api.use("/search", searchRouter(deps));
-  api.use("/export", exportRouter(deps));
+  api.use("/export", ownerOnly(), exportRouter(deps));
   api.use("/reference", referenceRouter(deps));
   api.use("/calc", calcRouter(deps));
-  api.use("/settings", settingsRouter(deps));
-  api.use("/usage", usageRouter(deps));
+  api.use("/settings", ownerOnly(), settingsRouter(deps));
+  api.use("/usage", ownerOnly(), usageRouter(deps));
+  api.use("/me", meRouter(deps));
+  api.use("/testers", testersRouter(deps));
   api.use("/corrections", correctionsRouter(deps));
   api.use("/followups", followupsRouter(deps));
   api.use(apiNotFound);

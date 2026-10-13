@@ -577,7 +577,7 @@ export type ElectricalCalcRequest =
   | { kind: "winding_check"; phase: 1 | 3; r1: number; r2: number; r3: number } // 1-phase: r1=C-S, r2=C-R, r3=S-R; 3-phase: T1-T2, T2-T3, T3-T1
   | { kind: "megohm"; megohms: number; testVolts?: number }
   // Wave 2 calculators (DESIGN.md "Calculators"); formulas are spelled out in each result's interpretation.
-  | { kind: "leak_rate"; addedLbs: number; fullChargeLbs: number; daysSinceLastAdd: number; applianceType?: ApplianceType }
+  | { kind: "leak_rate"; addedLbs: number; fullChargeLbs: number; daysSinceLastAdd: number; applianceType?: ApplianceType; refrigerant?: string }
   | { kind: "gas_meter_clock"; dialCuft: number; secondsPerRev: number; heatingValueBtuPerCuft?: number; revolutions?: number; nameplateInputBtuh?: number }
   | { kind: "combustion_co"; coPpm: number; o2Pct: number; ambientCoPpm?: number }
   | { kind: "sensible_cfm"; btuh: number; deltaTF: number; tons?: number }
@@ -691,6 +691,30 @@ export interface ConversationRow {
   signed_by?: string | null;
   signed_at?: string | null;
   signature_note?: string | null;
+  /** Tester who started it (Settings → Testers); null = the owner. Always present on rows read from the database. */
+  tester_id?: string | null;
+}
+
+/** A tester login row (password digest excluded from API responses). */
+export interface TesterRow {
+  id: string;
+  name: string;
+  password_sha256: string;
+  created_at: string;
+  disabled: number;
+  daily_cap_usd: number | null;
+  last_seen_at: string | null;
+  notes: string | null;
+}
+
+export interface TesterEventRow {
+  id: number;
+  tester_id: string;
+  created_at: string;
+  kind: "turn" | "error" | "cap";
+  conversation_id: string | null;
+  code: string | null;
+  detail: string | null;
 }
 
 export interface MessageRow {
@@ -790,6 +814,7 @@ export interface RefrigerantEventRow {
 
 export type PmItemKind = "check" | "number" | "text";
 export type PmNameplateCompare = "volts" | "amps" | "capacitor_uf";
+export type PmNameplateKey = "blower_fla" | "fan_fla";
 
 export interface PmItem {
   id: string;
@@ -797,6 +822,8 @@ export interface PmItem {
   kind: PmItemKind;
   unit?: string; // "V", "A", "µF", "°F", "in. wc", "ppm" …
   nameplateCompare?: PmNameplateCompare; // tolerance: volts ±10 %, amps ≤ 110 % RLA, capacitor ±6 %
+  /** Nameplate reference for an amps item that is not the compressor: blower or fan motor FLA from `nameplate_json`. */
+  nameplateKey?: PmNameplateKey;
   asFoundAsLeft?: boolean; // number recorded twice (as found / as left)
   safety?: boolean; // a failed safety item is called out first
   hint?: string;
@@ -981,4 +1008,6 @@ export interface AppConfig {
   webDir: string;
   /** Origins allowed via CORS (native shells, e.g. capacitor://localhost); empty/absent = same-origin only. */
   allowOrigins?: string[];
+  /** Default estimated spend (USD, server-local day) a tester may run up before chat is refused; 0 = no cap. */
+  testerDailyCapUsd?: number;
 }

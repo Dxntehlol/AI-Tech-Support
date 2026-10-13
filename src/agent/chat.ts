@@ -3,6 +3,7 @@ import type { MessagesStreamer, StreamLike, StreamParams } from "./client.ts";
 import type { Repos } from "../db/repos.ts";
 import type { AppConfig, ChatEvent, KnowledgeBase, MessageRow } from "../types.ts";
 import { staticSystemPrompt, unitContextBlock } from "./systemPrompt.ts";
+import { complianceRefrigerantLookup } from "../knowledge/refrigerants.ts";
 import { describeToolCall, executeTool, toolDefinitions, type ToolContext, type ToolOutcome } from "./tools.ts";
 
 export interface ChatDeps {
@@ -15,6 +16,8 @@ export interface ChatDeps {
   now?: () => Date;
   /** True when the assistant runs on the fake client (no credentials / CLAUDE_FAKE=1): usage is not recorded. */
   demo?: boolean;
+  /** Tester running this turn (Settings → Testers): usage rows are attributed to them. Null/absent = the owner. */
+  testerId?: string | null;
 }
 
 export interface UserTurnInput {
@@ -399,6 +402,7 @@ async function runTurnInner(
       repos.readings.list({ unitId: unit.id, limit: 20 }),
       repos.refrigerantEvents.list({ unitId: unit.id, limit: 50 }),
       repos.pmVisits.list({ unitId: unit.id, limit: 5 }),
+      complianceRefrigerantLookup(deps.kb),
     );
     return [staticBlock, { type: "text", text: block }];
   };
@@ -546,6 +550,7 @@ function recordUsage(deps: ChatDeps, conversationId: string, final: Anthropic.Be
       cache_write_tokens: u?.cache_creation_input_tokens ?? 0,
       web_searches: u?.server_tool_use?.web_search_requests ?? 0,
       stop_reason: final.stop_reason ?? null,
+      tester_id: deps.testerId ?? null,
     });
   } catch (err) {
     log(`usage record failed: ${err instanceof Error ? err.message : String(err)}`);

@@ -1,6 +1,6 @@
 import type { ConversationRow, CorrectionRow, DecodeResult, FindingRow, PmVisitRow, ReadingRow, RefrigerantEventRow, UnitRow } from "../types.ts";
 import { MODE_LABEL, toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
-import { complianceSummary, type ComplianceSummary } from "../knowledge/refrigerantCompliance.ts";
+import { complianceSummary, type ComplianceSummary, type RefrigerantLookup } from "../knowledge/refrigerantCompliance.ts";
 import { toComplianceEvent } from "../complianceStore.ts";
 import { parseSummary } from "../knowledge/pm.ts";
 
@@ -81,7 +81,7 @@ These are not negotiable. If the tech asks for something on this list, refuse an
 - Never bypass or permanently jumper high-pressure switches, high limits, flame rollout switches, gas pressure switches, flame safeguards, or A2L refrigerant-detection mitigation.
 - A low-pressure switch (LPS) may be jumpered only momentarily, for a diagnostic test the manufacturer's literature describes, attended the whole time, and removed before leaving.
 - EPA Section 608 certification is required for refrigerant work. No venting. Recover before opening the system. Never use refrigerant as a leak-test gas. Pressure-test only with dry nitrogen through a regulator with a relief valve. Purge with nitrogen while brazing.
-- Never mix refrigerants. Never retrofit R-454B or R-32 into R-410A equipment. Follow AIM Act leak-repair rules for HFC appliances holding 15 lb or more (leak rate over 10/20/30 % → repair within 30 days, verification tests before and 10 days after). Before any charging advice read the REFRIGERANT / COMPLIANCE context: when the last add exceeded the threshold, say so, quote the rate and the deadlines, and never recommend a top-off.
+- Never mix refrigerants. Never retrofit R-454B or R-32 into R-410A equipment. Follow AIM Act leak-repair rules for HFC appliances holding 15 lb or more (ODS: 50 lb; GWP ≤ 53: exempt; leak rate over 10/20/30 % → repair within 30 days, verification tests before and 10 days after). Before any charging advice read the REFRIGERANT / COMPLIANCE context: when it shows EXCEEDANCE OPEN, say so, quote the rate and the deadlines, and never recommend a top-off.
 - A2L refrigerants (R-32, R-454B and others): ventilate, no ignition sources, A2L-rated leak detector and recovery machine, and understand the RDS mitigation behavior (blower forced on, compressor and heat locked out) before refrigerant work.
 - Never add refrigerant without a leak check and valid readings. Never diagnose charge below 65 °F outdoor without confirmed head-pressure control.
 - Lockout/tagout (LOTO) per NFPA 70E with live-dead-live meter proof before touching conductors. CAT III/IV meter for 480/575 V. Arc-flash PPE per the label. Discharge capacitors through a bleed resistor, never a screwdriver.
@@ -417,15 +417,18 @@ function readingsSection(readings: ReadingRow[]): string[] {
 
 const MAX_REFRIGERANT_EVENTS = 5;
 
-/** "REFRIGERANT / COMPLIANCE": last add with leak rate, exceeded flag, open obligations, recent events; empty when nothing to say. */
-function complianceSection(unit: UnitRow, events: RefrigerantEventRow[], now: Date): string[] {
+/**
+ * "REFRIGERANT / COMPLIANCE": last add with leak rate, the open exceedance (refrigerantCompliance `openExceedance`),
+ * open obligations, recent events; empty when nothing to say. `lookup` resolves the refrigerant for applicability.
+ */
+function complianceSection(unit: UnitRow, events: RefrigerantEventRow[], now: Date, lookup?: RefrigerantLookup): string[] {
   const rows = Array.isArray(events) ? events.filter((e) => isRecord(e) && typeof e.created_at === "string") : [];
   const hasCharge = typeof unit.full_charge_lbs === "number" && Number.isFinite(unit.full_charge_lbs);
   if (rows.length === 0 && !hasCharge) return [];
   const today = now.toISOString().slice(0, 10);
   let c: ComplianceSummary;
   try {
-    c = complianceSummary(rows.map(toComplianceEvent), { fullChargeLbs: unit.full_charge_lbs ?? null, applianceType: unit.appliance_type ?? null, circuitsCount: unit.circuits_count ?? null, installYear: unit.install_year, refrigerant: unit.refrigerant }, today);
+    c = complianceSummary(rows.map(toComplianceEvent), { fullChargeLbs: unit.full_charge_lbs ?? null, applianceType: unit.appliance_type ?? null, circuitsCount: unit.circuits_count ?? null, installYear: unit.install_year, refrigerant: unit.refrigerant }, today, lookup);
   } catch {
     return [];
   }
@@ -433,7 +436,13 @@ function complianceSection(unit: UnitRow, events: RefrigerantEventRow[], now: Da
   const head: string[] = [];
   head.push(hasCharge ? `Full charge ${unit.full_charge_lbs} lb${c.circuitsCount > 1 ? ` across ${c.circuitsCount} circuits (${c.circuitChargeLbs} lb each)` : ""}` : "Full charge NOT recorded (leak rate cannot be computed; ask for the nameplate charge)");
   head.push(`${c.applianceType ? c.applianceType.replace(/_/g, " ") : "appliance type not set (comfort cooling assumed)"} → threshold ${c.thresholdPct} %`);
-  head.push(c.applies ? "rule applies (≥ 15 lb)" : "below the 15 lb applicability");
+  head.push(
+    c.applies
+      ? `rule applies (≥ ${c.applicabilityLbs} lb${c.regime === "ods" ? ", ODS — 40 CFR 82.157" : ""})`
+      : c.regime === "not_covered"
+        ? "leak-repair rule does not apply (refrigerant GWP ≤ 53, not an HFC or ODS)"
+        : `below the ${c.applicabilityLbs} lb applicability${c.regime === "ods" ? " for an ODS" : ""}`,
+  );
   lines.push(`- ${head.join(" | ")}`);
   if (c.lastAdd) {
     const la = c.lastAdd;
@@ -443,7 +452,12 @@ function complianceSection(unit: UnitRow, events: RefrigerantEventRow[], now: Da
   } else {
     lines.push("- No refrigerant adds on record.");
   }
-  if (c.exceeded) lines.push("- EXCEEDANCE OPEN: do not recommend topping off; the leak must be found and repaired, then verified. Mention the deadlines below in any refrigerant advice.");
+  const oe = c.openExceedance;
+  if (oe) {
+    lines.push(
+      `- EXCEEDANCE OPEN: do not recommend topping off; the leak must be found and repaired, then verified. Open since the ${oe.date} add (${oe.leakRatePct ?? "?"} %/yr${oe.thresholdPct !== null ? ` vs ${oe.thresholdPct} %` : ""}); it closes only with a passed follow-up verification test or a retrofit/retirement plan, not with a later top-off. Mention the deadlines below in any refrigerant advice.`,
+    );
+  }
   if (c.obligations.length) {
     lines.push(`Open obligations (${c.obligations.length}):`);
     for (const o of c.obligations.slice(0, 6)) lines.push(`- ${o.overdue ? "OVERDUE " : ""}${clip(o.text, 220)}${o.dueDate ? ` [due ${o.dueDate}]` : ""}`);
@@ -519,6 +533,7 @@ export function unitContextBlock(
   readings: ReadingRow[] = [],
   refrigerantEvents: RefrigerantEventRow[] = [],
   pmVisits: PmVisitRow[] = [],
+  refrigerantLookup?: RefrigerantLookup,
 ): string {
   const safeFindings = Array.isArray(findings) ? findings.filter((f) => isRecord(f)) : [];
   const safeConvos = Array.isArray(conversations) ? conversations.filter((c) => isRecord(c)) : [];
@@ -574,7 +589,7 @@ export function unitContextBlock(
     }
   }
 
-  const comp = complianceSection(unit, refrigerantEvents, now);
+  const comp = complianceSection(unit, refrigerantEvents, now, refrigerantLookup);
   if (comp.length) {
     out.push("");
     out.push(...comp);
