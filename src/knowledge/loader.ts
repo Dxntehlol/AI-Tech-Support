@@ -60,6 +60,7 @@ export const PRODUCT_TYPES = new Set([
   "water_source_hp",
   "compressor",
   "refrigeration_condensing_unit",
+  "precision_cooling",
   "other",
 ]);
 export const MODEL_ATTRIBUTES = new Set([

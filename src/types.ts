@@ -33,6 +33,7 @@ export type ProductType =
   | "water_source_hp"
   | "compressor"
   | "refrigeration_condensing_unit"
+  | "precision_cooling" // data-center CRAC/CRAH, in-row and rack coolers (Stulz, Liebert, Data Aire, Uniflair, InRow)
   | "other";
 
 export type MeteringDevice = "txv" | "fixed" | "eev" | "unknown";
