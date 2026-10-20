@@ -135,6 +135,19 @@ with canned responses so you can explore the UI and calculators.
 | `TESTER_DAILY_CAP_USD` | `2` | Default estimated spend per tester per day (server-local) before chat is refused; `0` = no cap. Per-tester values override it. |
 | `ALLOW_ORIGINS` | — | Comma-separated origins allowed via CORS, for native app shells (e.g. `capacitor://localhost,http://localhost`). Empty = same-origin only. |
 | `MAX_TOOL_ITERATIONS` | `12` | Tool calls the assistant may make in one turn before it must answer. |
+| `LIBRARY_DIR` | `./library` | Private manual library (see below). The search index is kept beside `DB_PATH` as `library-index.sqlite`. |
+
+**Manual library.** The assistant's `search_manuals` tool searches the full text of manufacturer
+manuals (IOMs, controller and service manuals) plus curated notes, and cites document, page and the
+public URL. The manuals are the manufacturers' copyright and this repository is public, so the library
+is **never committed**: copy the library folder (`manifest.json`, `<maker>/text/*.txt`, `<maker>/*.md`)
+to `LIBRARY_DIR` on the server, then run `node scripts/setup.mjs` (or `npm run library:index`). The
+index (SQLite FTS5, bm25) rebuilds automatically when `manifest.json` changes. Without a library the
+tool says so and the assistant falls back to the packs and web search.
+
+**Photos.** Tap the camera to send a nameplate, controller screen, board LEDs, wiring diagram or gauge
+photo, with or without text. The assistant reads it, transcribes the model, serial, alarm text or
+readings, and runs the matching tools (decode, fault-code lookup, manual search, diagnostics) on its own.
 
 **Settings in the app.** **Settings → AI connection** writes `settings.env` next to the database
 (`data/settings.env`, mode 600; the `/app/data` volume in Docker). It holds only `ANTHROPIC_API_KEY`,

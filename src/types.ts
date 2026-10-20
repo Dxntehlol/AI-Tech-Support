@@ -1006,6 +1006,10 @@ export interface AppConfig {
   /** Images in user messages older than this many user turns are replaced by a text placeholder on replay (0 = never). */
   replayImageWindow: number;
   knowledgeDir: string;
+  /** Private manual library (manifest.json + text), outside the repo. LIBRARY_DIR, default <project>/library. */
+  libraryDir: string;
+  /** FTS index for the manual library (beside the job database). */
+  libraryIndexPath: string;
   webDir: string;
   /** Origins allowed via CORS (native shells, e.g. capacitor://localhost); empty/absent = same-origin only. */
   allowOrigins?: string[];

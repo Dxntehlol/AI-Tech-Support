@@ -196,6 +196,23 @@ if (env.APP_PASSWORD) ok("Access password", CHECK ? "set in .env (APP_PASSWORD)"
 else warn("Access password", "APP_PASSWORD is empty — required for phone access; re-run this script to generate one");
 const port = Number.parseInt(env.PORT ?? "", 10) || (portGiven ? PORT : DEFAULT_PORT);
 
+// ---------------------------------------------------------------- 3b. manual library (optional, private)
+// Manufacturer manuals are copied onto this machine (never committed); the server searches them through an
+// index beside the database. Build the index here so the first start after an update is not slowed down.
+{
+  const libraryDir = resolve(ROOT, (env.LIBRARY_DIR || "").trim() || "./library");
+  if (!existsSync(join(libraryDir, "manifest.json"))) {
+    warn("Manual library", `not installed (no ${join(libraryDir, "manifest.json")}) — the assistant works without it; copy the library folder there to enable manual search`);
+  } else if (CHECK) {
+    ok("Manual library", `installed at ${libraryDir} (index is built on start or with: npm run library:index)`);
+  } else {
+    note("Indexing the manual library…");
+    const li = run(process.execPath, ["--disable-warning=ExperimentalWarning", join(ROOT, "scripts", "library-index.ts")], { stdio: "inherit" });
+    if (li.code === 0) ok("Manual library", `indexed from ${libraryDir}`);
+    else warn("Manual library", "indexing failed (see the output above); the server will retry on start");
+  }
+}
+
 // ---------------------------------------------------------------- 4. service (pm2)
 let serviceRunning = false;
 let pm2 = null;

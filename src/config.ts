@@ -98,6 +98,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     maxToolIterations: Number.parseInt(env.MAX_TOOL_ITERATIONS ?? "12", 10) || 12,
     replayImageWindow: Math.max(0, Number.parseInt(env.REPLAY_IMAGE_WINDOW ?? "10", 10) || 0),
     knowledgeDir: resolve(PROJECT_ROOT, "knowledge"),
+    libraryDir: resolve(PROJECT_ROOT, env.LIBRARY_DIR?.trim() || "./library"),
+    libraryIndexPath: resolve(dirname(resolve(PROJECT_ROOT, env.DB_PATH?.trim() || "./data/hvac.sqlite")), "library-index.sqlite"),
     webDir: resolve(PROJECT_ROOT, "web"),
     allowOrigins: parseAllowOrigins(env.ALLOW_ORIGINS),
     testerDailyCapUsd: parseCapUsd(env.TESTER_DAILY_CAP_USD, DEFAULT_TESTER_DAILY_CAP_USD),

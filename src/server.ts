@@ -5,6 +5,7 @@ import { loadConfig, loadDotEnv } from "./config.ts";
 import { openDatabase } from "./db/index.ts";
 import { createRepos } from "./db/repos.ts";
 import { loadKnowledge } from "./knowledge/loader.ts";
+import { ManualLibrary, setManualLibrary } from "./knowledge/library.ts";
 import { createFakeClient } from "./agent/fakeClient.ts";
 import { turnsInFlight } from "./agent/chat.ts";
 import { USAGE_RETENTION_DAYS } from "./agent/usage.ts";
@@ -45,6 +46,20 @@ mkdirSync(dirname(config.dbPath), { recursive: true });
 const db = openDatabase(config.dbPath);
 const repos = createRepos(db);
 const kb = loadKnowledge(config.knowledgeDir);
+
+// Manual library (private, outside the repo): open it now so a changed bundle is re-indexed before the
+// first request instead of during a chat turn. Missing library = the search_manuals tool says so.
+const library = new ManualLibrary({ dir: config.libraryDir, indexPath: config.libraryIndexPath, log: (m) => console.log(`  ${m}`) });
+setManualLibrary(library);
+let libraryLine: string;
+try {
+  const st = library.status();
+  libraryLine = st.available
+    ? `  manual library: ${st.manuals} manuals + ${st.documents - st.manuals} note files, ${st.chunks} passages (built ${st.built ?? "?"})`
+    : `  manual library: not installed (${st.reason ?? "unknown"}); search_manuals will say so`;
+} catch (err) {
+  libraryLine = `  manual library: failed to open (${err instanceof Error ? err.message : String(err)})`;
+}
 
 /**
  * Whether the SDK would find credentials outside the environment: the active `ant auth login` profile
@@ -96,6 +111,7 @@ const server = app.listen(config.port, config.host, () => {
   const live = runtime.get().config;
   console.log(`  model=${live.claudeModel} effort=${live.claudeEffort} fallbacks=${live.claudeFallbacks} webSearch=${live.enableWebSearch ? "on" : "off"}${demo ? " demo=on" : ""}`);
   console.log(`  knowledge: ${kb.manufacturers.length} manufacturer packs, ${kb.refrigerants.tables.size} refrigerants, ${kb.diagnostics.rules.rules.length} diagnostic rules, ${kb.electrical.components.length} electrical components, ${kb.electrical.procedures.length} procedures`);
+  console.log(libraryLine);
   console.log(`  db=${config.dbPath}${config.appPassword ? " auth=basic|bearer" : " auth=none (loopback only)"}`);
   console.log(allowOrigins.length ? `  cors=on origins=${allowOrigins.join(",")}` : "  cors=off (same-origin only; set ALLOW_ORIGINS for native shells)");
 });

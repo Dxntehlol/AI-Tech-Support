@@ -44,6 +44,8 @@ function config(overrides: Partial<AppConfig> = {}): AppConfig {
     maxToolIterations: 4,
     replayImageWindow: 2,
     knowledgeDir: join(PROJECT_ROOT, "knowledge"),
+    libraryDir: join(PROJECT_ROOT, "library-test-none"),
+    libraryIndexPath: ":memory:",
     webDir: join(PROJECT_ROOT, "web"),
     ...overrides,
   };

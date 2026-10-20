@@ -11,3 +11,5 @@ web/config.js
 # Capacitor native projects (created by npx cap add ios/android)
 ios/
 android/
+# private manual library (manufacturer manuals; copied onto the server, never committed)
+library/

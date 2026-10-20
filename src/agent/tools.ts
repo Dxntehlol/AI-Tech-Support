@@ -16,6 +16,7 @@ import { decodeUnit } from "../knowledge/decoder.ts";
 import { diagnose } from "../knowledge/diagnostics.ts";
 import { CALC_KINDS, calcElectrical, lookupElectrical } from "../knowledge/electrical.ts";
 import { lookupFaultCode } from "../knowledge/faults.ts";
+import { getManualLibrary } from "../knowledge/library.ts";
 import { complianceRefrigerantLookup, ptLookup, resolveRefrigerant, superheatSubcooling } from "../knowledge/refrigerants.ts";
 import { DX_MEASUREMENT_ENUM_CODED_KEYS, DX_MEASUREMENT_NUMERIC_KEYS } from "../knowledge/loader.ts";
 import { toTrendReading, trendFromReadings } from "../knowledge/trend.ts";
@@ -591,6 +592,16 @@ const SPECS: ToolSpec[] = [
     },
   },
   {
+    name: "search_manuals",
+    description:
+      "Search the manufacturer manual library: full text of the installation/operation/service manuals, controller manuals and alarm guides held for STULZ, Liebert/Vertiv, Trane/American Standard, Carrier/Bryant/Payne/ICP, Goodman/Amana/Daikin, Lennox, York/JCI, Rheem/Ruud, Data Aire, Uniflair, APC InRow and Rittal, plus curated notes (alarm tables, model-number keys, troubleshooting). Use it for sequences of operation, setpoints and factory defaults, menu paths and published passwords, alarm reset procedures, terminal and wiring designations, charging and pressure-switch settings, component data, and alarm text that lookup_fault_code has no entry for. Query with the words the manual would print (alarm text, component or menu names, model family) and pass the manufacturer. Returns passages with document title, doc number, page and public URL; quote them and cite title + page. No passages means the library has nothing on it, not that the answer does not exist.",
+    props: {
+      query: req("string", "Words to find, as the manual would print them: e.g. \"LOW PRESSURE 1 reset\", \"dehumidification reheat sequence\", \"E2 password service level\", \"high pressure switch setting R410A\".", { maxLength: 200 }),
+      manufacturer: opt("string", "Manufacturer or brand to restrict the search (STULZ, Liebert, Vertiv, Trane, Carrier, Bryant, Goodman, Daikin, Lennox, York, Rheem, Data Aire, Uniflair, APC, Rittal...).", { maxLength: 60 }),
+      max_results: opt("integer", "Passages to return (default 4).", { min: 1, max: 6 }),
+    },
+  },
+  {
     name: "search_history",
     description:
       "Full-text search across past conversations, findings and units in job memory (\"have we seen code A140 before\", \"compressor replacement at the pharmacy\"). Returns up to 10 hits with snippets. Set unit_only=true to search only the attached unit; filter by site or since (ISO date).",
@@ -856,6 +867,8 @@ export function describeToolCall(name: string, input: unknown): string {
       return `Calc ${s("kind").replace(/_/g, " ")}`;
     case "lookup_fault_code":
       return `Fault code ${s("code")}${i.manufacturer ? ` (${s("manufacturer")})` : ""}`;
+    case "search_manuals":
+      return `Manuals: "${s("query", 60)}"${i.manufacturer ? ` (${s("manufacturer")})` : ""}`;
     case "search_history":
       return `Search history "${s("query", 60)}"`;
     case "get_unit_history":
@@ -1444,6 +1457,46 @@ function toolCalcElectrical(v: Validated, ctx: ToolContext): ToolOutcome {
   return ok({ ...r, request }, summary);
 }
 
+/** Characters of passage text per hit, sized so the default 4 hits plus citations fit TOOL_RESULT_MAX_CHARS. */
+const MANUAL_PASSAGE_CHARS = 1500;
+
+function toolSearchManuals(v: Validated): ToolOutcome {
+  const query = str(v.query)!.trim();
+  const manufacturer = str(v.manufacturer)?.trim() || undefined;
+  const limit = num(v.max_results) ?? 4;
+  const lib = getManualLibrary();
+  const missing = lib ? lib.unavailable() : "no manual library configured on this server";
+  if (!lib || missing) {
+    return ok(
+      { query, manufacturer, available: false, reason: missing, guidance: "The manual library is not installed on this server. Answer from the knowledge tools, say the manual was not searched, and point the tech to the IOM / controller manual on the unit or the manufacturer's literature site." },
+      "Manuals: library not installed",
+    );
+  }
+  const r = lib.search(query, { manufacturer, limit });
+  const perHit = Math.max(500, Math.floor((MANUAL_PASSAGE_CHARS * 4) / Math.max(r.hits.length, 4)));
+  const passages = r.hits.map((h) => ({
+    document: h.title,
+    docNo: h.docNo ?? undefined,
+    manufacturer: h.manufacturerLabel,
+    type: h.kind === "manual" ? "manufacturer manual" : "research notes (compiled from manufacturer manuals; check the cited source)",
+    location: h.location,
+    url: h.url ?? undefined,
+    text: h.text.length > perHit ? `${h.text.slice(0, perHit).trimEnd()} …` : h.text,
+  }));
+  const out = {
+    query,
+    manufacturerFilter: r.manufacturerFilter ?? undefined,
+    match: r.match === "any" ? "partial: no passage had every word; these share some of them, so check relevance" : r.match === "all" ? "all words" : "no match",
+    passages,
+    note:
+      passages.length === 0
+        ? "No passages found. Try the exact display text, a component name, or drop the manufacturer filter. Do not guess the content of a manual."
+        : "Quote the passage and cite document + location. Manual text was extracted from PDFs: table columns are separated by ' | ' and may be misaligned; confirm numbers on the unit's own literature when they matter.",
+  };
+  const where = r.hits[0] ? `${clip(r.hits[0].title, 50)} ${r.hits[0].location}` : "no passages";
+  return ok(out, `Manuals "${clip(query, 40)}": ${r.hits.length} passage${r.hits.length === 1 ? "" : "s"} (${where})`);
+}
+
 function toolLookupFaultCode(v: Validated, ctx: ToolContext): ToolOutcome {
   const code = str(v.code)!;
   const manufacturer = str(v.manufacturer);
@@ -1835,6 +1888,8 @@ export async function executeTool(name: string, input: unknown, ctx: ToolContext
         return toolCalcElectrical(v, ctx);
       case "lookup_fault_code":
         return toolLookupFaultCode(v, ctx);
+      case "search_manuals":
+        return toolSearchManuals(v);
       case "search_history":
         return toolSearchHistory(v, ctx);
       case "get_unit_history":
