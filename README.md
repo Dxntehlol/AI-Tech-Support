@@ -89,9 +89,10 @@ Everything runs on one machine with Node.js; the only external call is to the An
 | Area | Contents |
 | --- | --- |
 | Refrigerants | 45 PT tables generated from CoolProp (dew/bubble for zeotropes, elevation correction) |
-| Manufacturer packs | 8 packs covering 83 brand names: 46 serial-number formats, 75 model nomenclatures, 44 control platforms |
-| Fault codes | 1,047 sourced fault/alarm codes and 201 LED flash patterns, plus 76 common-issue entries and 20 per-family electrical profiles |
-| Worked examples | 367 real nameplates that decode as tests on every run |
+| Manufacturer packs | 12 packs covering 242 brand names: 47 serial-number formats, 158 model nomenclatures, 134 control platforms (incl. STULZ, Liebert/Vertiv, Data Aire, Uniflair, APC InRow, Rittal precision cooling) |
+| Fault codes | 9,300 sourced fault/alarm codes and 458 LED flash patterns, plus 153 common-issue entries and 20 per-family electrical profiles |
+| Worked examples | 547 real nameplates that decode as tests on every run |
+| Manual library | Optional private full-text search over manufacturer manuals (`search_manuals`); see Configuration |
 | Diagnostics | 90 refrigeration-cycle rules with mode overrides (AC, heat-pump cooling/heating, refrigeration) |
 | Electrical | 29 component test procedures, 22 symptom procedures, 21 calculators |
 | PM checklists | 11 equipment-type templates, 206 items with nameplate comparisons |
@@ -135,6 +136,19 @@ with canned responses so you can explore the UI and calculators.
 | `TESTER_DAILY_CAP_USD` | `2` | Default estimated spend per tester per day (server-local) before chat is refused; `0` = no cap. Per-tester values override it. |
 | `ALLOW_ORIGINS` | — | Comma-separated origins allowed via CORS, for native app shells (e.g. `capacitor://localhost,http://localhost`). Empty = same-origin only. |
 | `MAX_TOOL_ITERATIONS` | `12` | Tool calls the assistant may make in one turn before it must answer. |
+| `LIBRARY_DIR` | `./library` | Private manual library (see below). The search index is kept beside `DB_PATH` as `library-index.sqlite`. |
+
+**Manual library.** The assistant's `search_manuals` tool searches the full text of manufacturer
+manuals (IOMs, controller and service manuals) plus curated notes, and cites document, page and the
+public URL. The manuals are the manufacturers' copyright and this repository is public, so the library
+is **never committed**: copy the library folder (`manifest.json`, `<maker>/text/*.txt`, `<maker>/*.md`)
+to `LIBRARY_DIR` on the server, then run `node scripts/setup.mjs` (or `npm run library:index`). The
+index (SQLite FTS5, bm25) rebuilds automatically when `manifest.json` changes. Without a library the
+tool says so and the assistant falls back to the packs and web search.
+
+**Photos.** Tap the camera to send a nameplate, controller screen, board LEDs, wiring diagram or gauge
+photo, with or without text. The assistant reads it, transcribes the model, serial, alarm text or
+readings, and runs the matching tools (decode, fault-code lookup, manual search, diagnostics) on its own.
 
 **Settings in the app.** **Settings → AI connection** writes `settings.env` next to the database
 (`data/settings.env`, mode 600; the `/app/data` volume in Docker). It holds only `ANTHROPIC_API_KEY`,

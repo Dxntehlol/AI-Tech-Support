@@ -14,6 +14,14 @@ test("loadConfig defaults", () => {
   assert.equal(c.claudeFallbacks, "default");
   assert.equal(c.enableWebSearch, false);
   assert.deepEqual(c.allowOrigins, []);
+  assert.equal(c.libraryDir, join(PROJECT_ROOT, "library"));
+  assert.equal(c.libraryIndexPath, join(PROJECT_ROOT, "data", "library-index.sqlite"));
+});
+
+test("loadConfig: LIBRARY_DIR and the index beside DB_PATH", () => {
+  const c = loadConfig({ LIBRARY_DIR: "./manuals", DB_PATH: "./var/db/hvac.sqlite" });
+  assert.equal(c.libraryDir, join(PROJECT_ROOT, "manuals"));
+  assert.equal(c.libraryIndexPath, join(PROJECT_ROOT, "var", "db", "library-index.sqlite"));
 });
 
 test("loadConfig parses env", () => {

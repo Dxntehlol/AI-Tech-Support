@@ -1,0 +1,2493 @@
+{
+ "id": "data-aire",
+ "manufacturer": "Data Aire",
+ "brands": [
+  "Data Aire",
+  "Data Aire, Inc.",
+  "DataAire"
+ ],
+ "aliases": [
+  "Data-Aire",
+  "Data Temp",
+  "gForce Ultra",
+  "gForce GT",
+  "dap4",
+  "DAP-II",
+  "DAP II",
+  "DAP III",
+  "Data Alarm Processor",
+  "Mini dap4"
+ ],
+ "serialFormats": [],
+ "modelFormats": [
+  {
+   "id": "data-aire-series",
+   "family": "Data Aire Series floor CRAC/CRAH (DX 6-30 ton dual circuit; chilled water 7-50 ton)",
+   "description": "DA | cooling (A air, G glycol, W water, C chilled water) | D downflow / U upflow | nominal tons | phase | voltage | optional coil (C auxiliary chilled-water coil, E Energy Saver coil). e.g. DAAD-1634, DACD1534.",
+   "productType": "precision_cooling",
+   "regex": "^(DA)([AGWC])([DU])-?([0-9]{2})(3)([245])([CE])?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Family",
+     "attribute": "series",
+     "map": {
+      "DA": "Data Aire Series"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Cooling",
+     "attribute": "unit_type",
+     "map": {
+      "A": "Air cooled DX",
+      "G": "Glycol cooled DX",
+      "W": "Water cooled DX",
+      "C": "Chilled water"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Airflow",
+     "attribute": "airflow",
+     "map": {
+      "D": "Downflow",
+      "U": "Upflow"
+     }
+    },
+    {
+     "group": 4,
+     "name": "Nominal tons",
+     "attribute": "tonnage",
+     "transform": "map_tons",
+     "map": {
+      "02": "2",
+      "03": "3",
+      "04": "4",
+      "05": "5",
+      "06": "6",
+      "07": "7",
+      "08": "8",
+      "09": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12",
+      "13": "13",
+      "14": "14",
+      "15": "15",
+      "16": "16",
+      "17": "17",
+      "18": "18",
+      "19": "19",
+      "20": "20",
+      "21": "21",
+      "22": "22",
+      "23": "23",
+      "24": "24",
+      "25": "25",
+      "26": "26",
+      "27": "27",
+      "28": "28",
+      "29": "29",
+      "30": "30",
+      "31": "31",
+      "32": "32",
+      "33": "33",
+      "34": "34",
+      "35": "35",
+      "36": "36",
+      "37": "37",
+      "38": "38",
+      "39": "39",
+      "40": "40",
+      "41": "41",
+      "42": "42",
+      "43": "43",
+      "44": "44",
+      "45": "45",
+      "46": "46",
+      "47": "47",
+      "48": "48",
+      "49": "49",
+      "50": "50"
+     },
+     "notes": "DX sizes 06, 08, 10, 13, 16, 20, 26, 30; chilled water 7-50 ton."
+    },
+    {
+     "group": 5,
+     "name": "Phase",
+     "map": {
+      "3": "Three phase"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "2": "208-230/3/60",
+      "4": "460/3/60",
+      "5": "575/3/60"
+     }
+    },
+    {
+     "group": 7,
+     "name": "Optional coil",
+     "attribute": "options",
+     "map": {
+      "C": "Auxiliary chilled-water coil (air or water cooled units)",
+      "E": "Energy Saver coil (water/glycol cooled)"
+     }
+    }
+   ],
+   "refrigerant": "R-410A (current DX); earlier units R-407C",
+   "controlPlatformIds": [
+    "data-aire-dap4",
+    "data-aire-dap-ii"
+   ],
+   "examples": [
+    {
+     "model": "DAAD-1634",
+     "expect": {
+      "series": "Data Aire Series",
+      "unit_type": "Air cooled DX",
+      "airflow": "Downflow",
+      "tonnage": "16",
+      "voltage": "460/3/60"
+     }
+    },
+    {
+     "model": "DAAD2032C",
+     "expect": {
+      "unit_type": "Air cooled DX",
+      "tonnage": "20",
+      "voltage": "208-230/3/60",
+      "options": "Auxiliary chilled-water coil (air or water cooled units)"
+     }
+    },
+    {
+     "model": "DACD1534",
+     "expect": {
+      "unit_type": "Chilled water",
+      "airflow": "Downflow",
+      "tonnage": "15",
+      "voltage": "460/3/60"
+     }
+    }
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Data Aire Series, Air Cooled / Water-Glycol Cooled, 6 through 30 ton Dual Circuits, R-410A spec book p.13 'Model Number Identification' (https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series-DX-R410A.pdf)",
+    "Data Aire Series Chilled Water, 7 through 50 ton spec book p.10 (https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series_ChilledWater.pdf)"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "data-aire-condenser-fluid-cooler",
+   "family": "Data Aire remote air-cooled condenser / fluid cooler",
+   "description": "DA | FC fluid cooler / RC remote condenser | size | phase | voltage | LD low decibel / PB indoor centrifugal. e.g. DAFC0612LD.",
+   "productType": "other",
+   "regex": "^(DA)(FC|RC)-?([0-9]{2})([13])([24])(LD|PB)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Family",
+     "attribute": "series",
+     "map": {
+      "DA": "Data Aire"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Type",
+     "attribute": "unit_type",
+     "map": {
+      "FC": "Fluid cooler",
+      "RC": "Remote condenser"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Size"
+    },
+    {
+     "group": 4,
+     "name": "Phase",
+     "map": {
+      "1": "Single phase",
+      "3": "Three phase"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "2": "208-230 V",
+      "4": "460 V"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Option",
+     "attribute": "options",
+     "map": {
+      "LD": "Low decibel",
+      "PB": "Indoor centrifugal"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "DAFC0612LD",
+     "expect": {
+      "unit_type": "Fluid cooler",
+      "options": "Low decibel"
+     }
+    }
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Data Aire Series, Air Cooled / Water-Glycol Cooled, 6 through 30 ton Dual Circuits, R-410A spec book p.13 'Model Number Identification' (https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series-DX-R410A.pdf)"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "data-aire-gforce-ultra",
+   "family": "Data Aire gForce Ultra variable-speed DX CRAC (22-125 kW, single and dual circuit)",
+   "description": "GU | cooling (A air, W water, G glycol) | D downflow / U upflow | nominal kW | phase | voltage | optional coil. e.g. GUAU02232C.",
+   "productType": "precision_cooling",
+   "regex": "^(GU)([AWG])([DU])-?(022|036|045|070|091|125)(3)([24])([CE])?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Family",
+     "attribute": "series",
+     "map": {
+      "GU": "gForce Ultra (single and dual circuit)"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Cooling",
+     "attribute": "unit_type",
+     "map": {
+      "A": "Air cooled",
+      "W": "Water cooled",
+      "G": "Glycol cooled"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Airflow",
+     "attribute": "airflow",
+     "map": {
+      "D": "Downflow",
+      "U": "Upflow"
+     }
+    },
+    {
+     "group": 4,
+     "name": "Nominal capacity (kW)",
+     "notes": "022, 036, 045 single circuit; 070, 091, 125 dual circuit. Not converted to tons."
+    },
+    {
+     "group": 5,
+     "name": "Phase",
+     "map": {
+      "3": "Three phase"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "2": "208-230/3/60",
+      "4": "460/3/60"
+     }
+    },
+    {
+     "group": 7,
+     "name": "Optional coil",
+     "attribute": "options",
+     "map": {
+      "C": "Auxiliary chilled-water coil (air or water cooled units)",
+      "E": "Energy Saver coil (water/glycol cooled units)"
+     }
+    }
+   ],
+   "refrigerant": "R-410A",
+   "controlPlatformIds": [
+    "data-aire-dap4"
+   ],
+   "examples": [
+    {
+     "model": "GUAU02232C",
+     "expect": {
+      "series": "gForce Ultra (single and dual circuit)",
+      "unit_type": "Air cooled",
+      "airflow": "Upflow",
+      "voltage": "208-230/3/60",
+      "options": "Auxiliary chilled-water coil (air or water cooled units)"
+     }
+    }
+   ],
+   "notes": [
+    "gForce Ultra: inverter scroll compressor on a VFD (25-100 rps, 4:1 turndown), EEV, dap4 / dap4 touch control."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "gForce Ultra, Single and Dual Circuit, 22 to 125 kW spec sheet p.2 (https://dataairpart.com/wp-content/uploads/2025/02/1_Data-Aire_gForce-Ultra.pdf)"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "data-aire-data-temp",
+   "family": "Data Aire Data Temp front-access CRAC (2-5 ton)",
+   "description": "DT | cooling | D downflow / U upflow | nominal tons (e.g. DTAD-02).",
+   "productType": "precision_cooling",
+   "regex": "^(DT)([AWGC])([DU])-?(0[2-5])([-A-Z0-9]{0,8})$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Family",
+     "attribute": "series",
+     "map": {
+      "DT": "Data Temp"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Cooling",
+     "attribute": "unit_type",
+     "map": {
+      "A": "Air cooled",
+      "W": "Water cooled (inferred)",
+      "G": "Glycol cooled (inferred)",
+      "C": "Chilled water (inferred)"
+     },
+     "notes": "Only A appears in the Data Temp book; W/G/C follow the Data Aire Series letter logic by analogy."
+    },
+    {
+     "group": 3,
+     "name": "Airflow",
+     "attribute": "airflow",
+     "map": {
+      "D": "Downflow",
+      "U": "Upflow"
+     }
+    },
+    {
+     "group": 4,
+     "name": "Nominal tons",
+     "attribute": "tonnage",
+     "transform": "map_tons",
+     "map": {
+      "02": "2",
+      "03": "3",
+      "04": "4",
+      "05": "5",
+      "06": "6",
+      "07": "7",
+      "08": "8",
+      "09": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12",
+      "13": "13",
+      "14": "14",
+      "15": "15",
+      "16": "16",
+      "17": "17",
+      "18": "18",
+      "19": "19",
+      "20": "20",
+      "21": "21",
+      "22": "22",
+      "23": "23",
+      "24": "24",
+      "25": "25",
+      "26": "26",
+      "27": "27",
+      "28": "28",
+      "29": "29",
+      "30": "30",
+      "31": "31",
+      "32": "32",
+      "33": "33",
+      "34": "34",
+      "35": "35",
+      "36": "36",
+      "37": "37",
+      "38": "38",
+      "39": "39",
+      "40": "40",
+      "41": "41",
+      "42": "42",
+      "43": "43",
+      "44": "44",
+      "45": "45",
+      "46": "46",
+      "47": "47",
+      "48": "48",
+      "49": "49",
+      "50": "50"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Remaining characters (not decoded)"
+    }
+   ],
+   "refrigerant": "R-410A (current); earlier R-407C",
+   "controlPlatformIds": [
+    "data-aire-dap4"
+   ],
+   "examples": [
+    {
+     "model": "DTAD-02",
+     "expect": {
+      "series": "Data Temp",
+      "unit_type": "Air cooled",
+      "airflow": "Downflow",
+      "tonnage": "2"
+     }
+    }
+   ],
+   "notes": [
+    "LOW: the Data Temp book has no nomenclature page; families DTAD/U-02 to -05 appear in its performance tables."
+   ],
+   "confidence": "low",
+   "evidence": "inferred",
+   "sources": [
+    "Data Temp R-410A spec book performance tables (https://dataairpart.com/wp-content/uploads/2025/02/7-2_Data-Aire-Data_Temp-R410A.pdf)"
+   ],
+   "lastVerified": "2026-10-20"
+  }
+ ],
+ "controls": [
+  {
+   "id": "data-aire-dap4",
+   "name": "Data Aire dap4 / dap4 touch / Mini dap4 control alarms (Data Aire Series, Data Temp, gForce GT, gForce Ultra, Mini ceiling)",
+   "description": "Data Aire Alarm Processor 4 (about 2008 on; touch-screen dap4 touch about 2014 on). Alarm classes: Warning (*) = notification only; Urgent (**) = shuts down the affected function (compressor, fan, humidifier...); Critical (***) = complete unit shutdown. All alarms, including auto-reset ones, are logged in the History menu (last 100 alarms). Some alarm actions are configurable in Menu K (Alarms and Limits). The main status screen shows OFFbyALM when an alarm has shut the unit off.",
+   "appliesTo": [
+    "data-aire-series",
+    "data-aire-gforce-ultra",
+    "data-aire-data-temp"
+   ],
+   "faultCodes": [
+    {
+     "code": "High Temperature Warning",
+     "meaning": "Return air above the high-temperature alarm limit. Default 80°F, range 70-90°F (70-120°F on chilled-water units); can be disabled.",
+     "likelyCauses": [
+      "Load greater than capacity",
+      "Cooling failure",
+      "Setpoint/limit too close"
+     ],
+     "checks": [
+      "Check cooling operation",
+      "Check limits in Menu K (Alarms and Limits)"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts); dap 4 Installation, Operation & Maintenance Manual (Data Aire) p.90 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Temperature Warning",
+     "meaning": "Return air below the low-temperature alarm limit. Default 60°F, range 55-75°F.",
+     "likelyCauses": [
+      "Over-cooling",
+      "Reheat failure"
+     ],
+     "checks": [
+      "Check reheat and the limit in Menu K"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Humidity Warning",
+     "meaning": "Return RH above the high-humidity limit (range 35-90 %); the humidifier is disabled during the alarm. Humidity setpoint default 50 % (range 25-70 %).",
+     "likelyCauses": [
+      "Dehumidification failure",
+      "Latent load",
+      "Infiltration"
+     ],
+     "checks": [
+      "Check dehumidification operation and the limit in Menu K"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Humidity Warning",
+     "meaning": "Return RH below the low-humidity limit.",
+     "likelyCauses": [
+      "Humidifier failure",
+      "Humidifier water supply"
+     ],
+     "checks": [
+      "Check the humidifier and its water supply"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Compressor 1",
+     "meaning": "Suction below the low-pressure cut-out (dap4 table: under 50 psi, cut-in 90 psi). Automatic reset.",
+     "likelyCauses": [
+      "Low airflow over the evaporator / dirty filters",
+      "Low refrigerant charge",
+      "EEV fault"
+     ],
+     "checks": [
+      "Check airflow and filters",
+      "Check charge (gForce Ultra manual: add refrigerant if suction is below 50 psi)"
+     ],
+     "severity": "lockout",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Compressor 2",
+     "meaning": "Suction below the low-pressure cut-out on compressor 2. Automatic reset.",
+     "likelyCauses": [
+      "Low airflow over the evaporator / dirty filters",
+      "Low refrigerant charge",
+      "EEV fault"
+     ],
+     "checks": [
+      "Check airflow and filters",
+      "Check charge"
+     ],
+     "severity": "lockout",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Compressor 1",
+     "meaning": "High-pressure switch tripped (or compressor internal overload open) on compressor 1; compressor locked out. HP is a manual reset: press and hold SILENCE while the HP message is displayed.",
+     "likelyCauses": [
+      "Air-cooled: condenser fan or coil fault",
+      "Water-cooled: low water flow or fouled condenser",
+      "Overcharge or non-condensables",
+      "Tripped breaker"
+     ],
+     "checks": [
+      "Fix the cause, then press and hold SILENCE while the HP message is displayed",
+      "Optional HP lockout after 2-5 resets per hour (auto-reset HP switch units only): the locked-out compressor stays off until acknowledged"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II wording: HIGH PRESSURE/INTERNAL OVERLOAD COMP: 1 (2) - 'Manual Reset Required'.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Compressor 2",
+     "meaning": "High-pressure switch tripped (or compressor internal overload open) on compressor 2; compressor locked out. HP is a manual reset: press and hold SILENCE while the HP message is displayed.",
+     "likelyCauses": [
+      "Air-cooled: condenser fan or coil fault",
+      "Water-cooled: low water flow or fouled condenser",
+      "Overcharge or non-condensables",
+      "Tripped breaker"
+     ],
+     "checks": [
+      "Fix the cause, then press and hold SILENCE while the HP message is displayed",
+      "Optional HP lockout after 2-5 resets per hour (auto-reset HP switch units only): the locked-out compressor stays off until acknowledged"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II wording: HIGH PRESSURE/INTERNAL OVERLOAD COMP: 1 (2) - 'Manual Reset Required'.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Dirty Filter",
+     "meaning": "Filter differential pressure switch closed. The message stays until corrected.",
+     "likelyCauses": [
+      "Filters loaded",
+      "Switch set too low"
+     ],
+     "checks": [
+      "Replace filters",
+      "Check the DP switch setting"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap 4 Installation, Operation & Maintenance Manual (Data Aire) p.90 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Under Floor Water Detection",
+     "meaning": "Leak detection cable/probe wet (optional water detection module required).",
+     "likelyCauses": [
+      "Condensate, humidifier or pipe leak"
+     ],
+     "checks": [
+      "Find the leak",
+      "Check the probe"
+     ],
+     "severity": "warning",
+     "notes": "Alarm class (warning/urgent/critical) not found in the sources read.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Firestat Tripped",
+     "meaning": "Return air above the firestat limit; the unit shuts down. Default 150°F (software 1.25 and later); 100°F in older software.",
+     "likelyCauses": [
+      "Fire or high heat in the return air",
+      "Reheat runaway"
+     ],
+     "checks": [
+      "Investigate the heat source before restarting",
+      "Check the firestat setting"
+     ],
+     "severity": "shutdown",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Compressor Short Cycle",
+     "meaning": "A compressor made more than 10 starts in an hour. Enabled by default (Comp Short Cycle = Yes); the condition adds 60 s to the minimum off time.",
+     "likelyCauses": [
+      "Setpoint/deadband too tight",
+      "Oversized unit",
+      "Low-pressure cycling"
+     ],
+     "checks": [
+      "Widen the deadband / review setpoints",
+      "Check for LP cycling"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Temperature Sensor Error",
+     "meaning": "Return air (temperature) sensor failure (open/short).",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check the connector and cable",
+      "Measure resistance against the sensor chart; replace"
+     ],
+     "severity": "warning",
+     "notes": "dap4 manual wording: Return Air (temperature) Sensor Failure.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidity Sensor Error",
+     "meaning": "Humidity sensor fault.",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check the connector and cable; replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discharge Sensor Error",
+     "meaning": "Discharge (supply) air sensor fault (optional).",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check the connector and cable; replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Chilled Water Sensor Failure",
+     "meaning": "Chilled-water temperature sensor fault.",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check the connector and cable; measure resistance against the sensor chart; replace"
+     ],
+     "severity": "warning",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "No Water Flow",
+     "meaning": "Flow switch open during cooling demand (checked only when the CW valve is >= 60 % open, or on water/glycol DX). Cannot be disabled. Delay 5-180 s (default 5 s). Action: alarm only (default) or compressors off until 5 min after the alarm clears.",
+     "likelyCauses": [
+      "Pump off",
+      "Valves closed",
+      "Strainer blocked",
+      "Air in the loop"
+     ],
+     "checks": [
+      "Check pump and flow"
+     ],
+     "severity": "warning",
+     "notes": "Optional alarm. Severity becomes Urgent when set to stop compressors.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Smoke Detector",
+     "meaning": "Smoke sensed by the optional detector; the unit shuts down.",
+     "likelyCauses": [
+      "Smoke",
+      "Dirty or failed detector"
+     ],
+     "checks": [
+      "Check the detector; reset after the smoke clears"
+     ],
+     "severity": "shutdown",
+     "notes": "Listed as Urgent in the dap4 table; main screen shows OFFbyALM.",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Condensate Water Level",
+     "meaning": "Secondary float in the optional condensate pump tripped.",
+     "likelyCauses": [
+      "Condensate pump failure",
+      "Blocked discharge"
+     ],
+     "checks": [
+      "Check the pump and discharge line"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fan Motor Overload",
+     "meaning": "Optional overload relay contact for a fan motor opened. On chilled-water units a fan overload drives the remaining fans to 100 %.",
+     "likelyCauses": [
+      "Over-amp",
+      "Bearing",
+      "Belt too tight"
+     ],
+     "checks": [
+      "Check motor amperage"
+     ],
+     "severity": "lockout",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04); dap 4 Installation, Operation & Maintenance Manual (Data Aire) p.90 (read via search excerpts); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Standby Pump On",
+     "meaning": "Standby pump running (optional).",
+     "likelyCauses": [
+      "Primary pump failed"
+     ],
+     "checks": [
+      "Check the primary pump"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local Alarm",
+     "meaning": "Local alarm input active (DAP wording: 'See tag inside door').",
+     "checks": [
+      "Read the tag inside the unit door for what the input is wired to"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual Override",
+     "meaning": "Manual override module switch(es) on.",
+     "likelyCauses": [
+      "Technician left an override switch on"
+     ],
+     "checks": [
+      "Return the override switches to auto"
+     ],
+     "severity": "warning",
+     "notes": "Manual Override Module P/N 160-600-002 (switches such as Cool 1 force outputs for testing).",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidifier Problem",
+     "meaning": "Humidifier fault input (DAP-II: HUMIDITY FAILURE 'Check Water Pressure'). Humidifier off.",
+     "likelyCauses": [
+      "Low water pressure",
+      "Canister/pan fault"
+     ],
+     "checks": [
+      "Check water pressure"
+     ],
+     "severity": "lockout",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts); Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom Message",
+     "meaning": "Optional custom alarm input with user-assigned text.",
+     "checks": [
+      "Check what the input is wired to"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Power Failure Restart",
+     "meaning": "Unit restarted after a power loss (or is held off if auto-restart is disabled).",
+     "likelyCauses": [
+      "Utility loss",
+      "Breaker"
+     ],
+     "checks": [
+      "Check power; if set not to auto-restart, restart manually"
+     ],
+     "severity": "warning",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9); dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Maintenance Required",
+     "meaning": "Scheduled maintenance due.",
+     "checks": [
+      "Perform maintenance and reset the reminder"
+     ],
+     "severity": "info",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Person to Contact on Alarm",
+     "meaning": "Optional display of the person to contact on alarm (not a fault).",
+     "severity": "info",
+     "source": "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Rack Sensor High Temperature",
+     "meaning": "Optional rack sensor above its limit (range 70-90°F, default 90°F).",
+     "checks": [
+      "Check rack airflow and the sensor location"
+     ],
+     "severity": "warning",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "No Airflow",
+     "meaning": "Air-flow switch (differential) or current-sensing relay shows no airflow. Cooling, reheat, humidification and dehumidification are locked out until cleared.",
+     "likelyCauses": [
+      "Broken belt",
+      "Blower motor failure",
+      "Overload trip",
+      "Switch tube off"
+     ],
+     "checks": [
+      "Check belt and motor (DAP-II text 'Check Belt & Motor')",
+      "Check the airflow switch tubing"
+     ],
+     "severity": "shutdown",
+     "notes": "Also shown as Loss of Airflow.",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04); FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Loss of Airflow",
+     "meaning": "Same as No Airflow: air-flow switch or current-sensing relay shows no airflow; cooling, reheat, humidification and dehumidification locked out.",
+     "likelyCauses": [
+      "Broken belt",
+      "Blower motor failure",
+      "Overload trip",
+      "Switch tube off"
+     ],
+     "checks": [
+      "Check belt and motor"
+     ],
+     "severity": "shutdown",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "High Suction Temperature",
+     "meaning": "Suction temperature above its limit (EEV units). Default 85°F, range 80-95°F; optional compressor lock-out in Menu K.",
+     "likelyCauses": [
+      "Low charge",
+      "EEV underfeeding"
+     ],
+     "checks": [
+      "Check charge and EEV operation"
+     ],
+     "severity": "warning",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EVD memory error",
+     "meaning": "Carel EVD EEV-driver memory error (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EVD pressure-temperature sensor error",
+     "meaning": "EVD suction pressure/temperature sensor error (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EVD valve motor error",
+     "meaning": "EVD valve motor error (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EVD Low Evaporator Temperature (LOP)",
+     "meaning": "Evaporating temperature below the LOP limit (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "EVD High Evaporator Temperature (MOP)",
+     "meaning": "Evaporating temperature above the MOP limit (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "High Superheat",
+     "meaning": "EEV superheat above the high limit (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Low Superheat",
+     "meaning": "EEV superheat below the low limit (Carel EVD driver alarm passed to dap4). When 'compressor shutdown on EVD alarm' = Yes (default), the compressor stops.",
+     "likelyCauses": [
+      "Driver fault",
+      "Pressure/temperature sensor failure",
+      "Valve wiring",
+      "Refrigerant charge"
+     ],
+     "checks": [
+      "Compare dap4 suction readings with gauges; if more than 5 % different, check EEV wiring and the EVD alarms"
+     ],
+     "severity": "lockout",
+     "source": "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts); gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Compressor VFD Alarm",
+     "meaning": "gForce Ultra: compressor called but the VFD stopped it.",
+     "likelyCauses": [
+      "Drive fault",
+      "Phase error (out of phase: the compressor will not start and the VFD shows an error)"
+     ],
+     "checks": [
+      "Read the fault on the VFD display",
+      "Test with the Manual Override Module Cool 1 switch"
+     ],
+     "severity": "lockout",
+     "notes": "The gForce Ultra drive make and its fault-code list were not found.",
+     "source": "gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)",
+     "evidence": "single_secondary"
+    },
+    {
+     "code": "Zone Master off-line",
+     "meaning": "More units selected than detected on the Zone Master network.",
+     "likelyCauses": [
+      "Communication cable",
+      "Unit address"
+     ],
+     "checks": [
+      "If Zone Master comm breaks, units run independently on their own setpoints; standby units start only on alarm"
+     ],
+     "severity": "warning",
+     "source": "dap4 Supplement Manual (Zone Master), manualslib 1645706 (search excerpt)",
+     "evidence": "single_secondary"
+    }
+   ],
+   "diagnosticTips": [
+    "Menus: F = Information, J = Factory Settings, K = Alarms and Limits.",
+    "High-pressure reset: press and hold SILENCE while the HP message is displayed.",
+    "Alarms scroll automatically and sound an audible alarm; only unacknowledged alarms keep sounding. Four programmable summary contacts are available for remote alarms.",
+    "EEV units: compare dap4 suction readings with gauges; more than 5 % difference means checking the EEV wiring and the EVD driver alarms.",
+    "Every Data Temp unit ships with dap4 control."
+   ],
+   "coverage": "partial",
+   "sourceDocs": [
+    {
+     "title": "Data Aire Series DX R-410A 6-30 ton spec book",
+     "url": "https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series-DX-R410A.pdf"
+    },
+    {
+     "title": "Data Aire Series Chilled Water 7-50 ton spec book",
+     "url": "https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series_ChilledWater.pdf"
+    },
+    {
+     "title": "Data Temp R-410A spec book",
+     "url": "https://dataairpart.com/wp-content/uploads/2025/02/7-2_Data-Aire-Data_Temp-R410A.pdf"
+    },
+    {
+     "title": "dap4 User Manual",
+     "url": "https://www.manualslib.com/manual/1799512/Data-Aire-Dap4.html"
+    },
+    {
+     "title": "dap4 touch Control System User Manual",
+     "url": "https://www.manualslib.com/manual/1549664/Data-Aire-Dap4-Touch.html"
+    },
+    {
+     "title": "gForce Ultra User Manual",
+     "url": "https://www.manualslib.com/manual/1951907/Data-Aire-Gforce-Ultra.html"
+    }
+   ],
+   "confidence": "medium",
+   "sources": [
+    "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9) (held)",
+    "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+    "dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+    "dap 4 Installation, Operation & Maintenance Manual (Data Aire) p.90 (read via search excerpts)",
+    "gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)"
+   ]
+  },
+  {
+   "id": "data-aire-dap-ii",
+   "name": "Data Aire DAP / DAP-II / Mini DAP-II / DAP 80 (Data Alarm Processor) alarm messages",
+   "description": "Earlier Data Aire microprocessor controls (DAP 1980s, DAP-II and Mini DAP-II about 1990s-2000s, DAP III 2000s). Backlit LCD with plain-language messages; optional alarm text is programmable in menus 28-34. The message set below is the full DAP unit-error bit table the controllers report over the Data Alarm Network (FieldServer FS-8700-49), whose strings match the unit display, plus DAP-II display/remedy pairs.",
+   "appliesTo": [
+    "data-aire-series",
+    "data-aire-data-temp"
+   ],
+   "faultCodes": [
+    {
+     "code": "High Pressure Failure Compressor No. 1",
+     "meaning": "Compressor 1 high-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset required"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II: HIGH PRESSURE/INTERNAL OVERLOAD COMP - 'Manual Reset Required'.",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Warning Compressor No. 1",
+     "meaning": "Compressor 1 high-pressure warning (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Failure Compressor No. 1",
+     "meaning": "Compressor 1 low-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow / dirty filters",
+      "Restriction"
+     ],
+     "checks": [
+      "Automatic reset on DAP-II ('automatic reset')"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Failure Compressor No. 2",
+     "meaning": "Compressor 2 high-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset required"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II: HIGH PRESSURE/INTERNAL OVERLOAD COMP - 'Manual Reset Required'.",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Warning Compressor No. 2",
+     "meaning": "Compressor 2 high-pressure warning (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Failure Compressor No. 2",
+     "meaning": "Compressor 2 low-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow / dirty filters",
+      "Restriction"
+     ],
+     "checks": [
+      "Automatic reset on DAP-II ('automatic reset')"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Failure Compressor No. 3",
+     "meaning": "Compressor 3 high-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset required"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II: HIGH PRESSURE/INTERNAL OVERLOAD COMP - 'Manual Reset Required'.",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Warning Compressor No. 3",
+     "meaning": "Compressor 3 high-pressure warning (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Failure Compressor No. 3",
+     "meaning": "Compressor 3 low-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow / dirty filters",
+      "Restriction"
+     ],
+     "checks": [
+      "Automatic reset on DAP-II ('automatic reset')"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Failure Compressor No. 4",
+     "meaning": "Compressor 4 high-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset required"
+     ],
+     "severity": "lockout",
+     "notes": "DAP-II: HIGH PRESSURE/INTERNAL OVERLOAD COMP - 'Manual Reset Required'.",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Pressure Warning Compressor No. 4",
+     "meaning": "Compressor 4 high-pressure warning (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Pressure Failure Compressor No. 4",
+     "meaning": "Compressor 4 low-pressure failure (DAP-II 046/048/049 units).",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow / dirty filters",
+      "Restriction"
+     ],
+     "checks": [
+      "Automatic reset on DAP-II ('automatic reset')"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No Air Flow, Check Belt and motor",
+     "meaning": "No air flow detected; message text tells the remedy: check belt and motor. Cooling, reheat and humidification are locked out.",
+     "likelyCauses": [
+      "Broken belt",
+      "Blower motor failure",
+      "Overload trip"
+     ],
+     "checks": [
+      "Check belt and motor"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Change Filters, High Pressure Drop",
+     "meaning": "Filter differential pressure switch closed (high pressure drop).",
+     "likelyCauses": [
+      "Dirty filters"
+     ],
+     "checks": [
+      "Check / change filters"
+     ],
+     "severity": "warning",
+     "notes": "DAP-II display: DIRTY FILTER - 'Check Filters'.",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local Alarm. See Tag inside Door",
+     "meaning": "Local alarm input active.",
+     "checks": [
+      "Read the tag inside the unit door"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual Override, service or emergency",
+     "meaning": "Manual override switch(es) on (service or emergency).",
+     "likelyCauses": [
+      "Override switch left on"
+     ],
+     "checks": [
+      "Check override/bypass switches"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidifier Failure, Check water pressure",
+     "meaning": "Humidifier failure (DAP-II display: HUMIDITY FAILURE - 'Check Water Pressure').",
+     "likelyCauses": [
+      "Low water pressure",
+      "Canister/pan fault"
+     ],
+     "checks": [
+      "Check water pressure"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No water flow. Check glycol pump.",
+     "meaning": "No water/glycol flow (DAP-II display: LOSS OF WATER FLOW - 'Check water pump').",
+     "likelyCauses": [
+      "Pump off",
+      "Valves closed"
+     ],
+     "checks": [
+      "Check the glycol/water pump"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Smoke detected, located inside unit",
+     "meaning": "Smoke detector inside the unit tripped; unit shutdown.",
+     "checks": [
+      "Check for smoke/fire; check the detector"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fire Stat Tripped, Location inside unit",
+     "meaning": "Firestat inside the unit tripped; unit shutdown.",
+     "likelyCauses": [
+      "Fire or high heat in the return air"
+     ],
+     "checks": [
+      "Investigate before restart"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Standby pump on, check glycol pump",
+     "meaning": "Standby glycol pump on.",
+     "likelyCauses": [
+      "Primary glycol pump failed"
+     ],
+     "checks": [
+      "Check the primary pump"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low voltage warning, check unit",
+     "meaning": "Low supply voltage warning.",
+     "checks": [
+      "Measure supply voltage"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Water detected in under floor area",
+     "meaning": "Water under the floor detected (DAP-II display: WATER UNDER FLOOR - 'Check probe').",
+     "likelyCauses": [
+      "Leak"
+     ],
+     "checks": [
+      "Find the leak; check the probe"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low air temperature warning",
+     "meaning": "Return air below the low-temperature limit (DAP-II default 60°F).",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High air temperature warning",
+     "meaning": "Return air above the high-temperature limit (DAP-II default 80°F, range 70-90°F).",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low Humidity warning",
+     "meaning": "Return humidity below the low limit.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High Humidity warning",
+     "meaning": "Return humidity above the high limit.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low chilled-water-in alarm",
+     "meaning": "Chilled-water inlet temperature low.",
+     "checks": [
+      "Check the chiller and CW supply"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High chilled-water-in alarm",
+     "meaning": "Chilled-water inlet temperature high.",
+     "checks": [
+      "Check the chiller and CW supply"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low chilled-water-out alarm",
+     "meaning": "Chilled-water outlet temperature low.",
+     "checks": [
+      "Check the chiller and CW supply"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High chilled-water-out alarm",
+     "meaning": "Chilled-water outlet temperature high.",
+     "checks": [
+      "Check the chiller and CW supply"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High or Low limits misadjusted",
+     "meaning": "High or low alarm limits set inconsistently.",
+     "checks": [
+      "Re-enter the alarm limits"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Air temperature sensor error",
+     "meaning": "Air temperature sensor error.",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidity sensor error",
+     "meaning": "Humidity sensor error.",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discharge air sensor error",
+     "meaning": "Discharge air sensor error.",
+     "likelyCauses": [
+      "Loose connection",
+      "Faulty sensor"
+     ],
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No communications with temp/humid module",
+     "meaning": "Controller lost communication with the temperature/humidity module.",
+     "checks": [
+      "Check module cable and power"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No communications with LCD module",
+     "meaning": "Controller lost communication with the LCD module.",
+     "checks": [
+      "Check the display cable"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Alarm network communications failure",
+     "meaning": "Data Alarm Network communication failure.",
+     "checks": [
+      "Check the network module and cabling"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "AC Power or controller restart",
+     "meaning": "AC power loss or controller restart (DAP-II display: POWER FAILURE OR RESTART).",
+     "checks": [
+      "Check power"
+     ],
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Network doppelganger error",
+     "meaning": "Two devices on the alarm network with the same identity.",
+     "checks": [
+      "Check unit addresses"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Incompatible Fahrenheit / centigrade mode",
+     "meaning": "Units on the network set to different temperature units.",
+     "checks": [
+      "Set all units to the same temperature scale"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Schedule normal maintenance due",
+     "meaning": "Scheduled maintenance due.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "compressor short cycle warning",
+     "meaning": "Compressor short-cycle warning.",
+     "likelyCauses": [
+      "Tight setpoints/deadband",
+      "Oversized unit",
+      "LP cycling"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fan motor overload, check motor amperage",
+     "meaning": "Fan motor overload (DAP-II display: FAN MOTOR OVERLOAD - 'Check Motor Amperage').",
+     "likelyCauses": [
+      "Over-amp",
+      "Bearing",
+      "Belt too tight"
+     ],
+     "checks": [
+      "Check motor amperage"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46; Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional alarm input #1",
+     "meaning": "Optional alarm input 1 with custom text (programmable in DAP-II menus 28-34).",
+     "checks": [
+      "Check what the input is wired to"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional alarm input #2",
+     "meaning": "Optional alarm input 2 with custom text (programmable in DAP-II menus 28-34).",
+     "checks": [
+      "Check what the input is wired to"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional alarm input #3",
+     "meaning": "Optional alarm input 3 with custom text (programmable in DAP-II menus 28-34).",
+     "checks": [
+      "Check what the input is wired to"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discharge air temperature limit (just a condition)",
+     "meaning": "Discharge air temperature limit active (status, not a fault).",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Reheat mode during dehumidification (just a condition)",
+     "meaning": "Reheat running during dehumidification (status).",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual Override: check bypass switch",
+     "meaning": "DAP 80 (DapII ver 5.0 or later): manual override active.",
+     "checks": [
+      "Check bypass/override switches"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Water detected under floor: check probe",
+     "meaning": "DAP 80: water under floor.",
+     "likelyCauses": [
+      "Leak"
+     ],
+     "checks": [
+      "Check probe and find the leak"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No air flow: check belt and motor",
+     "meaning": "DAP 80: no air flow.",
+     "likelyCauses": [
+      "Broken belt",
+      "Motor failure",
+      "Overload"
+     ],
+     "checks": [
+      "Check belt and motor"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Dirty filter: check filters",
+     "meaning": "DAP 80: dirty filter.",
+     "likelyCauses": [
+      "Dirty filters"
+     ],
+     "checks": [
+      "Check filters"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidifier problem: check water pressure",
+     "meaning": "DAP 80: humidifier problem.",
+     "likelyCauses": [
+      "Low water pressure"
+     ],
+     "checks": [
+      "Check water pressure"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low voltage warning: check unit",
+     "meaning": "DAP 80: low voltage warning.",
+     "checks": [
+      "Measure supply voltage"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Firestat alarm: unit shutdown",
+     "meaning": "DAP 80: firestat tripped; unit shutdown.",
+     "likelyCauses": [
+      "Fire or high heat in the return air"
+     ],
+     "checks": [
+      "Investigate before restart"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Power problem or unit restart",
+     "meaning": "DAP 80: power problem or unit restart.",
+     "checks": [
+      "Check power"
+     ],
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidity sensor problem",
+     "meaning": "DAP 80: humidity sensor problem.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Temperature sensor problem",
+     "meaning": "DAP 80: temperature sensor problem.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Scheduled maintenance due",
+     "meaning": "DAP 80: scheduled maintenance due.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High pressure C1: Manual reset required",
+     "meaning": "DAP 80: compressor 1 high pressure; manual reset required.",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause and manually reset"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low pressure C1: Manual reset required",
+     "meaning": "DAP 80: compressor 1 low pressure; manual reset required.",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow",
+      "Restriction"
+     ],
+     "checks": [
+      "Fix the cause and manually reset"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High pressure C2: Manual reset required",
+     "meaning": "DAP 80: compressor 2 high pressure; manual reset required.",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause and manually reset"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low pressure C2: Manual reset required",
+     "meaning": "DAP 80: compressor 2 low pressure; manual reset required.",
+     "likelyCauses": [
+      "Low charge",
+      "Low airflow",
+      "Restriction"
+     ],
+     "checks": [
+      "Fix the cause and manually reset"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Smoke detector: unit shutdown",
+     "meaning": "DAP 80: smoke detector tripped; unit shutdown.",
+     "checks": [
+      "Check for smoke/fire"
+     ],
+     "severity": "shutdown",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No water flow: check pump",
+     "meaning": "DAP 80: no water flow.",
+     "likelyCauses": [
+      "Pump off",
+      "Valves closed"
+     ],
+     "checks": [
+      "Check the pump"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Discharge temperature sensor problem",
+     "meaning": "DAP 80: discharge temperature sensor problem.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High temperature warning",
+     "meaning": "DAP 80: high temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low temperature warning",
+     "meaning": "DAP 80: low temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fan motor overload: check motor amperage",
+     "meaning": "DAP 80: fan motor overload.",
+     "checks": [
+      "Check motor amperage"
+     ],
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #1: See tag inside door",
+     "meaning": "DAP 80: local alarm 1.",
+     "checks": [
+      "Read the tag inside the door"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #1",
+     "meaning": "DAP 80: custom message on optional input 1.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #2: See tag inside door",
+     "meaning": "DAP 80: local alarm 2.",
+     "checks": [
+      "Read the tag inside the door"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #2",
+     "meaning": "DAP 80: custom message on optional input 2.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #3: See tag inside door",
+     "meaning": "DAP 80: local alarm 3.",
+     "checks": [
+      "Read the tag inside the door"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #3",
+     "meaning": "DAP 80: custom message on optional input 3.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #4: See tag inside door",
+     "meaning": "DAP 80: local alarm 4.",
+     "checks": [
+      "Read the tag inside the door"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #4",
+     "meaning": "DAP 80: custom message on optional input 4.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Standby pump on: check primary pump",
+     "meaning": "DAP 80: standby pump on.",
+     "likelyCauses": [
+      "Primary pump failed"
+     ],
+     "checks": [
+      "Check the primary pump"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "UPS power on: check main power supply",
+     "meaning": "DAP 80: running on UPS power.",
+     "checks": [
+      "Check the main power supply"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Humidification Inhibited",
+     "meaning": "DAP 80: humidification inhibited (status).",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Reheat inhibited",
+     "meaning": "DAP 80: reheat inhibited (status).",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Reheat and humidification inhibited",
+     "meaning": "DAP 80: reheat and humidification inhibited (status).",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual Override: Check bypass switches",
+     "meaning": "DAP 80 (DAPII ver 5.1 and later): manual override active.",
+     "checks": [
+      "Check bypass switches"
+     ],
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "HIGH PRESSURE/INTERNAL OVERLOAD COMP: 1",
+     "meaning": "DAP-II display: compressor 1 high pressure or internal overload. Remedy shown: Manual Reset Required.",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset"
+     ],
+     "severity": "lockout",
+     "source": "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "HIGH PRESSURE/INTERNAL OVERLOAD COMP: 2",
+     "meaning": "DAP-II display: compressor 2 high pressure or internal overload. Remedy shown: Manual Reset Required.",
+     "likelyCauses": [
+      "Condenser fan/coil fault (air-cooled)",
+      "Low water flow or fouled condenser (water-cooled)",
+      "Overcharge or non-condensables"
+     ],
+     "checks": [
+      "Fix the cause; manual reset"
+     ],
+     "severity": "lockout",
+     "source": "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LOW PRESSURE COMP: 1",
+     "meaning": "DAP-II display: compressor 1 low pressure (automatic reset).",
+     "severity": "lockout",
+     "source": "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LOW PRESSURE COMP: 2",
+     "meaning": "DAP-II display: compressor 2 low pressure (automatic reset).",
+     "severity": "lockout",
+     "source": "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "LOW TEMP WARNING",
+     "meaning": "DAP-II display: low temperature warning (bit 24 on DAPII-044/8/9).",
+     "severity": "warning",
+     "source": "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04)",
+     "evidence": "manufacturer_doc"
+    }
+   ],
+   "diagnosticTips": [
+    "DAP-II temperature alarm defaults 80°F high / 60°F low.",
+    "DAP III 'Warning and Alarms Displayed' list starts High Temperature Warning, High Humidity Warning, Low Temperature Warning, Low Humidity Warning, Low Pressure Compressor 1 (automatic reset) ... Firestat Temperature Alarm; the full list was not retrieved.",
+    "DAP-II units talk to a DART unit through a Data Alarm Network Module with network LEDs. FieldServer writes can push zeros into setpoints that were never set upstream (FS-8700-49 App. E.5)."
+   ],
+   "coverage": "complete",
+   "sourceDocs": [
+    {
+     "title": "FieldServer FS-8700-49 Data Aire (DAP) driver manual",
+     "docId": "FS-8700-49",
+     "url": "https://cdn.chipkin.com/assets/uploads/imports/manuals/FS-8700-49_Data_Aire_DAP.pdf"
+    },
+    {
+     "title": "Data Alarm Processor-II (DAP-II) Operation",
+     "docId": "DAPII_IOM010704",
+     "url": "https://www.yumpu.com/en/document/view/26864728/"
+    },
+    {
+     "title": "DAP III Operation Manual",
+     "url": "https://www.manualslib.com/manual/1623144/Data-Aire-Dap-Iii.html"
+    }
+   ],
+   "confidence": "high",
+   "sources": [
+    "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46",
+    "Data Alarm Processor-II (DAP-II) Operation manual (OCR scan, IOM 01/07/04) (OCR scan, medium)"
+   ]
+  },
+  {
+   "id": "data-aire-dap-chiller",
+   "name": "Data Aire DAP chiller module (Chiller-Stat) alarms",
+   "description": "Alarm/status bits reported by Data Aire chiller modules over the Data Alarm Network (FieldServer Chiller-Stat query). Names only; the driver manual gives no further description.",
+   "faultCodes": [
+    {
+     "code": "Auxiliary cooling available",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Auxiliary cooling available.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Auxiliary cooling locked out",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Auxiliary cooling locked out.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Unit on backup module standby",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Unit on backup module standby.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #1",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Custom message on optional input #1.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Custom message on optional input #2",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Custom message on optional input #2.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Evaporator freeze stat module #1",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Evaporator freeze stat module #1.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Evaporator freeze stat module #2",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Evaporator freeze stat module #2.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Evaporator freeze stat module #3",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Evaporator freeze stat module #3.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High pressure problem module #1",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: High pressure problem module #1.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High pressure problem module #2",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: High pressure problem module #2.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High pressure problem module #3",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: High pressure problem module #3.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High return temperature warning",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: High return temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "High supply temperature warning",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: High supply temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #1: See tag inside door",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Local alarm #1: See tag inside door.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Local alarm #2: See tag inside door",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Local alarm #2: See tag inside door.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low pressure problem module #1",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low pressure problem module #1.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low pressure problem module #2",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low pressure problem module #2.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low pressure problem module #3",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low pressure problem module #3.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low return temperature warning",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low return temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low supply temperature warning",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low supply temperature warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Low voltage warning: check unit",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Low voltage warning: check unit.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Scheduled normal maintenance due",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Scheduled normal maintenance due.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual override: compressor",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Manual override: compressor.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Manual override: check bypass switches",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Manual override: check bypass switches.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No chilled water flow module #1",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: No chilled water flow module #1.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No chilled water flow module #2",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: No chilled water flow module #2.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No chilled water flow module #3",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: No chilled water flow module #3.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "No condenser water flow",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: No condenser water flow.",
+     "severity": "lockout",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Power problem or restart",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Power problem or restart.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Return temperature sensor problem",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Return temperature sensor problem.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "compressor short cycle warning",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: compressor short cycle warning.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Standby pump on: Check primary pump",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Standby pump on: Check primary pump.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Supply temperature sensor problem",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Supply temperature sensor problem.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Unit on total standby",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Unit on total standby.",
+     "severity": "info",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Under floor water detected",
+     "meaning": "Data Aire chiller (DAP chiller module) status/alarm bit: Under floor water detected.",
+     "severity": "warning",
+     "source": "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query",
+     "evidence": "manufacturer_doc"
+    }
+   ],
+   "coverage": "complete",
+   "sourceDocs": [
+    {
+     "title": "FieldServer FS-8700-49 Data Aire (DAP) driver manual",
+     "docId": "FS-8700-49",
+     "url": "https://cdn.chipkin.com/assets/uploads/imports/manuals/FS-8700-49_Data_Aire_DAP.pdf"
+    }
+   ],
+   "confidence": "high",
+   "sources": [
+    "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 Chiller-Stat query"
+   ]
+  }
+ ],
+ "commonIssues": [
+  {
+   "symptom": "Data Aire: High Pressure Compressor alarm, compressor will not restart",
+   "likelyCauses": [
+    "Condenser fan/coil fault (air-cooled)",
+    "Low water flow or fouled condenser (water-cooled)",
+    "Overcharge or non-condensables",
+    "HP lockout option active after repeated resets"
+   ],
+   "checks": [
+    "Fix the cause, then press and hold SILENCE while the HP message is displayed (manual reset)",
+    "Optional HP lockout after 2-5 resets per hour (auto-reset HP switch units): the compressor stays off until acknowledged"
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+    "dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)"
+   ]
+  },
+  {
+   "symptom": "Data Aire: Low Pressure Compressor alarm",
+   "likelyCauses": [
+    "Low airflow over the evaporator / dirty filters",
+    "Low refrigerant charge",
+    "EEV / EVD driver fault"
+   ],
+   "checks": [
+    "Check airflow and filters",
+    "Check charge (gForce Ultra: add refrigerant if suction is below 50 psi)",
+    "Compare dap4 suction readings with gauges; >5 % difference = check EEV wiring and EVD alarms"
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+    "gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)"
+   ]
+  },
+  {
+   "symptom": "Data Aire gForce Ultra: compressor called but does not start (Compressor VFD Alarm)",
+   "likelyCauses": [
+    "VFD fault",
+    "Supply out of phase"
+   ],
+   "checks": [
+    "Read the fault on the VFD display",
+    "Test with the Manual Override Module Cool 1 switch"
+   ],
+   "appliesTo": "data-aire-gforce-ultra",
+   "confidence": "medium",
+   "evidence": "single_secondary",
+   "sources": [
+    "gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)"
+   ]
+  }
+ ],
+ "support": {
+  "phone": "(714) 921-6000 / (800) 347-2473 (Data Aire, Orange, CA; parts fax (714) 921-6022) - from the dap4 User Manual and a Data Aire parts list, medium confidence",
+  "url": "https://www.dataaire.com/",
+  "literatureUrl": "https://www.dataaire.com/installation-operation-maintenance-manuals/",
+  "literatureSearchHint": "Data Aire IOMs are requested through the dataaire.com IOM library; distributor copies of spec books (secovi.com, dataairpart.com) carry the model-number pages. Search '<model> Data Aire IOM' or 'dap4 user manual'."
+ },
+ "notes": [
+  "Created 2026-10-20 from the Data Aire research folder. Model nomenclature for Data Aire Series DX/CW, condensers/fluid coolers and gForce Ultra is from Data Aire spec-sheet figures (high).",
+  "The dap4 alarm details come mostly from search excerpts of the dap4 User Manual (p.100), dap4 touch manual and gForce Ultra IOM (not held); alarm names are confirmed by the held spec books. Severity classes for Water Under Floor, Firestat and Fan Overload in the dap4 table were not found.",
+  "Not found: serial-number/date-code decoding, the full dap4 alarm table with severities, the gForce Ultra VFD fault list, Data Temp nomenclature page, dap4 BACnet/Modbus point list."
+ ],
+ "sources": [
+  "Data Aire Series, Air Cooled / Water-Glycol Cooled, 6 through 30 ton Dual Circuits, R-410A spec book p.13 'Model Number Identification' (https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series-DX-R410A.pdf)",
+  "Data Aire Series Chilled Water, 7 through 50 ton spec book p.10 (https://secovi.com/images/pdfs/dataaire/piso/Data-Aire-Series_ChilledWater.pdf)",
+  "gForce Ultra, Single and Dual Circuit, 22 to 125 kW spec sheet p.2 (https://dataairpart.com/wp-content/uploads/2025/02/1_Data-Aire_gForce-Ultra.pdf)",
+  "FieldServer FS-8700-49 Data Aire DAP driver manual, Appendix E.4 'DAP Unit Errors' pp.42-46 (https://cdn.chipkin.com/assets/uploads/imports/manuals/FS-8700-49_Data_Aire_DAP.pdf)",
+  "Data Aire Series DX R-410A, Data Aire Series Chilled Water and Data Temp R-410A spec books, 'Control System - Alarms' (p.9)",
+  "dap4 User Manual (Data Aire) Alarms and Troubleshooting p.100 (read via search excerpts)",
+  "dap4 touch User Manual / IOM (Data Aire) (read via search excerpts)",
+  "gForce Ultra User Manual / IOM gFUltra_IOM 09/2020 (read via search excerpts)"
+ ],
+ "confidence": "medium",
+ "lastReviewed": "2026-10-20"
+}

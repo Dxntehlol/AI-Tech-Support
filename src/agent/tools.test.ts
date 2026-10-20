@@ -44,6 +44,7 @@ describe("toolDefinitions", () => {
       "electrical_reference",
       "calc_electrical",
       "lookup_fault_code",
+      "search_manuals",
       "search_history",
       "get_unit_history",
       "save_finding",

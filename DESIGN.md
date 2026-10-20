@@ -575,7 +575,12 @@ DxMeasurements fields in snake_case) — returns derived, validity, findings (to
 summary; with a unit attached it also stores a readings row (source `chat`) and returns `readingId` +
 `trendSinceLastVisit` (lines from `trendFromReadings`), never failing the diagnosis over storage; `electrical_reference` (query, kind); `calc_electrical`; `lookup_fault_code` (code,
 manufacturer?, platform?; accepts LED patterns like "IGC 3 flashes") — result text includes the
-platform's `coverage` and each entry's `source`; `search_history` (query, unit_only?, site?,
+platform's `coverage` and each entry's `source`; `search_manuals` (query, manufacturer?, max_results? 1-6,
+default 4) — full-text search (SQLite FTS5, porter stemming, bm25; AND first, OR fallback; ≤ 2 passages per
+document) over the private manual library at `LIBRARY_DIR` (manifest.json + pdftotext page-separated text +
+research notes, never committed); each passage carries document, doc number, page or section, public URL,
+and ≤ 1,500 chars of text; a missing library returns `available: false` with guidance (src/knowledge/library.ts);
+`search_history` (query, unit_only?, site?,
 since?) ≤ 10 hits, 300-char snippets; `get_unit_history` (unit_id?) — record, decode, `openFollowUps` first
 (findingId, due, text, symptom, status; findings with a follow_up not yet done), findings,
 `readings` (last 3, compact: date, mode, source, OD, suction/liquid psig, SH/SC/evapSat/condSat/ΔT/% RLA,

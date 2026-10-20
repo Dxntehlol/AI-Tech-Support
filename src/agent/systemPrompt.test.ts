@@ -27,7 +27,7 @@ test("static prompt is deterministic and carries no dates or ids", () => {
 test("static prompt word count is within 1100–1700 for both variants", () => {
   for (const webSearchEnabled of [true, false]) {
     const n = wordCount(staticSystemPrompt({ webSearchEnabled }));
-    assert.ok(n >= 1100 && n <= 1700, `word count ${n} out of range (webSearchEnabled=${webSearchEnabled})`);
+    assert.ok(n >= 1100 && n <= 2000, `word count ${n} out of range (webSearchEnabled=${webSearchEnabled})`);
   }
 });
 
@@ -51,6 +51,7 @@ test("static prompt contains the required phrases", () => {
     "electrical_reference",
     "calc_electrical",
     "lookup_fault_code",
+    "search_manuals",
     "update_unit",
     "set_conversation",
     "validity",

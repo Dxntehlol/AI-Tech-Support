@@ -1228,6 +1228,900 @@
     "Builder recollection of AAON product families; AAON product pages (aaon.com/products)"
    ],
    "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "rheem-res-furnace-endeavor",
+   "family": "Rheem Endeavor Line residential gas furnace, current 13-field format (R98MV, R97MV, R962V, R802V, R801...)",
+   "description": "Example R 98 M V 060 3 A 17 UP S G A P: brand, AFUE, stages of heating, motor type, heating input, AC max. capacity (blower drive), major series, cabinet width, position, NOx, controls, minor series, option code. Catalog listings show the NOx position as \"*\" (e.g. R802V0503A14UH*CAP).",
+   "productType": "furnace",
+   "regex": "^(R)(80|96|97|98)([12M])(V)(\\d{3})([345])([A-Z])(14|17|21|24)(UP|UH|DH|M4|DZ)([SN])?([CG])([A-Z])([A-Z])?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Rheem"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Furnace efficiency",
+     "attribute": "efficiency",
+     "map": {
+      "80": "80% AFUE",
+      "96": "96% AFUE",
+      "97": "97% AFUE",
+      "98": "98% AFUE"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Stages of heating",
+     "attribute": "stages",
+     "map": {
+      "1": "Single stage",
+      "2": "Two-stage",
+      "M": "Modulating"
+     },
+     "notes": "1 = single stage from the R802V family legend (R80 1 V 045 3)."
+    },
+    {
+     "group": 4,
+     "name": "Motor type",
+     "attribute": "other",
+     "map": {
+      "V": "ECM variable speed (constant CFM)"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Heating input",
+     "attribute": "heat_capacity",
+     "transform": "kbtuh",
+     "map": {
+      "040": "40,000 Btuh",
+      "045": "45,000 Btuh",
+      "050": "50,000 Btuh",
+      "060": "60,000 Btuh",
+      "070": "70,000 Btuh",
+      "075": "75,000 Btuh",
+      "085": "85,000 Btuh",
+      "100": "100,000 Btuh",
+      "115": "115,000 Btuh",
+      "125": "125,000 Btuh",
+      "150": "150,000 Btuh"
+     },
+     "notes": "Nominal input in MBH (060 = 60,000 Btuh)."
+    },
+    {
+     "group": 6,
+     "name": "AC max. capacity (blower drive)",
+     "attribute": "airflow",
+     "map": {
+      "3": "3 ton drive",
+      "4": "4 ton drive",
+      "5": "5 ton drive"
+     }
+    },
+    {
+     "group": 7,
+     "name": "Major series",
+     "attribute": "revision",
+     "map": {
+      "A": "1st design series"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Cabinet width",
+     "map": {
+      "14": "14 in.",
+      "17": "17.5 in.",
+      "21": "21 in.",
+      "24": "24.5 in."
+     }
+    },
+    {
+     "group": 9,
+     "name": "Position",
+     "attribute": "cabinet",
+     "map": {
+      "UP": "Upflow",
+      "UH": "Upflow/horizontal",
+      "DH": "Downflow/horizontal",
+      "M4": "Multi-position 4-way"
+     },
+     "notes": "DZ is seen in R802V model lists; meaning not printed, left raw."
+    },
+    {
+     "group": 10,
+     "name": "NOx",
+     "attribute": "options",
+     "map": {
+      "S": "Standard NOx",
+      "N": "Low NOx"
+     },
+     "notes": "Optional in the regex because catalog listings print \"*\" here."
+    },
+    {
+     "group": 11,
+     "name": "Controls",
+     "attribute": "controls",
+     "map": {
+      "C": "Communicating, EcoNet, Bluetooth",
+      "G": "Communicating, EcoNet"
+     }
+    },
+    {
+     "group": 12,
+     "name": "Minor series",
+     "map": {
+      "A": "1st series"
+     }
+    },
+    {
+     "group": 13,
+     "name": "Option code",
+     "map": {
+      "P": "Premium grade"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "R98MV0603A17UPSGAP",
+     "expect": {
+      "efficiency": "98% AFUE",
+      "stages": "Modulating",
+      "heat_capacity": "60,000 Btuh",
+      "airflow": "3 ton drive",
+      "cabinet": "Upflow",
+      "options": "Standard NOx",
+      "controls": "Communicating, EcoNet"
+     }
+    },
+    {
+     "model": "R97MV0855A21DHSGAP",
+     "expect": {
+      "efficiency": "97% AFUE",
+      "heat_capacity": "85,000 Btuh",
+      "airflow": "5 ton drive",
+      "cabinet": "Downflow/horizontal"
+     }
+    },
+    {
+     "model": "R962V0403A17M4SCAP",
+     "expect": {
+      "efficiency": "96% AFUE",
+      "stages": "Two-stage",
+      "cabinet": "Multi-position 4-way",
+      "controls": "Communicating, EcoNet, Bluetooth"
+     }
+    },
+    {
+     "model": "R802V0503A14UH*CAP",
+     "expect": {
+      "efficiency": "80% AFUE",
+      "stages": "Two-stage",
+      "heat_capacity": "50,000 Btuh",
+      "cabinet": "Upflow/horizontal"
+     }
+    }
+   ],
+   "notes": [
+    "These furnaces have the dual 7-segment PlusOne Diagnostics display (R98MV/R97MV \"7-Segment LED\") and EcoNet/Bluetooth reporting; their fault code table was not obtained, so no control platform is linked. The standard IFC 1-5 flash table (rheem-ifc-flash) does NOT apply to two-stage or modulating furnaces.",
+    "Ruud-branded equivalents (U-prefix) are not verified and are not matched."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rheem R98MV spec sheet, Model Number Identification p.4 - https://files.myrheem.com/webpartners/ProductDocuments/1DB45063-CE05-4372-BC49-EA4DD1ED35FB.pdf",
+    "Rheem R97MV spec sheet, Model Number Identification p.4 - https://files.myrheem.com/webpartners/ProductDocuments/9E792A02-1F2D-49C1-BECC-E899F463BD91.pdf",
+    "Rheem R962V spec sheet, Model Number Identification p.4 - https://files.myrheem.com/webpartners/ProductDocuments/A25BA753-A734-4E7C-B22E-BCBF460F0B6D.pdf",
+    "Rheem R802V-UH spec sheet, Model Number Identification p.4 - https://files.myrheem.com/webpartners/ProductDocuments/D1CE05CF-E461-4518-8FDE-170F71964547.pdf"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "rheem-res-furnace-r96v",
+   "family": "Rheem R96V Prestige EcoNet two-stage 96% furnace, previous format (e.g. R96VA-0402317MSA)",
+   "description": "R 96 V A - 040 2 3 17 M S A: Rheem, 96 % AFUE, ECM motor, design series, input, two-stage, airflow (tons), cabinet width, multi-position, standard, revision.",
+   "productType": "furnace",
+   "regex": "^(R)(96)(V)([A-Z])-?(\\d{3})(2)([35])(17|21|24)(M)([SN])([A-Z])$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Rheem"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Efficiency",
+     "attribute": "efficiency",
+     "map": {
+      "96": "96% AFUE"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Motor",
+     "attribute": "other",
+     "map": {
+      "V": "ECM motor"
+     }
+    },
+    {
+     "group": 4,
+     "name": "Design series",
+     "attribute": "series",
+     "map": {
+      "A": "1st design series"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Input",
+     "attribute": "heat_capacity",
+     "transform": "kbtuh",
+     "map": {
+      "040": "42,000 Btuh",
+      "060": "56,000 Btuh",
+      "070": "70,000 Btuh",
+      "085": "84,000 Btuh",
+      "100": "98,000 Btuh",
+      "115": "112,000 Btuh"
+     },
+     "notes": "High-fire input per the spec sheet (040 = 42,000 ... 115 = 112,000 Btuh)."
+    },
+    {
+     "group": 6,
+     "name": "Stages",
+     "attribute": "stages",
+     "map": {
+      "2": "Two-stage"
+     }
+    },
+    {
+     "group": 7,
+     "name": "Airflow",
+     "attribute": "airflow",
+     "map": {
+      "3": "Up to 3 tons",
+      "5": "Up to 5 tons"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Cabinet width",
+     "map": {
+      "17": "17.5 in.",
+      "21": "21.0 in.",
+      "24": "24.5 in."
+     }
+    },
+    {
+     "group": 9,
+     "name": "Configuration",
+     "attribute": "cabinet",
+     "map": {
+      "M": "Multi-position"
+     }
+    },
+    {
+     "group": 10,
+     "name": "NOx / type",
+     "attribute": "options",
+     "map": {
+      "S": "Standard"
+     }
+    },
+    {
+     "group": 11,
+     "name": "Revision",
+     "attribute": "revision",
+     "map": {
+      "A": "First release",
+      "B": "First revision"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "R96VA-0402317MSA",
+     "expect": {
+      "efficiency": "96% AFUE",
+      "heat_capacity": "42,000 Btuh",
+      "stages": "Two-stage",
+      "airflow": "Up to 3 tons",
+      "cabinet": "Multi-position",
+      "revision": "First release"
+     }
+    },
+    {
+     "model": "R96VA-0852521MSB",
+     "expect": {
+      "heat_capacity": "84,000 Btuh",
+      "airflow": "Up to 5 tons",
+      "revision": "First revision"
+     }
+    }
+   ],
+   "notes": [
+    "7-segment Prestige EcoNet control; fault code table not obtained (standard IFC 1-5 flash table does not apply)."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rheem R96V Prestige EcoNet spec sheet Form G11-540 (distributor copy), Model Number Identification - https://wizard.youngsupply.com/files/8E9E3C12-51E6-44C6-A060-427E201AC88B.pdf"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "ruud-rgfg-ultra",
+   "family": "Ruud RGFG Ultra Series modulating 90 Plus gas furnace, legacy format (e.g. RGFG-07EMCKS)",
+   "description": "R G F G - 07E M C K S: Ruud, gas furnace, F = modulating Ultra Series 90 Plus, G = design series (communicating), input designation (E = electric ignition, N = electric ignition NOx model), blower size, variations, heat/cool airflow designation, fuel code.",
+   "productType": "furnace",
+   "regex": "^(R)(G)(F)(G)-?(\\d{2})([EN])([MRZ])(C)([KM])(S)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Ruud"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Product",
+     "attribute": "unit_type",
+     "map": {
+      "G": "Gas furnace"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Series",
+     "attribute": "series",
+     "map": {
+      "F": "Modulating Ultra Series 90 Plus"
+     }
+    },
+    {
+     "group": 4,
+     "name": "Design series",
+     "attribute": "revision",
+     "map": {
+      "G": "Design series G, communicating"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Input designation",
+     "attribute": "heat_capacity",
+     "map": {
+      "06": "60,000 Btuh",
+      "07": "75,000 Btuh",
+      "09": "90,000 Btuh",
+      "10": "105,000 Btuh",
+      "12": "120,000 Btuh"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Ignition",
+     "attribute": "options",
+     "map": {
+      "E": "Electric ignition",
+      "N": "Electric ignition, NOx model"
+     }
+    },
+    {
+     "group": 7,
+     "name": "Blower size",
+     "attribute": "other",
+     "map": {
+      "M": "11 x 7",
+      "R": "11 x 10",
+      "Z": "12 x 11"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Variations",
+     "map": {
+      "C": "Single/multi zone"
+     }
+    },
+    {
+     "group": 9,
+     "name": "Heat/cool designation",
+     "attribute": "airflow",
+     "map": {
+      "K": "600-1200 CFM",
+      "M": "1200-2000 CFM"
+     }
+    },
+    {
+     "group": 10,
+     "name": "Fuel code",
+     "map": {
+      "S": "U.S. and Canadian natural gas"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "RGFG-07EMCKS",
+     "expect": {
+      "unit_type": "Gas furnace",
+      "series": "Modulating Ultra Series 90 Plus",
+      "heat_capacity": "75,000 Btuh",
+      "options": "Electric ignition",
+      "other": "11 x 7",
+      "airflow": "600-1200 CFM"
+     }
+    },
+    {
+     "model": "RGFG-09EZCM",
+     "expect": {
+      "heat_capacity": "90,000 Btuh",
+      "other": "12 x 11",
+      "airflow": "1200-2000 CFM"
+     }
+    },
+    {
+     "model": "RGFG-12ERCM",
+     "expect": {
+      "heat_capacity": "120,000 Btuh",
+      "other": "11 x 10"
+     }
+    }
+   ],
+   "notes": [
+    "Comfort Control 2 System with a dual 7-segment LED: 28 on-board diagnostic codes and a fault recall of the last six codes kept through power loss; the code table (installation manual Table 19) was not obtained."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Ruud RGFG Ultra Series spec sheet Form G22-522 Rev.1 (distributor copy), Model Number Identification - https://wizard.youngsupply.com/files/65-11564.pdf"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "rheem-res-ac-ra",
+   "family": "Rheem residential air conditioner (RA13/RA14/RA15/RA16/RA18/RA19 families, e.g. RA16AZ24AJ3CA)",
+   "description": "R A 16 A Z 24 A J 3 C A LHP: brand, product category (A = air conditioner, P = heat pump), SEER2, region, refrigerant, capacity (kBtuh), major series, voltage, type (stages), controls, minor series, option code.",
+   "productType": "split_condensing_unit",
+   "regex": "^(R)(A)(\\d{2})([A-Z])([YZ])(\\d{2})([A-Z])([A-Z])([0-9A-Z])([A-Z])([A-Z])([A-Z]{2,4})?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Rheem"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Product category",
+     "attribute": "unit_type",
+     "map": {
+      "A": "Air conditioner",
+      "P": "Heat pump"
+     }
+    },
+    {
+     "group": 3,
+     "name": "SEER2",
+     "attribute": "efficiency",
+     "transform": "raw",
+     "notes": "Nominal SEER2 (16 = 16 SEER2)."
+    },
+    {
+     "group": 4,
+     "name": "Region",
+     "map": {
+      "A": "All regions"
+     },
+     "notes": "Other letters (e.g. N on RA13NY) are not decoded."
+    },
+    {
+     "group": 5,
+     "name": "Refrigerant",
+     "attribute": "refrigerant",
+     "map": {
+      "Z": "R-410A",
+      "Y": "R-454B"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Capacity (kBtuh)",
+     "attribute": "tonnage",
+     "transform": "mbh_to_tons",
+     "unit": "tons",
+     "notes": "24 = 24,000 Btuh = 2 tons ... 60 = 5 tons."
+    },
+    {
+     "group": 7,
+     "name": "Major series",
+     "attribute": "revision",
+     "map": {
+      "A": "1st design"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "J": "208-230/1/60"
+     }
+    },
+    {
+     "group": 9,
+     "name": "Type",
+     "attribute": "stages",
+     "map": {
+      "3": "3+ stage",
+      "V": "Fully variable"
+     },
+     "notes": "Only 3 (RA16AZ) and V (RP19AY) are printed on the sheets read."
+    },
+    {
+     "group": 10,
+     "name": "Controls",
+     "attribute": "controls",
+     "map": {
+      "C": "Communicating"
+     }
+    },
+    {
+     "group": 11,
+     "name": "Minor series",
+     "map": {
+      "A": "1st design"
+     }
+    },
+    {
+     "group": 12,
+     "name": "Option code",
+     "attribute": "options",
+     "map": {
+      "LHP": "With HLPC (high/low pressure controls)"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "RA16AZ24AJ3CA",
+     "expect": {
+      "unit_type": "Air conditioner",
+      "efficiency": "16",
+      "refrigerant": "R-410A",
+      "tonnage": "2",
+      "voltage": "208-230/1/60",
+      "stages": "3+ stage",
+      "controls": "Communicating"
+     }
+    },
+    {
+     "model": "RA16AZ60AJ3CALHP",
+     "expect": {
+      "tonnage": "5",
+      "options": "With HLPC (high/low pressure controls)"
+     }
+    }
+   ],
+   "notes": [
+    "Communicating RA/RP units have PlusOne Diagnostics, Bluetooth and EcoNet alarm history; their 7-segment / EcoNet alarm code list was not obtained."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rheem RA16AZ air conditioner spec sheet, Model Number Identification - https://files.myrheem.com/webpartners/ProductDocuments/F4F57469-AD64-4890-859B-5DE36011DBCE.pdf"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "rheem-res-hp-rp",
+   "family": "Rheem residential heat pump (RP14/RP15/RP16/RP17/RP18/RP19 families, e.g. RP19AY24AJVCA)",
+   "description": "R A 16 A Z 24 A J 3 C A LHP: brand, product category (A = air conditioner, P = heat pump), SEER2, region, refrigerant, capacity (kBtuh), major series, voltage, type (stages), controls, minor series, option code.",
+   "productType": "split_heat_pump",
+   "regex": "^(R)(P)(\\d{2})([A-Z])([YZ])(\\d{2})([A-Z])([A-Z])([0-9A-Z])([A-Z])([A-Z])([A-Z]{2,4})?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Rheem"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Product category",
+     "attribute": "unit_type",
+     "map": {
+      "A": "Air conditioner",
+      "P": "Heat pump"
+     }
+    },
+    {
+     "group": 3,
+     "name": "SEER2",
+     "attribute": "efficiency",
+     "transform": "raw",
+     "notes": "Nominal SEER2 (16 = 16 SEER2)."
+    },
+    {
+     "group": 4,
+     "name": "Region",
+     "map": {
+      "A": "All regions"
+     },
+     "notes": "Other letters (e.g. N on RA13NY) are not decoded."
+    },
+    {
+     "group": 5,
+     "name": "Refrigerant",
+     "attribute": "refrigerant",
+     "map": {
+      "Z": "R-410A",
+      "Y": "R-454B"
+     }
+    },
+    {
+     "group": 6,
+     "name": "Capacity (kBtuh)",
+     "attribute": "tonnage",
+     "transform": "mbh_to_tons",
+     "unit": "tons",
+     "notes": "24 = 24,000 Btuh = 2 tons ... 60 = 5 tons."
+    },
+    {
+     "group": 7,
+     "name": "Major series",
+     "attribute": "revision",
+     "map": {
+      "A": "1st design"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "J": "208-230/1/60"
+     }
+    },
+    {
+     "group": 9,
+     "name": "Type",
+     "attribute": "stages",
+     "map": {
+      "3": "3+ stage",
+      "V": "Fully variable"
+     },
+     "notes": "Only 3 (RA16AZ) and V (RP19AY) are printed on the sheets read."
+    },
+    {
+     "group": 10,
+     "name": "Controls",
+     "attribute": "controls",
+     "map": {
+      "C": "Communicating"
+     }
+    },
+    {
+     "group": 11,
+     "name": "Minor series",
+     "map": {
+      "A": "1st design"
+     }
+    },
+    {
+     "group": 12,
+     "name": "Option code",
+     "attribute": "options",
+     "map": {
+      "LHP": "With HLPC (high/low pressure controls)"
+     }
+    }
+   ],
+   "examples": [
+    {
+     "model": "RP19AY24AJVCA",
+     "expect": {
+      "unit_type": "Heat pump",
+      "efficiency": "19",
+      "refrigerant": "R-454B",
+      "tonnage": "2",
+      "voltage": "208-230/1/60",
+      "stages": "Fully variable"
+     }
+    },
+    {
+     "model": "RP19AY48AJVCA",
+     "expect": {
+      "tonnage": "4",
+      "refrigerant": "R-454B"
+     }
+    }
+   ],
+   "notes": [
+    "Communicating RA/RP units have PlusOne Diagnostics, Bluetooth and EcoNet alarm history; their 7-segment / EcoNet alarm code list was not obtained."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rheem RP19AY heat pump spec sheet, Model Number Identification - https://files.myrheem.com/webpartners/ProductDocuments/E592CA25-DBE6-48FE-8535-FA4628893534.pdf"
+   ],
+   "lastVerified": "2026-10-20"
+  },
+  {
+   "id": "rheem-res-air-handler-rh",
+   "family": "Rheem residential multipoise air handler (RHMVY / RHMVZ and similar RH families, e.g. RHMVY2417SEACNJ)",
+   "description": "R H M V Y 24 17 S E A C N J L: brand, category (H = multipoise air handler), stages of airflow, motor type, refrigerant, capacity, cabinet width, efficiency, metering, major series, controls, coil, voltage, option.",
+   "productType": "air_handler",
+   "regex": "^(R)(H)([M23])([VT])([YZ])(\\d{2})(14|17|21|24)([SM])([A-Z])([A-Z])([A-Z])([AN])([A-Z])(L)?$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Brand",
+     "map": {
+      "R": "Rheem"
+     }
+    },
+    {
+     "group": 2,
+     "name": "Category",
+     "attribute": "unit_type",
+     "map": {
+      "H": "Multipoise air handler"
+     }
+    },
+    {
+     "group": 3,
+     "name": "Stages of airflow",
+     "attribute": "stages",
+     "map": {
+      "M": "Modulating"
+     },
+     "notes": "2 / 3 (RH2TZ, RH2VY, RH3VZ families) are not decoded on the sheet read."
+    },
+    {
+     "group": 4,
+     "name": "Motor type",
+     "attribute": "other",
+     "map": {
+      "V": "Constant CFM"
+     }
+    },
+    {
+     "group": 5,
+     "name": "Refrigerant",
+     "attribute": "refrigerant",
+     "map": {
+      "Y": "R-454B",
+      "Z": "R-410A"
+     },
+     "notes": "Y from the RHMVY sheet; Z = R-410A per the Rheem outdoor-unit sheets (RA16AZ)."
+    },
+    {
+     "group": 6,
+     "name": "Capacity (kBtuh)",
+     "attribute": "tonnage",
+     "transform": "mbh_to_tons",
+     "unit": "tons"
+    },
+    {
+     "group": 7,
+     "name": "Cabinet width",
+     "attribute": "cabinet",
+     "map": {
+      "17": "17.5 in. width",
+      "21": "21 in. width",
+      "24": "24.5 in. width"
+     }
+    },
+    {
+     "group": 8,
+     "name": "Efficiency",
+     "attribute": "efficiency",
+     "map": {
+      "S": "Standard",
+      "M": "Mid"
+     }
+    },
+    {
+     "group": 9,
+     "name": "Metering",
+     "map": {
+      "E": "EEV"
+     }
+    },
+    {
+     "group": 10,
+     "name": "Major series",
+     "attribute": "revision",
+     "map": {
+      "A": "1st design"
+     }
+    },
+    {
+     "group": 11,
+     "name": "Controls",
+     "attribute": "controls",
+     "map": {
+      "C": "Communicating"
+     }
+    },
+    {
+     "group": 12,
+     "name": "Coil",
+     "map": {
+      "A": "A coil",
+      "N": "N coil"
+     }
+    },
+    {
+     "group": 13,
+     "name": "Voltage",
+     "attribute": "voltage",
+     "map": {
+      "J": "208-240/1/60"
+     }
+    },
+    {
+     "group": 14,
+     "name": "Option",
+     "attribute": "options",
+     "map": {
+      "L": "Less A2L sensor"
+     },
+     "notes": "Blank = factory-installed (A2L) refrigerant sensor."
+    }
+   ],
+   "examples": [
+    {
+     "model": "RHMVY2417SEACNJ",
+     "expect": {
+      "unit_type": "Multipoise air handler",
+      "stages": "Modulating",
+      "refrigerant": "R-454B",
+      "tonnage": "2",
+      "cabinet": "17.5 in. width",
+      "efficiency": "Standard",
+      "controls": "Communicating",
+      "voltage": "208-240/1/60"
+     }
+    },
+    {
+     "model": "RHMVY2421MEACNJL",
+     "expect": {
+      "efficiency": "Mid",
+      "options": "Less A2L sensor"
+     }
+    },
+    {
+     "model": "RHMVY3621MEACAJ",
+     "expect": {
+      "tonnage": "3",
+      "cabinet": "21 in. width"
+     }
+    }
+   ],
+   "notes": [
+    "RHMVY units ship with a factory-installed A2L refrigerant sensor unless the L option is present."
+   ],
+   "confidence": "high",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rheem RHMVY air handler spec sheet, Model Number Identification - https://files.myrheem.com/webpartners/ProductDocuments/595D07DF-4CD8-4014-AD14-30AE05DD168C.pdf"
+   ],
+   "lastVerified": "2026-10-20"
   }
  ],
  "controls": [
@@ -1571,7 +2465,7 @@
   {
    "id": "rheem-ifc-flash",
    "name": "Rheem/Ruud Integrated Furnace Control (IFC) LED flash codes — standard gas furnace / gas-pack ignition control",
-   "description": "Single-LED flash-code ignition control used across Rheem and Ruud gas furnaces and gas/electric packaged units (Rheem and Ruud share the platform, so codes are identical). The LED flashes a count, pauses, and repeats. On RKNL-C and later the IFC also reports the fault to the RTU-C via Modbus.",
+   "description": "Single-LED flash-code ignition control used across Rheem and Ruud gas furnaces and gas/electric packaged units (Rheem and Ruud share the platform, so codes are identical). The LED flashes a count, pauses, and repeats. On RKNL-C and later the IFC also reports the fault to the RTU-C via Modbus. The Rheem PTS table (1-5 flashes) covers standard (single-stage) gas furnaces; it does not cover modulating, LXE or two-stage furnaces, whose dual 7-segment PlusOne / Comfort Control 2 boards use a different table (not in this pack).",
    "appliesTo": [
     "rheem-commercial-package-rk-rl-rq (gas heat section)",
     "rheem-light-commercial-package-rs-rj",
@@ -1579,8 +2473,27 @@
    ],
    "faultCodes": [
     {
+     "code": "1 flash",
+     "meaning": "Soft lockout (1 hour): no flame sense after four ignition trials, or four flame failures in one call for heat.",
+     "likelyCauses": [
+      "No flame sense: L1-N / L1-ground / N-ground voltages wrong, transformer out of phase, missing hard-wired equipment ground",
+      "Wrong manifold pressure",
+      "Dirty flame rod",
+      "On upflow 90+ furnaces: blocked condensate drain switch (wired in series with the gas valve) opening four times in one call"
+     ],
+     "checks": [
+      "Reset by turning off 115 V or turning the thermostat off for 5-10 s",
+      "Check L1-N = 115 V, L1-ground = 115 V, N-ground = 0 V, and L1 to R = 96 V; 144 V means the transformer is out of phase: reverse the 24 VAC and 24 COM wires on the IFC",
+      "Check for a hard-wired equipment ground, correct manifold pressure and a clean flame rod",
+      "90+ upflow: clean the condensate trap and drain"
+     ],
+     "severity": "lockout",
+     "source": "Rheem Product Technical Support (PTS) web pages \"Standard Gas Furnace Flash Codes\" and \"Gas Furnace Technical FAQ\" (retrieved 2026-10-20)",
+     "evidence": "manufacturer_doc"
+    },
+    {
      "code": "2 flashes",
-     "meaning": "Pressure switch stuck open — the switch will not close when the inducer is on.",
+     "meaning": "Pressure switch failure (remains open). The negative pressure from the inducer must be at least 0.1\" w.c. beyond the switch closing setting.",
      "likelyCauses": [
       "Blocked or restricted flue/vent or combustion-air inlet",
       "Condensate backed up into the pressure-switch hose (clogged drain/trap)",
@@ -1588,18 +2501,21 @@
       "Cracked/loose pressure-switch tubing, failed pressure switch"
      ],
      "checks": [
+      "Check the draft with a Magnehelic gauge: inducer negative pressure must be at least 0.1\" w.c. beyond the switch closing setting (PTS)",
+      "Check the switch tube port on the inducer housing and the vent for blockage (PTS)",
       "With the inducer running, measure draft at the switch tap with a manometer and compare with the switch's setpoint printed on it",
       "Inspect and clear the condensate drain/trap and the switch tubing",
       "Verify inducer runs at full speed and the vent is clear end to end",
       "Jumper the switch only to prove the switch itself (never leave it jumpered)"
      ],
      "severity": "lockout",
-     "source": "Rheem 'Standard Gas Furnace Flash Codes' (pts.myrheem.com GF_Flash_Code) as summarized by multiple third-party guides (bcwide.ca, burkhardtheating.com, honestfix.com)",
-     "evidence": "multi_secondary"
+     "source": "Rheem Product Technical Support (PTS) web pages \"Standard Gas Furnace Flash Codes\" and \"Gas Furnace Technical FAQ\" (retrieved 2026-10-20)",
+     "evidence": "manufacturer_doc",
+     "notes": "Meaning and first two checks from the Rheem PTS page; remaining causes/checks are field practice from the earlier secondary sources."
     },
     {
      "code": "3 flashes",
-     "meaning": "Limit switch open — main limit or roll-out (flame roll-out) control open.",
+     "meaning": "Limit switch open: main high limit (low airflow or over-firing) or the manual-reset rollout switch above the burner.",
      "likelyCauses": [
       "Low airflow: dirty filter, dirty evaporator coil, blower/belt problem, closed dampers, high external static",
       "Blower not running / failed blower motor or capacitor",
@@ -1607,14 +2523,48 @@
       "Over-fired unit (gas pressure too high)"
      ],
      "checks": [
+      "Check manifold pressure and check for a blocked flue or heat exchanger (PTS)",
+      "Inducer and blower running but no ignition sequence = limit circuit open (connection, rollout or high limit) (PTS)",
       "Check whether a manual-reset roll-out switch is tripped before anything else",
       "Measure temperature rise against the nameplate range and external static pressure",
       "Verify blower operation in heat (speed/belt/motor amps)",
       "Check manifold gas pressure and clocked input"
      ],
      "severity": "lockout",
-     "source": "Rheem 'Standard Gas Furnace Flash Codes' as summarized by multiple third-party guides (bcwide.ca, burkhardtheating.com, honestfix.com)",
-     "evidence": "multi_secondary"
+     "source": "Rheem Product Technical Support (PTS) web pages \"Standard Gas Furnace Flash Codes\" and \"Gas Furnace Technical FAQ\" (retrieved 2026-10-20)",
+     "evidence": "manufacturer_doc",
+     "notes": "Meaning and first two checks from the Rheem PTS page; remaining causes/checks are field practice from the earlier secondary sources."
+    },
+    {
+     "code": "4 flashes",
+     "meaning": "Pressure switch failure (remains closed): contacts welded or stuck during the off cycle. No ignition sequence until the switch opens.",
+     "likelyCauses": [
+      "Pressure switch contacts welded or stuck closed"
+     ],
+     "checks": [
+      "Check the pressure switch opens with the inducer off; replace a stuck switch"
+     ],
+     "severity": "shutdown",
+     "source": "Rheem Product Technical Support (PTS) web pages \"Standard Gas Furnace Flash Codes\" and \"Gas Furnace Technical FAQ\" (retrieved 2026-10-20)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "5 flashes",
+     "meaning": "Twinning circuit failure (boards with twinning only): no thermostat wire on the TWIN terminal.",
+     "likelyCauses": [
+      "No thermostat wire on the TWIN terminal",
+      "Board switch setting wrong",
+      "Twinned boards not identical",
+      "Electronic thermostat or its wiring"
+     ],
+     "checks": [
+      "Check the board switch setting",
+      "Both twinned boards must be identical",
+      "Jumper R-W to test whether the electronic thermostat or its wiring causes it"
+     ],
+     "severity": "shutdown",
+     "source": "Rheem Product Technical Support (PTS) web pages \"Standard Gas Furnace Flash Codes\" and \"Gas Furnace Technical FAQ\" (retrieved 2026-10-20)",
+     "evidence": "manufacturer_doc"
     }
    ],
    "ledPatterns": [
@@ -1643,10 +2593,22 @@
    "diagnosticTips": [
     "The LED is on the IFC board in the burner/control compartment; the code legend is printed on the board label and the unit's flash-code label (e.g. 92-103343-01 for 2-digit-display furnaces).",
     "A clogged condensate line that backs up into the pressure-switch hose is a common cause of a 2-flash fault on gas packs.",
-    "Clear a lockout by cycling thermostat demand (W off/on) or unit power; a roll-out switch is manual reset and must be pressed after the cause is fixed."
+    "Clear a lockout by cycling thermostat demand (W off/on) or unit power; a roll-out switch is manual reset and must be pressed after the cause is fixed.",
+    "Failed flame sense: L1-N = 115 V, L1-ground = 115 V, N-ground = 0 V, L1 to R = 96 V; 144 V means the transformer is out of phase (reverse the 24 VAC and 24 COM wires on the IFC). Also check the equipment ground, manifold pressure and flame rod (Rheem PTS).",
+    "Inducer and blower run but there is no ignition sequence: the limit circuit is open (connection, rollout or high limit) (Rheem PTS).",
+    "Upflow 90+ furnaces: the blocked-drain switch is in series with the gas valve; four openings in one call show up as a 1-flash soft lockout, typically after long cycles or setback recovery (Rheem PTS).",
+    "Burner firing rates: 80+ in-shot burners 25,000 Btu each, 90+ burners 15,000 Btu each, so the LP kits differ (Rheem PTS)."
    ],
-   "coverage": "partial",
+   "coverage": "complete",
    "sourceDocs": [
+    {
+     "title": "Rheem PTS - Standard Gas Furnace Flash Codes (1-5 blinks)",
+     "url": "https://my.rheem.com/pts/Topics/GF_Flash_Code.asp"
+    },
+    {
+     "title": "Rheem PTS - Gas Furnace Technical FAQ",
+     "url": "https://my.rheem.com/pts/FAQ/FAQ_Gas_Furnace.asp"
+    },
     {
      "title": "Rheem Service — Standard Gas Furnace Flash Codes (pts.myrheem.com Trouble2a GF_Flash_Code)",
      "url": "https://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/Topics/GF_Flash_Code.asp"
@@ -1656,8 +2618,10 @@
      "url": "http://pts.myrheem.com/docstore/webdocs/Public/ServicePublic/Trouble2a/pdfs/Gas_Furnace/IO/92-103343-01-00_Fault_Code_Label.pdf"
     }
    ],
-   "confidence": "medium",
+   "confidence": "high",
    "sources": [
+    "https://my.rheem.com/pts/Topics/GF_Flash_Code.asp",
+    "https://my.rheem.com/pts/FAQ/FAQ_Gas_Furnace.asp",
     "bcwide.ca Rheem furnace error codes",
     "burkhardtheating.com Rheem/Ruud furnace error codes",
     "honestfix.com Rheem furnace flash/LED codes guide",
@@ -3276,6 +4240,45 @@
     "Not AAON-specific: a Purdue open-access thesis on rooftop unit fault detection lists economizer damper failure and excess outdoor air as common RTU degradation modes; the VCCX2 Title 24 damper-feedback alarms (orion-vccx2) are the manufacturer-documented detection path",
     "AAON RN IOM economizer section"
    ]
+  },
+  {
+   "symptom": "Rheem/Ruud standard gas furnace: 1-flash soft lockout, burner lights then drops out (failed flame sense)",
+   "likelyCauses": [
+    "Transformer out of phase (L1 to R reads 144 V instead of 96 V)",
+    "Missing hard-wired equipment ground or N-ground voltage",
+    "Wrong manifold pressure",
+    "Dirty flame rod",
+    "90+ upflow: blocked condensate drain switch opening the gas valve circuit"
+   ],
+   "checks": [
+    "Measure L1-N = 115 V, L1-ground = 115 V, N-ground = 0 V, L1 to R = 96 V; at 144 V reverse the 24 VAC and 24 COM wires on the IFC",
+    "Verify the equipment ground and manifold pressure; clean the flame rod",
+    "Clean the condensate trap and drain (upflow 90+)"
+   ],
+   "appliesTo": "rheem|ruud|furnace|^R\\d{2}",
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "https://my.rheem.com/pts/Topics/GF_Flash_Code.asp",
+    "https://my.rheem.com/pts/FAQ/FAQ_Gas_Furnace.asp"
+   ]
+  },
+  {
+   "symptom": "Rheem/Ruud gas furnace: inducer and blower run but no ignition sequence",
+   "likelyCauses": [
+    "Open limit circuit: loose connection, tripped manual-reset rollout switch or open high limit"
+   ],
+   "checks": [
+    "Check the limit circuit for continuity: connections, rollout switch (manual reset) and high limit",
+    "Find the cause (airflow, over-firing, blocked flue/heat exchanger) before resetting the rollout"
+   ],
+   "appliesTo": "rheem|ruud|furnace|^R\\d{2}",
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "https://my.rheem.com/pts/Topics/GF_Flash_Code.asp",
+    "https://my.rheem.com/pts/FAQ/FAQ_Gas_Furnace.asp"
+   ]
   }
  ],
  "support": {
@@ -3289,7 +4292,9 @@
   "This pack combines two manufacturers because AAON and Rheem/Ruud commercial share a scope; check the brand on the nameplate first — Rheem/Ruud plates carry 'RKNL-…' style models with a letter-first serial, AAON plates carry a long hyphen/colon feature string with a year-first serial.",
   "Research constraint: the session's web-search budget ran out after the first rounds; several items were therefore left at 'low' or omitted rather than guessed (see lowConfidence/unresolved in the build report).",
   "Not decoded: Rheem 2019+ Renaissance long-form nomenclature (e.g. 'RACDZT…' per spec S11-983), Rheem RHKL/RHLL commercial air handlers, Ruud U-prefixed commercial models (Ruud commercial spec R22-852 uses R-prefixed RKNL/RKPL), AAON RL/RM/RG/CN/CB/H3/V3 feature strings (identification only), AAON Touch and AAON Field Controller platforms, the full RTU-C fault table.",
-  "Refrigerant defaults: Rheem R-410A revisions from ~2010 (earlier RKNL-A/RKKA units R-22); AAON RN/RQ R-410A with 2025+ builds moving to R-454B (A2L — ventilate, no ignition sources, A2L-rated tools)."
+  "Refrigerant defaults: Rheem R-410A revisions from ~2010 (earlier RKNL-A/RKKA units R-22); AAON RN/RQ R-410A with 2025+ builds moving to R-454B (A2L — ventilate, no ignition sources, A2L-rated tools).",
+  "2026-10-20 residential additions: standard IFC flash codes 1-5 completed from the Rheem PTS pages (1 soft lockout, 4 pressure switch stuck closed, 5 twinning failure added; the 2- and 3-flash entries were re-worded to the PTS text and re-sourced from secondary to manufacturer evidence), PTS troubleshooting as common issues, and residential nomenclature from current spec sheets: Endeavor 13-field furnaces (R98MV/R97MV/R962V/R802V), R96V, Ruud RGFG, RA air conditioners, RP heat pumps, RHMV air handlers.",
+  "Not covered (residential): the dual 7-segment PlusOne / Comfort Control 2 furnace code table (two-stage, modulating, EcoNet; secondary lists conflict and were not used), EcoNet alarm codes, outdoor-unit 7-segment and Comfort Alert codes, Ruud U-prefix residential nomenclature, any new serial decode."
  ],
  "sources": [
   "https://www.building-center.org/rheem-hvac-age/",
@@ -3337,8 +4342,19 @@
   "https://www.inspectapedia.com/water/Rheem_Water_Heater_Age.php",
   "Rheem package gas/electric wiring diagrams 90-23626-17-02 and 90-105564-01 (component legends)",
   "https://www.aaon.com/products/compressor_protection_module",
-  "https://www.aaon.com/products/one_condenser_head_pressure_module"
+  "https://www.aaon.com/products/one_condenser_head_pressure_module",
+  "https://my.rheem.com/pts/Topics/GF_Flash_Code.asp",
+  "https://my.rheem.com/pts/FAQ/FAQ_Gas_Furnace.asp",
+  "https://files.myrheem.com/webpartners/ProductDocuments/1DB45063-CE05-4372-BC49-EA4DD1ED35FB.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/9E792A02-1F2D-49C1-BECC-E899F463BD91.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/A25BA753-A734-4E7C-B22E-BCBF460F0B6D.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/D1CE05CF-E461-4518-8FDE-170F71964547.pdf",
+  "https://wizard.youngsupply.com/files/8E9E3C12-51E6-44C6-A060-427E201AC88B.pdf",
+  "https://wizard.youngsupply.com/files/65-11564.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/F4F57469-AD64-4890-859B-5DE36011DBCE.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/E592CA25-DBE6-48FE-8535-FA4628893534.pdf",
+  "https://files.myrheem.com/webpartners/ProductDocuments/595D07DF-4CD8-4014-AD14-30AE05DD168C.pdf"
  ],
  "confidence": "medium",
- "lastReviewed": "2026-09-26"
+ "lastReviewed": "2026-10-20"
 }

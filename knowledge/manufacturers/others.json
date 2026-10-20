@@ -23,15 +23,14 @@
   "Samsung",
   "Fujitsu",
   "Fujitsu General",
-  "Liebert",
-  "Vertiv",
   "Modine",
   "CaptiveAire",
   "Greenheck",
   "ClimateMaster",
   "WaterFurnace",
   "Trane Axiom",
-  "Friedrich"
+  "Friedrich",
+  "Rittal"
  ],
  "aliases": [
   "Bard Manufacturing",
@@ -44,16 +43,18 @@
   "DVM",
   "DVM S",
   "Airstage",
-  "Liebert DS",
-  "Challenger 3000",
-  "Deluxe System 3",
   "Hot Dawg",
   "Tranquility",
   "Envision",
   "Axiom",
   "PTAC",
   "Captive-Aire",
-  "Captive Aire"
+  "Captive Aire",
+  "Rittal LCP",
+  "LCP DX",
+  "LCP CW",
+  "Liquid Cooling Package",
+  "TopTherm LCP"
  ],
  "serialFormats": [
   {
@@ -1471,88 +1472,6 @@
    "lastVerified": "2026-09-26"
   },
   {
-   "id": "liebert-crac",
-   "family": "Liebert / Vertiv computer-room units (Challenger 3000 BF/BU, Deluxe System/3 DH/DE/UH/UE, Liebert DS)",
-   "description": "Liebert model prefix identifies the family and airflow: D* = downflow Deluxe System/3, U* = upflow Deluxe System/3 (second letter H = air-cooled, W = water-cooled, G = glycol-cooled, E = chilled water); DS = Liebert DS; BF/BU = Challenger 3000 (floor/upflow). The 3-digit number is the nominal size code.",
-   "productType": "other",
-   "eraStart": 1985,
-   "regex": "^(DS|DH|DE|DW|DG|UH|UE|UW|UG|BF|BU|VH|VE|VW|VG|PX|PH|PW)(\\d{3})(?:[-A-Z0-9/]*)?$",
-   "segments": [
-    {
-     "group": 1,
-     "name": "Family / airflow / cooling medium",
-     "attribute": "series",
-     "map": {
-      "DS": "Liebert DS (downflow/upflow precision cooling, iCOM)",
-      "DH": "Deluxe System/3 downflow, air-cooled",
-      "DE": "Deluxe System/3 downflow, chilled water",
-      "DW": "Deluxe System/3 downflow, water-cooled",
-      "DG": "Deluxe System/3 downflow, glycol-cooled",
-      "UH": "Deluxe System/3 upflow, air-cooled",
-      "UE": "Deluxe System/3 upflow, chilled water",
-      "UW": "Deluxe System/3 upflow, water-cooled",
-      "UG": "Deluxe System/3 upflow, glycol-cooled",
-      "BF": "Challenger 3000 downflow (floor)",
-      "BU": "Challenger 3000 upflow",
-      "VH": "Deluxe System/3 (VH) air-cooled",
-      "VE": "Deluxe System/3 (VE) chilled water",
-      "VW": "Deluxe System/3 (VW) water-cooled",
-      "VG": "Deluxe System/3 (VG) glycol-cooled",
-      "PX": "Liebert PeX",
-      "PH": "Liebert PDX/PCW air-cooled",
-      "PW": "Liebert PDX/PCW"
-     },
-     "notes": "Partial map from builder memory and the Liebert Model Number Reference Guide title; verify on the Liebert model definition page (applications.liebert.com/partsmanuals)."
-    },
-    {
-     "group": 2,
-     "name": "Nominal size code",
-     "attribute": "other",
-     "transform": "raw",
-     "notes": "Size code is family-specific (Deluxe System/3: nominal MBH ~ e.g. 199 = 20-ton class; DS: 035-105 nominal kW). Not converted to tons."
-    }
-   ],
-   "refrigerant": "R-407C",
-   "controlPlatformIds": [
-    "liebert-icom"
-   ],
-   "examples": [
-    {
-     "model": "DS035AD",
-     "expect": {
-      "series": "Liebert DS (downflow/upflow precision cooling, iCOM)",
-      "other": "035"
-     }
-    },
-    {
-     "model": "BF042A-AAM",
-     "expect": {
-      "series": "Challenger 3000 downflow (floor)",
-      "other": "042"
-     }
-    },
-    {
-     "model": "DH245A",
-     "expect": {
-      "series": "Deluxe System/3 downflow, air-cooled",
-      "other": "245"
-     }
-    }
-   ],
-   "notes": [
-    "LOW confidence: prefix meanings from builder memory; the Liebert Model Number Reference Guide (surplusgroup.com literature library / scribd) was located but not read. Refrigerant varies: R-22 on older Deluxe/Challenger, R-407C on later Deluxe System/3 and Challenger 3000, R-410A on DS/PDX/PCW.",
-    "Nameplate: the Liebert plate shows the full configured model string (e.g. DS035ADAOEI...) - the first 5 characters identify family and size."
-   ],
-   "confidence": "low",
-   "evidence": "inferred",
-   "sources": [
-    "Liebert Model Number Reference Guide (Air Products; surplusgroup.com literature library) - title only",
-    "Liebert DS model definition page (applications.liebert.com/partsmanuals/ds/vs/modeldefinition.htm) - not read",
-    "Builder memory (unverified)"
-   ],
-   "lastVerified": "2026-09-26"
-  },
-  {
    "id": "climatemaster-tranquility",
    "family": "ClimateMaster Tranquility water-source / geothermal heat pumps (TC = Tranquility 16, TS = Tranquility 20, TY = Tranquility 22, TT = Tranquility 27/30, TR = Tranquility 16 HE Versatile, TE/TZ = Tranquility 30/27 Digital residential)",
    "description": "ClimateMaster: TTV036AGC00CRTS style. Two-letter series, cabinet letter (H horizontal / V vertical / D downflow / W water-to-water), nominal capacity in kBtuh, revision letter, voltage letter, controls/option letters.",
@@ -1936,6 +1855,72 @@
     "Friedrich PTAC parts manuals (ManualsLib) - serial/model identification guide (nominal heater sizes 2.5 / 3.4 / 5.0 kW; digit mapping not read)"
    ],
    "lastVerified": "2026-09-26"
+  },
+  {
+   "id": "rittal-lcp",
+   "family": "Rittal LCP (Liquid Cooling Package) rack / inline coolers by part number (DX 12/20, CW, CWG)",
+   "description": "Rittal part numbers 3311.xxx / 3313.xxx as listed on the LCP assembly and operating instructions.",
+   "productType": "precision_cooling",
+   "regex": "^(33(?:11|13)\\.?[0-9]{3})$",
+   "segments": [
+    {
+     "group": 1,
+     "name": "Rittal part number",
+     "attribute": "series",
+     "map": {
+      "3311.393": "LCP Rack/Inline DX 12/20",
+      "3311.394": "LCP Rack/Inline DX 12/20",
+      "3313.425": "LCP Rack/Inline DX 12/20",
+      "3313.445": "LCP Rack/Inline DX 12/20",
+      "3313.290": "LCP Rack/Inline DX 20",
+      "3313.390": "LCP Rack/Inline DX 20",
+      "3313.130": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.230": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.260": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.530": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.560": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.540": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.250": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.550": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3313.570": "LCP Rack/Inline CW / CWG (CMC III PU)",
+      "3311.130": "TopTherm LCP Rack/Inline CW",
+      "3311.230": "TopTherm LCP Rack/Inline CW",
+      "3311.260": "TopTherm LCP Rack/Inline CW",
+      "3311.530": "TopTherm LCP Rack/Inline CW",
+      "3311.560": "TopTherm LCP Rack/Inline CW",
+      "3311.540": "TopTherm LCP Rack/Inline CW"
+     },
+     "notes": "Map lists the part numbers printed on the four downloaded Rittal LCP manuals; others decode as the raw part number."
+    }
+   ],
+   "controlPlatformIds": [
+    "rittal-lcp-dx",
+    "rittal-lcp-cw"
+   ],
+   "examples": [
+    {
+     "model": "3311.393",
+     "expect": {
+      "series": "LCP Rack/Inline DX 12/20"
+     }
+    },
+    {
+     "model": "3313.130",
+     "expect": {
+      "series": "LCP Rack/Inline CW / CWG (CMC III PU)"
+     }
+    }
+   ],
+   "notes": [
+    "Part numbers without the dot (e.g. 3313130) match but decode to the raw number; type them with the dot."
+   ],
+   "confidence": "medium",
+   "evidence": "manufacturer_doc",
+   "sources": [
+    "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+    "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)"
+   ],
+   "lastVerified": "2026-10-20"
   }
  ],
  "controls": [
@@ -5127,123 +5112,6 @@
    ]
   },
   {
-   "id": "liebert-icom",
-   "name": "Liebert iCOM control (Challenger 3000/ITR, DS, Deluxe System/3, PeX, PDX) alarms",
-   "description": "Vertiv Liebert iCOM microprocessor control with a display on the unit door; alarms are text messages with configurable action (shutdown / disable / warning).",
-   "appliesTo": [
-    "liebert-crac"
-   ],
-   "faultCodes": [
-    {
-     "code": "LOSS OF AIR FLOW",
-     "meaning": "Loss of airflow detected by the differential air pressure switch (or fan/EC fan fault)",
-     "likelyCauses": [
-      "Blocked unit air inlet/outlet or dirty filters",
-      "Broken belt, loose blower wheel, blower motor overload/fuse",
-      "Differential pressure switch tubing or setpoint"
-     ],
-     "checks": [
-      "Check for blockage of unit air outlet or inlet",
-      "Blower motor fuses and overload reset; belts; blower wheels tight to shaft",
-      "Alarm action setting: Shutdown (DX units) vs Disable (chilled water: stops humidifier/heaters/dehumidification, allows cooling)"
-     ],
-     "severity": "shutdown",
-     "source": "Emerson Liebert Challenger 3000/ITR with iCOM user manual - alarm 9 'Loss of Air Flow' (manualsdir 85779 p.40); Vertiv Liebert iCOM installer/user manual",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "HIGH HEAD PRESSURE",
-     "meaning": "High head (discharge) pressure on a compressor circuit; repeated trips lock the compressor off until the High Pressure Alarm Code is reset to zero",
-     "likelyCauses": [
-      "Condenser fan / fan speed control failure, dirty condenser (air-cooled)",
-      "Low water/glycol flow or fouled coaxial condenser (water/glycol-cooled)",
-      "Overcharge, non-condensables",
-      "Closed valves or refrigerant restriction"
-     ],
-     "checks": [
-      "Head pressure on the circuit vs. condenser entering conditions",
-      "Condenser fan operation / Lee-Temp or fan speed control",
-      "Reset the High Pressure Alarm Code to 0 in iCOM (service menu) to unlock the compressor after fixing the cause"
-     ],
-     "severity": "lockout",
-     "source": "Vertiv Liebert iCOM installer/user manual - Resetting High-Pressure Alarm Code (ManualsLib 1461666 p.93)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "MAIN FAN OVERLOAD",
-     "meaning": "Main (evaporator) fan motor overload or EC fan fault",
-     "likelyCauses": [
-      "Motor overload tripped",
-      "EC fan electronics fault",
-      "High static / blocked airflow"
-     ],
-     "checks": [
-      "Motor amps vs. nameplate",
-      "Overload/contactor",
-      "EC fan status via iCOM"
-     ],
-     "severity": "shutdown",
-     "source": "Emerson Liebert Challenger with iCOM user manual - fan alarm / fan protection settings (manualsdir 85779 p.34)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LOSS OF POWER",
-     "meaning": "Unit lost input power (alarm raised on power restoration / autorestart)",
-     "likelyCauses": [
-      "Utility outage",
-      "Disconnect or breaker opened"
-     ],
-     "checks": [
-      "Confirm autorestart setting",
-      "Check incoming power and breakers"
-     ],
-     "severity": "info",
-     "source": "Emerson Liebert Challenger with iCOM user manual - alarm 10 'Loss of Power', Autorestart (manualsdir 85779 p.34, p.40)",
-     "evidence": "manufacturer_doc"
-    },
-    {
-     "code": "LOW HUMIDITY",
-     "meaning": "Room humidity below the low-humidity alarm setpoint",
-     "likelyCauses": [
-      "Humidifier off / failed (canister, water supply)",
-      "Setpoint too high for conditions",
-      "Sensor calibration"
-     ],
-     "checks": [
-      "Humidifier operation and water supply",
-      "Alarm setpoint and sensor calibration in iCOM"
-     ],
-     "severity": "warning",
-     "source": "Emerson Liebert Challenger with iCOM user manual - alarm 11 'Low Humidity' (manualsdir 85779 p.40)",
-     "evidence": "manufacturer_doc"
-    }
-   ],
-   "diagnosticTips": [
-    "iCOM display on the unit front: the alarm list, event log and service menus (password-protected) are reached from the main screen; alarms are acknowledged/silenced on the display and clear when the condition resets.",
-    "A compressor locked off by repeated high-pressure trips is released by resetting the High Pressure Alarm Code to 0 in the service menu (Vertiv iCOM manual).",
-    "Older Challenger/Deluxe units use the Advanced Microprocessor / Level 0-10 controls with similar alarm names; this list is partial."
-   ],
-   "coverage": "partial",
-   "sourceDocs": [
-    {
-     "title": "Emerson Liebert Challenger 3000/ITR with Liebert iCOM Control user manual (manualsdir 85779)",
-     "url": "https://www.manualsdir.com/manuals/85779/emerson-liebert-challenger-with-liebert-icom-control-3000_itr.html?page=40"
-    },
-    {
-     "title": "Vertiv Liebert iCOM Installer/User Manual (ManualsLib 1461666)",
-     "url": "https://www.manualslib.com/manual/1461666/Vertiv-Liebert-Icom.html?page=93"
-    },
-    {
-     "title": "Liebert iCOM user manual SL-18835 / PeX applications 051536_R0_0508 (vertiv.com)"
-    }
-   ],
-   "confidence": "medium",
-   "sources": [
-    "Emerson Liebert Challenger with iCOM user manual (search summary)",
-    "Vertiv Liebert iCOM installer/user manual (search summary)"
-   ]
-  },
-  {
    "id": "waterfurnace-aurora",
    "name": "WaterFurnace Aurora Base Control (ABC) / Aurora Advanced Control fault codes (Exx)",
    "description": "Aurora controls on WaterFurnace 5/7 Series, Envision and Versatec units; faults are shown as E-codes on the AID Tool / Aurora display and as flash codes on the ABC board status LED.",
@@ -5446,6 +5314,690 @@
    "sources": [
     "ClimateMaster CXM manual 97B0003N12 (search summary)",
     "ClimateMaster Basic Troubleshooting guide (search summary)"
+   ]
+  },
+  {
+   "id": "rittal-lcp-dx",
+   "name": "Rittal LCP DX (LCP Rack DX 12/20, LCP Inline DX 12/20) controller alarm codes",
+   "description": "Carel-style controller on Rittal Liquid Cooling Package DX units. Categories: Alarms (the device, or at least some components, stops), Warnings (selected functions no longer executed), Messages (display only). Press 'Alarm' to view active errors and scroll with Up/Down; press 'Alarm' again to confirm. After an automatic restart the alarm LED and text stay until 'Alarm' is pressed twice. The alarm log keeps 50 errors (E01 = oldest) with date/time, code, cause, inlet/outlet temperatures and high/low pressures (menu level E). Collective-fault alarm relay.",
+   "appliesTo": [
+    "rittal-lcp"
+   ],
+   "faultCodes": [
+    {
+     "code": "ALA02",
+     "meaning": "Probe B2 faulty or disconnected alarm (Position: B2)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA03",
+     "meaning": "Probe B3 faulty or disconnected alarm (Position: B3)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA04",
+     "meaning": "Probe B4 faulty or disconnected alarm (Position: B4)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA06",
+     "meaning": "Probe B6 faulty or disconnected alarm (Position: B6)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA07",
+     "meaning": "Probe B7 faulty or disconnected alarm (Position: B7)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA08",
+     "meaning": "Probe B8 faulty or disconnected alarm (Position: B8)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA09",
+     "meaning": "Probe B9 faulty or disconnected alarm (Position: B9)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA10",
+     "meaning": "Probe B10 faulty or disconnected alarm (Position: B10)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA11",
+     "meaning": "Probe B11 faulty or disconnected alarm (Position: B11)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALA12",
+     "meaning": "Probe B12 faulty or disconnected alarm (Position: B12)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected."
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor."
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALB01",
+     "meaning": "High pressure (Position: ID3)",
+     "likelyCauses": [
+      "High ambient temperature",
+      "Incorrect refrigerant filling",
+      "Defective fan"
+     ],
+     "checks": [
+      "Check device limits",
+      "Check refrigerant volume",
+      "Check correct functioning of fan"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALB02",
+     "meaning": "High pressure compressor 1 by transducer",
+     "likelyCauses": [
+      "High ambient temperature",
+      "Incorrect refrigerant filling",
+      "Defective fan"
+     ],
+     "checks": [
+      "Check device limits",
+      "Check refrigerant volume",
+      "Check correct functioning of fan"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALB03",
+     "meaning": "Low pressure compressor/compressors by transducer",
+     "likelyCauses": [
+      "Incorrect refrigerant filling",
+      "Insufficient quantity of refrigerant",
+      "Blocked refrigerant lines",
+      "Thermostatic valve closed"
+     ],
+     "checks": [
+      "Check refrigerant volume",
+      "Check lines for leaks",
+      "Check thermostatic valve"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALC01",
+     "meaning": "Compressor 1 overload or inverter alarm (Position: ID2)",
+     "likelyCauses": [
+      "High inlet temperature",
+      "High heat load",
+      "Incorrect pipework",
+      "Incorrect wiring"
+     ],
+     "checks": [
+      "Check operating conditions as per compressor specifications",
+      "Check device limits",
+      "Check pipework and wiring"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALC03",
+     "meaning": "Envelope alarm zone",
+     "likelyCauses": [
+      "Operating conditions outside of compressor specifications"
+     ],
+     "checks": [
+      "Check operating conditions as per compressor specifications"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALC04",
+     "meaning": "Compressor start failure (temp.:/max.:)",
+     "likelyCauses": [
+      "Inadequate pressure difference during device startup",
+      "Excess current or missing phase on inverter",
+      "Blocked inverter"
+     ],
+     "checks": [
+      "Check operating conditions as per compressor specifications",
+      "Check device limits",
+      "Check error codes in inverter manual"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALC05",
+     "meaning": "High discharge gas temperature",
+     "likelyCauses": [
+      "High inlet temperature",
+      "High heat load",
+      "Incorrect pipework"
+     ],
+     "checks": [
+      "Check operating conditions as per compressor specifications",
+      "Check device limits",
+      "Check pipework"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALC06",
+     "meaning": "Low pressure differential (insuff. lubrication)",
+     "likelyCauses": [
+      "Operating conditions outside of compressor specifications or device limits",
+      "Blocked compressor",
+      "Incorrect wiring"
+     ],
+     "checks": [
+      "Check operating conditions as per compressor specifications",
+      "Check device limits",
+      "Check wiring"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALF01",
+     "meaning": "Fan overload (Position: ID1)",
+     "likelyCauses": [
+      "Incorrect wiring"
+     ],
+     "checks": [
+      "Check wiring against circuit diagram"
+     ],
+     "severity": "shutdown",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD02",
+     "meaning": "EEV driver probe error (Probe S1: Probe S2: Probe S3: Probe S4:)",
+     "likelyCauses": [
+      "Sensor failure or sensor not correctly connected"
+     ],
+     "checks": [
+      "Check the connection on the motherboard or replace the sensor"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD03",
+     "meaning": "EEV motor error",
+     "likelyCauses": [
+      "Incorrect or missing wiring between motherboard and valve motor"
+     ],
+     "checks": [
+      "Check the connection on the motherboard or on the valve motor"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD04",
+     "meaning": "Low superheat (LowSH)",
+     "likelyCauses": [
+      "Incorrect refrigerant filling",
+      "Insufficient heat load",
+      "Insufficient fan speed"
+     ],
+     "checks": [
+      "Check device limits",
+      "Check refrigerant volume",
+      "Check fan speed"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD05",
+     "meaning": "Low suction temperature",
+     "likelyCauses": [
+      "See ALD04 and ALD06"
+     ],
+     "checks": [
+      "See ALD04 and ALD06"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD06",
+     "meaning": "Low evaporation temperature (LOP)",
+     "likelyCauses": [
+      "Incorrect refrigerant filling",
+      "Insufficient refrigerant volume",
+      "Blocked refrigerant lines",
+      "Thermostatic valve closed"
+     ],
+     "checks": [
+      "Check refrigerant volume",
+      "Check lines for leaks",
+      "Check thermostatic valve"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD07",
+     "meaning": "High evaporation temperature (HOP)",
+     "likelyCauses": [
+      "High inlet temperature",
+      "Incorrect PID valve parameter"
+     ],
+     "checks": [
+      "Check valve PID parameters and alarm delay",
+      "Raise the MOP limit (max. 25°C/77°F) if the condenser ambient temperature is max. 35°C/97°F"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD08",
+     "meaning": "High condensing temperature (HiTcond)",
+     "likelyCauses": [
+      "High ambient temperature",
+      "Incorrect refrigerant filling",
+      "Defective fan on condenser"
+     ],
+     "checks": [
+      "Check device limits",
+      "Check refrigerant volume",
+      "Check fan on condenser"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALD09",
+     "meaning": "Driver offline",
+     "likelyCauses": [
+      "See inverter manual"
+     ],
+     "checks": [
+      "See inverter manual"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALL01",
+     "meaning": "Power+ offline",
+     "likelyCauses": [
+      "Wrong communication between the driver and the motherboard"
+     ],
+     "checks": [
+      "Check the Modbus connection cable",
+      "Check the communication parameters"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALL02",
+     "meaning": "Power+ Generic Alarm",
+     "likelyCauses": [
+      "Over or under current, over or under voltage, over or under temperature of the compressor motor drive (see drive manual 'code [105]')"
+     ],
+     "checks": [
+      "Check the cable",
+      "Check for a previous high pressure alarm"
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALL99",
+     "meaning": "99 Unexpected inverter stop",
+     "likelyCauses": [
+      "Short power failure"
+     ],
+     "checks": [
+      "Restart the unit; connect to a UPS if necessary. After the reset the alarm is stored in the alarm log as ALL01."
+     ],
+     "severity": "lockout",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "ALW04",
+     "meaning": "Max temperature (warning)",
+     "likelyCauses": [
+      "A previous alarm has stopped the unit",
+      "Heat load too high compared to the cooling capacity of the unit"
+     ],
+     "checks": [
+      "Reset the previous alarm"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3",
+     "evidence": "manufacturer_doc"
+    }
+   ],
+   "diagnosticTips": [
+    "Display format: 'Alarms ALxxx' plus the text; the log entry (menu E01-E50) also stores inlet/outlet temperatures and high/low pressures at the time of the fault - read them before resetting.",
+    "ALL99 (unexpected inverter stop after a short power failure) is stored in the log as ALL01 after the reset; consider a UPS for the controller.",
+    "ALD07 (HOP): the MOP limit can be raised to max. 25°C/77°F only if the condenser ambient is max. 35°C/97°F."
+   ],
+   "coverage": "complete",
+   "sourceDocs": [
+    {
+     "title": "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions",
+     "docId": "3311.425 Instructions EN",
+     "url": "https://rittal.com/imf/none/3_9646/3311425_Instructions_EN"
+    },
+    {
+     "title": "Rittal LCP Rack/Inline DX 20 assembly and operating instructions (3313.290/390)",
+     "url": "https://www.rittal.com/imf/none/3_8215"
+    }
+   ],
+   "confidence": "high",
+   "sources": [
+    "Rittal LCP Rack/Inline DX 12/20 assembly and operating instructions (3311.393, 3311.394, 3313.425, 3313.445) section 8.2 pp.40-42; LCP Rack/Inline DX 20 (3313.290/390) section 8.3"
+   ]
+  },
+  {
+   "id": "rittal-lcp-cw",
+   "name": "Rittal LCP CW / CWG (LCP Rack CW, Inline CW, Rack CWG, Inline CWG) with CMC III PU display messages",
+   "description": "Chilled-water Liquid Cooling Packages monitored by the CMC III Processing Unit. Configuration changes (an added sensor, or a lost water or fan PCB) show on the multi-LED and must be acknowledged. If communication between the fan/water PCB and the CMC III PU is lost the LCP goes to emergency mode (2-way valve open, fans at full speed).",
+   "appliesTo": [
+    "rittal-lcp"
+   ],
+   "faultCodes": [
+    {
+     "code": "Rotation error fan X",
+     "meaning": "Speed of fan no. X faulty.",
+     "likelyCauses": [
+      "Fan failed or blocked",
+      "Fan connection"
+     ],
+     "checks": [
+      "Check fan X and its connection"
+     ],
+     "severity": "warning",
+     "notes": "X = fan number on the display.",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 1.1",
+     "meaning": "Server inlet temperature sensor top faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 2.1",
+     "meaning": "Server inlet temperature sensor middle faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 3.1",
+     "meaning": "Server inlet temperature sensor bottom faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 1.2",
+     "meaning": "Server outlet temperature sensor top faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 2.2",
+     "meaning": "Server outlet temperature sensor middle faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. sensor 3.2",
+     "meaning": "Server outlet temperature sensor bottom faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. water sensor X",
+     "meaning": "Water temperature sensor at the inlet (1) or the return (2) faulty.",
+     "checks": [
+      "Check / replace the sensor"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Water module lost",
+     "meaning": "Water module not present.",
+     "likelyCauses": [
+      "Water PCB lost / communication"
+     ],
+     "checks": [
+      "Check the water module connection; acknowledge configuration changes (section 8.2.2)"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fan module lost",
+     "meaning": "Fan module not present.",
+     "likelyCauses": [
+      "Fan PCB lost / communication"
+     ],
+     "checks": [
+      "Check the fan module connection; acknowledge configuration changes"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Water leakage",
+     "meaning": "Leak message.",
+     "likelyCauses": [
+      "Leak in the water circuit or condensate"
+     ],
+     "checks": [
+      "Find the leak"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. serv-in",
+     "meaning": "Average of the three server inlet sensors below the set limit.",
+     "checks": [
+      "Check the limit setting and sensors"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Fail. temp. serv-out",
+     "meaning": "Average of the three server outlet sensors below the set limit.",
+     "checks": [
+      "Check the limit setting and sensors"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Failure motor valve",
+     "meaning": "Control valve faulty.",
+     "likelyCauses": [
+      "Dirty or failed control valve"
+     ],
+     "checks": [
+      "Open and close the valve several times from the CMC III PU; fit a filter; power-cycle the whole LCP and wait about 1 min"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    },
+    {
+     "code": "Failure flowmeter",
+     "meaning": "Flow faulty.",
+     "likelyCauses": [
+      "Dirty flow meter"
+     ],
+     "checks": [
+      "Authorised personnel must clean or replace the flow meter"
+     ],
+     "severity": "warning",
+     "source": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)",
+     "evidence": "manufacturer_doc"
+    }
+   ],
+   "diagnosticTips": [
+    "Emergency mode (valve open, fans 100 %): press 'C' on the LCP control unit for about 2 s; if that does not restore communication the system restarts. Call service if it persists.",
+    "CMC III PU shows flow with the valve closed: dirty control valve - cycle it open/closed several times from the CMC III PU, fit a filter, power-cycle the LCP. No flow with the valve open: dirty flow meter.",
+    "Not enough cooling: air in the water circuit (bleed the heat exchanger), piping pressure loss (clean the filter, set the flow limiter), air bypass through open rack U-spaces (blanking plates), undersized pump, no hydraulic balancing.",
+    "Water quality: flush new pipe networks and use filters plus corrosion/antifreeze treatment; on old networks use a water/water heat exchanger."
+   ],
+   "coverage": "complete",
+   "sourceDocs": [
+    {
+     "title": "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU)",
+     "url": "https://www.rittal.com/imf/none/3_8938"
+    },
+    {
+     "title": "Rittal TopTherm LCP Rack/Inline/Inline flush CW manual",
+     "docId": "3311560 Manual EN",
+     "url": "https://www.rittal.com/imf/none/3_4723/3311560_Manual_EN"
+    }
+   ],
+   "confidence": "high",
+   "sources": [
+    "Rittal LCP Rack/Inline CW and CWG assembly and operating instructions (CMC III PU), section 10.2 pp.77-79; TopTherm LCP CW manual 3311560 section 11.2 (same message set)"
    ]
   }
  ],
@@ -5873,88 +6425,6 @@
    "sources": [
     "Builder memory of Mitsubishi City Multi service handbooks (unverified)"
    ]
-  },
-  {
-   "familyRegex": "liebert-crac",
-   "familyLabel": "Liebert Challenger / DS / Deluxe System/3 computer-room units",
-   "controlVoltage": "24 VAC control transformer feeding the iCOM control board; iCOM display on the door",
-   "components": [
-    {
-     "designator": "iCOM",
-     "name": "Microprocessor control board and display"
-    },
-    {
-     "designator": "C1 / C2",
-     "name": "Compressor contactors (circuit 1 / circuit 2)"
-    },
-    {
-     "designator": "HP1/HP2",
-     "name": "High-pressure switches per circuit"
-    },
-    {
-     "designator": "LP1/LP2",
-     "name": "Low-pressure switches / transducers"
-    },
-    {
-     "designator": "EFM / FM",
-     "name": "Evaporator (main) fan motor(s) - belt drive or EC plug fans"
-    },
-    {
-     "designator": "OL",
-     "name": "Fan motor overload"
-    },
-    {
-     "designator": "DPS / AFS",
-     "name": "Differential air pressure switch (loss of airflow)"
-    },
-    {
-     "designator": "HUM",
-     "name": "Humidifier (infrared or canister) and contactor"
-    },
-    {
-     "designator": "RH1-RH3",
-     "name": "Reheat elements and contactors (electric or hot-gas reheat)"
-    },
-    {
-     "designator": "HGBV / LLSV",
-     "name": "Hot-gas bypass valve / liquid line solenoid"
-    },
-    {
-     "designator": "FSC / Lee-Temp",
-     "name": "Condenser fan speed control / flooded-condenser head-pressure control (air-cooled)"
-    },
-    {
-     "designator": "WRV",
-     "name": "Water-regulating valve (water/glycol-cooled)"
-    }
-   ],
-   "safetyDevices": [
-    "High-pressure switches (compressor lockout after repeated trips)",
-    "Low-pressure switches",
-    "Main fan overload",
-    "Loss-of-airflow differential pressure switch",
-    "Reheat/humidifier high-limits",
-    "Water/leak detection (option)"
-   ],
-   "terminalLabels": {
-    "REMOTE SHUTDOWN": "Remote shutdown dry-contact input on the customer terminal strip",
-    "COMMON ALARM": "Common alarm relay output",
-    "SMOKE / WATER": "Customer alarm inputs on the terminal strip (configurable in iCOM)"
-   },
-   "sequenceOfOperation": [
-    "Cooling (DX): iCOM enables the main fan continuously; on cooling demand it starts compressor circuit(s) through HP/LP safeties, with head pressure held by the condenser fan speed control or Lee-Temp; unloaders/digital scroll or hot-gas bypass trim capacity on 4-step/variable units.",
-    "Dehumidification: compressor runs at reduced airflow/coil temperature and reheat maintains the room temperature; humidification via the canister/infrared humidifier on low-humidity demand.",
-    "Alarms: configurable per alarm as shutdown, disable (stop heaters/humidifier) or warning; repeated high-head trips lock the compressor off until the alarm code is reset in iCOM."
-   ],
-   "notes": [
-    "LOW confidence: designators from builder memory; alarm behaviour from the Liebert Challenger/iCOM manual summaries. Confirm on the unit's electrical schematic (in the electric box)."
-   ],
-   "confidence": "low",
-   "evidence": "inferred",
-   "sources": [
-    "Emerson Liebert Challenger with iCOM user manual (search summary)",
-    "Builder memory (unverified)"
-   ]
   }
  ],
  "commonIssues": [
@@ -6166,45 +6636,6 @@
    ]
   },
   {
-   "symptom": "Liebert CRAC: repeated high head pressure alarms, compressor locked off",
-   "likelyCauses": [
-    "Condenser fan speed control / Lee-Temp receiver or fan failure (air-cooled)",
-    "Fouled coax / low water flow (water-cooled)",
-    "Overcharge or non-condensables"
-   ],
-   "checks": [
-    "Head pressure vs. condenser conditions",
-    "Condenser fan / speed control operation",
-    "After fixing: reset the High Pressure Alarm Code to 0 in iCOM to unlock the compressor"
-   ],
-   "appliesTo": "liebert-crac",
-   "confidence": "medium",
-   "evidence": "manufacturer_doc",
-   "sources": [
-    "Vertiv Liebert iCOM manual - Resetting High-Pressure Alarm Code"
-   ]
-  },
-  {
-   "symptom": "Liebert CRAC: LOSS OF AIRFLOW alarm",
-   "likelyCauses": [
-    "Dirty filters / blocked inlet or outlet",
-    "Broken belt or loose blower wheel",
-    "Blower motor overload / fuse",
-    "Differential pressure switch setting or tubing"
-   ],
-   "checks": [
-    "Check for blockage of unit air outlet or inlet",
-    "Blower motor fuses and overload reset; belts; wheel set screws",
-    "Switch tubing and setpoint"
-   ],
-   "appliesTo": "liebert-crac",
-   "confidence": "medium",
-   "evidence": "manufacturer_doc",
-   "sources": [
-    "Emerson Liebert Challenger with iCOM user manual - Loss of Air Flow"
-   ]
-  },
-  {
    "symptom": "Water-source heat pump: lockout on FP1 water-coil freeze detection (WaterFurnace E5 / ClimateMaster CXM-DXM code 4) in heating",
    "likelyCauses": [
     "Freeze setpoint left at 30 F (water) on an antifreeze loop",
@@ -6287,15 +6718,16 @@
  "support": {
   "phone": "800-695-1901",
   "url": "https://www.reznorhvac.com/",
-  "literatureUrl": "Bard: bardhvac.com (product literature) / bardwallmount.com/files; Reznor: reznorhvac.com literature + serial lookup reznorheaters.com/en/na/serials; Mitsubishi Electric: mylinkdrive.com; LG: lghvac.com; Samsung: samsunghvac.com; Fujitsu: fujitsugeneral.com; Liebert/Vertiv: vertiv.com/en-us/support/ and applications.liebert.com/partsmanuals; Modine: modinehvac.com (breeze.modine.com tech support docs); ClimateMaster: files.climatemaster.com; WaterFurnace: waterfurnace.com/literature; Trane Axiom: trane.com; Friedrich: friedrich.com",
+  "literatureUrl": "Bard: bardhvac.com (product literature) / bardwallmount.com/files; Reznor: reznorhvac.com literature + serial lookup reznorheaters.com/en/na/serials; Mitsubishi Electric: mylinkdrive.com; LG: lghvac.com; Samsung: samsunghvac.com; Fujitsu: fujitsugeneral.com; Modine: modinehvac.com (breeze.modine.com tech support docs); ClimateMaster: files.climatemaster.com; WaterFurnace: waterfurnace.com/literature; Trane Axiom: trane.com; Friedrich: friedrich.com; Rittal LCP: rittal.com/imf/none/... (assembly and operating instructions per part number)",
   "literatureSearchHint": "Search '<model prefix> installation operation manual' plus the brand (e.g. 'UDAP installation manual Reznor', 'Bard W36A2 2100-829', 'PUHY-P72TNU-A service handbook', 'ClimateMaster 97B0003N12'); wiring diagrams are inside the unit control panel cover and in the IOM appendix. VRF error tables live in the outdoor unit service handbook 'Troubleshooting - Check Code List'.",
-  "notes": "800-695-1901 is Reznor general sales & support (reznorhvac.com/contact-us), not a dedicated tech-support line; (855) 584-3172 is the Nortek Global HVAC LLC general sales & support number (O'Fallon, MO). Bard Technical Service 419-636-0439 (bardhvac.com/contact-us). Phone numbers for Mitsubishi, LG, Samsung, Fujitsu, Vertiv, Modine, ClimateMaster, WaterFurnace, Trane and Friedrich were NOT confirmed in this review and are deliberately omitted - look them up on the brand's support page before calling."
+  "notes": "800-695-1901 is Reznor general sales & support (reznorhvac.com/contact-us), not a dedicated tech-support line; (855) 584-3172 is the Nortek Global HVAC LLC general sales & support number (O'Fallon, MO). Bard Technical Service 419-636-0439 (bardhvac.com/contact-us). Phone numbers for Mitsubishi, LG, Samsung, Fujitsu, Modine, ClimateMaster, WaterFurnace, Trane and Friedrich were NOT confirmed in this review and are deliberately omitted - look them up on the brand's support page before calling."
  },
  "notes": [
   "This pack groups secondary commercial brands. Each serialFormat and modelFormat is scoped to a brand family by its regex; brands[] lists every brand covered so the manufacturer hint can rank this pack.",
-  "Research for this pack was limited to one round of web-search summaries (search budget exhausted); many entries are marked low and rely on builder memory. Serial rules for Liebert/Vertiv, Samsung, Fujitsu, Modine, ClimateMaster, WaterFurnace, CaptiveAire and Greenheck were not established and are omitted rather than guessed.",
+  "Research for this pack was limited to one round of web-search summaries (search budget exhausted); many entries are marked low and rely on builder memory. Serial rules for Samsung, Fujitsu, Modine, ClimateMaster, WaterFurnace, CaptiveAire and Greenheck were not established and are omitted rather than guessed.",
   "Trane Axiom serials decode with the Trane pack; Mitsubishi Electric Trane HVAC US (METUS) units use Mitsubishi serials.",
-  "VRF fault-code tables are intentionally short: only codes with a located manufacturer source were transcribed. The full tables are in the outdoor-unit service handbooks (see each control platform's sourceDocs)."
+  "VRF fault-code tables are intentionally short: only codes with a located manufacturer source were transcribed. The full tables are in the outdoor-unit service handbooks (see each control platform's sourceDocs).",
+  "2026-10-20: the Liebert/Vertiv entries (model format liebert-crac, control platform liebert-icom, two common issues, electrical entry) moved to vertiv-liebert.json and were corrected and extended there; Data Aire, Uniflair and APC InRow have their own packs (data-aire.json, schneider-uniflair-apc.json). Rittal LCP alarm codes added here."
  ],
  "sources": [
   "Building Intelligence Center - Bard HVAC age; Bard model number nomenclature; NORDYNE HVAC age; Mitsubishi HVAC age; Friedrich HVAC age; Reznor HVAC age (building-center.org)",
@@ -6311,14 +6743,14 @@
   "LG Multi V Trouble Shooting Guide (CH05, 53, 237) (lg.com); LG Help Library CH53; ARMA LG Air Conditioning Fault Codes PDF; rapidhvacparts.com LG Multi V CH code guide; blog.usro.net LG Multi V error codes",
   "Samsung DVM S ECO HR service manual AC-00216E; Samsung DVM PLUS III Technical Data Book error codes (ManualsLib 1223320); acerrorcode.com Samsung DVM error codes; manuals.plus Samsung E101 service guide",
   "Fujitsu Airstage V-II / J-II service manuals error code lists (ManualsLib 821045, 918110); assist.fujitsugeneral.com.au error codes",
-  "Emerson Liebert Challenger 3000/ITR with iCOM user manual (manualsdir 85779); Vertiv Liebert iCOM installer/user manual (ManualsLib 1461666); Liebert Model Number Reference Guide (surplusgroup.com)",
   "ClimateMaster CXM Controls manual 97B0003N12; ClimateMaster Basic Troubleshooting Information and Guidelines; ClimateMaster Service Tool fault list (files.climatemaster.com)",
   "WaterFurnace Aurora Control Standard V3.00 A&T Guide AG1566EW; Aurora Base Control A&T Guide AG1562EW; 5 Series 500A11 O&M OMW5-0016W (waterfurnace.com)",
   "Friedrich PTAC parts manuals - serial number identification guide (ManualsLib 53690, 53751)",
   "Reznor replacement parts form UBX-UBZ-UDX-UDZ-RPL (08-22) 1034346-H (firstsupply.com) - Table 2 date codes 2023-2028; Reznor Unit Heater Catalog C-UH",
   "ClimateMaster Tranquility IOMs 97B0075N02/N05/N06/N07/N08/N15, 97B0045N04 (files.climatemaster.com) - series / voltage codes; WaterFurnace SC2500AN 5 Series specification catalog - nomenclature",
   "Trane WSHP-PRC017W-EN Axiom product catalog model number description; Trane/Mitsubishi CITY MULTI Outdoor Unit Model Number Reference Guide; LG Multi V 5 ODU submittal ARUM072BTE5; Samsung AM080FXWANR service manual 'Model Naming'",
-  "building-center.org/lg-hvac-age; rapidhvacparts.com LG Multi V serial nomenclature; howtolookatahouse.com LG age (2020); intrysys Bard serial decoder"
+  "building-center.org/lg-hvac-age; rapidhvacparts.com LG Multi V serial nomenclature; howtolookatahouse.com LG age (2020); intrysys Bard serial decoder",
+  "Rittal LCP assembly and operating instructions: LCP Rack/Inline DX 12/20 (rittal.com/imf/none/3_9646/3311425_Instructions_EN), LCP DX 20 (rittal.com/imf/none/3_8215), LCP CW/CWG with CMC III PU (rittal.com/imf/none/3_8938), TopTherm LCP CW (rittal.com/imf/none/3_4723/3311560_Manual_EN)"
  ],
  "confidence": "low",
  "lastReviewed": "2026-09-26"
