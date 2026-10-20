@@ -89,9 +89,10 @@ Everything runs on one machine with Node.js; the only external call is to the An
 | Area | Contents |
 | --- | --- |
 | Refrigerants | 45 PT tables generated from CoolProp (dew/bubble for zeotropes, elevation correction) |
-| Manufacturer packs | 8 packs covering 83 brand names: 46 serial-number formats, 75 model nomenclatures, 44 control platforms |
-| Fault codes | 1,047 sourced fault/alarm codes and 201 LED flash patterns, plus 76 common-issue entries and 20 per-family electrical profiles |
-| Worked examples | 367 real nameplates that decode as tests on every run |
+| Manufacturer packs | 12 packs covering 242 brand names: 47 serial-number formats, 158 model nomenclatures, 134 control platforms (incl. STULZ, Liebert/Vertiv, Data Aire, Uniflair, APC InRow, Rittal precision cooling) |
+| Fault codes | 9,300 sourced fault/alarm codes and 458 LED flash patterns, plus 153 common-issue entries and 20 per-family electrical profiles |
+| Worked examples | 547 real nameplates that decode as tests on every run |
+| Manual library | Optional private full-text search over manufacturer manuals (`search_manuals`); see Configuration |
 | Diagnostics | 90 refrigeration-cycle rules with mode overrides (AC, heat-pump cooling/heating, refrigeration) |
 | Electrical | 29 component test procedures, 22 symptom procedures, 21 calculators |
 | PM checklists | 11 equipment-type templates, 206 items with nameplate comparisons |
